@@ -240,6 +240,13 @@ var drone_trail: Array[Vector2] = []
 const MAX_TRAIL_LENGTH: int = 35
 
 func _ready() -> void:
+	if SpaceWorldManager:
+		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
+		if mgr_rooms.size() > 0:
+			rooms = mgr_rooms
+		var mgr_ducts := SpaceWorldManager.get_duct_corridors()
+		if mgr_ducts.size() > 0:
+			ducts = mgr_ducts
 	_configure_window()
 	_setup_ui_events()
 	load_dat_configuration()

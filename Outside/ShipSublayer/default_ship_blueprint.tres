@@ -1,0 +1,558 @@
+[gd_resource type="Resource" script_class="ShipBlueprint" format=3]
+
+[ext_resource type="Script" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="1_8ivkh"]
+
+[resource]
+script = ExtResource("1_8ivkh")
+rooms = Array[Dictionary]([{
+"border_color": Color(0.35, 0.75, 1, 0.8),
+"category": "command",
+"color": Color(0.12, 0.28, 0.45, 0.55),
+"id": "bridge",
+"name": "Ponte di Comando",
+"rect": Rect2(230, 45, 140, 70)
+}, {
+"border_color": Color(0.2, 0.85, 0.65, 0.8),
+"category": "sensors",
+"color": Color(0.12, 0.35, 0.3, 0.5),
+"id": "sensors",
+"name": "Sensori & Avionica",
+"rect": Rect2(110, 115, 100, 65)
+}, {
+"border_color": Color(0.2, 0.85, 0.65, 0.8),
+"category": "comms",
+"color": Color(0.12, 0.35, 0.3, 0.5),
+"id": "comms",
+"name": "Comunicazioni & EW",
+"rect": Rect2(390, 115, 100, 65)
+}, {
+"border_color": Color(0.9, 0.35, 0.4, 0.8),
+"category": "tactical",
+"color": Color(0.35, 0.15, 0.2, 0.5),
+"id": "armory",
+"name": "Armeria & Sicurezza",
+"rect": Rect2(245, 135, 110, 60)
+}, {
+"border_color": Color(0.65, 0.45, 0.95, 0.8),
+"category": "defense",
+"color": Color(0.2, 0.15, 0.4, 0.5),
+"id": "shields",
+"name": "Scudi Deflettori",
+"rect": Rect2(175, 145, 120, 60)
+}, {
+"border_color": Color(0.35, 0.85, 0.45, 0.8),
+"category": "life_support",
+"color": Color(0.15, 0.35, 0.2, 0.5),
+"id": "life_support",
+"name": "Supporto Vitale",
+"rect": Rect2(100, 205, 120, 60)
+}, {
+"border_color": Color(0.85, 0.7, 0.3, 0.8),
+"category": "cargo",
+"color": Color(0.35, 0.28, 0.1, 0.5),
+"id": "cargo",
+"name": "Baia di Carico Principale",
+"rect": Rect2(380, 175, 120, 90)
+}, {
+"border_color": Color(1, 0.4, 0.2, 0.85),
+"category": "engineering",
+"color": Color(0.4, 0.15, 0.1, 0.55),
+"id": "reactor",
+"name": "Nucleo Reattore & Fusione",
+"rect": Rect2(235, 225, 130, 60)
+}, {
+"border_color": Color(0.4, 0.65, 0.85, 0.8),
+"category": "propulsion",
+"color": Color(0.15, 0.25, 0.35, 0.5),
+"id": "rcs",
+"name": "Pod Manovra RCS",
+"rect": Rect2(240, 270, 120, 60)
+}, {
+"border_color": Color(0.95, 0.55, 0.2, 0.85),
+"category": "propulsion",
+"color": Color(0.38, 0.22, 0.1, 0.55),
+"id": "engines",
+"name": "Sala Motori Principale",
+"rect": Rect2(230, 330, 140, 65)
+}])
+ducts = Array[Dictionary]([{
+"from": Vector2(300, 115),
+"id": "duct_spine_1",
+"is_blocked": false,
+"name": "Condotto Dorsale Alpha",
+"to": Vector2(300, 135),
+"width": 16.0
+}, {
+"from": Vector2(300, 195),
+"id": "duct_spine_2",
+"is_blocked": false,
+"name": "Condotto Reattore-Armeria",
+"to": Vector2(300, 215),
+"width": 16.0
+}, {
+"from": Vector2(300, 285),
+"id": "duct_spine_3",
+"is_blocked": false,
+"name": "Condotto Reattore-RCS",
+"to": Vector2(300, 290),
+"width": 16.0
+}, {
+"from": Vector2(300, 310),
+"id": "duct_spine_4",
+"is_blocked": false,
+"name": "Condotto RCS-Motori",
+"to": Vector2(300, 330),
+"width": 16.0
+}, {
+"from": Vector2(240, 80),
+"id": "duct_port_fwd",
+"is_blocked": false,
+"name": "Condotto Prua Babordo",
+"to": Vector2(210, 130),
+"width": 14.0
+}, {
+"from": Vector2(360, 80),
+"id": "duct_stbd_fwd",
+"is_blocked": false,
+"name": "Condotto Prua Tribordo",
+"to": Vector2(390, 130),
+"width": 14.0
+}, {
+"from": Vector2(160, 180),
+"id": "duct_port_mid",
+"is_blocked": false,
+"name": "Condotto Laterale Sensori",
+"to": Vector2(160, 205),
+"width": 14.0
+}, {
+"from": Vector2(440, 180),
+"id": "duct_stbd_mid",
+"is_blocked": false,
+"name": "Condotto Laterale Comms",
+"to": Vector2(440, 190),
+"width": 14.0
+}, {
+"from": Vector2(220, 235),
+"id": "duct_port_eng",
+"is_blocked": false,
+"name": "Condotto Vita-Reattore",
+"to": Vector2(240, 255),
+"width": 14.0
+}, {
+"from": Vector2(380, 235),
+"id": "duct_stbd_eng",
+"is_blocked": false,
+"name": "Condotto Carico-Reattore",
+"to": Vector2(360, 255),
+"width": 14.0
+}, {
+"from": Vector2(245, 165),
+"id": "duct_armory_bypass",
+"is_blocked": false,
+"name": "Bypass Armeria-Scudi",
+"to": Vector2(220, 175),
+"width": 14.0
+}, {
+"from": Vector2(235, 205),
+"id": "duct_shields_core",
+"is_blocked": false,
+"name": "Condotto Alimentazione Scudi",
+"to": Vector2(240, 235),
+"width": 14.0
+}, {
+"from": Vector2(160, 265),
+"id": "duct_port_aft",
+"is_blocked": false,
+"name": "Condotto Servizio Poppa SX",
+"to": Vector2(235, 345),
+"width": 14.0
+}, {
+"from": Vector2(440, 265),
+"id": "duct_stbd_aft",
+"is_blocked": false,
+"name": "Condotto Servizio Poppa DX",
+"to": Vector2(365, 345),
+"width": 14.0
+}])
+devices = Array[Dictionary]([{
+"desc": "Generatore primario a fusione quantistica. Alimenta gli snodi dorsali e ventrali.",
+"id": "reactor_main",
+"inputs_count": 0,
+"is_generator": true,
+"name": "Reattore Principale",
+"pos": Vector2(300, 255),
+"power_mw": 1200.0,
+"sector": "Nucleo Reattore & Fusione"
+}, {
+"desc": "Celle energetiche ausiliarie di riserva. Alimentano il settore tribordo e i canali di bypass.",
+"id": "aux_generator",
+"inputs_count": 0,
+"is_generator": true,
+"name": "Generatore Ausiliario",
+"pos": Vector2(440, 240),
+"power_mw": 450.0,
+"sector": "Baia di Carico Principale"
+}, {
+"desc": "Console di navigazione e comando centrale. Richiede 2 linee di alimentazione per piena operatività.",
+"id": "bridge_nav",
+"inputs_count": 2,
+"is_generator": false,
+"name": "Ponte di Comando",
+"pos": Vector2(300, 75),
+"power_mw": 150.0,
+"sector": "Ponte di Comando"
+}, {
+"desc": "Array sensori a lungo raggio, scanner EM e telemetria spaziale.",
+"id": "sensors_radar",
+"inputs_count": 1,
+"is_generator": false,
+"name": "Sensori & Avionica",
+"pos": Vector2(160, 145),
+"power_mw": 120.0,
+"sector": "Sensori & Avionica"
+}, {
+"desc": "Trasmettitore subspaziale e contromisure di guerra elettronica.",
+"id": "comms_ew",
+"inputs_count": 1,
+"is_generator": false,
+"name": "Comunicazioni & EW",
+"pos": Vector2(440, 145),
+"power_mw": 120.0,
+"sector": "Comunicazioni & EW"
+}, {
+"desc": "Sistemi di puntamento armi pesanti, torrette difensive di prossimità e blocco armeria.",
+"id": "armory_defense",
+"inputs_count": 2,
+"is_generator": false,
+"name": "Armeria & Torrette",
+"pos": Vector2(300, 165),
+"power_mw": 250.0,
+"sector": "Armeria & Sicurezza"
+}, {
+"desc": "Filtrazione atmosfera, gravità artificiale e regolazione termica alloggi.",
+"id": "life_support",
+"inputs_count": 2,
+"is_generator": false,
+"name": "Supporto Vitale",
+"pos": Vector2(160, 235),
+"power_mw": 200.0,
+"sector": "Supporto Vitale"
+}, {
+"desc": "Docking station del Duct Drone e matrice telecamere CCTV esterne.",
+"id": "cargo_drone_bay",
+"inputs_count": 1,
+"is_generator": false,
+"name": "Baia Drone & CCTV",
+"pos": Vector2(440, 205),
+"power_mw": 90.0,
+"sector": "Baia di Carico Principale"
+}, {
+"desc": "Generatori di campo deflettore prua, poppa e matrice di sovralimentazione.",
+"id": "shields_deflector",
+"inputs_count": 3,
+"is_generator": false,
+"name": "Scudi Deflettori",
+"pos": Vector2(235, 175),
+"power_mw": 400.0,
+"sector": "Scudi Deflettori"
+}, {
+"desc": "Propulsione sub-luce (Propulsore SX, DX e canale termico di spinta centrale).",
+"id": "engines_sublight",
+"inputs_count": 3,
+"is_generator": false,
+"name": "Motori Principali",
+"pos": Vector2(300, 360),
+"power_mw": 600.0,
+"sector": "Sala Motori Principale"
+}, {
+"desc": "Ugelli di manovra laterali RCS Babordo (SX) e Tribordo (DX).",
+"id": "rcs_thrusters",
+"inputs_count": 2,
+"is_generator": false,
+"name": "Sistema RCS",
+"pos": Vector2(300, 300),
+"power_mw": 160.0,
+"sector": "Pod Manovra RCS"
+}])
+junctions = Array[Dictionary]([{
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J1_B0",
+"name": "Linea Dorsale Prua (J2)",
+"target_id": "J2",
+"target_type": "junction",
+"to_pos": Vector2(300, 125)
+}, {
+"line_id": "L_J1_B1",
+"name": "Bypass Babordo (J3)",
+"target_id": "J3",
+"target_type": "junction",
+"to_pos": Vector2(160, 185)
+}, {
+"line_id": "L_J1_B2",
+"name": "Terminazione Ausiliaria Morta",
+"target_id": "DEAD_1",
+"target_type": "dead_end",
+"to_pos": Vector2(360, 215)
+}],
+"id": "J1",
+"input_source": "reactor_main",
+"name": "Snodo Reattore Dorsale",
+"pos": Vector2(300, 215)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J2_B0",
+"name": "Ponte Nav (In1) & Armeria (In1)",
+"target_ids": ["bridge_nav:0", "armory_defense:0"],
+"target_type": "device_multi",
+"to_pos": Vector2(300, 75)
+}, {
+"line_id": "L_J2_B1",
+"name": "Sensori & Avionica (In1)",
+"target_id": "sensors_radar:0",
+"target_type": "device",
+"to_pos": Vector2(160, 145)
+}, {
+"line_id": "L_J2_B2",
+"name": "Comunicazioni & EW (In1)",
+"target_id": "comms_ew:0",
+"target_type": "device",
+"to_pos": Vector2(440, 145)
+}],
+"id": "J2",
+"input_source": "J1_B0",
+"name": "Snodo Prua & Avionica",
+"pos": Vector2(300, 125)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J3_B0",
+"name": "Supporto Vitale (In1)",
+"target_id": "life_support:0",
+"target_type": "device",
+"to_pos": Vector2(160, 235)
+}, {
+"line_id": "L_J3_B1",
+"name": "Scudi Deflettori (In1 - Prua)",
+"target_id": "shields_deflector:0",
+"target_type": "device",
+"to_pos": Vector2(235, 175)
+}, {
+"line_id": "L_J3_B2",
+"name": "Bypass Manutenzione SX (J8)",
+"target_id": "J8",
+"target_type": "junction",
+"to_pos": Vector2(160, 320)
+}],
+"id": "J3",
+"input_source": "J1_B1",
+"name": "Snodo Babordo & Difesa",
+"pos": Vector2(160, 185)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J4_B0",
+"name": "Linea Poppa Motori (J5)",
+"target_id": "J5",
+"target_type": "junction",
+"to_pos": Vector2(300, 325)
+}, {
+"line_id": "L_J4_B1",
+"name": "Scudi Sovralimentazione (In3)",
+"target_id": "shields_deflector:2",
+"target_type": "device",
+"to_pos": Vector2(235, 175)
+}, {
+"line_id": "L_J4_B2",
+"name": "Scarico Termico Morto",
+"target_id": "DEAD_2",
+"target_type": "dead_end",
+"to_pos": Vector2(240, 295)
+}],
+"id": "J4",
+"input_source": "reactor_main",
+"name": "Snodo Reattore Ventrale",
+"pos": Vector2(300, 295)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J5_B0",
+"name": "Motore SX (In1) & Termico (In3)",
+"target_ids": ["engines_sublight:0", "engines_sublight:2"],
+"target_type": "device_multi",
+"to_pos": Vector2(300, 360)
+}, {
+"line_id": "L_J5_B1",
+"name": "Motore DX (In2)",
+"target_id": "engines_sublight:1",
+"target_type": "device",
+"to_pos": Vector2(330, 360)
+}, {
+"line_id": "L_J5_B2",
+"name": "Scudi Deflettori Poppa (In2)",
+"target_id": "shields_deflector:1",
+"target_type": "device",
+"to_pos": Vector2(235, 175)
+}],
+"id": "J5",
+"input_source": "J4_B0",
+"name": "Snodo Propulsione Poppa",
+"pos": Vector2(300, 325)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J6_B0",
+"name": "Baia Drone (In1) & Comms (In1)",
+"target_ids": ["cargo_drone_bay:0", "comms_ew:0"],
+"target_type": "device_multi",
+"to_pos": Vector2(440, 205)
+}, {
+"line_id": "L_J6_B1",
+"name": "RCS Tribordo DX (In2)",
+"target_id": "rcs_thrusters:1",
+"target_type": "device",
+"to_pos": Vector2(300, 300)
+}, {
+"line_id": "L_J6_B2",
+"name": "Armeria Secondaria (In2)",
+"target_id": "armory_defense:1",
+"target_type": "device",
+"to_pos": Vector2(300, 165)
+}],
+"id": "J6",
+"input_source": "J7_B0",
+"name": "Snodo Ausiliario Tribordo",
+"pos": Vector2(440, 185)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J7_B0",
+"name": "Canale Tribordo (J6)",
+"target_id": "J6",
+"target_type": "junction",
+"to_pos": Vector2(440, 185)
+}, {
+"line_id": "L_J7_B1",
+"name": "Bypass Supporto Vitale (In2)",
+"target_id": "life_support:1",
+"target_type": "device",
+"to_pos": Vector2(160, 235)
+}, {
+"line_id": "L_J7_B2",
+"name": "Backup Avionica Ponte (In2)",
+"target_id": "bridge_nav:1",
+"target_type": "device",
+"to_pos": Vector2(300, 75)
+}],
+"id": "J7",
+"input_source": "aux_generator",
+"name": "Snodo Generatore Riserva",
+"pos": Vector2(440, 260)
+}, {
+"active_branch": 0,
+"branches": [{
+"line_id": "L_J8_B0",
+"name": "Motore SX Ausiliario (In1)",
+"target_id": "engines_sublight:0",
+"target_type": "device",
+"to_pos": Vector2(270, 360)
+}, {
+"line_id": "L_J8_B1",
+"name": "RCS Babordo SX (In1)",
+"target_id": "rcs_thrusters:0",
+"target_type": "device",
+"to_pos": Vector2(300, 300)
+}, {
+"line_id": "L_J8_B2",
+"name": "Condotto Morto Manutenzione",
+"target_id": "DEAD_3",
+"target_type": "dead_end",
+"to_pos": Vector2(100, 340)
+}],
+"id": "J8",
+"input_source": "J3_B2",
+"name": "Snodo Bypass Manutenzione SX",
+"pos": Vector2(160, 320)
+}])
+damages = Array[Dictionary]([{
+"desc": "Micrometeorite ha perforato la blindatura anteriore della cabina di pilotaggio.",
+"id": "dmg_1",
+"name": "Falla Strutturale Prua",
+"pos": Vector2(260, 65),
+"repair_cost": 10.0,
+"sector": "Ponte di Comando",
+"severity": 4.5,
+"system_impact": "nav_instability",
+"type": "breach"
+}, {
+"desc": "Sovratensione nei banchi di condensatori dei sensori a lungo raggio.",
+"id": "dmg_2",
+"name": "Cortocircuito Scanner EM",
+"pos": Vector2(140, 135),
+"repair_cost": 12.0,
+"sector": "Sensori & Avionica",
+"severity": 6.0,
+"system_impact": "radar_ghosts",
+"type": "short_circuit"
+}, {
+"desc": "Arco voltaico negli anelli di collimazione deflettore sinistro.",
+"id": "dmg_3",
+"name": "Guasto Emettitore Scudo Babordo",
+"pos": Vector2(210, 160),
+"repair_cost": 15.0,
+"sector": "Scudi Deflettori",
+"severity": 7.5,
+"system_impact": "shields_degraded",
+"type": "short_circuit"
+}, {
+"desc": "Perdita di fluido criogenico ad alta pressione dal circuito di confinamento.",
+"id": "dmg_4",
+"name": "Infiltrazione Refrigerante Nucleo",
+"pos": Vector2(275, 245),
+"repair_cost": 18.0,
+"sector": "Nucleo Reattore & Fusione",
+"severity": 8.0,
+"system_impact": "overheating",
+"type": "breach"
+}, {
+"desc": "Blocco meccanico con surriscaldamento delle valvole di ricircolo O2.",
+"id": "dmg_5",
+"name": "Malfunzionamento Compressore Atmosfera",
+"pos": Vector2(130, 225),
+"repair_cost": 8.0,
+"sector": "Supporto Vitale",
+"severity": 5.0,
+"system_impact": "o2_leak",
+"type": "short_circuit"
+}, {
+"desc": "Stress termico elevato ha causato microfratture nell'ugello di scarico destro.",
+"id": "dmg_6",
+"name": "Fessurazione Camera di Spinta",
+"pos": Vector2(320, 350),
+"repair_cost": 14.0,
+"sector": "Sala Motori Principale",
+"severity": 6.5,
+"system_impact": "engine_thrust_loss",
+"type": "breach"
+}, {
+"desc": "Relè di potenza bruciato sull'elettrovalvola dei propulsori di rotazione SX.",
+"id": "dmg_7",
+"name": "Attuatore Ugello RCS Babordo Bloccato",
+"pos": Vector2(260, 290),
+"repair_cost": 7.0,
+"sector": "Pod Manovra RCS",
+"severity": 4.0,
+"system_impact": "turn_speed_reduced",
+"type": "short_circuit"
+}, {
+"desc": "Guarnizione magnetica della rampa di carico danneggiata da detriti.",
+"id": "dmg_8",
+"name": "Compromissione Portellone Cargo Esterno",
+"pos": Vector2(460, 215),
+"repair_cost": 11.0,
+"sector": "Baia di Carico Principale",
+"severity": 5.5,
+"system_impact": "cargo_depressurization",
+"type": "breach"
+}])

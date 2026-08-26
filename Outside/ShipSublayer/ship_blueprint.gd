@@ -1,0 +1,755 @@
+@tool
+class_name ShipBlueprint
+extends Resource
+
+## Struttura dati (Sublayer / Blueprint) per l'astronave in Dark Nova: Rogue Squadron.
+## Contiene in modo unificato la geometria delle stanze, i condotti per i droni,
+## la rete elettrica (dispositivi, snodi e cablaggi) e le zone di danno strutturale.
+
+signal blueprint_changed()
+
+# --- METADATI GENERALI ---
+@export var ship_id: String = "dark_nova_corvette":
+	set(val):
+		ship_id = val
+		emit_changed()
+
+@export var ship_name: String = "Dark Nova Corvette":
+	set(val):
+		ship_name = val
+		emit_changed()
+
+@export var ship_class: String = "Corvetta d'Assalto & Ricognizione Leggera":
+	set(val):
+		ship_class = val
+		emit_changed()
+
+@export var ship_bounds: Rect2 = Rect2(60, 30, 480, 420):
+	set(val):
+		ship_bounds = val
+		emit_changed()
+
+@export var drone_spawn_pos: Vector2 = Vector2(300, 80):
+	set(val):
+		drone_spawn_pos = val
+		emit_changed()
+
+@export var drone_spawn_heading: float = -PI * 0.5:
+	set(val):
+		drone_spawn_heading = val
+		emit_changed()
+
+# --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
+# Ogni elemento: { "id": str, "name": str, "rect": Rect2, "color": Color, "border_color": Color, "category": str }
+@export var rooms: Array[Dictionary] = []:
+	set(val):
+		rooms = val
+		emit_changed()
+
+# --- SUBLAYER 2: CONDOTTI DI MANUTENZIONE (Ducts System) ---
+# Ogni elemento: { "id": str, "name": str, "from": Vector2, "to": Vector2, "width": float, "is_blocked": bool }
+@export var ducts: Array[Dictionary] = []:
+	set(val):
+		ducts = val
+		emit_changed()
+
+# --- SUBLAYER 3: RETE ELETTRICA (Power Grid) ---
+# Dispositivi: { "id": str, "name": str, "sector": str, "pos": Vector2, "is_generator": bool, "power_mw": float, "inputs_count": int, "desc": str }
+@export var devices: Array[Dictionary] = []:
+	set(val):
+		devices = val
+		emit_changed()
+
+# Snodi: { "id": str, "name": str, "pos": Vector2, "input_source": str, "active_branch": int, "branches": Array[Dictionary] }
+@export var junctions: Array[Dictionary] = []:
+	set(val):
+		junctions = val
+		emit_changed()
+
+# Cablaggi / Conduits espliciti o ausiliari: { "id": str, "from_pos": Vector2, "to_pos": Vector2, "from_junction": str, "target_id": str }
+@export var conduits: Array[Dictionary] = []:
+	set(val):
+		conduits = val
+		emit_changed()
+
+# --- SUBLAYER 4: ZONE E PUNTI DI DANNO (Damage Zones) ---
+# Ogni elemento: { "id": str, "type": str, "name": str, "pos": Vector2, "sector": str, "severity": float, "repair_cost": float, "desc": str, "system_impact": str }
+@export var damages: Array[Dictionary] = []:
+	set(val):
+		damages = val
+		emit_changed()
+
+func _init() -> void:
+	if rooms.is_empty() and ducts.is_empty() and devices.is_empty():
+		create_default_ship()
+
+## Inizializza la blueprint con i dati standard della Dark Nova Corvette.
+func create_default_ship() -> void:
+	ship_id = "dark_nova_corvette"
+	ship_name = "Dark Nova Corvette"
+	ship_class = "Corvetta d'Assalto & Ricognizione Leggera"
+	ship_bounds = Rect2(60, 30, 480, 420)
+	drone_spawn_pos = Vector2(300, 80)
+	drone_spawn_heading = -PI * 0.5
+	
+	_init_default_rooms()
+	_init_default_ducts()
+	_init_default_power_grid()
+	_init_default_damages()
+	emit_changed()
+
+func _init_default_rooms() -> void:
+	rooms = [
+		{
+			"id": "bridge",
+			"name": "Ponte di Comando",
+			"rect": Rect2(230, 45, 140, 70),
+			"color": Color(0.12, 0.28, 0.45, 0.55),
+			"border_color": Color(0.35, 0.75, 1.0, 0.8),
+			"category": "command"
+		},
+		{
+			"id": "sensors",
+			"name": "Sensori & Avionica",
+			"rect": Rect2(110, 115, 100, 65),
+			"color": Color(0.12, 0.35, 0.3, 0.5),
+			"border_color": Color(0.2, 0.85, 0.65, 0.8),
+			"category": "sensors"
+		},
+		{
+			"id": "comms",
+			"name": "Comunicazioni & EW",
+			"rect": Rect2(390, 115, 100, 65),
+			"color": Color(0.12, 0.35, 0.3, 0.5),
+			"border_color": Color(0.2, 0.85, 0.65, 0.8),
+			"category": "comms"
+		},
+		{
+			"id": "armory",
+			"name": "Armeria & Sicurezza",
+			"rect": Rect2(245, 135, 110, 60),
+			"color": Color(0.35, 0.15, 0.2, 0.5),
+			"border_color": Color(0.9, 0.35, 0.4, 0.8),
+			"category": "tactical"
+		},
+		{
+			"id": "shields",
+			"name": "Scudi Deflettori",
+			"rect": Rect2(175, 145, 120, 60),
+			"color": Color(0.2, 0.15, 0.4, 0.5),
+			"border_color": Color(0.65, 0.45, 0.95, 0.8),
+			"category": "defense"
+		},
+		{
+			"id": "life_support",
+			"name": "Supporto Vitale",
+			"rect": Rect2(100, 205, 120, 60),
+			"color": Color(0.15, 0.35, 0.2, 0.5),
+			"border_color": Color(0.35, 0.85, 0.45, 0.8),
+			"category": "life_support"
+		},
+		{
+			"id": "cargo",
+			"name": "Baia di Carico Principale",
+			"rect": Rect2(380, 175, 120, 90),
+			"color": Color(0.35, 0.28, 0.1, 0.5),
+			"border_color": Color(0.85, 0.7, 0.3, 0.8),
+			"category": "cargo"
+		},
+		{
+			"id": "reactor",
+			"name": "Nucleo Reattore & Fusione",
+			"rect": Rect2(235, 225, 130, 60),
+			"color": Color(0.4, 0.15, 0.1, 0.55),
+			"border_color": Color(1.0, 0.4, 0.2, 0.85),
+			"category": "engineering"
+		},
+		{
+			"id": "rcs",
+			"name": "Pod Manovra RCS",
+			"rect": Rect2(240, 270, 120, 60),
+			"color": Color(0.15, 0.25, 0.35, 0.5),
+			"border_color": Color(0.4, 0.65, 0.85, 0.8),
+			"category": "propulsion"
+		},
+		{
+			"id": "engines",
+			"name": "Sala Motori Principale",
+			"rect": Rect2(230, 330, 140, 65),
+			"color": Color(0.38, 0.22, 0.1, 0.55),
+			"border_color": Color(0.95, 0.55, 0.2, 0.85),
+			"category": "propulsion"
+		}
+	]
+
+func _init_default_ducts() -> void:
+	ducts = [
+		{"id": "duct_spine_1", "from": Vector2(300, 115), "to": Vector2(300, 135), "width": 16.0, "name": "Condotto Dorsale Alpha", "is_blocked": false},
+		{"id": "duct_spine_2", "from": Vector2(300, 195), "to": Vector2(300, 215), "width": 16.0, "name": "Condotto Reattore-Armeria", "is_blocked": false},
+		{"id": "duct_spine_3", "from": Vector2(300, 285), "to": Vector2(300, 290), "width": 16.0, "name": "Condotto Reattore-RCS", "is_blocked": false},
+		{"id": "duct_spine_4", "from": Vector2(300, 310), "to": Vector2(300, 330), "width": 16.0, "name": "Condotto RCS-Motori", "is_blocked": false},
+		{"id": "duct_port_fwd", "from": Vector2(240, 80), "to": Vector2(210, 130), "width": 14.0, "name": "Condotto Prua Babordo", "is_blocked": false},
+		{"id": "duct_stbd_fwd", "from": Vector2(360, 80), "to": Vector2(390, 130), "width": 14.0, "name": "Condotto Prua Tribordo", "is_blocked": false},
+		{"id": "duct_port_mid", "from": Vector2(160, 180), "to": Vector2(160, 205), "width": 14.0, "name": "Condotto Laterale Sensori", "is_blocked": false},
+		{"id": "duct_stbd_mid", "from": Vector2(440, 180), "to": Vector2(440, 190), "width": 14.0, "name": "Condotto Laterale Comms", "is_blocked": false},
+		{"id": "duct_port_eng", "from": Vector2(220, 235), "to": Vector2(240, 255), "width": 14.0, "name": "Condotto Vita-Reattore", "is_blocked": false},
+		{"id": "duct_stbd_eng", "from": Vector2(380, 235), "to": Vector2(360, 255), "width": 14.0, "name": "Condotto Carico-Reattore", "is_blocked": false},
+		{"id": "duct_armory_bypass", "from": Vector2(245, 165), "to": Vector2(220, 175), "width": 14.0, "name": "Bypass Armeria-Scudi", "is_blocked": false},
+		{"id": "duct_shields_core", "from": Vector2(235, 205), "to": Vector2(240, 235), "width": 14.0, "name": "Condotto Alimentazione Scudi", "is_blocked": false},
+		{"id": "duct_port_aft", "from": Vector2(160, 265), "to": Vector2(235, 345), "width": 14.0, "name": "Condotto Servizio Poppa SX", "is_blocked": false},
+		{"id": "duct_stbd_aft", "from": Vector2(440, 265), "to": Vector2(365, 345), "width": 14.0, "name": "Condotto Servizio Poppa DX", "is_blocked": false}
+	]
+
+func _init_default_power_grid() -> void:
+	devices = [
+		{
+			"id": "reactor_main",
+			"name": "Reattore Principale",
+			"sector": "Nucleo Reattore & Fusione",
+			"pos": Vector2(300, 255),
+			"is_generator": true,
+			"power_mw": 1200.0,
+			"inputs_count": 0,
+			"desc": "Generatore primario a fusione quantistica. Alimenta gli snodi dorsali e ventrali."
+		},
+		{
+			"id": "aux_generator",
+			"name": "Generatore Ausiliario",
+			"sector": "Baia di Carico Principale",
+			"pos": Vector2(440, 240),
+			"is_generator": true,
+			"power_mw": 450.0,
+			"inputs_count": 0,
+			"desc": "Celle energetiche ausiliarie di riserva. Alimentano il settore tribordo e i canali di bypass."
+		},
+		{
+			"id": "bridge_nav",
+			"name": "Ponte di Comando",
+			"sector": "Ponte di Comando",
+			"pos": Vector2(300, 75),
+			"is_generator": false,
+			"power_mw": 150.0,
+			"inputs_count": 2,
+			"desc": "Console di navigazione e comando centrale. Richiede 2 linee di alimentazione per piena operatività."
+		},
+		{
+			"id": "sensors_radar",
+			"name": "Sensori & Avionica",
+			"sector": "Sensori & Avionica",
+			"pos": Vector2(160, 145),
+			"is_generator": false,
+			"power_mw": 120.0,
+			"inputs_count": 1,
+			"desc": "Array sensori a lungo raggio, scanner EM e telemetria spaziale."
+		},
+		{
+			"id": "comms_ew",
+			"name": "Comunicazioni & EW",
+			"sector": "Comunicazioni & EW",
+			"pos": Vector2(440, 145),
+			"is_generator": false,
+			"power_mw": 120.0,
+			"inputs_count": 1,
+			"desc": "Trasmettitore subspaziale e contromisure di guerra elettronica."
+		},
+		{
+			"id": "armory_defense",
+			"name": "Armeria & Torrette",
+			"sector": "Armeria & Sicurezza",
+			"pos": Vector2(300, 165),
+			"is_generator": false,
+			"power_mw": 250.0,
+			"inputs_count": 2,
+			"desc": "Sistemi di puntamento armi pesanti, torrette difensive di prossimità e blocco armeria."
+		},
+		{
+			"id": "life_support",
+			"name": "Supporto Vitale",
+			"sector": "Supporto Vitale",
+			"pos": Vector2(160, 235),
+			"is_generator": false,
+			"power_mw": 200.0,
+			"inputs_count": 2,
+			"desc": "Filtrazione atmosfera, gravità artificiale e regolazione termica alloggi."
+		},
+		{
+			"id": "cargo_drone_bay",
+			"name": "Baia Drone & CCTV",
+			"sector": "Baia di Carico Principale",
+			"pos": Vector2(440, 205),
+			"is_generator": false,
+			"power_mw": 90.0,
+			"inputs_count": 1,
+			"desc": "Docking station del Duct Drone e matrice telecamere CCTV esterne."
+		},
+		{
+			"id": "shields_deflector",
+			"name": "Scudi Deflettori",
+			"sector": "Scudi Deflettori",
+			"pos": Vector2(235, 175),
+			"is_generator": false,
+			"power_mw": 400.0,
+			"inputs_count": 3,
+			"desc": "Generatori di campo deflettore prua, poppa e matrice di sovralimentazione."
+		},
+		{
+			"id": "engines_sublight",
+			"name": "Motori Principali",
+			"sector": "Sala Motori Principale",
+			"pos": Vector2(300, 360),
+			"is_generator": false,
+			"power_mw": 600.0,
+			"inputs_count": 3,
+			"desc": "Propulsione sub-luce (Propulsore SX, DX e canale termico di spinta centrale)."
+		},
+		{
+			"id": "rcs_thrusters",
+			"name": "Sistema RCS",
+			"sector": "Pod Manovra RCS",
+			"pos": Vector2(300, 300),
+			"is_generator": false,
+			"power_mw": 160.0,
+			"inputs_count": 2,
+			"desc": "Ugelli di manovra laterali RCS Babordo (SX) e Tribordo (DX)."
+		}
+	]
+
+	junctions = [
+		{
+			"id": "J1",
+			"name": "Snodo Reattore Dorsale",
+			"pos": Vector2(300, 215),
+			"input_source": "reactor_main",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Linea Dorsale Prua (J2)", "target_type": "junction", "target_id": "J2", "line_id": "L_J1_B0", "to_pos": Vector2(300, 125)},
+				{"name": "Bypass Babordo (J3)", "target_type": "junction", "target_id": "J3", "line_id": "L_J1_B1", "to_pos": Vector2(160, 185)},
+				{"name": "Terminazione Ausiliaria Morta", "target_type": "dead_end", "target_id": "DEAD_1", "line_id": "L_J1_B2", "to_pos": Vector2(360, 215)}
+			]
+		},
+		{
+			"id": "J2",
+			"name": "Snodo Prua & Avionica",
+			"pos": Vector2(300, 125),
+			"input_source": "J1_B0",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Ponte Nav (In1) & Armeria (In1)", "target_type": "device_multi", "target_ids": ["bridge_nav:0", "armory_defense:0"], "line_id": "L_J2_B0", "to_pos": Vector2(300, 75)},
+				{"name": "Sensori & Avionica (In1)", "target_type": "device", "target_id": "sensors_radar:0", "line_id": "L_J2_B1", "to_pos": Vector2(160, 145)},
+				{"name": "Comunicazioni & EW (In1)", "target_type": "device", "target_id": "comms_ew:0", "line_id": "L_J2_B2", "to_pos": Vector2(440, 145)}
+			]
+		},
+		{
+			"id": "J3",
+			"name": "Snodo Babordo & Difesa",
+			"pos": Vector2(160, 185),
+			"input_source": "J1_B1",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Supporto Vitale (In1)", "target_type": "device", "target_id": "life_support:0", "line_id": "L_J3_B0", "to_pos": Vector2(160, 235)},
+				{"name": "Scudi Deflettori (In1 - Prua)", "target_type": "device", "target_id": "shields_deflector:0", "line_id": "L_J3_B1", "to_pos": Vector2(235, 175)},
+				{"name": "Bypass Manutenzione SX (J8)", "target_type": "junction", "target_id": "J8", "line_id": "L_J3_B2", "to_pos": Vector2(160, 320)}
+			]
+		},
+		{
+			"id": "J4",
+			"name": "Snodo Reattore Ventrale",
+			"pos": Vector2(300, 295),
+			"input_source": "reactor_main",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Linea Poppa Motori (J5)", "target_type": "junction", "target_id": "J5", "line_id": "L_J4_B0", "to_pos": Vector2(300, 325)},
+				{"name": "Scudi Sovralimentazione (In3)", "target_type": "device", "target_id": "shields_deflector:2", "line_id": "L_J4_B1", "to_pos": Vector2(235, 175)},
+				{"name": "Scarico Termico Morto", "target_type": "dead_end", "target_id": "DEAD_2", "line_id": "L_J4_B2", "to_pos": Vector2(240, 295)}
+			]
+		},
+		{
+			"id": "J5",
+			"name": "Snodo Propulsione Poppa",
+			"pos": Vector2(300, 325),
+			"input_source": "J4_B0",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Motore SX (In1) & Termico (In3)", "target_type": "device_multi", "target_ids": ["engines_sublight:0", "engines_sublight:2"], "line_id": "L_J5_B0", "to_pos": Vector2(300, 360)},
+				{"name": "Motore DX (In2)", "target_type": "device", "target_id": "engines_sublight:1", "line_id": "L_J5_B1", "to_pos": Vector2(330, 360)},
+				{"name": "Scudi Deflettori Poppa (In2)", "target_type": "device", "target_id": "shields_deflector:1", "line_id": "L_J5_B2", "to_pos": Vector2(235, 175)}
+			]
+		},
+		{
+			"id": "J6",
+			"name": "Snodo Ausiliario Tribordo",
+			"pos": Vector2(440, 185),
+			"input_source": "J7_B0",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Baia Drone (In1) & Comms (In1)", "target_type": "device_multi", "target_ids": ["cargo_drone_bay:0", "comms_ew:0"], "line_id": "L_J6_B0", "to_pos": Vector2(440, 205)},
+				{"name": "RCS Tribordo DX (In2)", "target_type": "device", "target_id": "rcs_thrusters:1", "line_id": "L_J6_B1", "to_pos": Vector2(300, 300)},
+				{"name": "Armeria Secondaria (In2)", "target_type": "device", "target_id": "armory_defense:1", "line_id": "L_J6_B2", "to_pos": Vector2(300, 165)}
+			]
+		},
+		{
+			"id": "J7",
+			"name": "Snodo Generatore Riserva",
+			"pos": Vector2(440, 260),
+			"input_source": "aux_generator",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Canale Tribordo (J6)", "target_type": "junction", "target_id": "J6", "line_id": "L_J7_B0", "to_pos": Vector2(440, 185)},
+				{"name": "Bypass Supporto Vitale (In2)", "target_type": "device", "target_id": "life_support:1", "line_id": "L_J7_B1", "to_pos": Vector2(160, 235)},
+				{"name": "Backup Avionica Ponte (In2)", "target_type": "device", "target_id": "bridge_nav:1", "line_id": "L_J7_B2", "to_pos": Vector2(300, 75)}
+			]
+		},
+		{
+			"id": "J8",
+			"name": "Snodo Bypass Manutenzione SX",
+			"pos": Vector2(160, 320),
+			"input_source": "J3_B2",
+			"active_branch": 0,
+			"branches": [
+				{"name": "Motore SX Ausiliario (In1)", "target_type": "device", "target_id": "engines_sublight:0", "line_id": "L_J8_B0", "to_pos": Vector2(270, 360)},
+				{"name": "RCS Babordo SX (In1)", "target_type": "device", "target_id": "rcs_thrusters:0", "line_id": "L_J8_B1", "to_pos": Vector2(300, 300)},
+				{"name": "Condotto Morto Manutenzione", "target_type": "dead_end", "target_id": "DEAD_3", "line_id": "L_J8_B2", "to_pos": Vector2(100, 340)}
+			]
+		}
+	]
+
+func _init_default_damages() -> void:
+	damages = [
+		{
+			"id": "dmg_1",
+			"type": "breach",
+			"name": "Falla Strutturale Prua",
+			"pos": Vector2(260, 65),
+			"sector": "Ponte di Comando",
+			"severity": 4.5,
+			"repair_cost": 10.0,
+			"desc": "Micrometeorite ha perforato la blindatura anteriore della cabina di pilotaggio.",
+			"system_impact": "nav_instability"
+		},
+		{
+			"id": "dmg_2",
+			"type": "short_circuit",
+			"name": "Cortocircuito Scanner EM",
+			"pos": Vector2(140, 135),
+			"sector": "Sensori & Avionica",
+			"severity": 6.0,
+			"repair_cost": 12.0,
+			"desc": "Sovratensione nei banchi di condensatori dei sensori a lungo raggio.",
+			"system_impact": "radar_ghosts"
+		},
+		{
+			"id": "dmg_3",
+			"type": "short_circuit",
+			"name": "Guasto Emettitore Scudo Babordo",
+			"pos": Vector2(210, 160),
+			"sector": "Scudi Deflettori",
+			"severity": 7.5,
+			"repair_cost": 15.0,
+			"desc": "Arco voltaico negli anelli di collimazione deflettore sinistro.",
+			"system_impact": "shields_degraded"
+		},
+		{
+			"id": "dmg_4",
+			"type": "breach",
+			"name": "Infiltrazione Refrigerante Nucleo",
+			"pos": Vector2(275, 245),
+			"sector": "Nucleo Reattore & Fusione",
+			"severity": 8.0,
+			"repair_cost": 18.0,
+			"desc": "Perdita di fluido criogenico ad alta pressione dal circuito di confinamento.",
+			"system_impact": "overheating"
+		},
+		{
+			"id": "dmg_5",
+			"type": "short_circuit",
+			"name": "Malfunzionamento Compressore Atmosfera",
+			"pos": Vector2(130, 225),
+			"sector": "Supporto Vitale",
+			"severity": 5.0,
+			"repair_cost": 8.0,
+			"desc": "Blocco meccanico con surriscaldamento delle valvole di ricircolo O2.",
+			"system_impact": "o2_leak"
+		},
+		{
+			"id": "dmg_6",
+			"type": "breach",
+			"name": "Fessurazione Camera di Spinta",
+			"pos": Vector2(320, 350),
+			"sector": "Sala Motori Principale",
+			"severity": 6.5,
+			"repair_cost": 14.0,
+			"desc": "Stress termico elevato ha causato microfratture nell'ugello di scarico destro.",
+			"system_impact": "engine_thrust_loss"
+		},
+		{
+			"id": "dmg_7",
+			"type": "short_circuit",
+			"name": "Attuatore Ugello RCS Babordo Bloccato",
+			"pos": Vector2(260, 290),
+			"sector": "Pod Manovra RCS",
+			"severity": 4.0,
+			"repair_cost": 7.0,
+			"desc": "Relè di potenza bruciato sull'elettrovalvola dei propulsori di rotazione SX.",
+			"system_impact": "turn_speed_reduced"
+		},
+		{
+			"id": "dmg_8",
+			"type": "breach",
+			"name": "Compromissione Portellone Cargo Esterno",
+			"pos": Vector2(460, 215),
+			"sector": "Baia di Carico Principale",
+			"severity": 5.5,
+			"repair_cost": 11.0,
+			"desc": "Guarnizione magnetica della rampa di carico danneggiata da detriti.",
+			"system_impact": "cargo_depressurization"
+		}
+	]
+
+# --- METODI DI QUERY E RICERCA ---
+
+func get_room_by_id(room_id: String) -> Dictionary:
+	for r in rooms:
+		if r.get("id", "") == room_id:
+			return r
+	return {}
+
+func get_room_at(pos: Vector2) -> Dictionary:
+	for r in rooms:
+		var rect: Rect2 = r.get("rect", Rect2())
+		if rect.has_point(pos):
+			return r
+	return {}
+
+func get_duct_by_id(duct_id: String) -> Dictionary:
+	for d in ducts:
+		if d.get("id", "") == duct_id:
+			return d
+	return {}
+
+func get_device_by_id(dev_id: String) -> Dictionary:
+	for dev in devices:
+		if dev.get("id", "") == dev_id:
+			return dev
+	return {}
+
+func get_junction_by_id(junc_id: String) -> Dictionary:
+	for j in junctions:
+		if j.get("id", "") == junc_id:
+			return j
+	return {}
+
+func get_damage_by_id(dmg_id: String) -> Dictionary:
+	for d in damages:
+		if d.get("id", "") == dmg_id:
+			return d
+	return {}
+
+## Converte l'intera Blueprint in un dizionario serializzabile (es. per JSON o salvataggi di rete)
+func to_dict() -> Dictionary:
+	var rooms_copy: Array = []
+	for r: Dictionary in rooms:
+		var rc: Dictionary = r.duplicate(true)
+		if rc.has("rect") and rc["rect"] is Rect2:
+			var rect: Rect2 = rc["rect"]
+			rc["rect"] = [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
+		if rc.has("color") and rc["color"] is Color:
+			var col: Color = rc["color"]
+			rc["color"] = [col.r, col.g, col.b, col.a]
+		if rc.has("border_color") and rc["border_color"] is Color:
+			var col: Color = rc["border_color"]
+			rc["border_color"] = [col.r, col.g, col.b, col.a]
+		rooms_copy.append(rc)
+	
+	var ducts_copy: Array = []
+	for d: Dictionary in ducts:
+		var dc: Dictionary = d.duplicate(true)
+		if dc.has("from") and dc["from"] is Vector2:
+			dc["from"] = [dc["from"].x, dc["from"].y]
+		if dc.has("to") and dc["to"] is Vector2:
+			dc["to"] = [dc["to"].x, dc["to"].y]
+		ducts_copy.append(dc)
+		
+	var devices_copy: Array = []
+	for dev: Dictionary in devices:
+		var dev_c: Dictionary = dev.duplicate(true)
+		if dev_c.has("pos") and dev_c["pos"] is Vector2:
+			dev_c["pos"] = [dev_c["pos"].x, dev_c["pos"].y]
+		devices_copy.append(dev_c)
+		
+	var junctions_copy: Array = []
+	for j: Dictionary in junctions:
+		var jc: Dictionary = j.duplicate(true)
+		if jc.has("pos") and jc["pos"] is Vector2:
+			jc["pos"] = [jc["pos"].x, jc["pos"].y]
+		if jc.has("branches") and jc["branches"] is Array:
+			var branches_copy: Array = []
+			for b in (jc["branches"] as Array):
+				if b is Dictionary:
+					var bc: Dictionary = (b as Dictionary).duplicate(true)
+					if bc.has("to_pos") and bc["to_pos"] is Vector2:
+						bc["to_pos"] = [bc["to_pos"].x, bc["to_pos"].y]
+					branches_copy.append(bc)
+			jc["branches"] = branches_copy
+		junctions_copy.append(jc)
+
+	var damages_copy: Array = []
+	for dmg: Dictionary in damages:
+		var dmg_c: Dictionary = dmg.duplicate(true)
+		if dmg_c.has("pos") and dmg_c["pos"] is Vector2:
+			dmg_c["pos"] = [dmg_c["pos"].x, dmg_c["pos"].y]
+		damages_copy.append(dmg_c)
+		
+	return {
+		"ship_id": ship_id,
+		"ship_name": ship_name,
+		"ship_class": ship_class,
+		"ship_bounds": [ship_bounds.position.x, ship_bounds.position.y, ship_bounds.size.x, ship_bounds.size.y],
+		"drone_spawn_pos": [drone_spawn_pos.x, drone_spawn_pos.y],
+		"drone_spawn_heading": drone_spawn_heading,
+		"rooms": rooms_copy,
+		"ducts": ducts_copy,
+		"devices": devices_copy,
+		"junctions": junctions_copy,
+		"damages": damages_copy
+	}
+
+## Ricostruisce la blueprint a partire da un dizionario deserializzato
+func from_dict(data: Dictionary) -> void:
+	if data.has("ship_id"):
+		ship_id = str(data["ship_id"])
+	if data.has("ship_name"):
+		ship_name = str(data["ship_name"])
+	if data.has("ship_class"):
+		ship_class = str(data["ship_class"])
+	if data.has("ship_bounds") and data["ship_bounds"] is Array and data["ship_bounds"].size() == 4:
+		var b: Array = data["ship_bounds"]
+		ship_bounds = Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3]))
+	if data.has("drone_spawn_pos") and data["drone_spawn_pos"] is Array and data["drone_spawn_pos"].size() == 2:
+		var p: Array = data["drone_spawn_pos"]
+		drone_spawn_pos = Vector2(float(p[0]), float(p[1]))
+	if data.has("drone_spawn_heading"):
+		drone_spawn_heading = float(data["drone_spawn_heading"])
+		
+	if data.has("rooms") and data["rooms"] is Array:
+		var new_rooms: Array[Dictionary] = []
+		for r in data["rooms"]:
+			if r is Dictionary:
+				var rd := (r as Dictionary).duplicate(true)
+				if rd.has("rect") and rd["rect"] is Array and rd["rect"].size() == 4:
+					var arr: Array = rd["rect"]
+					rd["rect"] = Rect2(float(arr[0]), float(arr[1]), float(arr[2]), float(arr[3]))
+				if rd.has("color") and rd["color"] is Array and rd["color"].size() >= 3:
+					var arr: Array = rd["color"]
+					var a := float(arr[3]) if arr.size() > 3 else 1.0
+					rd["color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
+				if rd.has("border_color") and rd["border_color"] is Array and rd["border_color"].size() >= 3:
+					var arr: Array = rd["border_color"]
+					var a := float(arr[3]) if arr.size() > 3 else 1.0
+					rd["border_color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
+				new_rooms.append(rd)
+		rooms = new_rooms
+		
+	if data.has("ducts") and data["ducts"] is Array:
+		var new_ducts: Array[Dictionary] = []
+		for d in data["ducts"]:
+			if d is Dictionary:
+				var dd := (d as Dictionary).duplicate(true)
+				if dd.has("from") and dd["from"] is Array and dd["from"].size() == 2:
+					var arr: Array = dd["from"]
+					dd["from"] = Vector2(float(arr[0]), float(arr[1]))
+				if dd.has("to") and dd["to"] is Array and dd["to"].size() == 2:
+					var arr: Array = dd["to"]
+					dd["to"] = Vector2(float(arr[0]), float(arr[1]))
+				new_ducts.append(dd)
+		ducts = new_ducts
+
+	if data.has("devices") and data["devices"] is Array:
+		var new_devs: Array[Dictionary] = []
+		for dev in data["devices"]:
+			if dev is Dictionary:
+				var dev_d := (dev as Dictionary).duplicate(true)
+				if dev_d.has("pos") and dev_d["pos"] is Array and dev_d["pos"].size() == 2:
+					var arr: Array = dev_d["pos"]
+					dev_d["pos"] = Vector2(float(arr[0]), float(arr[1]))
+				new_devs.append(dev_d)
+		devices = new_devs
+
+	if data.has("junctions") and data["junctions"] is Array:
+		var new_juncs: Array[Dictionary] = []
+		for j in data["junctions"]:
+			if j is Dictionary:
+				var jd := (j as Dictionary).duplicate(true)
+				if jd.has("pos") and jd["pos"] is Array and jd["pos"].size() == 2:
+					var arr: Array = jd["pos"]
+					jd["pos"] = Vector2(float(arr[0]), float(arr[1]))
+				if jd.has("branches") and jd["branches"] is Array:
+					var new_branches: Array[Dictionary] = []
+					for b in jd["branches"]:
+						if b is Dictionary:
+							var bd := (b as Dictionary).duplicate(true)
+							if bd.has("to_pos") and bd["to_pos"] is Array and bd["to_pos"].size() == 2:
+								var arr: Array = bd["to_pos"]
+								bd["to_pos"] = Vector2(float(arr[0]), float(arr[1]))
+							new_branches.append(bd)
+					jd["branches"] = new_branches
+				new_juncs.append(jd)
+		junctions = new_juncs
+
+	if data.has("damages") and data["damages"] is Array:
+		var new_damages: Array[Dictionary] = []
+		for dmg in data["damages"]:
+			if dmg is Dictionary:
+				var dmg_d := (dmg as Dictionary).duplicate(true)
+				if dmg_d.has("pos") and dmg_d["pos"] is Array and dmg_d["pos"].size() == 2:
+					var arr: Array = dmg_d["pos"]
+					dmg_d["pos"] = Vector2(float(arr[0]), float(arr[1]))
+				new_damages.append(dmg_d)
+		damages = new_damages
+
+	emit_changed()
+
+## Esporta la Blueprint in formato JSON su disco
+func export_to_json(file_path: String) -> Error:
+	var dict := to_dict()
+	var json_text := JSON.stringify(dict, "\t")
+	var file := FileAccess.open(file_path, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(json_text)
+	file.close()
+	return OK
+
+## Importa la Blueprint da formato JSON
+func import_from_json(file_path: String) -> Error:
+	if not FileAccess.file_exists(file_path):
+		return ERR_FILE_NOT_FOUND
+	var file := FileAccess.open(file_path, FileAccess.READ)
+	if file == null:
+		return FileAccess.get_open_error()
+	var json_text := file.get_as_text()
+	file.close()
+	
+	var json := JSON.new()
+	var parse_err := json.parse(json_text)
+	if parse_err != OK:
+		return parse_err
+	if json.data is Dictionary:
+		from_dict(json.data as Dictionary)
+		return OK
+	return ERR_INVALID_DATA
+
+## Clona l'istanza corrente
+func clone() -> ShipBlueprint:
+	var copy := ShipBlueprint.new()
+	copy.from_dict(to_dict())
+	return copy
+
+static func get_default_blueprint() -> ShipBlueprint:
+	const PATH := "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+	if ResourceLoader.exists(PATH):
+		var res = ResourceLoader.load(PATH)
+		if res is ShipBlueprint:
+			return res as ShipBlueprint
+	var bp := ShipBlueprint.new()
+	bp.create_default_ship()
+	return bp

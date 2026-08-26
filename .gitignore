@@ -1,6 +1,5 @@
 # Godot 4+ specific ignores
 .godot/
-.*
+
+# Ignore all directories starting with '.'
 .*/
-!.*
-!.*/

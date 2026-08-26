@@ -1,0 +1,202 @@
+extends Node
+
+func _ready() -> void:
+	print("--- INIZIO TEST SHIP BLUEPRINT & SUBLAYER ARCHITECTURE ---")
+	_run_suite.call_deferred()
+
+func _run_suite() -> void:
+	await get_tree().process_frame
+
+	# =========================================================================
+	# FASE 1: TEST CREAZIONE E INIZIALIZZAZIONE BLUEPRINT DI DEFAULT
+	# =========================================================================
+	print("\n--- TEST 1: Inizializzazione e Struttura ShipBlueprint di Default ---")
+	var bp := ShipBlueprint.new()
+	bp.create_default_ship()
+	
+	assert(bp.ship_id == "dark_nova_corvette", "ship_id deve essere dark_nova_corvette")
+	assert(bp.ship_name == "Dark Nova Corvette", "ship_name deve essere Dark Nova Corvette")
+	assert(bp.ship_bounds == Rect2(60, 30, 480, 420), "ship_bounds deve corrispondere alle dimensioni previste")
+	assert(bp.rooms.size() == 10, "La Blueprint deve contenere 10 stanze di default")
+	assert(bp.ducts.size() == 14, "La Blueprint deve contenere 14 condotti di default")
+	assert(bp.devices.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
+	assert(bp.junctions.size() == 8, "La Blueprint deve contenere 8 snodi elettrici di default")
+	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
+	print("✔ Struttura dati e 4 sublayer inizializzati con successo")
+
+	# =========================================================================
+	# FASE 2: METODI DI QUERY RAPIDA (Stanze, Condotti, Dispositivi, Snodi, Danni)
+	# =========================================================================
+	print("\n--- TEST 2: Metodi di Query Rapida ---")
+	var bridge_room := bp.get_room_by_id("bridge")
+	assert(not bridge_room.is_empty(), "get_room_by_id(bridge) deve trovare la stanza")
+	assert(bridge_room.get("name") == "Ponte di Comando", "Nome stanza deve essere Ponte di Comando")
+
+	var room_at_bridge := bp.get_room_at(Vector2(250, 60))
+	assert(not room_at_bridge.is_empty(), "get_room_at deve trovare la stanza al punto (250, 60)")
+	assert(room_at_bridge.get("id") == "bridge", "La stanza trovata deve essere bridge")
+
+	var non_existing_room := bp.get_room_by_id("non_existing_room_id")
+	assert(non_existing_room.is_empty(), "get_room_by_id su ID inesistente deve ritornare dizionario vuoto")
+
+	var duct_spine := bp.get_duct_by_id("duct_spine_1")
+	assert(not duct_spine.is_empty(), "get_duct_by_id(duct_spine_1) deve trovare il condotto")
+
+	var reactor_dev := bp.get_device_by_id("reactor_main")
+	assert(not reactor_dev.is_empty(), "get_device_by_id(reactor_main) deve trovare il dispositivo")
+	assert(reactor_dev.get("is_generator") == true, "reactor_main deve essere un generatore")
+
+	var junction_j1 := bp.get_junction_by_id("J1")
+	assert(not junction_j1.is_empty(), "get_junction_by_id(J1) deve trovare lo snodo J1")
+
+	var dmg_1 := bp.get_damage_by_id("dmg_1")
+	assert(not dmg_1.is_empty(), "get_damage_by_id(dmg_1) deve trovare il punto di danno")
+	print("✔ Tutte le query e ricerche per ID/coordinate hanno avuto successo")
+
+	# =========================================================================
+	# FASE 3: SERIALIZZAZIONE TO_DICT E FROM_DICT
+	# =========================================================================
+	print("\n--- TEST 3: Serializzazione to_dict() e from_dict() ---")
+	var serialized_dict := bp.to_dict()
+	assert(serialized_dict.has("ship_id") and serialized_dict["ship_id"] == "dark_nova_corvette", "Dizionario deve contenere ship_id")
+	assert(serialized_dict.has("rooms") and serialized_dict["rooms"].size() == 10, "Dizionario deve contenere 10 stanze")
+	assert(serialized_dict.has("devices") and serialized_dict["devices"].size() == 11, "Dizionario deve contenere 11 dispositivi")
+	assert(serialized_dict.has("junctions") and serialized_dict["junctions"].size() == 8, "Dizionario deve contenere 8 snodi")
+
+	var reconstructed_bp := ShipBlueprint.new()
+	reconstructed_bp.from_dict(serialized_dict)
+	assert(reconstructed_bp.ship_id == bp.ship_id, "ship_id ricostruito deve coincidere")
+	assert(reconstructed_bp.ship_bounds == bp.ship_bounds, "ship_bounds ricostruito deve coincidere")
+	assert(reconstructed_bp.rooms.size() == bp.rooms.size(), "Numero stanze ricostruito deve coincidere")
+	assert(reconstructed_bp.ducts.size() == bp.ducts.size(), "Numero condotti ricostruito deve coincidere")
+	assert(reconstructed_bp.devices.size() == bp.devices.size(), "Numero dispositivi ricostruito deve coincidere")
+	assert(reconstructed_bp.junctions.size() == bp.junctions.size(), "Numero snodi ricostruito deve coincidere")
+	assert(reconstructed_bp.damages.size() == bp.damages.size(), "Numero danni ricostruito deve coincidere")
+	print("✔ Serializzazione e deserializzazione validate con successo")
+
+	# =========================================================================
+	# FASE 4: ESPORTAZIONE E IMPORTAZIONE JSON
+	# =========================================================================
+	print("\n--- TEST 4: Export e Import JSON ---")
+	const TEST_JSON_PATH := "user://test_ship_blueprint.json"
+	var export_err := bp.export_to_json(TEST_JSON_PATH)
+	assert(export_err == OK, "Esportazione su file JSON deve restituire OK")
+	assert(FileAccess.file_exists(TEST_JSON_PATH), "Il file JSON esportato deve esistere su disco")
+
+	var imported_bp := ShipBlueprint.new()
+	var import_err := imported_bp.import_from_json(TEST_JSON_PATH)
+	assert(import_err == OK, "Importazione da file JSON deve restituire OK")
+	assert(imported_bp.ship_name == "Dark Nova Corvette", "Nome nave importato deve coincidere")
+	assert(imported_bp.rooms.size() == 10, "Stanze importate da JSON devono essere 10")
+	assert(imported_bp.devices.size() == 11, "Dispositivi importati da JSON devono essere 11")
+
+	# Test gestione errori su file inesistente
+	var missing_err := imported_bp.import_from_json("user://non_existing_file_12345.json")
+	assert(missing_err != OK, "Importazione di file inesistente deve restituire errore")
+	print("✔ Esportazione e importazione JSON eseguite correttamente")
+
+	# =========================================================================
+	# FASE 5: CLONAZIONE PROFONDA E ISOLAMENTO
+	# =========================================================================
+	print("\n--- TEST 5: Clonazione Profonda (clone()) ---")
+	var cloned_bp := bp.clone()
+	assert(cloned_bp != null, "L'istanza clonata non deve essere null")
+	assert(cloned_bp.ship_id == bp.ship_id, "L'istanza clonata deve avere lo stesso ship_id")
+
+	# Modifica sull'istanza clonata per verificare l'isolamento
+	cloned_bp.ship_name = "Corvetta Modificata"
+	cloned_bp.rooms[0]["name"] = "Ponte Personalizzato"
+	assert(bp.ship_name == "Dark Nova Corvette", "L'originale non deve essere mutato dalla modifica del nome clone")
+	assert(bp.rooms[0]["name"] == "Ponte di Comando", "L'originale non deve essere mutato dalla modifica di una stanza nel clone")
+	print("✔ Clonazione profonda e isolamento delle istanze validati")
+
+	# =========================================================================
+	# FASE 6: INTEGRAZIONE CON SPACE WORLD MANAGER
+	# =========================================================================
+	print("\n--- TEST 6: Integrazione con SpaceWorldManager ---")
+	if SpaceWorldManager:
+		SpaceWorldManager.set_ship_blueprint(bp)
+		var mgr_bp := SpaceWorldManager.get_ship_blueprint()
+		assert(mgr_bp != null and mgr_bp.ship_id == "dark_nova_corvette", "SpaceWorldManager deve restituire la blueprint attiva")
+
+		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
+		assert(mgr_rooms.size() == 10, "SpaceWorldManager.get_duct_rooms() deve restituire 10 stanze")
+
+		var mgr_ducts := SpaceWorldManager.get_duct_corridors()
+		assert(mgr_ducts.size() == 14, "SpaceWorldManager.get_duct_corridors() deve restituire 14 condotti")
+
+		var mgr_devs := SpaceWorldManager.get_power_devices()
+		assert(mgr_devs.size() == 11, "SpaceWorldManager.get_power_devices() deve restituire 11 dispositivi")
+
+		var mgr_juncs := SpaceWorldManager.get_power_junctions()
+		assert(mgr_juncs.size() == 8, "SpaceWorldManager.get_power_junctions() deve restituire 8 snodi")
+
+		var mgr_damages := SpaceWorldManager.get_damage_zones()
+		assert(mgr_damages.size() == 8, "SpaceWorldManager.get_damage_zones() deve restituire 8 zone di danno")
+
+		# Test generazione danni da blueprint
+		SpaceWorldManager.generate_initial_ship_damages(3)
+		var active_damages := SpaceWorldManager.get_ship_damages()
+		assert(active_damages.size() == 3, "SpaceWorldManager deve aver generato 3 danni attingendo dalla blueprint")
+		print("✔ Integrazione completa tra SpaceWorldManager e ShipBlueprint verificata")
+
+	# =========================================================================
+	# FASE 7: INTEGRAZIONE CON POWER GRID APP
+	# =========================================================================
+	print("\n--- TEST 7: Integrazione PowerGridApp con ShipBlueprint ---")
+	var pwr_res: PackedScene = load("res://Applications/PowerGrid/power_grid_app.tscn")
+	assert(pwr_res != null, "Scena power_grid_app.tscn valida")
+	var pwr_app: PowerGridApp = pwr_res.instantiate() as PowerGridApp
+	add_child(pwr_app)
+	await get_tree().process_frame
+
+	assert(pwr_app.devices.size() == 11, "PowerGridApp deve aver caricato 11 dispositivi da ShipBlueprint")
+	assert(pwr_app.junctions.size() == 8, "PowerGridApp deve aver caricato 8 snodi da ShipBlueprint")
+	assert(pwr_app.devices.has("reactor_main"), "PowerGridApp deve contenere reactor_main")
+	assert(pwr_app.junctions.has("J1"), "PowerGridApp deve contenere snodo J1")
+
+	pwr_app.queue_free()
+	await get_tree().process_frame
+	print("✔ PowerGridApp inizializzata con successo dai dati della Blueprint")
+
+	# =========================================================================
+	# FASE 8: INTEGRAZIONE CON DUCT DRONE APP
+	# =========================================================================
+	print("\n--- TEST 8: Integrazione DuctDroneApp con ShipBlueprint ---")
+	var drone_res: PackedScene = load("res://Applications/DuctDrone/duct_drone_app.tscn")
+	assert(drone_res != null, "Scena duct_drone_app.tscn valida")
+	var drone_app = drone_res.instantiate()
+	add_child(drone_app)
+	await get_tree().process_frame
+
+	assert(drone_app.get("rooms").size() == 10, "DuctDroneApp deve aver caricato 10 stanze")
+	assert(drone_app.get("ducts").size() == 14, "DuctDroneApp deve aver caricato 14 condotti")
+
+	drone_app.queue_free()
+	await get_tree().process_frame
+	print("✔ DuctDroneApp inizializzata con successo dai dati della Blueprint")
+
+	# =========================================================================
+	# FASE 9: ISTANZIAZIONE VISUAL EDITOR & CANVAS
+	# =========================================================================
+	print("\n--- TEST 9: Istanziazione Editor e Canvas UI ---")
+	var editor := ShipSublayerEditor.new()
+	add_child(editor)
+	await get_tree().process_frame
+
+	editor.load_blueprint(bp)
+	assert(editor.canvas != null, "Editor canvas deve essere istanziato")
+	assert(editor.canvas.blueprint == bp, "Canvas deve referenziare la blueprint corrente")
+
+	editor.queue_free()
+	await get_tree().process_frame
+	print("✔ Editor visivo e Canvas istanziati e collegati alla Blueprint con successo")
+
+	# Pulizia file di test
+	if FileAccess.file_exists(TEST_JSON_PATH):
+		DirAccess.remove_absolute(TEST_JSON_PATH)
+
+	print("\n=======================================================")
+	print("✔ TUTTI I TEST SHIP BLUEPRINT COMPLETATI CON SUCCESSO! (9/9)")
+	print("=======================================================")
+	get_tree().quit(0)

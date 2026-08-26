@@ -192,6 +192,9 @@ var is_duct_drone_repairing: bool = false
 var repairing_damage_id: String = ""
 var _next_damage_idx: int = 1
 
+# Sublayer Blueprint unificato della nave
+var active_ship_blueprint: ShipBlueprint = null
+
 var _last_sent_drone_linear_in: float = 0.0
 var _last_sent_drone_angular_in: float = 0.0
 var _last_sent_drone_speed_mult: float = 1.0
@@ -771,16 +774,82 @@ func _constrain_duct_drone_movement(old_pos: Vector2, new_pos: Vector2) -> Vecto
 	
 	return old_pos
 
+## Ritorna l'istanza attiva della ShipBlueprint
+func get_ship_blueprint() -> ShipBlueprint:
+	if active_ship_blueprint == null:
+		active_ship_blueprint = ShipBlueprint.get_default_blueprint()
+	return active_ship_blueprint
+
+## Imposta l'istanza attiva della ShipBlueprint
+func set_ship_blueprint(bp: ShipBlueprint) -> void:
+	active_ship_blueprint = bp
+
+## Ritorna le stanze della nave da ShipBlueprint o fallback a costanti
+func get_duct_rooms() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.rooms.size() > 0:
+		return bp.rooms
+	return DUCT_ROOMS
+
+## Ritorna i condotti della nave da ShipBlueprint o fallback a costanti
+func get_duct_corridors() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.ducts.size() > 0:
+		return bp.ducts
+	return DUCT_CORRIDORS
+
+## Ritorna i dispositivi elettrici della nave da ShipBlueprint
+func get_power_devices() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.devices.size() > 0:
+		return bp.devices
+	return []
+
+## Ritorna gli snodi elettrici della nave da ShipBlueprint
+func get_power_junctions() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.junctions.size() > 0:
+		return bp.junctions
+	return []
+
+## Ritorna le zone/punti di danno predefiniti della nave da ShipBlueprint
+func get_damage_zones() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.damages.size() > 0:
+		return bp.damages
+	return []
+
+## Ritorna i confini strutturali della nave
+func get_ship_bounds() -> Rect2:
+	var bp := get_ship_blueprint()
+	if bp:
+		return bp.ship_bounds
+	return Rect2(60, 30, 480, 420)
+
+## Ritorna la posizione di spawn iniziale del Duct Drone
+func get_drone_spawn_pos() -> Vector2:
+	var bp := get_ship_blueprint()
+	if bp:
+		return bp.drone_spawn_pos
+	return INITIAL_DUCT_DRONE_POS
+
+## Ritorna l'orientamento di spawn iniziale del Duct Drone
+func get_drone_spawn_heading() -> float:
+	var bp := get_ship_blueprint()
+	if bp:
+		return bp.drone_spawn_heading
+	return INITIAL_DUCT_DRONE_HEADING
+
 func _is_duct_drone_position_valid(pos: Vector2) -> bool:
-	for room in DUCT_ROOMS:
+	for room in get_duct_rooms():
 		var r: Rect2 = room["rect"]
 		if r.grow(-2.0).has_point(pos):
 			return true
 	
-	for duct in DUCT_CORRIDORS:
+	for duct in get_duct_corridors():
 		var p1: Vector2 = duct["from"]
 		var p2: Vector2 = duct["to"]
-		var width: float = duct.get("width", 14.0)
+		var width: float = float(duct.get("width", 14.0))
 		var seg_dist := _distance_to_segment_2d(pos, p1, p2)
 		if seg_dist <= width * 0.8:
 			return true
@@ -894,8 +963,10 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 		type = DAMAGE_TYPE_BREACH if randf() < 0.5 else DAMAGE_TYPE_SHORT_CIRCUIT
 	
 	if pos == Vector2.ZERO:
-		if randf() < 0.6 and DUCT_ROOMS.size() > 0:
-			var room: Dictionary = DUCT_ROOMS.pick_random()
+		var bp_rooms := get_duct_rooms()
+		var bp_ducts := get_duct_corridors()
+		if randf() < 0.6 and bp_rooms.size() > 0:
+			var room: Dictionary = bp_rooms.pick_random()
 			var r: Rect2 = room["rect"]
 			pos = Vector2(
 				randf_range(r.position.x + 10, r.position.x + r.size.x - 10),
@@ -903,21 +974,21 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 			)
 			if sector_name == "":
 				sector_name = room.get("name", "Settore Nave")
-		elif DUCT_CORRIDORS.size() > 0:
-			var duct: Dictionary = DUCT_CORRIDORS.pick_random()
+		elif bp_ducts.size() > 0:
+			var duct: Dictionary = bp_ducts.pick_random()
 			var p1: Vector2 = duct["from"]
 			var p2: Vector2 = duct["to"]
 			var t := randf_range(0.2, 0.8)
 			pos = p1.lerp(p2, t)
 			if sector_name == "":
 				sector_name = duct.get("name", "Condotto")
-	
+
 	if duration <= 0.0:
 		duration = randf_range(3.0, 8.0)
-	
+
 	var dmg_id := "dmg_%d" % _next_damage_idx
 	_next_damage_idx += 1
-	
+
 	var dmg_dict: Dictionary = {
 		"id": dmg_id,
 		"type": type,
@@ -929,57 +1000,68 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 		"repair_duration": duration,
 		"repaired": false
 	}
-	
+
 	ship_damages.append(dmg_dict)
 	ship_damages_updated.emit(ship_damages)
-	
+
 	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
 		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 			_rpc_sync_ship_damages.rpc(ship_damages)
-	
+
 	return dmg_dict
 
 func generate_initial_ship_damages(count: int = 4) -> void:
 	ship_damages.clear()
 	_next_damage_idx = 1
-	
-	var preset_damages := [
-		{
-			"type": DAMAGE_TYPE_BREACH,
-			"pos": Vector2(160, 310),
-			"sector": "Condotto Manutenzione SX",
-			"duration": 4.5
-		},
-		{
-			"type": DAMAGE_TYPE_SHORT_CIRCUIT,
-			"pos": Vector2(390, 140),
-			"sector": "Comunicazioni & EW",
-			"duration": 5.2
-		},
-		{
-			"type": DAMAGE_TYPE_BREACH,
-			"pos": Vector2(440, 310),
-			"sector": "Condotto Manutenzione DX",
-			"duration": 6.0
-		},
-		{
-			"type": DAMAGE_TYPE_SHORT_CIRCUIT,
-			"pos": Vector2(200, 140),
-			"sector": "Sensori & Avionica",
-			"duration": 3.8
-		},
-		{
-			"type": DAMAGE_TYPE_SHORT_CIRCUIT,
-			"pos": Vector2(300, 255),
-			"sector": "Reattore Principale",
-			"duration": 7.0
-		}
-	]
-	
-	var num := mini(count, preset_damages.size())
-	for i in range(num):
-		var p: Dictionary = preset_damages[i]
-		spawn_ship_damage(p["type"], p["pos"], p["sector"], p["duration"])
+
+	var bp_damages := get_damage_zones()
+	if bp_damages.size() > 0:
+		var num := mini(count, bp_damages.size())
+		for i in range(num):
+			var d: Dictionary = bp_damages[i]
+			var dmg_type: String = str(d.get("type", DAMAGE_TYPE_SHORT_CIRCUIT))
+			var dmg_pos: Vector2 = d.get("pos", Vector2.ZERO)
+			var dmg_sector: String = str(d.get("sector", d.get("name", "Settore Nave")))
+			var dmg_dur: float = float(d.get("repair_cost", d.get("duration", 5.0)))
+			spawn_ship_damage(dmg_type, dmg_pos, dmg_sector, dmg_dur)
+	else:
+		var preset_damages := [
+			{
+				"type": DAMAGE_TYPE_BREACH,
+				"pos": Vector2(160, 310),
+				"sector": "Condotto Manutenzione SX",
+				"duration": 4.5
+			},
+			{
+				"type": DAMAGE_TYPE_SHORT_CIRCUIT,
+				"pos": Vector2(390, 140),
+				"sector": "Comunicazioni & EW",
+				"duration": 5.2
+			},
+			{
+				"type": DAMAGE_TYPE_BREACH,
+				"pos": Vector2(440, 310),
+				"sector": "Condotto Manutenzione DX",
+				"duration": 6.0
+			},
+			{
+				"type": DAMAGE_TYPE_SHORT_CIRCUIT,
+				"pos": Vector2(200, 140),
+				"sector": "Sensori & Avionica",
+				"duration": 3.8
+			},
+			{
+				"type": DAMAGE_TYPE_SHORT_CIRCUIT,
+				"pos": Vector2(300, 255),
+				"sector": "Reattore Principale",
+				"duration": 7.0
+			}
+		]
+
+		var num := mini(count, preset_damages.size())
+		for i in range(num):
+			var p: Dictionary = preset_damages[i]
+			spawn_ship_damage(p["type"], p["pos"], p["sector"], p["duration"])
 
 func clear_ship_damages() -> void:
 	ship_damages.clear()
