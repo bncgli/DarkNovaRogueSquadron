@@ -195,10 +195,14 @@ func _populate_default_ship_drive_files() -> void:
 	_write_file_content("Ship Drive/Programs/Cams/cams_config.dat", "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION\n# WARNING: SENSORS & OPTICS CONFIGURATION FILE\n[SYSTEM]\napp_name=Cams\nversion=1.0.4\nstatus=OPERATIONAL\nsensor_array=CCTV_6CH\n\n[OPTICS]\ndefault_fov=75.0\nmin_fov=30.0\nmax_fov=100.0\nzoom_step=10.0\nnight_vision_intensity=0.18\ntactical_hud_contrast=0.18\nthermal_intensity=0.22\n")
 	_write_file_content("Ship Drive/Programs/Cams/optics_tuning.dat", "# OPTICS & SENSOR CALIBRATION MATRIX\n[SENSORS]\nsignal_boost=1.0\nnoise_reduction=1.0\nrefresh_rate_hz=60.0\ncrosshair_style=STANDARD\noverclock_gain=1.0\n")
 	
+	_write_file_content("Ship Drive/Programs/DuctDrone/duct_drone_config.dat", "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT\n[SYSTEM]\napp_name=DuctDrone\nversion=1.0.4\nstatus=OPERATIONAL\nmaintenance_subsystem=ACTIVE\n\n[DRONE_DYNAMICS]\nlinear_speed=175.0\nlinear_acceleration=650.0\nlinear_deceleration=750.0\nrotate_speed=3.0\n\n[BATTERY_MANAGEMENT]\nbattery_max=100.0\nbattery_drain_move=0.35\nbattery_drain_lights=0.75\nbattery_drain_radar=3.5\nbattery_drain_repair=6.0\n\n[MAINTENANCE]\nradar_scan_radius_max=160.0\nrepair_range=42.0\nrepair_speed_multiplier=1.0\n")
+	_write_file_content("Ship Drive/Programs/DuctDrone/drone_tuning.dat", "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX\n[TUNING]\nturbo_multiplier=2.0\nprecision_multiplier=0.5\nrepair_efficiency=1.0\nradar_intensity=1.0\noverclock_speed_gain=1.0\n")
+	
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	if fpm:
 		fpm.set_password("Ship Drive/Programs/FlightControls", "FLIGHT-7815")
 		fpm.set_password("Ship Drive/Programs/Cams", "CAMS-7815")
+		fpm.set_password("Ship Drive/Programs/DuctDrone", "DRONE-7815")
 
 func _close_ship_drive_windows() -> void:
 	if not is_inside_tree():

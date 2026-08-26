@@ -15,11 +15,22 @@ class_name DuctDroneApp
 const APP_TITLE: String = "Duct Drone - Schema Nave & Condotti"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(880, 580)
 
+const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/DuctDrone/duct_drone_config.dat"
+const CONFIG_PATH_FALLBACK: String = "Ship Drive/Programs/DuctDrone/config.dat"
+const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/DuctDrone/drone_tuning.dat"
+const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/DuctDrone/tuning.dat"
+
 # Riferimenti UI principali
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 @onready var status_summary_label: Label = get_node_or_null("%StatusSummaryLabel")
 @onready var status_badge: Label = get_node_or_null("%StatusBadge")
+@onready var role_badge: Label = get_node_or_null("%RoleBadge")
 @onready var map_canvas: Control = get_node_or_null("%MapCanvas")
+
+# Configurazione .DAT e Tuning
+@onready var dat_status_badge: Label = get_node_or_null("%DatStatusBadge")
+@onready var dat_config_summary_label: Label = get_node_or_null("%DatConfigSummaryLabel")
+@onready var reload_config_button: Button = get_node_or_null("%ReloadConfigButton")
 
 # Telemetria UI
 @onready var pos_value_label: Label = get_node_or_null("%PosValueLabel")
@@ -49,6 +60,28 @@ const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(880, 580)
 
 var parent_window: FakeWindow = null
 var can_control: bool = true
+
+# Parametri runtime configurati dai file .dat protetti
+var active_config: Dictionary = {
+	"linear_speed": 175.0,
+	"linear_acceleration": 650.0,
+	"linear_deceleration": 750.0,
+	"rotate_speed": 3.0,
+	"battery_max": 100.0,
+	"battery_drain_move": 0.35,
+	"battery_drain_lights": 0.75,
+	"battery_drain_radar": 3.5,
+	"battery_drain_repair": 6.0,
+	"radar_scan_radius_max": 160.0,
+	"repair_range": 42.0,
+	"repair_speed_multiplier": 1.0,
+	"turbo_multiplier": 2.0,
+	"precision_multiplier": 0.5,
+	"repair_efficiency": 1.0,
+	"radar_intensity": 1.0,
+	"overclock_speed_gain": 1.0,
+	"is_dat_loaded": false
+}
 
 # Stato del robottino
 var drone_pos: Vector2 = Vector2(300, 80) # Posizione iniziale nel Ponte di Comando
@@ -80,7 +113,7 @@ var _ui_angular_input: float = 0.0
 # Modalità velocità
 var _speed_multiplier: float = 1.0
 var _speed_mode_index: int = 0
-const SPEED_MODES := [
+var speed_modes: Array[Dictionary] = [
 	{"name": "NORMALE (1x)", "mult": 1.0, "color": Color(0.3, 0.85, 1.0)},
 	{"name": "TURBO (2x)", "mult": 2.0, "color": Color(1.0, 0.5, 0.2)},
 	{"name": "PRECISIONE (0.5x)", "mult": 0.5, "color": Color(0.4, 1.0, 0.6)}
@@ -209,6 +242,7 @@ const MAX_TRAIL_LENGTH: int = 35
 func _ready() -> void:
 	_configure_window()
 	_setup_ui_events()
+	load_dat_configuration()
 	_update_speed_mode_button()
 	_connect_system_signals()
 	_sync_state_from_manager()
@@ -244,7 +278,7 @@ func _setup_ui_events() -> void:
 	var all_buttons: Array[Button] = [
 		btn_forward, btn_backward, btn_rot_left, btn_rot_right,
 		btn_stop, btn_reset, btn_speed_mode, btn_lights_toggle, btn_scan_pulse,
-		btn_repair
+		btn_repair, reload_config_button
 	]
 	for b in all_buttons:
 		if b:
@@ -276,6 +310,13 @@ func _setup_ui_events() -> void:
 		btn_scan_pulse.pressed.connect(_on_scan_pulse_pressed)
 	if btn_repair:
 		btn_repair.pressed.connect(_on_repair_button_pressed)
+	if reload_config_button:
+		reload_config_button.pressed.connect(func() -> void:
+			load_dat_configuration()
+			var notif := get_node_or_null("/root/NotificationManager")
+			if notif and notif.has_method("spawn_notification"):
+				notif.spawn_notification("Duct Drone: Configurazione .DAT ricaricata.")
+		)
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -300,6 +341,13 @@ func _connect_system_signals() -> void:
 	if NetworkManager:
 		if not NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.connect(_on_player_role_changed)
+	
+	var sdm := _get_ship_drive_manager()
+	if sdm:
+		if sdm.has_signal("file_synced") and not sdm.file_synced.is_connected(_on_file_synced):
+			sdm.file_synced.connect(_on_file_synced)
+		if sdm.has_signal("ship_drive_mounted") and not sdm.ship_drive_mounted.is_connected(_on_ship_drive_mounted):
+			sdm.ship_drive_mounted.connect(_on_ship_drive_mounted)
 
 func _exit_tree() -> void:
 	if SpaceWorldManager:
@@ -320,6 +368,113 @@ func _exit_tree() -> void:
 		SpaceWorldManager.stop_duct_drone()
 	if NetworkManager and NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 		NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
+	
+	var sdm := _get_ship_drive_manager()
+	if sdm:
+		if sdm.has_signal("file_synced") and sdm.file_synced.is_connected(_on_file_synced):
+			sdm.file_synced.disconnect(_on_file_synced)
+		if sdm.has_signal("ship_drive_mounted") and sdm.ship_drive_mounted.is_connected(_on_ship_drive_mounted):
+			sdm.ship_drive_mounted.disconnect(_on_ship_drive_mounted)
+
+func _get_ship_drive_manager() -> Node:
+	return get_node_or_null("/root/ShipDriveManager")
+
+func _on_ship_drive_mounted() -> void:
+	load_dat_configuration()
+
+func _on_file_synced(path: String) -> void:
+	if path.begins_with("Ship Drive/Programs/DuctDrone"):
+		load_dat_configuration()
+
+## Carica i parametri di funzionamento del drone dai file .dat protetti in Ship Drive
+func load_dat_configuration() -> Dictionary:
+	var cfg_dict := _parse_dat_file(CONFIG_PATH_PRIMARY)
+	if cfg_dict.is_empty():
+		cfg_dict = _parse_dat_file(CONFIG_PATH_FALLBACK)
+	
+	var tuning_dict := _parse_dat_file(TUNING_PATH_PRIMARY)
+	if tuning_dict.is_empty():
+		tuning_dict = _parse_dat_file(TUNING_PATH_FALLBACK)
+	
+	var has_dat := not cfg_dict.is_empty() or not tuning_dict.is_empty()
+	
+	active_config["linear_speed"] = cfg_dict.get("linear_speed", 175.0)
+	active_config["linear_acceleration"] = cfg_dict.get("linear_acceleration", 650.0)
+	active_config["linear_deceleration"] = cfg_dict.get("linear_deceleration", 750.0)
+	active_config["rotate_speed"] = cfg_dict.get("rotate_speed", 3.0)
+	active_config["battery_max"] = cfg_dict.get("battery_max", 100.0)
+	active_config["battery_drain_move"] = cfg_dict.get("battery_drain_move", 0.35)
+	active_config["battery_drain_lights"] = cfg_dict.get("battery_drain_lights", 0.75)
+	active_config["battery_drain_radar"] = cfg_dict.get("battery_drain_radar", 3.5)
+	active_config["battery_drain_repair"] = cfg_dict.get("battery_drain_repair", 6.0)
+	active_config["radar_scan_radius_max"] = cfg_dict.get("radar_scan_radius_max", 160.0)
+	active_config["repair_range"] = cfg_dict.get("repair_range", 42.0)
+	active_config["repair_speed_multiplier"] = cfg_dict.get("repair_speed_multiplier", 1.0)
+	
+	active_config["turbo_multiplier"] = tuning_dict.get("turbo_multiplier", 2.0)
+	active_config["precision_multiplier"] = tuning_dict.get("precision_multiplier", 0.5)
+	active_config["repair_efficiency"] = tuning_dict.get("repair_efficiency", 1.0)
+	active_config["radar_intensity"] = tuning_dict.get("radar_intensity", 1.0)
+	active_config["overclock_speed_gain"] = tuning_dict.get("overclock_speed_gain", 1.0)
+	active_config["is_dat_loaded"] = has_dat
+	
+	_apply_configuration()
+	return active_config
+
+func _apply_configuration() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("set_duct_drone_config"):
+		SpaceWorldManager.set_duct_drone_config(active_config)
+	
+	if speed_modes.size() >= 3:
+		speed_modes[1]["mult"] = active_config["turbo_multiplier"]
+		speed_modes[2]["mult"] = active_config["precision_multiplier"]
+		_speed_multiplier = speed_modes[_speed_mode_index]["mult"]
+		_update_speed_mode_button()
+	
+	if dat_status_badge:
+		if active_config["is_dat_loaded"]:
+			dat_status_badge.text = "● .DAT ATTIVO"
+			dat_status_badge.modulate = Color(0.3, 1.0, 0.6)
+		else:
+			dat_status_badge.text = "○ DEFAULT"
+			dat_status_badge.modulate = Color(0.8, 0.8, 0.4)
+	
+	if dat_config_summary_label:
+		var src := "Ship Drive" if active_config["is_dat_loaded"] else "Default"
+		dat_config_summary_label.text = "Fonte: %s | VMax: %.0f px/s | Rot: %.1f rad/s | Drain: %.2f/s | Range: %.0f px" % [
+			src,
+			float(active_config["linear_speed"]),
+			float(active_config["rotate_speed"]),
+			float(active_config["battery_drain_move"]),
+			float(active_config["repair_range"])
+		]
+
+func _parse_dat_file(rel_path: String) -> Dictionary:
+	var result: Dictionary = {}
+	var abs_path := "user://files/%s" % rel_path
+	if not FileAccess.file_exists(abs_path):
+		return result
+	var file := FileAccess.open(abs_path, FileAccess.READ)
+	if not file:
+		return result
+	while not file.eof_reached():
+		var line := file.get_line().strip_edges()
+		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
+			continue
+		if line.begins_with("[") and line.ends_with("]"):
+			continue
+		var eq_pos := line.find("=")
+		if eq_pos != -1:
+			var key := line.substr(0, eq_pos).strip_edges()
+			var val_str := line.substr(eq_pos + 1).strip_edges()
+			if val_str.is_valid_float():
+				result[key] = val_str.to_float()
+			elif val_str.is_valid_int():
+				result[key] = val_str.to_int()
+			else:
+				result[key] = val_str
+	file.close()
+	return result
 
 func _sync_state_from_manager() -> void:
 	if SpaceWorldManager:
@@ -356,8 +511,11 @@ func _update_trail(pos: Vector2) -> void:
 			drone_trail.pop_front()
 
 func is_operational() -> bool:
-	# Il robottino di manutenzione interna alla nave è sempre operativo sia in locale che durante la missione
-	return true
+	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
+		return SpaceWorldManager.is_ship_connected()
+	elif NetworkManager and NetworkManager.has_method("is_ship_connected"):
+		return NetworkManager.is_ship_connected()
+	return false
 
 func is_control_active() -> bool:
 	if not is_inside_tree() or not is_visible_in_tree():
@@ -371,40 +529,63 @@ func _on_ship_connection_changed(_is_connected: bool) -> void:
 	_update_connection_state()
 
 func _update_connection_state() -> void:
-	var is_ship_online := false
-	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
-		is_ship_online = SpaceWorldManager.is_ship_connected()
-	elif NetworkManager and NetworkManager.has_method("is_ship_connected"):
-		is_ship_online = NetworkManager.is_ship_connected()
-	
+	var op := is_operational()
 	if disconnected_overlay:
-		# L'overlay viene mostrato solo se esplicitamente offline e non in modalità solo
-		disconnected_overlay.visible = false
+		disconnected_overlay.visible = not op
 	
 	if status_badge:
-		status_badge.text = "● ATTIVO"
-		status_badge.modulate = Color(0.3, 1.0, 0.5)
+		if op:
+			status_badge.text = "● ATTIVO"
+			status_badge.modulate = Color(0.3, 1.0, 0.5)
+		else:
+			status_badge.text = "○ OFFLINE"
+			status_badge.modulate = Color(1.0, 0.4, 0.3)
 	
 	if status_summary_label:
-		if is_ship_online:
+		if op:
 			status_summary_label.text = "Telemetria Drone Collegata - Canale Manutenzione Nave Attivo"
 		else:
-			status_summary_label.text = "Telemetria Drone Operativa - Modalità Locale / Manutenzione Standby"
+			status_summary_label.text = "Telemetria Disconnessa - In attesa di avvio missione o connessione alla nave"
 	
-	set_process(true)
-	set_process_input(true)
+	set_process(op)
+	set_process_input(op)
+	set_physics_process(op)
+	
+	if op:
+		_update_permissions()
+		load_dat_configuration()
 
 func _on_player_role_changed(_peer_id: int, _new_role: String) -> void:
 	_update_permissions()
 
 func _update_permissions() -> void:
 	var my_role := ""
+	var is_solo := false
 	if NetworkManager:
 		my_role = NetworkManager.get_local_player_role()
-		var is_solo := NetworkManager.is_solo_mode
-		can_control = is_solo or (my_role in ["Ingegnere", "Pilota", "Capitano", "Tattico", "Sensori", "Comunicazioni", "Non Assegnato", "Operatore", ""])
+		is_solo = NetworkManager.is_solo_mode
 	else:
-		can_control = true
+		is_solo = true
+	
+	can_control = (
+		my_role == NetworkManager.ROLE_ENGINEER or
+		my_role == NetworkManager.ROLE_CAPTAIN or
+		my_role == NetworkManager.ROLE_PILOT or
+		my_role == "" or
+		my_role == NetworkManager.ROLE_UNASSIGNED or
+		is_solo
+	)
+	
+	if role_badge:
+		if is_solo:
+			role_badge.text = "MODO: SOLO (FULL ACCESS)"
+			role_badge.modulate = Color(0.4, 1.0, 0.6)
+		elif not my_role.is_empty():
+			role_badge.text = "RUOLO: %s" % my_role.to_upper()
+			role_badge.modulate = Color(0.35, 0.85, 1.0)
+		else:
+			role_badge.text = "OPERATORE MANUTENZIONE"
+			role_badge.modulate = Color(0.8, 0.8, 0.9)
 	
 	var controls_disabled := not can_control
 	if btn_forward: btn_forward.disabled = controls_disabled
@@ -413,6 +594,11 @@ func _update_permissions() -> void:
 	if btn_rot_right: btn_rot_right.disabled = controls_disabled
 	if btn_stop: btn_stop.disabled = controls_disabled
 	if btn_reset: btn_reset.disabled = controls_disabled
+	if btn_repair: btn_repair.disabled = controls_disabled
+	if btn_lights_toggle: btn_lights_toggle.disabled = controls_disabled
+	if btn_scan_pulse: btn_scan_pulse.disabled = controls_disabled
+	if btn_speed_mode: btn_speed_mode.disabled = controls_disabled
+	if reload_config_button: reload_config_button.disabled = controls_disabled
 
 func _is_key_down(key: Key) -> bool:
 	return Input.is_physical_key_pressed(key) \
@@ -901,13 +1087,13 @@ func _on_reset_pressed() -> void:
 		drone_battery = 100.0
 
 func _on_speed_mode_toggle() -> void:
-	_speed_mode_index = (_speed_mode_index + 1) % SPEED_MODES.size()
-	_speed_multiplier = SPEED_MODES[_speed_mode_index]["mult"]
+	_speed_mode_index = (_speed_mode_index + 1) % speed_modes.size()
+	_speed_multiplier = speed_modes[_speed_mode_index]["mult"]
 	_update_speed_mode_button()
 
 func _update_speed_mode_button() -> void:
 	if btn_speed_mode:
-		var mode: Dictionary = SPEED_MODES[_speed_mode_index]
+		var mode: Dictionary = speed_modes[_speed_mode_index]
 		btn_speed_mode.text = "⚡ " + mode["name"]
 		btn_speed_mode.modulate = mode["color"]
 

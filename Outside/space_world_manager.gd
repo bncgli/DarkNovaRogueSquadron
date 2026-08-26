@@ -200,6 +200,23 @@ var _master_viewport: SubViewport = null
 var _space_scene_instance: SpaceScene = null
 var _active_camera_windows: Dictionary = {} # cam_id (String) -> FakeWindow
 var _cams_active_config: Dictionary = {} # Parametri runtime ottiche caricati da .dat
+var _duct_drone_active_config: Dictionary = {
+	"linear_speed": 175.0,
+	"linear_acceleration": 650.0,
+	"linear_deceleration": 750.0,
+	"rotate_speed": 3.0,
+	"battery_max": 100.0,
+	"battery_drain_move": 0.35,
+	"battery_drain_lights": 0.75,
+	"battery_drain_radar": 3.5,
+	"battery_drain_repair": 6.0,
+	"radar_scan_radius_max": 160.0,
+	"repair_range": 42.0,
+	"repair_speed_multiplier": 1.0,
+	"turbo_multiplier": 2.0,
+	"precision_multiplier": 0.5,
+	"is_dat_loaded": false
+}
 var _net_mgr: Node = null
 
 func _ready() -> void:
@@ -594,10 +611,28 @@ func apply_synced_duct_drone_state(pos: Vector2, heading: float, speed: float, b
 	duct_drone_scan_radius = scan_radius
 	duct_drone_state_changed.emit(pos, heading, speed, battery, lights, scan_active, scan_radius)
 
+func set_duct_drone_config(cfg: Dictionary) -> void:
+	for k in cfg:
+		_duct_drone_active_config[k] = cfg[k]
+	_duct_drone_active_config["is_dat_loaded"] = true
+
+func get_duct_drone_config() -> Dictionary:
+	return _duct_drone_active_config
+
 func _update_duct_drone_physics(delta: float) -> void:
+	var base_rot_speed: float = float(_duct_drone_active_config.get("rotate_speed", DUCT_BASE_ROTATE_SPEED))
+	var base_lin_speed: float = float(_duct_drone_active_config.get("linear_speed", DUCT_BASE_LINEAR_SPEED))
+	var drain_move: float = float(_duct_drone_active_config.get("battery_drain_move", 0.35))
+	var drain_lights: float = float(_duct_drone_active_config.get("battery_drain_lights", 0.75))
+	var drain_radar: float = float(_duct_drone_active_config.get("battery_drain_radar", 3.5))
+	var drain_repair: float = float(_duct_drone_active_config.get("battery_drain_repair", 6.0))
+	var scan_max: float = float(_duct_drone_active_config.get("radar_scan_radius_max", 160.0))
+	var repair_rng: float = float(_duct_drone_active_config.get("repair_range", 42.0))
+	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier", 1.0)) * float(_duct_drone_active_config.get("repair_efficiency", 1.0))
+
 	# 1. Rotazione Tank (gira sul posto)
 	if absf(duct_drone_angular_input) > 0.01:
-		var rot_step := duct_drone_angular_input * DUCT_BASE_ROTATE_SPEED * duct_drone_speed_mult * delta
+		var rot_step := duct_drone_angular_input * base_rot_speed * duct_drone_speed_mult * delta
 		duct_drone_heading += rot_step
 		duct_drone_heading = wrapf(duct_drone_heading, -PI, PI)
 	
@@ -609,25 +644,21 @@ func _update_duct_drone_physics(delta: float) -> void:
 			stop_duct_drone_repair()
 	
 	# 2. Spostamento Lineare (avanti/indietro su vettore prua)
-	var target_speed := effective_linear_input * DUCT_BASE_LINEAR_SPEED * duct_drone_speed_mult
+	var target_speed := effective_linear_input * base_lin_speed * duct_drone_speed_mult
 	duct_drone_speed = target_speed
 	
-	# Consumo batteria differenziato:
-	# - Movimento: 0.35/s * speed_mult
+	# Consumo batteria differenziato da parametri attivi
 	if absf(effective_linear_input) > 0.01:
-		duct_drone_battery = maxf(0.0, duct_drone_battery - 0.35 * delta * duct_drone_speed_mult)
+		duct_drone_battery = maxf(0.0, duct_drone_battery - drain_move * delta * duct_drone_speed_mult)
 	
-	# - Fari / Luci accesi: 0.75/s (scarica batteria)
 	if duct_drone_lights:
-		duct_drone_battery = maxf(0.0, duct_drone_battery - 0.75 * delta)
+		duct_drone_battery = maxf(0.0, duct_drone_battery - drain_lights * delta)
 	
-	# - Radar / Sonar scanner: 3.5/s (scarica batteria rapidamente durante l'impulso)
 	if duct_drone_scan_active:
-		duct_drone_battery = maxf(0.0, duct_drone_battery - 3.5 * delta)
+		duct_drone_battery = maxf(0.0, duct_drone_battery - drain_radar * delta)
 	
-	# - Riparazione attiva: 6.0/s (consumo elevato di saldatura / riparazione)
 	if is_duct_drone_repairing:
-		duct_drone_battery = maxf(0.0, duct_drone_battery - 6.0 * delta)
+		duct_drone_battery = maxf(0.0, duct_drone_battery - drain_repair * delta)
 	
 	if absf(duct_drone_speed) > 0.1:
 		var forward_dir := Vector2.from_angle(duct_drone_heading)
@@ -637,18 +668,17 @@ func _update_duct_drone_physics(delta: float) -> void:
 	else:
 		# Ricarica al dock station se il robottino è fermo alla base
 		if duct_drone_pos.distance_to(INITIAL_DUCT_DRONE_POS) < 30.0:
-			duct_drone_battery = minf(100.0, duct_drone_battery + 15.0 * delta)
+			var max_bat: float = float(_duct_drone_active_config.get("battery_max", 100.0))
+			duct_drone_battery = minf(max_bat, duct_drone_battery + 15.0 * delta)
 	
 	# 3. Sonar pulse
 	if duct_drone_scan_active:
 		duct_drone_scan_radius += 180.0 * delta
-		if duct_drone_scan_radius > 160.0:
+		if duct_drone_scan_radius > scan_max:
 			duct_drone_scan_active = false
 			duct_drone_scan_radius = 0.0
 	
-	# 4. Rilevamento Danni Invisibili:
-	# - Brecce (DAMAGE_TYPE_BREACH): visualizzate quando illuminate con la luce
-	# - Cortocircuiti (DAMAGE_TYPE_SHORT_CIRCUIT): rilevati solo dall'impulso radar
+	# 4. Rilevamento Danni Invisibili
 	var damages_changed := false
 	for dmg in ship_damages:
 		if dmg.get("repaired", false):
@@ -698,7 +728,7 @@ func _update_duct_drone_physics(delta: float) -> void:
 			duct_drone_repair_state_changed.emit(false, "", 0.0)
 		else:
 			var d: float = duct_drone_pos.distance_to(target_dmg.get("pos", Vector2.ZERO))
-			if d > 42.0 or duct_drone_battery <= 0.0:
+			if d > repair_rng or duct_drone_battery <= 0.0:
 				# Troppo lontano o batteria esaurita: interrompi riparazione
 				is_duct_drone_repairing = false
 				repairing_damage_id = ""
@@ -706,7 +736,7 @@ func _update_duct_drone_physics(delta: float) -> void:
 			else:
 				var duration: float = maxf(1.0, float(target_dmg.get("repair_duration", 5.0)))
 				var progress: float = float(target_dmg.get("repair_progress", 0.0))
-				progress = clampf(progress + (delta / duration), 0.0, 1.0)
+				progress = clampf(progress + ((delta * repair_mult) / duration), 0.0, 1.0)
 				target_dmg["repair_progress"] = progress
 				duct_drone_repair_state_changed.emit(true, repairing_damage_id, progress)
 				
@@ -975,7 +1005,8 @@ func start_duct_drone_repair(damage_id: String) -> void:
 		return
 	
 	var d: float = duct_drone_pos.distance_to(dmg.get("pos", Vector2.ZERO))
-	if d > 42.0:
+	var repair_rng: float = float(_duct_drone_active_config.get("repair_range", 42.0))
+	if d > repair_rng:
 		return
 	
 	is_duct_drone_repairing = true
