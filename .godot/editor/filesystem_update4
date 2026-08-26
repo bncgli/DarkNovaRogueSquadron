@@ -1,6 +1,7 @@
 res://Scenes/Main/MainScene.tscn
 res://Applications/Terminal/terminal_theme.tres
-res://Applications/DuctDrone/duct_drone_app.gd
+res://Outside/ShipSublayer/ship_blueprint.gd
 res://Outside/space_world_manager.gd
-res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd
 res://Applications/PowerGrid/power_grid_app.gd
+res://addons/ship_sublayer_editor/ship_sublayer_editor.gd
+res://Applications/DuctDrone/duct_drone_app.gd
