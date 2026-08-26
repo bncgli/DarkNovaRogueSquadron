@@ -1,0 +1,382 @@
+[gd_scene format=3 uid="uid://cx6y8v2u0cam0"]
+
+[ext_resource type="Script" path="res://Applications/Cams/cams_app.gd" id="1_cams_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_bg"]
+bg_color = Color(0.08, 0.1, 0.14, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.35, 0.5, 0.5)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.05, 0.07, 0.1, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.25, 0.35, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.12, 0.16, 0.22, 0.9)
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.45, 0.65, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.18, 0.25, 0.35, 0.95)
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.65, 0.9, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.06, 0.1, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.6, 0.2, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="CamsApp" type="Control"]
+custom_minimum_size = Vector2(520, 500)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cams_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderCard" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/HeaderCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="Margin/VBox/HeaderCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "🛰️ TELECAMERE ESTERNE ASTRONAVE"
+
+[node name="SubTitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "6 Canali CCTV Perimetrali (Facce del Cubo)"
+
+[node name="RoleBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "MODO: SOLO"
+
+[node name="ActiveCountBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "0 / 6 ATTIVI"
+
+[node name="ConfigCard" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ConfigCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ConfigCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HeaderHBox" type="HBoxContainer" parent="Margin/VBox/ConfigCard/Margin/VBox"]
+layout_mode = 2
+
+[node name="ConfigTitle" type="Label" parent="Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
+theme_override_font_sizes/font_size = 11
+text = "⚙️ CONFIGURAZIONE OTTICHE (.DAT RUNTIME)"
+
+[node name="DatStatusBadge" type="Label" parent="Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "● .DAT ATTIVO"
+
+[node name="ReloadConfigButton" type="Button" parent="Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "🔄 Ricarica .DAT"
+
+[node name="DatConfigSummaryLabel" type="Label" parent="Margin/VBox/ConfigCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.85)
+theme_override_font_sizes/font_size = 10
+text = "FOV: 75° (Range: 30°-100°, Step: 10°) | Boost: 1.0x"
+
+[node name="GridCard" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/GridCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="ButtonsGrid" type="GridContainer" parent="Margin/VBox/GridCard/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="BtnFront" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "▲ FRONTALE
+[Prua (-Z)]  ○ SPENTA"
+
+[node name="BtnRear" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "▼ POSTERIORE
+[Poppa (+Z)]  ○ SPENTA"
+
+[node name="BtnLeft" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "◀ LATERALE SINISTRA
+[Babordo (-X)]  ○ SPENTA"
+
+[node name="BtnRight" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "▶ LATERALE DESTRA
+[Tribordo (+X)]  ○ SPENTA"
+
+[node name="BtnTop" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "▲ SUPERIORE
+[Dorsale (+Y)]  ○ SPENTA"
+
+[node name="BtnBottom" type="Button" parent="Margin/VBox/GridCard/Margin/ButtonsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+toggle_mode = true
+text = "▼ INFERIORE
+[Ventrale (-Y)]  ○ SPENTA"
+
+[node name="FooterVBox" type="VBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StatusSummaryLabel" type="Label" parent="Margin/VBox/FooterVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Nessuna telecamera attiva. Premi un pulsante per aprire il feed."
+autowrap_mode = 2
+
+[node name="ActionsHBox" type="HBoxContainer" parent="Margin/VBox/FooterVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OpenAllButton" type="Button" parent="Margin/VBox/FooterVBox/ActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "📺 Apri Tutte (6)"
+
+[node name="CloseAllButton" type="Button" parent="Margin/VBox/FooterVBox/ActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "❌ Chiudi Tutte"
+
+[node name="ResetOpticsButton" type="Button" parent="Margin/VBox/FooterVBox/ActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "🎯 Reset Ottiche"
+
+[node name="DisconnectedOverlay" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="Margin" type="MarginContainer" parent="DisconnectedOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay/Margin"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Margin/Center"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="WarnIcon" type="Label" parent="DisconnectedOverlay/Margin/Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "🛰️"
+horizontal_alignment = 1
+
+[node name="DisconnectedTitle" type="Label" parent="DisconnectedOverlay/Margin/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+text = "FEED TELECAMERE DISCONNESSO"
+horizontal_alignment = 1
+
+[node name="DisconnectedLabel" type="Label" parent="DisconnectedOverlay/Margin/Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 18
+text = "Connettersi alla nave"
+horizontal_alignment = 1
+
+[node name="DisconnectedDesc" type="Label" parent="DisconnectedOverlay/Margin/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "I sensori ottici e i feed perimetrali non sono raggiungibili.
+Avvia la sessione tramite l'applicazione 'Lobby & Comms' in modalità Solo o unisciti a una nave in rete."
+horizontal_alignment = 1
+autowrap_mode = 2

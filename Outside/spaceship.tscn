@@ -1,0 +1,147 @@
+[gd_scene format=3 uid="uid://cor6md0ymrc48"]
+
+[ext_resource type="Script" uid="uid://mjg5p8xix78j" path="res://Outside/spaceship.gd" id="1_spaceship_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_main"]
+size = Vector3(2.6, 0.8, 3.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hull"]
+albedo_color = Color(0.18, 0.2, 0.24, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_fuselage"]
+material = SubResource("StandardMaterial3D_hull")
+size = Vector3(1.2, 0.5, 3.2)
+
+[sub_resource type="PrismMesh" id="PrismMesh_8vlop"]
+material = SubResource("StandardMaterial3D_hull")
+size = Vector3(1.205, 0.21, 0.46)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cockpit"]
+albedo_color = Color(0.1, 0.5, 0.8, 0.8)
+metallic = 0.3
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.1, 0.6, 0.9, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="PrismMesh" id="PrismMesh_cockpit"]
+material = SubResource("StandardMaterial3D_cockpit")
+size = Vector3(0.7, 0.37, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wings"]
+albedo_color = Color(0.28, 0.12, 0.14, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="PrismMesh" id="PrismMesh_wing_left"]
+material = SubResource("StandardMaterial3D_wings")
+size = Vector3(1.4, 0.1, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_engine"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+metallic = 0.9
+roughness = 0.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_engine"]
+material = SubResource("StandardMaterial3D_engine")
+top_radius = 0.25
+bottom_radius = 0.3
+height = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_thruster_glow"]
+albedo_color = Color(0.2, 0.8, 1, 1)
+emission_enabled = true
+emission = Color(0.2, 0.8, 1, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_thruster_glow"]
+material = SubResource("StandardMaterial3D_thruster_glow")
+top_radius = 0.2
+bottom_radius = 0.22
+height = 0.15
+
+[node name="Spaceship" type="RigidBody3D" unique_id=1196229740]
+mass = 1200.0
+gravity_scale = 0.0
+linear_damp = 0.2
+angular_damp = 1.0
+script = ExtResource("1_spaceship_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1044165838]
+shape = SubResource("BoxShape3D_main")
+
+[node name="CameraMounts" type="Node3D" parent="." unique_id=1982736451]
+
+[node name="CamFront" type="Marker3D" parent="CameraMounts" unique_id=1982736452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, -2.1)
+
+[node name="CamRear" type="Marker3D" parent="CameraMounts" unique_id=1982736453]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.6, 2.2)
+
+[node name="CamLeft" type="Marker3D" parent="CameraMounts" unique_id=1982736454]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2, 0.1, 0)
+
+[node name="CamRight" type="Marker3D" parent="CameraMounts" unique_id=1982736455]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2, 0.1, 0)
+
+[node name="CamTop" type="Marker3D" parent="CameraMounts" unique_id=1982736456]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1.2, -0.2)
+
+[node name="CamBottom" type="Marker3D" parent="CameraMounts" unique_id=1982736457]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.8, -0.2)
+
+[node name="Model" type="Node3D" parent="." unique_id=966817327]
+
+[node name="Fuselage" type="MeshInstance3D" parent="Model" unique_id=309189079]
+mesh = SubResource("BoxMesh_fuselage")
+
+[node name="NoseCone" type="MeshInstance3D" parent="Model" unique_id=365591284]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -1.7089279)
+mesh = SubResource("PrismMesh_8vlop")
+
+[node name="Cockpit" type="MeshInstance3D" parent="Model" unique_id=1322061943]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0.43891582, -0.4)
+mesh = SubResource("PrismMesh_cockpit")
+
+[node name="LeftWing" type="MeshInstance3D" parent="Model" unique_id=1646847441]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, -1.1, 0, 0.2)
+mesh = SubResource("PrismMesh_wing_left")
+
+[node name="RightWing" type="MeshInstance3D" parent="Model" unique_id=1022067525]
+transform = Transform3D(0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0, 1, 1.1, 0, 0.2)
+mesh = SubResource("PrismMesh_wing_left")
+
+[node name="LeftEngine" type="MeshInstance3D" parent="Model" unique_id=1634138237]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.45, 0, 1.4)
+mesh = SubResource("CylinderMesh_engine")
+
+[node name="LeftGlow" type="MeshInstance3D" parent="Model/LeftEngine" unique_id=209377091]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("CylinderMesh_thruster_glow")
+
+[node name="RightEngine" type="MeshInstance3D" parent="Model" unique_id=1867773580]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.45, 0, 1.4)
+mesh = SubResource("CylinderMesh_engine")
+
+[node name="RightGlow" type="MeshInstance3D" parent="Model/RightEngine" unique_id=429130396]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("CylinderMesh_thruster_glow")
+
+[node name="EngineLight" type="OmniLight3D" parent="Model" unique_id=806579301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9)
+light_color = Color(0.2, 0.8, 1, 1)
+light_energy = 2.5
+omni_range = 4.0
+
+[node name="Hardpoints" type="Node3D" parent="." unique_id=1636251621]
+
+[node name="LeftGunMount" type="Marker3D" parent="Hardpoints" unique_id=578246691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, -0.05, -0.8)
+
+[node name="RightGunMount" type="Marker3D" parent="Hardpoints" unique_id=358079625]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, -0.05, -0.8)
+
+[node name="ThrusterMount" type="Marker3D" parent="Hardpoints" unique_id=241864886]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.8)

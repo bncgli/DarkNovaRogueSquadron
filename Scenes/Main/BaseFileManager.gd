@@ -12,6 +12,10 @@ func populate_file_manager() -> void:
 		if child is FakeFolder:
 			child.queue_free()
 	for folder_name in DirAccess.get_directories_at("user://files/%s" % file_path):
+		if file_path.is_empty() and folder_name == "Ship Drive":
+			var sdm := get_node_or_null("/root/ShipDriveManager")
+			if not sdm or not sdm.get("is_drive_mounted") or not sdm.is_ship_connected():
+				continue
 		if file_path.is_empty():
 			instantiate_file(folder_name, folder_name, FakeFolder.file_type_enum.FOLDER)
 		else:
@@ -62,62 +66,78 @@ func new_folder(new_folder_name: String = "New Folder", folder_path: String = ""
 	if not file_path.is_empty():
 		folder_path = file_path
 	
-	# Guarantees a "/" at the end of the path
-	if folder_path.length() > 0 and not folder_path.ends_with('/'):
-		folder_path += '/'
+	var clean_dir := folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
 	
-	if DirAccess.dir_exists_absolute("user://files/%s%s" % [folder_path, new_folder_name]):
-		var valid_name: String = new_folder_name
+	var candidate_name: String = new_folder_name
+	if DirAccess.dir_exists_absolute("user://files/%s%s" % [prefix, candidate_name]):
 		for i in range(2, 1000):
-			valid_name = new_folder_name + (" %d" % i)
-			if !DirAccess.dir_exists_absolute("user://files/%s%s" % [folder_path, valid_name]):
+			var test_name := "%s %d" % [new_folder_name, i]
+			if not DirAccess.dir_exists_absolute("user://files/%s%s" % [prefix, test_name]):
+				candidate_name = test_name
 				break
-		new_folder_name = valid_name
 	
-	DirAccess.make_dir_absolute("user://files/%s%s" % [folder_path, new_folder_name])
+	DirAccess.make_dir_absolute("user://files/%s%s" % [prefix, candidate_name])
+	var rel_folder := "%s%s" % [prefix, candidate_name]
+	
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		sdm.sync_folder(rel_folder)
+	
 	for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-		if file_manager.file_path + '/' == folder_path:
-			file_manager.instantiate_file(new_folder_name, "%s%s" % [folder_path, new_folder_name], FakeFolder.file_type_enum.FOLDER)
+		if file_manager.file_path == clean_dir:
+			file_manager.instantiate_file(candidate_name, rel_folder, FakeFolder.file_type_enum.FOLDER)
 			await get_tree().process_frame # Waiting for child to get added...
-			sort_folders()
+			file_manager.sort_folders()
 	
-	if folder_path.is_empty():
-		instantiate_file(new_folder_name, new_folder_name, FakeFolder.file_type_enum.FOLDER)
+	if clean_dir.is_empty():
+		instantiate_file(candidate_name, candidate_name, FakeFolder.file_type_enum.FOLDER)
 		sort_folders()
 
 ## Creates a new file.
 ## Not to be confused with instantiating which adds an existing real folder, this function CREATES one. 
 func new_file(extension: String, file_type: FakeFolder.file_type_enum, new_file_name: String = "New File", new_file_path: String = "") -> void:
-	new_file_name = new_file_name.trim_suffix(".txt")
+	if not extension.begins_with("."):
+		extension = "." + extension
 	
 	# Takes file_path as priority for folders added
 	# by context menu, this is for backward compatibility
 	if not file_path.is_empty():
 		new_file_path = file_path
 	
-	# Guarantees a "/" at the end of the path
-	if new_file_path.length() > 0 and not new_file_path.ends_with('/'):
-		new_file_path += '/'
+	var clean_dir := new_file_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
 	
-	if FileAccess.file_exists("user://files/%s%s" % [new_file_path, new_file_name]):
-		var valid_name: String = new_file_name
+	var base_name := new_file_name
+	if base_name.ends_with(extension):
+		base_name = base_name.trim_suffix(extension)
+	
+	var candidate_name := "%s%s" % [base_name, extension]
+	if FileAccess.file_exists("user://files/%s%s" % [prefix, candidate_name]):
 		for i in range(2, 1000):
-			valid_name = "%s %d%s" % [new_file_name, i, extension]
-			if !FileAccess.file_exists("user://files/%s%s" % [new_file_path, valid_name]):
+			var test_name := "%s %d%s" % [base_name, i, extension]
+			if not FileAccess.file_exists("user://files/%s%s" % [prefix, test_name]):
+				candidate_name = test_name
 				break
-		new_file_name = valid_name
 	
 	# Just touches the file
-	var _file: FileAccess = FileAccess.open("user://files/%s%s" % [new_file_path, new_file_name], FileAccess.WRITE)
+	var _file: FileAccess = FileAccess.open("user://files/%s%s" % [prefix, candidate_name], FileAccess.WRITE)
+	if _file:
+		_file.close()
+	
+	var rel_file := "%s%s" % [prefix, candidate_name]
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		sdm.sync_file(rel_file, "")
 	
 	for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-		if file_manager.file_path + '/' == new_file_path:
-			file_manager.instantiate_file(new_file_name, new_file_path, file_type)
+		if file_manager.file_path == clean_dir:
+			file_manager.instantiate_file(candidate_name, clean_dir, file_type)
 			await get_tree().process_frame # Waiting for child to get added...
 			file_manager.sort_folders()
 	
-	if new_file_path.is_empty():
-		instantiate_file(new_file_name, new_file_path, file_type)
+	if clean_dir.is_empty():
+		instantiate_file(candidate_name, clean_dir, file_type)
 		sort_folders()
 
 ## Finds a file/folder based on name and frees it (but doesn't delete it from the actual system)

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b7h8lam0n1p2q"]
+
+[ext_resource type="Script" path="res://.tests/test_headless_auto_rehost_node.gd" id="1_test_node"]
+
+[node name="TestHeadlessAutoRehost" type="Node"]
+script = ExtResource("1_test_node")

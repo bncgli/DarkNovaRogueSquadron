@@ -39,58 +39,94 @@ func trigger_rename() -> void:
 	get_parent().visible = false
 	var folder: FakeFolder = $"../../.."
 	
+	if folder.folder_name == "Ship Drive" and (folder.folder_path == "Ship Drive" or folder.folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile rinominare 'Ship Drive'.")
+		cancel_rename()
+		return
+	
+	if folder.folder_name == "Terminal Drive" and (folder.folder_path == "Terminal Drive" or folder.folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile rinominare 'Terminal Drive'.")
+		cancel_rename()
+		return
+	
 	if folder.file_type != folder.file_type_enum.FOLDER:
 		var old_folder_name: String = folder.folder_name
-		var new_folder_name: String = "%s.%s" % [text, folder.folder_name.split('.')[-1]]
-		if FileAccess.file_exists("user://files/%s/%s" % [folder.folder_path, new_folder_name]):
+		var ext: String = old_folder_name.get_extension()
+		var new_folder_name: String
+		if not ext.is_empty():
+			new_folder_name = "%s.%s" % [text.trim_suffix("." + ext), ext]
+		else:
+			new_folder_name = text
+		
+		var clean_dir := folder.folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+		var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
+		
+		var old_abs := "user://files/%s%s" % [prefix, old_folder_name]
+		var new_abs := "user://files/%s%s" % [prefix, new_folder_name]
+		
+		if FileAccess.file_exists(new_abs):
 			cancel_rename()
 			NotificationManager.spawn_notification("That file already exists!")
 			return
+		
 		folder.folder_name = new_folder_name
-		DirAccess.rename_absolute("user://files/%s/%s" % [folder.folder_path, old_folder_name], "user://files/%s/%s" % [folder.folder_path, folder.folder_name])
+		DirAccess.rename_absolute(old_abs, new_abs)
 		%"Folder Title".text = "[center]%s" % folder.folder_name
+		
+		var sdm := get_node_or_null("/root/ShipDriveManager")
+		if sdm and sdm.get("is_drive_mounted"):
+			var old_file_rel := "%s%s" % [prefix, old_folder_name]
+			var new_file_rel := "%s%s" % [prefix, new_folder_name]
+			sdm.sync_rename(old_file_rel, new_file_rel, false)
 		
 		if folder.get_parent() is DesktopFileManager:
 			folder.get_parent().sort_folders()
 		else:
 			# Reloads open windows
 			for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-				if file_manager.file_path == folder.folder_path:
+				if file_manager.file_path == clean_dir:
 					file_manager.sort_folders()
 		for text_editor in get_tree().get_nodes_in_group("text_editor_window"):
-			if text_editor.file_path == "%s/%s" % [folder.folder_path, old_folder_name]:
-				text_editor.file_path = "%s/%s" % [folder.folder_path, folder.folder_name]
-			elif text_editor.file_path == old_folder_name: # In desktop
-				text_editor.file_path = folder.folder_name 
+			var old_rel := "%s%s" % [prefix, old_folder_name]
+			var new_rel := "%s%s" % [prefix, new_folder_name]
+			if text_editor.file_path == old_rel:
+				text_editor.file_path = new_rel
+			elif clean_dir.is_empty() and text_editor.file_path == old_folder_name:
+				text_editor.file_path = new_folder_name
 	
 	elif folder.file_type == folder.file_type_enum.FOLDER:
 		var old_folder_name: String = folder.folder_name
-		var old_folder_path: String = folder.folder_path
+		var old_folder_path: String = folder.folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
 		
-		if old_folder_path.contains("/"):
-			var new_folder_path: String = "%s%s" % [folder.folder_path.trim_suffix(old_folder_name), text]
-			if DirAccess.dir_exists_absolute("user://files/%s" % new_folder_path):
-				cancel_rename()
-				NotificationManager.spawn_notification("That folder already exists!")
-				return
-			folder.folder_path = new_folder_path
-		else:
-			if DirAccess.dir_exists_absolute("user://files/%s" % text):
-				cancel_rename()
-				NotificationManager.spawn_notification("That folder already exists!")
-				return
-			folder.folder_path = text
+		var parent_dir := old_folder_path.get_base_dir()
+		var prefix := (parent_dir + "/") if not parent_dir.is_empty() else ""
+		var new_folder_path := "%s%s" % [prefix, text]
+		
+		if DirAccess.dir_exists_absolute("user://files/%s" % new_folder_path):
+			cancel_rename()
+			NotificationManager.spawn_notification("That folder already exists!")
+			return
+		
+		folder.folder_path = new_folder_path
 		folder.folder_name = text
 		%"Folder Title".text = "[center]%s" % folder.folder_name
 		DirAccess.rename_absolute("user://files/%s" % old_folder_path, "user://files/%s" % folder.folder_path)
+		
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm:
+			fpm.rename_path(old_folder_path, folder.folder_path)
+		
+		var sdm := get_node_or_null("/root/ShipDriveManager")
+		if sdm and sdm.get("is_drive_mounted"):
+			sdm.sync_rename(old_folder_path, folder.folder_path, true)
 		
 		if folder.get_parent() is DesktopFileManager:
 			folder.get_parent().sort_folders()
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
 			if file_manager.file_path.begins_with(old_folder_path):
 				file_manager.file_path = file_manager.file_path.replace(old_folder_path, folder.folder_path)
-				file_manager.reload_window("")
-			elif file_manager.file_path == folder.folder_path.trim_suffix("/%s" % folder.folder_name):
+				file_manager.reload_window(file_manager.file_path)
+			elif file_manager.file_path == parent_dir:
 				file_manager.sort_folders()
 	
 	text = ""

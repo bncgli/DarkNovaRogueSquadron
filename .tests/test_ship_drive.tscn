@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c8nqm3vx1p7y5"]
+
+[ext_resource type="Script" path="res://.tests/test_ship_drive_node.gd" id="1_test_sd"]
+
+[node name="TestShipDrive" type="Node"]
+script = ExtResource("1_test_sd")

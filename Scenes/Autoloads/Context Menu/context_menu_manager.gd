@@ -84,18 +84,6 @@ func add_folder_options() -> void:
 	rename_option.get_node("%Option Text").text = "Rename %s" % type_name
 	rename_option.option_clicked.connect(_handle_folder_rename)
 	
-	var copy_option: Control = context_menu_option.instantiate()
-	copy_option.get_node("%Option Text").text = "Copy %s" % type_name
-	copy_option.option_clicked.connect(_handle_copy_folder)
-	
-	var cut_option: Control = context_menu_option.instantiate()
-	cut_option.get_node("%Option Text").text = "Cut %s" % type_name
-	cut_option.option_clicked.connect(_handle_cut_folder)
-	
-	var delete_option: Control = context_menu_option.instantiate()
-	delete_option.get_node("%Option Text").text = "Move to trash"
-	delete_option.option_clicked.connect(_handle_folder_delete)
-	
 	$VBoxContainer.add_child(rename_option)
 	
 	if target.file_type == FakeFolder.file_type_enum.IMAGE:
@@ -104,13 +92,37 @@ func add_folder_options() -> void:
 		set_wallpaper_option.option_clicked.connect(_handle_set_wallpaper)
 		$VBoxContainer.add_child(set_wallpaper_option)
 	
-	$VBoxContainer.add_child(context_menu_seperator.instantiate())
-	$VBoxContainer.add_child(copy_option)
-	$VBoxContainer.add_child(cut_option)
-	$VBoxContainer.add_child(context_menu_seperator.instantiate())
-	$VBoxContainer.add_child(delete_option)
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	var is_pwd_protected: bool = false
+	if fpm and target.file_type == FakeFolder.file_type_enum.FOLDER:
+		is_pwd_protected = fpm.has_password(target.folder_path)
+	
+	if not is_pwd_protected:
+		var copy_option: Control = context_menu_option.instantiate()
+		copy_option.get_node("%Option Text").text = "Copy %s" % type_name
+		copy_option.option_clicked.connect(_handle_copy_folder)
+		
+		var cut_option: Control = context_menu_option.instantiate()
+		cut_option.get_node("%Option Text").text = "Cut %s" % type_name
+		cut_option.option_clicked.connect(_handle_cut_folder)
+		
+		var delete_option: Control = context_menu_option.instantiate()
+		delete_option.get_node("%Option Text").text = "Move to trash"
+		delete_option.option_clicked.connect(_handle_folder_delete)
+		
+		$VBoxContainer.add_child(context_menu_seperator.instantiate())
+		$VBoxContainer.add_child(copy_option)
+		$VBoxContainer.add_child(cut_option)
+		$VBoxContainer.add_child(context_menu_seperator.instantiate())
+		$VBoxContainer.add_child(delete_option)
 	
 	if type_name == "Folder":
+		if not is_pwd_protected:
+			var password_option: Control = context_menu_option.instantiate()
+			password_option.get_node("%Option Text").text = "Aggiungi password"
+			password_option.option_clicked.connect(_handle_folder_password)
+			$VBoxContainer.add_child(password_option)
+		
 		var open_terminal_option: Control = context_menu_option.instantiate()
 		open_terminal_option.get_node("%Option Text").text = "Open in Terminal"
 		open_terminal_option.option_clicked.connect(_handle_open_terminal)
@@ -149,8 +161,26 @@ func add_file_manager_options() -> void:
 func _handle_folder_rename() -> void:
 	target.get_node("%Folder Title Edit").show_rename()
 
+func _handle_folder_password() -> void:
+	if target is FakeFolder:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm:
+			fpm.prompt_set_password(target.folder_path, target.folder_name)
+
 func _handle_open_terminal() -> void:
-	get_node("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option").spawn_window()
+	if target is FakeFolder and target.file_type == FakeFolder.file_type_enum.FOLDER:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(target.folder_path):
+			var saved_target = target
+			fpm.prompt_enter_password(saved_target.folder_path, saved_target.folder_name, func(_removed_pass: bool) -> void:
+				var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
+				if term_option:
+					term_option.spawn_window()
+			)
+			return
+	var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
+	if term_option:
+		term_option.spawn_window()
 
 func _handle_set_wallpaper() -> void:
 	# TODO make this a relative path?

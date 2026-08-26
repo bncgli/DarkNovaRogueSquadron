@@ -28,8 +28,18 @@ func _input(event: InputEvent) -> void:
 
 func populate_text(path: String) -> void:
 	file_path = path
+	if file_path.ends_with(".dat"):
+		text = "[ERRORE: FILE PROTETTO / BINARIO]\nI file .dat di configurazione non sono leggibili tramite il visualizzatore di testo standard."
+		editable = false
+		return
+	
+	editable = true
 	var file: FileAccess = FileAccess.open("user://files/%s" % file_path, FileAccess.READ)
-	text = file.get_as_text()
+	if file:
+		text = file.get_as_text()
+		file.close()
+	else:
+		text = ""
 
 func _on_text_changed() -> void:
 	if text_edited:
@@ -48,6 +58,11 @@ func save_file() -> void:
 	
 	var file: FileAccess = FileAccess.open("user://files/%s" % file_path, FileAccess.WRITE)
 	file.store_string(text)
+	file.close()
+	
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		sdm.sync_file(file_path, text)
 	
 	$"../../Top Bar/Title Text".text = $"../../Top Bar/Title Text".text.trim_suffix('*')
 	text_edited = false

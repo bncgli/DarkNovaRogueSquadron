@@ -62,7 +62,7 @@ func spawn_window() -> void:
 			window.get_node("%GamePauseManager").process_mode = Node.PROCESS_MODE_INHERIT
 		
 	elif application_scene:
-		window = load("uid://e14mtfpwja0f").instantiate()
+		window = load("res://Scenes/Window/Application Window/application_window.tscn").instantiate()
 		window.get_node("%ApplicationContents").add_child(load(application_scene).instantiate())
 	
 	window.title_text = %"Menu Title".text

@@ -17,6 +17,10 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 		current_path += '/'
 	
 	var file_path: String = current_path + args[0]
+	if file_path.ends_with(".dat"):
+		terminal.push_line_to_output("Errore: I file .dat sono file di configurazione binari/protetti e non sono leggibili dal visualizzatore di testo standard.")
+		return
+	
 	if terminal.virtual_path_manager.path_is_valid_file(file_path):
 		var file: FileAccess = terminal.virtual_path_manager.open_file(file_path, FileAccess.READ)
 		var file_text: PackedStringArray = file.get_as_text().split("\n")

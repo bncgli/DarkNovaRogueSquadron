@@ -22,7 +22,12 @@ func _ready() -> void:
 	%"Folder Title".text = "[center]%s" % folder_name
 	
 	if file_type == file_type_enum.FOLDER:
-		$Folder/TextureRect.modulate = FOLDER_COLOR
+		if folder_name == "Ship Drive" and (folder_path == "Ship Drive" or folder_path == ""):
+			$Folder/TextureRect.modulate = Color("00e5ff")
+		elif folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
+			$Folder/TextureRect.modulate = Color("39ff14")
+		else:
+			$Folder/TextureRect.modulate = FOLDER_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/folder.png")
 	elif file_type == file_type_enum.TEXT_FILE:
 		$Folder/TextureRect.modulate = TEXT_FILE_COLOR
@@ -30,6 +35,20 @@ func _ready() -> void:
 	elif file_type == file_type_enum.IMAGE:
 		$Folder/TextureRect.modulate = IMAGE_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/image.png")
+	
+	update_lock_status()
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	if fpm:
+		fpm.passwords_changed.connect(update_lock_status)
+
+func update_lock_status() -> void:
+	if not has_node("%LockIcon"):
+		return
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	if fpm and file_type == file_type_enum.FOLDER and fpm.has_password(folder_path):
+		%"LockIcon".visible = true
+	else:
+		%"LockIcon".visible = false
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
@@ -132,37 +151,73 @@ func spawn_window() -> void:
 	get_tree().get_first_node_in_group("taskbar_buttons").add_child(taskbar_button)
 
 func delete_file() -> void:
+	if folder_name == "Ship Drive" and (folder_path == "Ship Drive" or folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile eliminare 'Ship Drive'. Disconnettersi per smontare l'unita'.")
+		return
+	if folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile eliminare 'Terminal Drive'.")
+		return
+	
 	if file_type == file_type_enum.FOLDER:
-		var delete_path: String = ProjectSettings.globalize_path("user://files/%s" % folder_path)
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(folder_path):
+			NotificationManager.spawn_notification("Non e' possibile eliminare una cartella protetta da password.")
+			return
+	
+	var is_folder: bool = (file_type == file_type_enum.FOLDER)
+	var clean_dir := folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
+	var rel_item_path: String = clean_dir if is_folder else ("%s%s" % [prefix, folder_name])
+	
+	if is_folder:
+		var delete_path: String = ProjectSettings.globalize_path("user://files/%s" % clean_dir)
 		if !DirAccess.dir_exists_absolute(delete_path):
 			return
 		OS.move_to_trash(delete_path)
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm:
+			fpm.delete_path(clean_dir)
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-			if file_manager.file_path.begins_with(folder_path):
+			if file_manager.file_path.begins_with(clean_dir):
 				file_manager.close_window()
 			elif get_parent() is FileManagerWindow and file_manager.file_path == get_parent().file_path:
 				file_manager.delete_file_with_name(folder_name)
 				file_manager.update_positions()
 	else:
-		var delete_path: String = ProjectSettings.globalize_path("user://files/%s/%s" % [folder_path, folder_name])
+		var delete_path: String = ProjectSettings.globalize_path("user://files/%s%s" % [prefix, folder_name])
 		if !FileAccess.file_exists(delete_path):
 			return
 		OS.move_to_trash(delete_path)
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-			if file_manager.file_path == folder_path:
+			if file_manager.file_path == clean_dir:
 				file_manager.delete_file_with_name(folder_name)
 				file_manager.sort_folders()
 	
-	if folder_path.is_empty() or (file_type == file_type_enum.FOLDER and len(folder_path.split('/')) == 1):
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		sdm.sync_delete(rel_item_path, is_folder)
+	
+	if clean_dir.is_empty() or (file_type == file_type_enum.FOLDER and len(clean_dir.split('/')) == 1):
 		var desktop_file_manager: DesktopFileManager = get_tree().get_first_node_in_group("desktop_file_manager")
-		desktop_file_manager.delete_file_with_name(folder_name)
-		desktop_file_manager.sort_folders()
+		if desktop_file_manager:
+			desktop_file_manager.delete_file_with_name(folder_name)
+			desktop_file_manager.sort_folders()
 	# TODO make the color file_type dependent?
 	NotificationManager.spawn_notification("Moved [color=59ea90][wave freq=7]%s[/wave][/color] to trash!" % folder_name)
 	queue_free()
 
 func open_folder() -> void:
 	hide_selected_highlight()
+	if file_type == file_type_enum.FOLDER:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(folder_path):
+			fpm.prompt_enter_password(folder_path, folder_name, func(_removed_pass: bool) -> void:
+				_perform_open_folder()
+			)
+			return
+	_perform_open_folder()
+
+func _perform_open_folder() -> void:
 	if get_parent().is_in_group("file_manager_window") and file_type == file_type_enum.FOLDER:
 		get_parent().reload_window(folder_path)
 	else:

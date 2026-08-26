@@ -26,6 +26,17 @@ func _ready() -> void:
 		DefaultValues.wallpaper_name = "default wall.webp"
 		DefaultValues.save_state()
 	
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm:
+		if not sdm.is_ship_connected():
+			if DirAccess.dir_exists_absolute("user://files/Ship Drive"):
+				sdm._delete_dir_recursive("user://files/Ship Drive")
+			sdm._close_ship_drive_windows()
+	
+	var tdm := get_node_or_null("/root/TerminalDriveManager")
+	if tdm and tdm.has_method("ensure_drive_exists"):
+		tdm.ensure_drive_exists()
+	
 	populate_file_manager()
 	get_window().size_changed.connect(update_positions)
 	get_window().focus_entered.connect(_on_window_focus)
@@ -51,6 +62,10 @@ func _on_window_focus() -> void:
 	for file_name in DirAccess.get_files_at("user://files/"):
 		new_file_names.append(file_name)
 	for folder_name in DirAccess.get_directories_at("user://files/"):
+		if folder_name == "Ship Drive":
+			var sdm := get_node_or_null("/root/ShipDriveManager")
+			if not sdm or not sdm.get("is_drive_mounted") or not sdm.is_ship_connected():
+				continue
 		new_file_names.append(folder_name)
 	
 	if current_file_names.size() != new_file_names.size():

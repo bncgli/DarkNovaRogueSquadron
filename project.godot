@@ -20,7 +20,7 @@ config/version="1.2.0"
 run/main_scene="res://Scenes/Main/MainScene.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="GodotOS"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 run/low_processor_mode=true
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/stretch_mode=0
@@ -35,6 +35,11 @@ NotificationManager="*res://Scenes/Autoloads/Notification Manager/notification_m
 CopyPasteManager="*res://Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.tscn"
 GlobalValues="*res://Scenes/Autoloads/GlobalValues/global_values.tscn"
 DefaultValues="*res://Scenes/Autoloads/Default Values/default_values.tscn"
+NetworkManager="*res://Scenes/Networking/network_manager.tscn"
+SpaceWorldManager="*res://Outside/space_world_manager.gd"
+ShipDriveManager="*res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd"
+TerminalDriveManager="*res://Scenes/Autoloads/TerminalDrive/terminal_drive_manager.gd"
+FolderPasswordManager="*res://Scenes/Autoloads/FolderPasswordManager/folder_password_manager.gd"
 
 [debug]
 
@@ -42,6 +47,7 @@ gdscript/warnings/untyped_declaration=1
 
 [display]
 
+window/subwindows/embed_subwindows=false
 window/vsync/vsync_mode=0
 
 [file_customization]
@@ -51,6 +57,7 @@ folder_colors={
 "res://Art/": "green",
 "res://Default Files/": "gray",
 "res://Games/": "red",
+"res://Outside/": "purple",
 "res://Scenes/": "blue",
 "res://Scenes/Misc/": "gray"
 }
@@ -166,5 +173,4 @@ pause_game={
 
 textures/canvas_textures/default_texture_filter=2
 renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.301961, 0.301961, 0.301961, 1)

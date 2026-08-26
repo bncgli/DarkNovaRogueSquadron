@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://dci6t0fj42xpv"]
+[gd_scene load_steps=9 format=3 uid="uid://dci6t0fj42xpv"]
 
 [ext_resource type="Script" uid="uid://j6auwoexib63" path="res://Scenes/Desktop/desktop_folder.gd" id="1_44lov"]
 [ext_resource type="Texture2D" uid="uid://cjve37ywrq6qo" path="res://Art/Folder Icons/folder.png" id="2_8hyqf"]
 [ext_resource type="Script" uid="uid://csxjm2dry3dji" path="res://Scenes/Desktop/folder_title_edit.gd" id="2_aux0e"]
+[ext_resource type="Texture2D" uid="uid://cqajaj7jxwxg3" path="res://Art/Folder Icons/lock.svg" id="4_lock"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fr400"]
 bg_color = Color(0, 0.521569, 0.627451, 0.784314)
@@ -75,6 +76,19 @@ layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("2_8hyqf")
 expand_mode = 4
+
+[node name="LockIcon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 46.0
+offset_top = 40.0
+offset_right = 72.0
+offset_bottom = 66.0
+mouse_filter = 2
+texture = ExtResource("4_lock")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Double Click" type="Timer" parent="."]
 wait_time = 0.3

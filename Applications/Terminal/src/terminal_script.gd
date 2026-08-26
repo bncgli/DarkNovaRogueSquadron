@@ -102,10 +102,13 @@ func find_parent_window() -> FakeWindow:
 		else:
 			node = node.get_parent()
 		
-		if node is FakeWindow and node.is_ancestor_of(self):
+		if node == null:
 			break
+		
+		if node is FakeWindow and node.is_ancestor_of(self):
+			return node
 	
-	return node
+	return null
 
 
 # Called when the user presses enter with the command line in focus

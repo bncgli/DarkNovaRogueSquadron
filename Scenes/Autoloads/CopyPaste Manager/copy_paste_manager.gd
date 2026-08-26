@@ -29,6 +29,11 @@ func _input(event: InputEvent) -> void:
 			paste_folder(file_manager_window.file_path)
 
 func copy_folder(folder: FakeFolder) -> void:
+	if folder.file_type == FakeFolder.file_type_enum.FOLDER:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(folder.folder_path):
+			NotificationManager.spawn_notification("Non e' possibile copiare una cartella protetta da password.")
+			return
 	if target_folder:
 		target_folder.modulate.a = 1
 	target_folder = folder
@@ -41,6 +46,18 @@ func copy_folder(folder: FakeFolder) -> void:
 	NotificationManager.spawn_notification("Copied [color=59ea90][wave freq=7]%s[/wave][/color]" % target_folder_name)
 
 func cut_folder(folder: FakeFolder) -> void:
+	if folder.folder_name == "Ship Drive" and (folder.folder_path == "Ship Drive" or folder.folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile tagliare 'Ship Drive'.")
+		return
+	if folder.folder_name == "Terminal Drive" and (folder.folder_path == "Terminal Drive" or folder.folder_path == ""):
+		NotificationManager.spawn_notification("Non e' possibile tagliare 'Terminal Drive'.")
+		return
+	if folder.file_type == FakeFolder.file_type_enum.FOLDER:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(folder.folder_path):
+			NotificationManager.spawn_notification("Non e' possibile tagliare o spostare una cartella protetta da password.")
+			return
+	
 	if target_folder:
 		target_folder.modulate.a = 1
 	target_folder = folder
@@ -58,61 +75,101 @@ func paste_folder(to_path: String) -> void:
 		NotificationManager.spawn_notification("Error: Nothing to copy")
 		return
 	
+	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_password(target_folder_path):
+			NotificationManager.spawn_notification("Operazione non consentita per una cartella protetta da password.")
+			target_folder_name = ""
+			target_folder = null
+			return
+	
 	if state == StateEnum.COPY:
 		paste_folder_copy(to_path)
 	elif state == StateEnum.CUT:
 		paste_folder_cut(to_path)
 
 func paste_folder_copy(to_path: String) -> void:
-	var to: String = "user://files/%s/%s" % [to_path, target_folder_name]
+	var clean_dir := to_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
+	var to: String = "user://files/%s%s" % [prefix, target_folder_name]
 	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
 		var from: String = "user://files/%s" % target_folder_path
 		if from != to:
 			DirAccess.make_dir_absolute(to)
 			copy_directory_recursively(from, to)
+			var fpm := get_node_or_null("/root/FolderPasswordManager")
+			if fpm:
+				var dest_rel: String = "%s%s" % [prefix, target_folder_name]
+				fpm.copy_path(target_folder_path, dest_rel)
 	else:
-		var from: String = "user://files/%s/%s" % [target_folder_path, target_folder_name]
+		var from_dir := target_folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+		var from_prefix := (from_dir + "/") if not from_dir.is_empty() else ""
+		var from: String = "user://files/%s%s" % [from_prefix, target_folder_name]
 		if from != to:
 			DirAccess.copy_absolute(from, to)
 	
 	if target_folder != null:
 		target_folder.modulate.a = 1
-	if to_path.is_empty():
+	if clean_dir.is_empty():
 		var desktop_file_manager: DesktopFileManager = get_tree().get_first_node_in_group("desktop_file_manager")
-		desktop_file_manager.delete_file_with_name(target_folder_name)
-		instantiate_file_and_sort(desktop_file_manager, to_path)
+		if desktop_file_manager:
+			desktop_file_manager.delete_file_with_name(target_folder_name)
+			instantiate_file_and_sort(desktop_file_manager, clean_dir)
 	else:
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-			if file_manager.file_path == to_path:
+			if file_manager.file_path == clean_dir:
 				file_manager.delete_file_with_name(target_folder_name)
-				instantiate_file_and_sort(file_manager, to_path)
+				instantiate_file_and_sort(file_manager, clean_dir)
+	
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		var dest_rel: String = "%s%s" % [prefix, target_folder_name]
+		sdm.sync_path_recursive(dest_rel)
 	
 	target_folder_name = ""
 	target_folder = null
 
 func paste_folder_cut(to_path: String) -> void:
-	var to: String = "user://files/%s/%s" % [to_path, target_folder_name]
+	var clean_dir := to_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
+	var to: String = "user://files/%s%s" % [prefix, target_folder_name]
+	
+	var from_dir := target_folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	var from_prefix := (from_dir + "/") if not from_dir.is_empty() else ""
+	var old_from_rel: String = "%s%s" % [from_prefix, target_folder_name]
+	
 	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
 		var from: String = "user://files/%s" % target_folder_path
+		old_from_rel = target_folder_path
 		DirAccess.rename_absolute(from, to)
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm:
+			var dest_rel: String = "%s%s" % [prefix, target_folder_name]
+			fpm.rename_path(old_from_rel, dest_rel)
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
 			if file_manager.file_path.begins_with(target_folder_path):
 				file_manager.close_window()
-			elif file_manager.file_path == to_path:
-				instantiate_file_and_sort(file_manager, to_path)
+			elif file_manager.file_path == clean_dir:
+				instantiate_file_and_sort(file_manager, clean_dir)
 	else:
-		var from: String = "user://files/%s/%s" % [target_folder_path, target_folder_name]
+		var from: String = "user://files/%s%s" % [from_prefix, target_folder_name]
 		DirAccess.rename_absolute(from, to)
 		for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
-			if file_manager.file_path == to_path:
-				instantiate_file_and_sort(file_manager, to_path)
+			if file_manager.file_path == clean_dir:
+				instantiate_file_and_sort(file_manager, clean_dir)
 	
 	if target_folder != null:
 		target_folder.get_parent().delete_file_with_name(target_folder_name)
 	
-	if to_path.is_empty():
+	if clean_dir.is_empty():
 		var desktop_file_manager: DesktopFileManager = get_tree().get_first_node_in_group("desktop_file_manager")
-		instantiate_file_and_sort(desktop_file_manager, to_path)
+		if desktop_file_manager:
+			instantiate_file_and_sort(desktop_file_manager, clean_dir)
+	
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	if sdm and sdm.get("is_drive_mounted"):
+		var dest_rel: String = "%s%s" % [prefix, target_folder_name]
+		sdm.sync_rename(old_from_rel, dest_rel, target_folder_type == FakeFolder.file_type_enum.FOLDER)
 	
 	target_folder = null
 

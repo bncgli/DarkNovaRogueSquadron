@@ -57,6 +57,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_gwhiu")
 script = ExtResource("1_c3iwi")
 
 [node name="Top Bar" type="Panel" parent="."]
+z_index = 2
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 1
 anchors_preset = 10
@@ -103,6 +104,17 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_es3h4")
 theme_override_styles/hover = SubResource("StyleBoxFlat_iro1c")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_epasn")
 text = "-"
+
+[node name="Popout Button" type="Button" parent="Top Bar/HBoxContainer"]
+texture_filter = 6
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_es3h4")
+theme_override_styles/hover = SubResource("StyleBoxFlat_iro1c")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_epasn")
+tooltip_text = "Apri come finestra esterna (OS)"
+text = "↗"
 
 [node name="Maximize Button" type="Button" parent="Top Bar/HBoxContainer"]
 texture_filter = 6
@@ -161,5 +173,6 @@ stretch_mode = 4
 
 [connection signal="gui_input" from="Top Bar" to="." method="_on_top_bar_gui_input"]
 [connection signal="pressed" from="Top Bar/HBoxContainer/Minimize Button" to="." method="_on_minimize_button_pressed"]
+[connection signal="pressed" from="Top Bar/HBoxContainer/Popout Button" to="." method="_on_popout_button_pressed"]
 [connection signal="pressed" from="Top Bar/HBoxContainer/Maximize Button" to="." method="_on_maximize_button_pressed"]
 [connection signal="pressed" from="Top Bar/HBoxContainer/Close Button" to="." method="_on_close_button_pressed"]

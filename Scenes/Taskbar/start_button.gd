@@ -40,7 +40,8 @@ func handle_mouse_click() -> void:
 func show_start_menu() -> void:
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(start_menu, "position:y", -405, 0.3).from(-50)
+	var target_y: float = -start_menu.size.y - 5.0
+	tween.tween_property(start_menu, "position:y", target_y, 0.3).from(-50)
 
 func hide_start_menu() -> void:
 	# Called from clicking on desktop

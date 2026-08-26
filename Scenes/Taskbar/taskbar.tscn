@@ -55,16 +55,61 @@ layout_mode = 1
 offset_left = 5.0
 offset_top = 50.0
 offset_right = 355.0
-offset_bottom = 450.0
+offset_bottom = 605.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="StartMenuAnchor/Start Menu" unique_id=1408136866]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 1
+
+[node name="Flight Control Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271893 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "res://Applications/FlightControl/flight_control_app.tscn"
+title_text = "Flight Control"
+description_text = "Controlli di manovra e navigazione nave"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Flight Control Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(1, 0.6, 0.2, 1)
+
+[node name="Duct Drone Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271894 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "res://Applications/DuctDrone/duct_drone_app.tscn"
+title_text = "Duct Drone"
+description_text = "Robottino manutenzione e schema condotti 2D"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Duct Drone Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(1, 0.85, 0.2, 1)
+
+[node name="Cams Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271892 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "res://Applications/Cams/cams_app.tscn"
+title_text = "Cams"
+description_text = "Telecamere esterne dell'astronave"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Cams Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(0.3, 0.9, 0.6, 1)
+
+[node name="Lobby Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271891 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "res://Applications/Lobby/lobby_app.tscn"
+title_text = "Lobby & Comms"
+description_text = "Coordina equipaggio e postazioni di volo"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Lobby Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(0.2, 0.8, 1, 1)
 
 [node name="Godotris Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=776187856 instance=ExtResource("2_1ualm")]
 layout_mode = 2

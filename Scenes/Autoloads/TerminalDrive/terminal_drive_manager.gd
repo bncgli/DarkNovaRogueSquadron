@@ -1,0 +1,132 @@
+class_name TerminalDriveManagerSingleton
+extends Node
+
+## Singleton / Manager per la gestione dell'unità "Terminal Drive" sul Desktop di GodotOS.
+## Contiene le impostazioni, documentazione, alias e configurazioni del terminale.
+## A differenza di "Ship Drive", questa cartella è strettamente locale e non necessita
+## di sincronizzazione multiplayer tra i giocatori.
+## Viene caricata di default sul Desktop all'avvio del programma.
+
+signal terminal_drive_loaded()
+
+const TERMINAL_DRIVE_NAME := "Terminal Drive"
+const TERMINAL_DRIVE_ROOT_DIR := "user://files/Terminal Drive"
+
+var is_drive_loaded: bool = false
+
+func _ready() -> void:
+	ensure_drive_exists()
+
+## Verifica o crea la cartella Terminal Drive e i file di configurazione di default
+func ensure_drive_exists() -> void:
+	if not DirAccess.dir_exists_absolute("user://files"):
+		DirAccess.make_dir_recursive_absolute("user://files")
+	
+	if not DirAccess.dir_exists_absolute(TERMINAL_DRIVE_ROOT_DIR):
+		DirAccess.make_dir_recursive_absolute(TERMINAL_DRIVE_ROOT_DIR)
+	
+	_populate_default_terminal_drive_files()
+	is_drive_loaded = true
+	terminal_drive_loaded.emit()
+
+func _populate_default_terminal_drive_files() -> void:
+	var settings_path := "%s/Terminal Settings.txt" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(settings_path):
+		_write_file_content("Terminal Drive/Terminal Settings.txt", """=== DARK NOVA - TERMINAL CONFIGURATION ===
+# Impostazioni di visualizzazione terminale
+PROMPT_STYLE=folder_arrow
+FONT_SIZE=14
+THEME_ACCENT=matrix_green
+AUTO_SCROLL=true
+
+# Comportamento della shell
+HISTORY_MAX_ENTRIES=100
+AUTO_FOCUS=true
+SHOW_WELCOME_BANNER=true
+
+# Informazioni di sistema
+TERMINAL_ID=DN-TERM-01
+OS_NAME=GodotOS
+VERSION=1.2.0
+SECURITY_LEVEL=OPERATIONAL
+DRIVE_MOUNT=LOCAL
+""")
+
+	var commands_path := "%s/Commands Reference.txt" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(commands_path):
+		_write_file_content("Terminal Drive/Commands Reference.txt", """=== GUIDA COMANDI TERMINALE ===
+
+COMANDI DISPONIBILI:
+----------------------------------------------------------------------
+  help [comando]     Mostra la lista dei comandi o i dettagli di un comando.
+  ls [percorso]      Elenca file e cartelle nella directory corrente o nel percorso specificato.
+  cd <percorso>      Cambia la cartella di lavoro corrente (supporta '..', '/', o percorsi relativi).
+  pwd                Visualizza il percorso virtuale corrente.
+  cat <file>         Mostra a schermo il contenuto di un file di testo.
+  touch <file>       Crea un nuovo file vuoto nella directory indicata.
+  mkdir <cartella>   Crea una nuova cartella nel percorso indicato.
+  echo <testo>       Stampa il testo specificato sul terminale.
+  clear              Pulisce l'output della schermata del terminale.
+  date               Mostra data e ora correnti di sistema.
+
+UNITA' DI SISTEMA:
+----------------------------------------------------------------------
+  - Terminal Drive : Impostazioni e configurazioni locali della shell.
+  - Ship Drive     : File di bordo condivisi in rete (attivo quando connessi).
+""")
+
+	var env_path := "%s/Environment.txt" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(env_path):
+		_write_file_content("Terminal Drive/Environment.txt", """# Profilo Ambiente Shell Locale
+USER=Operator
+HOSTNAME=DarkNova-Console
+SHELL=/bin/godotos-sh
+TERMINAL_DRIVE=user://files/Terminal Drive
+NETWORK_SYNC=DISABLED
+LOCALE=it_IT.UTF-8
+""")
+
+	var aliases_path := "%s/Aliases.txt" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(aliases_path):
+		_write_file_content("Terminal Drive/Aliases.txt", """# Alias personalizzati per sessioni di lavoro
+# Sintassi: alias=comando
+cls=clear
+dir=ls
+sysinfo=cat Environment.txt
+config=cat "Terminal Settings.txt"
+manual=cat "Commands Reference.txt"
+""")
+
+func _write_file_content(rel_path: String, content: String) -> void:
+	var abs_path := "user://files/%s" % rel_path
+	var base_dir := abs_path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(base_dir):
+		DirAccess.make_dir_recursive_absolute(base_dir)
+	var file := FileAccess.open(abs_path, FileAccess.WRITE)
+	if file:
+		file.store_string(content)
+		file.close()
+
+## Verifica se un percorso appartiene a Terminal Drive
+func is_path_in_terminal_drive(path: String) -> bool:
+	var clean := path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
+	return clean == TERMINAL_DRIVE_NAME or clean.begins_with(TERMINAL_DRIVE_NAME + "/")
+
+## Recupera una configurazione chiave=valore da Terminal Settings.txt
+func get_setting(key: String, default_val: String = "") -> String:
+	var path := "%s/Terminal Settings.txt" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(path):
+		return default_val
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return default_val
+	while not file.eof_reached():
+		var line := file.get_line().strip_edges()
+		if line.begins_with("#") or line.begins_with(";") or line.begins_with("=") or line.is_empty():
+			continue
+		var parts := line.split("=", true, 1)
+		if parts.size() == 2 and parts[0].strip_edges() == key:
+			file.close()
+			return parts[1].strip_edges()
+	file.close()
+	return default_val
