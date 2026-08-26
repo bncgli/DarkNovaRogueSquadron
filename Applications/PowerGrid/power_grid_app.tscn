@@ -1,0 +1,436 @@
+[gd_scene format=3 uid="uid://c8pwrgrd00fxe"]
+
+[ext_resource type="Script" path="res://Applications/PowerGrid/power_grid_app.gd" id="1_grid_script"]
+[ext_resource type="Script" path="res://Applications/PowerGrid/power_grid_map_canvas.gd" id="2_canvas_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.05, 0.07, 0.1, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.25, 0.35, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_bg"]
+bg_color = Color(0.02, 0.04, 0.08, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.45, 0.65, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_term_bg"]
+bg_color = Color(0.01, 0.02, 0.04, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.12, 0.25, 0.35, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.12, 0.16, 0.22, 0.9)
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.45, 0.65, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.18, 0.25, 0.35, 0.95)
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.65, 0.9, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.06, 0.1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.6, 0.2, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="PowerGridApp" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_grid_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderCard" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/HeaderCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="Margin/VBox/HeaderCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "⚡ POWER GRID - RETE ELETTRICA NAVE"
+
+[node name="SubTitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Mappa di distribuzione, snodi di commutazione e reindirizzamento flussi"
+
+[node name="StatusBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "● ONLINE"
+
+[node name="RoleBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "RUOLO: SOLO"
+
+[node name="DatStatusBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "DAT: DEFAULT"
+
+[node name="ReloadConfigButton" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "🔄 Ricarica .DAT"
+
+[node name="ContentHBox" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="MapPanel" type="PanelContainer" parent="Margin/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.7
+theme_override_styles/panel = SubResource("StyleBoxFlat_map_bg")
+
+[node name="MapCanvas" type="Control" parent="Margin/VBox/ContentHBox/MapPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("2_canvas_script")
+
+[node name="SidebarVBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="TelemetryCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "📊 STATO RETE ELETTRICA"
+
+[node name="Grid" type="GridContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox"]
+layout_mode = 2
+columns = 2
+
+[node name="LblPwr" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Potenza Attiva:"
+
+[node name="TotalPowerLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "1650 / 1650 MW"
+horizontal_alignment = 2
+
+[node name="LblEff" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Efficienza Generale:"
+
+[node name="EfficiencyLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "100%"
+horizontal_alignment = 2
+
+[node name="LblDmg" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Guasti Duct Drone:"
+
+[node name="DamageCountLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TelemetryCard/Margin/VBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "0 CORTI"
+horizontal_alignment = 2
+
+[node name="InspectorCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="InspectorTitleLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "Seleziona Snodo / Dispositivo"
+
+[node name="InspectorDescLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.85)
+theme_override_font_sizes/font_size = 10
+text = "Clicca su uno snodo [J1-J8] o componente della mappa."
+autowrap_mode = 3
+
+[node name="HBoxInfo" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox"]
+layout_mode = 2
+
+[node name="InspectorInputsLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox/HBoxInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Input: --"
+
+[node name="InspectorRegimeLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox/HBoxInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "Regime: --"
+horizontal_alignment = 2
+
+[node name="InspectorRegimeBar" type="ProgressBar" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BtnSwitchSelectedJunction" type="Button" parent="Margin/VBox/ContentHBox/SidebarVBox/InspectorCard/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "⚡ Commuta Snodo"
+
+[node name="TerminalCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_term_bg")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TermTitleHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox"]
+layout_mode = 2
+
+[node name="TermTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox/TermTitleHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "💻 MINI-TERMINALE ENERGETICO"
+
+[node name="BtnAutobalance" type="Button" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox/TermTitleHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 9
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "⚡ Auto-Bilancia"
+
+[node name="BtnDiagnostics" type="Button" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox/TermTitleHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 9
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+text = "🔍 Diagnostica"
+
+[node name="TerminalOutput" type="RichTextLabel" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.85, 0.9, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 10
+bbcode_enabled = true
+scroll_following = true
+
+[node name="InputHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PromptLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox/InputHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = ">"
+
+[node name="TerminalInput" type="LineEdit" parent="Margin/VBox/ContentHBox/SidebarVBox/TerminalCard/Margin/VBox/InputHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+placeholder_text = "help, status, switch J1 2, autobalance..."
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.7, 0.2, 1)
+theme_override_font_sizes/font_size = 32
+text = "⚠️"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "SISTEMA POWER GRID DISCONNESSO"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "In attesa di connessione alla Dark Nova / Avvio missione..."
+horizontal_alignment = 1
