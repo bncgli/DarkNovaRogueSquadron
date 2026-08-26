@@ -124,7 +124,7 @@ func _parse_dat_file(rel_path: String) -> Dictionary:
 
 ## 3. Struttura delle Cartelle e File
 
-Ogni applicazione deve risiedere in una propria sottocartella all'interno di `Applications/`, mentre tutte le suite di test automatizzati risiedono nella cartella `.tests/`:
+Ogni applicazione deve risiedere in una propria sottocartella all'interno di `Applications/`, mentre tutte le suite di test automatizzati risiedono nella cartella `tests/`:
 
 ```text
 Applications/
@@ -136,7 +136,7 @@ Applications/
     │   └── sub_comp.gd
     └── Assets/                # Risorse grafiche, icone o temi dedicati (opzionali)
 
-.tests/                        # Suite di test automatizzati headless
+tests/                         # Suite di test automatizzati headless
 ├── test_nome_app.tscn         # Scena runner per il test dell'applicazione
 ├── test_nome_app_node.gd      # Script con asserzioni e scenari di test
 └── ...
@@ -312,6 +312,15 @@ func _update_permissions() -> void:
    * Gestisce l'ambiente 3D dello spazio, la simulazione fisica della nave (`Spaceship`), telecamere esterne (CCTV) e ostacoli.
    * `SpaceWorldManager.is_ship_connected() -> bool`: Indica se la nave è attiva e la missione è in corso.
    * `SpaceWorldManager.ship_connection_changed(is_connected: bool)`: Segnale emesso all'attivazione/disattivazione dei sistemi.
+   * **Integrazione Blueprint**:
+     * `SpaceWorldManager.get_ship_blueprint() -> ShipBlueprint`: Ritorna l'istanza attiva di `ShipBlueprint`.
+     * `SpaceWorldManager.get_duct_rooms() -> Array[Dictionary]`: Ritorna le stanze/settori della nave.
+     * `SpaceWorldManager.get_duct_corridors() -> Array[Dictionary]`: Ritorna i condotti di manutenzione per il drone.
+     * `SpaceWorldManager.get_power_devices() -> Array[Dictionary]`: Ritorna i generatori e le utenze della rete elettrica.
+     * `SpaceWorldManager.get_power_junctions() -> Array[Dictionary]`: Ritorna gli snodi e le biforcazioni elettriche.
+     * `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna le zone di danno predefinite.
+     * `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i limiti dimensionali dello scafo.
+     * `SpaceWorldManager.get_drone_spawn_pos() -> Vector2` & `get_drone_spawn_heading() -> float`: Ritorna le coordinate iniziali del Duct Drone.
 
 2. **`NetworkManager` (`Scenes/Networking/network_manager.gd`)**:
    * Gestisce socket ENet / P2P, stanze, equipaggio e chat.
@@ -358,33 +367,107 @@ Prima di considerare completata una nuova applicazione, verificare:
 - [ ] **Multiplayer / Solo**: L'app funziona regolarmente sia in modalità **Solo (Locale)** che in **Multiplayer (Host + Client)**.
 - [ ] **Contenimento Finestra e No Sbordamento**: Il contenuto dell'applicazione non sborda all'esterno della finestra; le dimensioni minime e predefinite (`DEFAULT_WINDOW_SIZE` / `custom_minimum_size`) sono state opportunamente adattate per contenere tutti gli elementi UI senza tagli né overflow.
 - [ ] **Resistenza al Resize**: Il layout UI usa Containers (`VBoxContainer`, `HBoxContainer`, `GridContainer`) e si adatta al ridimensionamento della finestra `ApplicationWindow`.
-- [ ] **Test Automatizzati (.tests/)**: L'applicazione dispone di una suite di test headless collocata nella cartella `.tests/` (es. `.tests/test_[nome_app].tscn`) per validare il ciclo di vita, i permessi RBAC e la configurazione `.dat`.
+- [ ] **Integrazione ShipBlueprint**: Se l'applicazione interagisce con settori, condotti, impianti elettrici o danni della nave, i dati geometrici e topologici vengono estratti dinamicamente da `SpaceWorldManager.get_ship_blueprint()` o dai relativi helper di `SpaceWorldManager`, con fallback locale in caso di assenza.
+- [ ] **Test Automatizzati (tests/)**: L'applicazione dispone di una suite di test headless collocata nella cartella `tests/` (es. `tests/test_[nome_app].tscn`) per validare il ciclo di vita, i permessi RBAC e la configurazione `.dat`.
 - [ ] **Pulizia `_exit_tree()`**: Tutti i segnali globali collegati vengono disconnessi alla chiusura della finestra per prevenire memory leak o crash.
 
 ---
 
-## 9. Suite di Test Automatizzati (`.tests/`)
+## 9. Suite di Test Automatizzati (`tests/`)
 
-Tutti i test automatizzati del progetto devono essere collocati all'interno della directory `.tests/`.
+Tutti i test automatizzati del progetto devono essere collocati all'interno della directory `tests/`.
 
 ### Struttura Standard dei Test
 Ogni suite di test è composta da:
-* **Scena Runner (`.tests/test_[modulo].tscn`)**: Scena Godot minimale che istanzia lo script di test.
-* **Script di Test (`.tests/test_[modulo]_node.gd`)**: Script GDScript che esegue i test in modalità headless, verifica lo stato con `assert()`, testa le funzionalità sia offline che connesse, e termina l'esecuzione con `get_tree().quit(0)` in caso di successo o `get_tree().quit(1)` in caso di errore.
+* **Scena Runner (`tests/test_[modulo].tscn`)**: Scena Godot minimale che istanzia lo script di test.
+* **Script di Test (`tests/test_[modulo]_node.gd`)**: Script GDScript che esegue i test in modalità headless, verifica lo stato con `assert()`, testa le funzionalità sia offline che connesse, e termina l'esecuzione con `get_tree().quit(0)` in caso di successo o `get_tree().quit(1)` in caso di errore.
 
 ### Esecuzione dei Test Headless
 I test possono essere eseguiti da riga di comando o in pipeline CI/CD tramite Godot Engine in modalità headless:
 ```bash
 # Esecuzione di un singolo test
-godot --headless --path . .tests/test_cams_system.tscn
+godot --headless --path . tests/test_cams_system.tscn
 
-# Esecuzione di tutti i test della cartella .tests/
-for t in .tests/*.tscn; do echo "=== Running $t ==="; godot --headless --path . "$t"; done
+# Esecuzione di tutti i test della cartella tests/
+for t in tests/*.tscn; do echo "=== Running $t ==="; godot --headless --path . "$t"; done
 ```
 
 ### Requisiti di Copertura per Nuove Applicazioni
-I test all'interno di `.tests/` per una nuova applicazione devono verificare:
+I test all'interno di `tests/` per una nuova applicazione devono verificare:
 1. **Overlay / Ciclo di Vita**: Verifica del blocco con overlay quando offline/in lobby e sblocco automatico all'avvio della missione (`SpaceWorldManager.is_ship_connected()`).
 2. **File `.dat` & Cartelle Protette**: Verifica dell'esistenza della cartella protetta (`Ship Drive/Programs/[NomeApp]`), parsing dei file `.dat` e hot-reloading su sincronizzazione/modifica.
 3. **Controllo Ruoli (RBAC)**: Verifica che i comandi attivi siano consentiti solo ai ruoli autorizzati.
 4. **Pulizia Segnali**: Verifica che alla chiusura dell'app tutti i segnali e timer vengano ripuliti senza errori in `_exit_tree()`.
+
+---
+
+## 10. Integrazione con ShipBlueprint / Sublayer della Nave
+
+### A. Panoramica del Sublayer Unificato
+La risorsa centrale **`ShipBlueprint`** (`Outside/ShipSublayer/ship_blueprint.gd` e `default_ship_blueprint.tres`) definisce l'intera configurazione e geometria della nave attraverso 4 sublayer coordinati:
+
+1. **Sublayer 1: Stanze e Settori (`rooms`)**:
+   - Geometria dei compartimenti dello scafo (`Rect2`), nomi identificativi, categoria (`command`, `engineering`, `propulsion`, `sensors`, ecc.), colori primari e bordi.
+2. **Sublayer 2: Condotti di Manutenzione (`ducts`)**:
+   - Segmenti di navigazione interna per il Duct Drone (`from`, `to`, `width`), nomi dei condotti e flag di ostruzione (`is_blocked`).
+3. **Sublayer 3: Rete Elettrica (`devices`, `junctions`, `conduits`)**:
+   - Dispositivi generatori e consumatori (potenza in MW, porte di alimentazione `inputs_count`).
+   - Snodi a commutazione dinamica (`junctions` con rami e linee `conduits`).
+4. **Sublayer 4: Zone di Danno e Vulnerabilità (`damages`)**:
+   - Punti di danno strutturale (falle, cortocircuiti), gravità (`severity`), costi di riparazione e impatto sui sistemi.
+
+Inoltre, la risorsa contiene i metadati dimensionali dello scafo (`ship_bounds`), le coordinate di spawn del drone (`drone_spawn_pos`) e l'orientamento iniziale (`drone_spawn_heading`).
+
+### B. Come un'Applicazione si Connette ed Estrae i Dati della Blueprint
+
+Le applicazioni non devono includere coordinate o topologie hardcoded. Devono invece interrogare l'istanza attiva tramite l'autoload **`SpaceWorldManager`**.
+
+#### Metodi Helper di `SpaceWorldManager`
+* `SpaceWorldManager.get_ship_blueprint() -> ShipBlueprint`: Ritorna l'istanza di risorsa attiva (o la blueprint di default).
+* `SpaceWorldManager.get_duct_rooms() -> Array[Dictionary]`: Ritorna l'elenco delle stanze dello scafo.
+* `SpaceWorldManager.get_duct_corridors() -> Array[Dictionary]`: Ritorna l'elenco dei condotti di transito.
+* `SpaceWorldManager.get_power_devices() -> Array[Dictionary]`: Ritorna l'elenco dei dispositivi elettrici.
+* `SpaceWorldManager.get_power_junctions() -> Array[Dictionary]`: Ritorna l'elenco degli snodi di derivazione.
+* `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna l'elenco dei punti di danno predefiniti.
+* `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i confini dimensionali della nave.
+* `SpaceWorldManager.get_drone_spawn_pos() -> Vector2`: Ritorna la posizione di spawn del drone.
+
+#### Pattern GDScript Consigliato per le Applicazioni
+
+```gdscript
+func _init_ship_topology() -> void:
+	# 1. Recupero dell'istanza Blueprint o fallback
+	var bp: ShipBlueprint = null
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
+		bp = SpaceWorldManager.get_ship_blueprint()
+	
+	if bp != null:
+		_load_from_blueprint(bp)
+	else:
+		_load_fallback_topology()
+
+func _load_from_blueprint(bp: ShipBlueprint) -> void:
+	# Esempio: Caricamento stanze e condotti
+	for room in bp.rooms:
+		var room_id: String = room.get("id", "")
+		var room_rect: Rect2 = room.get("rect", Rect2())
+		var room_name: String = room.get("name", "Settore")
+		# Inizializza elementi UI / logica...
+
+	# Esempio: Caricamento dispositivi elettrici
+	for dev in bp.devices:
+		var dev_id: String = dev.get("id", "")
+		var dev_pos: Vector2 = dev.get("pos", Vector2.ZERO)
+		var is_gen: bool = dev.get("is_generator", false)
+		# Popola la mappa o il controller...
+
+	# Esempio: Metodi di query rapida forniti dalla Blueprint
+	var bridge_room := bp.get_room_by_id("bridge")
+	var room_at_cursor := bp.get_room_at(Vector2(300, 80))
+	var reactor_device := bp.get_device_by_id("reactor_main")
+```
+
+### C. Editor Visivo dei Sublayer (`addons/ship_sublayer_editor/`)
+Gli sviluppatori possono progettare, modificare, testare e serializzare i sublayer della nave direttamente dall'Editor di Godot:
+* Il plugin aggiunge una scheda **Ship Blueprint** nel pannello inferiore.
+* Supporta navigazione Pan/Zoom, Snap alla griglia, manipolazione interattiva (trascinamento e ridimensionamento), ispettore delle proprietà e salvataggio in `.tres` o esportazione/importazione `.json`.

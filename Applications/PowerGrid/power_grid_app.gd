@@ -174,6 +174,63 @@ func _init_grid_topology() -> void:
 	junctions.clear()
 	conduits.clear()
 	
+	var bp: ShipBlueprint = null
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
+		bp = SpaceWorldManager.get_ship_blueprint()
+	
+	if bp and bp.devices.size() > 0 and bp.junctions.size() > 0:
+		_load_grid_from_blueprint(bp)
+	else:
+		_load_default_grid_topology()
+	
+	_rebuild_conduits_list()
+
+func _load_grid_from_blueprint(bp: ShipBlueprint) -> void:
+	for d: Dictionary in bp.devices:
+		var id: String = d.get("id", "")
+		if id.is_empty():
+			continue
+		var is_gen: bool = bool(d.get("is_generator", false))
+		var pos_val = d.get("pos", Vector2.ZERO)
+		var pos_vec: Vector2 = pos_val if pos_val is Vector2 else Vector2(pos_val[0], pos_val[1]) if pos_val is Array and pos_val.size() == 2 else Vector2.ZERO
+		devices[id] = {
+			"id": id,
+			"name": str(d.get("name", id)),
+			"sector": str(d.get("sector", "Settore Nave")),
+			"pos": pos_vec,
+			"is_generator": is_gen,
+			"power_mw": float(d.get("power_mw", 100.0)),
+			"inputs_count": int(d.get("inputs_count", 1)),
+			"inputs_powered": 0,
+			"regime": 1.0 if is_gen else 0.0,
+			"desc": str(d.get("desc", ""))
+		}
+	
+	for j: Dictionary in bp.junctions:
+		var id: String = j.get("id", "")
+		if id.is_empty():
+			continue
+		var pos_val = j.get("pos", Vector2.ZERO)
+		var pos_vec: Vector2 = pos_val if pos_val is Vector2 else Vector2(pos_val[0], pos_val[1]) if pos_val is Array and pos_val.size() == 2 else Vector2.ZERO
+		var branches_list: Array = []
+		if j.has("branches") and j["branches"] is Array:
+			for b in (j["branches"] as Array):
+				if b is Dictionary:
+					var branch_dict: Dictionary = (b as Dictionary).duplicate(true)
+					if branch_dict.has("to_pos") and branch_dict["to_pos"] is Array and branch_dict["to_pos"].size() == 2:
+						branch_dict["to_pos"] = Vector2(branch_dict["to_pos"][0], branch_dict["to_pos"][1])
+					branches_list.append(branch_dict)
+		
+		junctions[id] = {
+			"id": id,
+			"name": str(j.get("name", id)),
+			"pos": pos_vec,
+			"input_source": str(j.get("input_source", "")),
+			"active_branch": int(j.get("active_branch", 0)),
+			"branches": branches_list
+		}
+
+func _load_default_grid_topology() -> void:
 	# Dispositivi di bordo (Fonti di alimentazione e Utillizzatori con input 1, 2 o 3)
 	devices["reactor_main"] = {
 		"id": "reactor_main",
@@ -533,7 +590,7 @@ func update_power_simulation() -> void:
 		# Determina se lo snodo riceve corrente a monte
 		if j["input_source"] == "reactor_main" or j["input_source"] == "aux_generator":
 			for c in conduits:
-				if c["target"] == j_id and c["is_powered"] and not c["is_shorted"]:
+				if c.get("target", "") == j_id and c["is_powered"] and not c["is_shorted"]:
 					is_j_powered = true
 					break
 		else:
