@@ -89,6 +89,17 @@ use_generic_pause_menu = false
 [node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Duct Drone Option/HBoxContainer/MarginContainer" index="0"]
 modulate = Color(1, 0.85, 0.2, 1)
 
+[node name="Power Grid Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271895 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "res://Applications/PowerGrid/power_grid_app.tscn"
+title_text = "Power Grid"
+description_text = "Mappa elettrica 2D, snodi e flussi energetici nave"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Power Grid Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(0.95, 0.85, 0.2, 1)
+
 [node name="Cams Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271892 instance=ExtResource("2_1ualm")]
 layout_mode = 2
 game_scene = ""
