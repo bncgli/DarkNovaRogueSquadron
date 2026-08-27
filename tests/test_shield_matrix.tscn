@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cb8bdxckqgb48"]
+
+[ext_resource type="Script" path="res://tests/test_shield_matrix_node.gd" id="1_shld_test_script"]
+
+[node name="TestShieldMatrix" type="Node"]
+script = ExtResource("1_shld_test_script")

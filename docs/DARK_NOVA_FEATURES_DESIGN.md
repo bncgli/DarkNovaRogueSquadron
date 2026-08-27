@@ -246,6 +246,24 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
   - Supporta comandi standard (`ls`, `cd`, `pwd`, `cat`, `help`, `clear`).
   - Protezione diegetica dei file `.dat`: il comando `cat` rifiuta la lettura grezza dei file di configurazione per preservare l'integrità del sistema.
 
+### 4.7 Tactical Weapons & Point Defense (`Applications/Weapons`)
+- **Scopo**: Gestione, puntamento e ingaggio dei sistemi d'arma di bordo (Torrette Laser binate, Siluri e PDG).
+- **Finestra**: `weapons_app.tscn` (Dimensioni: `720x520`).
+- **Ruolo**: **Soldato** (Override: Capitano/Factotum).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Weapons/`, file `weapons_config.dat` e `ammo_tuning.dat` (Password debug: `WEAP-7815`).
+
+### 4.8 Shield Matrix & Hull Deflectors (`Applications/ShieldMatrix`)
+- **Scopo**: Gestione, distribuzione e bilanciamento della barriera deflettente energetica a 4 quadranti (Prua, Poppa, Babordo, Tribordo).
+- **Finestra**: `shield_matrix_app.tscn` (Dimensioni: `620x460`).
+- **Flusso Utente**:
+  1. L'Ingegnere apre l'app dal menu Start o Taskbar.
+  2. Monitora lo stato energetico e l'integrità dei 4 quadranti attraverso il visualizzatore olografico e le barre telemetriche.
+  3. Utilizza gli slider dedicati o il Vector Pad 2D per sbilanciare la protezione verso la direzione dei pericoli/impatti.
+  4. In caso di emergenza, attiva la **Ricarica Rapida d'Emergenza** per un boost istantaneo di energia deflettente al costo di un picco di assorbimento (120 MW).
+  5. Sincronizza le armoniche di fase (440.0 Hz) per massimizzare stabilità ed efficienza di assorbimento.
+- **Ruolo**: **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ShieldMatrix/`, file `shields_config.dat` e `deflector_tuning.dat` (Password debug: `SHLD-7815`).
+
 ---
 
 ## 5. Roadmap e Nuove Feature da Creare
@@ -316,18 +334,22 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-### 5.3 Nuova Feature 3: Shield Matrix & Hull Deflectors (`Applications/ShieldMatrix`)
+### 5.3 Nuova Feature 3: Shield Matrix & Hull Deflectors (`Applications/ShieldMatrix`) [SVILUPPATA]
+- **Stato di Sviluppo**: **Completata e Integrata** (conforme ad `APP_ARCHITECTURE_STANDARD.md`, registrata in `ShipBlueprint` con suite di test headless `tests/test_shield_matrix.tscn`).
 - **Descrizione**: Gestione e distribuzione dinamica della barriera deflettente energetica della nave, suddivisa in 4 quadranti indipendenti (**Prua**, **Poppa**, **Babordo**, **Tribordo**).
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`shield_matrix_app.tscn`, `620x460`)**:
-    - Visualizzatore olografico della corvetta con barre di integrità e stato energetico per ciascuno dei 4 quadranti.
-    - Pad direzionale / Vector Slider 2D per sbilanciare e concentrare l'energia difensiva verso la direzione d'impatto (es. 80% su prua durante l'attraversamento di una tempesta di micrometeoriti, o su tribordo durante uno scontro a fuoco).
-    - Pulsante "Ricarica Rapida d'Emergenza": convoglia un boost immediato di ripristino scudi al costo di un picco di assorbimento da 80-120 MW dalla rete elettrica.
-    - Interruttore di sincronizzazione frequenza di fase (deflection harmonics).
+    - Visualizzatore olografico della corvetta con rendering wireframe, archi scudo dinamici e barre di integrità e stato energetico per ciascuno dei 4 quadranti.
+    - Pad direzionale / Vector Slider 2D e cursori ratio individuali per sbilanciare e concentrare l'energia difensiva verso la direzione d'impatto con normalizzazione automatica (somma 100%).
+    - Pulsante "Ricarica Rapida d'Emergenza": convoglia un boost immediato di ripristino scudi al costo di un picco di assorbimento da 80-120 MW dalla rete elettrica con cooldown attivo.
+    - Interruttore di sincronizzazione frequenza di fase (deflection harmonics a 440.0 Hz).
+    - Pulsante "🔄 Ricarica .DAT" per hot-reloading manuale e visualizzazione dello stato firmware.
 - **Ruolo Assegnato**: **Ingegnere** (Controllo totale sul bilanciamento e sulla ricarica; Capitano in override; Pilota e Soldato in sola visualizzazione telemetrica).
 - **Integrazione con i Sublayer**:
   - **Sublayer 3 (Rete Elettrica)**: L'emettitore scudi (`shields_deflector`) è un'utenza primaria ad alto consumo continuo. La perdita di potenza causa il decadimento rapido della matrice.
-  - **Sublayer 4 (Danni)**: Danni all'emettitore o agli anelli di collimazione riducono la capacità massima del quadrante interessato e impediscono il bilanciamento rapido.
+  - **Sublayer 4 (Danni)**: Danni all'emettitore o agli anelli di collimazione riducono la capacità massima del quadrante interessato e degradano la tenuta.
+  - **Sublayer 5 (Drive Files)**: Cartella protetta `Ship Drive/Programs/ShieldMatrix/` (Password debug: `SHLD-7815`).
+  - **Sublayer 6 (Mainframe Apps)**: Registrata in `ShipBlueprint` con visibilità nel menu Start per Ingegnere, Capitano e Factotum.
 - **Configurazione `.DAT` e Meccanica Hackwarfare**:
   - **Percorso Cartella Protetta**: `Ship Drive/Programs/ShieldMatrix/` (Password debug: `SHLD-7815`).
   - **File di Configurazione Attivi**:

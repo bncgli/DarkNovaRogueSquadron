@@ -1,0 +1,470 @@
+[gd_scene format=3 uid="uid://cx6y8v2u0shld"]
+
+[ext_resource type="Script" path="res://Applications/ShieldMatrix/shield_matrix_app.gd" id="1_shld_script"]
+[ext_resource type="Script" path="res://Applications/ShieldMatrix/shield_matrix_hologram.gd" id="2_holo_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.04, 0.07, 0.12, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.3, 0.45, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_boost"]
+bg_color = Color(0.1, 0.45, 0.75, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.8, 1, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pad_bg"]
+bg_color = Color(0.02, 0.05, 0.08, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.5, 0.7, 0.5)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pad_handle"]
+bg_color = Color(0.3, 0.85, 1, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.06, 0.1, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.6, 0.9, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="ShieldMatrixApp" type="Control"]
+custom_minimum_size = Vector2(620, 460)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shld_script")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "🛡️ SHIELD MATRIX & HULL DEFLECTORS"
+
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+text = "● MATRICE SCUDI ONLINE"
+
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "RUOLO: Ingegnere"
+
+[node name="PowerBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 11
+text = "POTENZA: 90 MW"
+
+[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 11
+text = "DAT: ATTIVO"
+
+[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "🔄 Ricarica .DAT"
+
+[node name="MainContentHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="HologramCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HoloTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "VISTA OLOGRAFICA 4 QUADRANTI"
+horizontal_alignment = 1
+
+[node name="HologramCanvas" type="Control" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 190)
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("2_holo_script")
+
+[node name="TotalIntegrityLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "INTEGRITÀ GLOBALE: 1000 / 1000 MW (100.0%)"
+horizontal_alignment = 1
+
+[node name="TotalIntegrityBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+
+[node name="QuadrantsAndControlCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="GridTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "STATO MATRICE QUADRANTI"
+horizontal_alignment = 1
+
+[node name="Grid" type="GridContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 4
+
+[node name="ForeBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ForeHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+layout_mode = 2
+
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "PRUA (FORE)"
+
+[node name="ForeValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "250/250 MW"
+
+[node name="ForeBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 250.0
+value = 250.0
+show_percentage = false
+
+[node name="BalanceForeSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 70.0
+value = 25.0
+
+[node name="AftBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AftHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+layout_mode = 2
+
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "POPPA (AFT)"
+
+[node name="AftValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "250/250 MW"
+
+[node name="AftBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 250.0
+value = 250.0
+show_percentage = false
+
+[node name="BalanceAftSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 70.0
+value = 25.0
+
+[node name="PortBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PortHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+layout_mode = 2
+
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "BABORDO (PORT)"
+
+[node name="PortValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "250/250 MW"
+
+[node name="PortBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 250.0
+value = 250.0
+show_percentage = false
+
+[node name="BalancePortSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 70.0
+value = 25.0
+
+[node name="StarboardBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StarboardHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+layout_mode = 2
+
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "TRIBORDO (STARBOARD)"
+
+[node name="StarboardValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "250/250 MW"
+
+[node name="StarboardBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 250.0
+value = 250.0
+show_percentage = false
+
+[node name="BalanceStarboardSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 5.0
+max_value = 70.0
+value = 25.0
+
+[node name="PadAndControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="VectorPad" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pad_bg")
+
+[node name="PadHandle" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/VectorPad"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pad_handle")
+
+[node name="PadInfoVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PadLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Vector Pad: Trascina per concentrare energia difensiva"
+
+[node name="ResetBalanceButton" type="Button" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "⚖️ Reset Bilanciamento (25% cad.)"
+
+[node name="ActionCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ActionCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EmergencyBoostButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(170, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_boost")
+text = "⚡ RICARICA RAPIDA"
+
+[node name="PhaseSyncSwitch" type="CheckButton" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+button_pressed = true
+text = "Sincronizza Armoniche"
+
+[node name="PhaseStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "ARMONICHE: SINCRONIZZATE (440.0 Hz)"
+
+[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 10
+text = "[LOG] Matrice Scudi pronta."
+clip_text = true
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "🛡️"
+horizontal_alignment = 1
+
+[node name="OfflineTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "SISTEMI SCUDI OFFLINE"
+horizontal_alignment = 1
+
+[node name="OfflineDesc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "In attesa di connessione alla corvetta o avvio missione..."
+horizontal_alignment = 1

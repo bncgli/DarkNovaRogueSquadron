@@ -22,9 +22,9 @@ func _run_suite() -> void:
 	assert(bp.devices.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
 	assert(bp.junctions.size() == 8, "La Blueprint deve contenere 8 snodi elettrici di default")
 	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
-	assert(bp.drive_files.size() == 13, "La Blueprint deve contenere 13 file di default per Ship Drive (inclusi Weapons)")
-	assert(bp.drive_passwords.size() == 5, "La Blueprint deve contenere 5 password cartelle per Ship Drive (incluso Weapons)")
-	assert(bp.installed_apps.size() == 5, "La Blueprint deve contenere 5 applicazioni mainframe installate di default (incluso Weapons)")
+	assert(bp.drive_files.size() == 15, "La Blueprint deve contenere 15 file di default per Ship Drive (inclusi Weapons e ShieldMatrix)")
+	assert(bp.drive_passwords.size() == 6, "La Blueprint deve contenere 6 password cartelle per Ship Drive (inclusi Weapons e ShieldMatrix)")
+	assert(bp.installed_apps.size() == 6, "La Blueprint deve contenere 6 applicazioni mainframe installate di default (inclusi Weapons e ShieldMatrix)")
 	print("✔ Struttura dati e 6 sublayer (incluso Mainframe Apps & Ship Drive) inizializzati con successo")
 
 	# =========================================================================
@@ -73,6 +73,13 @@ func _run_suite() -> void:
 	var weap_pwd := bp.get_drive_password("Ship Drive/Programs/Weapons")
 	assert(weap_pwd == "WEAP-7815", "Password Weapons deve essere WEAP-7815")
 
+	var shld_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/ShieldMatrix/shields_config.dat")
+	assert(not shld_cfg.is_empty(), "get_drive_file_by_path deve trovare shields_config.dat")
+	assert(shld_cfg.get("is_protected") == true, "shields_config.dat deve essere protetto")
+
+	var shld_pwd := bp.get_drive_password("Ship Drive/Programs/ShieldMatrix")
+	assert(shld_pwd == "SHLD-7815", "Password ShieldMatrix deve essere SHLD-7815")
+
 	# Test aggiunta e rimozione file dinamico
 	bp.set_drive_file("Ship Drive/test_note.txt", "Note test", false, "Descrizione")
 	assert(not bp.get_drive_file_by_path("Ship Drive/test_note.txt").is_empty(), "File temporaneo aggiunto con successo")
@@ -87,17 +94,21 @@ func _run_suite() -> void:
 	assert(not weap_app.is_empty(), "get_installed_app_by_id deve trovare weapons")
 	assert(weap_app.get("title") == "Tactical Weapons", "Titolo app deve essere Tactical Weapons")
 	
+	var shld_app := bp.get_installed_app_by_id("shield_matrix")
+	assert(not shld_app.is_empty(), "get_installed_app_by_id deve trovare shield_matrix")
+	assert(shld_app.get("title") == "Shield Matrix", "Titolo app deve essere Shield Matrix")
+	
 	var pilot_apps := bp.get_apps_for_role("Pilota", false)
 	assert(pilot_apps.size() == 2, "Pilota deve visualizzare 2 app (Flight Control e Cams)")
 	
 	var eng_apps := bp.get_apps_for_role("Ingegnere", false)
-	assert(eng_apps.size() == 2, "Ingegnere deve visualizzare 2 app (Duct Drone e Power Grid)")
+	assert(eng_apps.size() == 3, "Ingegnere deve visualizzare 3 app (Duct Drone, Power Grid e Shield Matrix)")
 	
 	var soldier_apps := bp.get_apps_for_role("Soldato", false)
 	assert(soldier_apps.size() == 2, "Soldato deve visualizzare 2 app (Cams e Weapons)")
 	
 	var cap_apps := bp.get_apps_for_role("Capitano", false)
-	assert(cap_apps.size() == 5, "Capitano deve visualizzare tutte e 5 le app")
+	assert(cap_apps.size() == 6, "Capitano deve visualizzare tutte e 6 le app")
 
 	print("✔ Tutte le query e ricerche per ID/coordinate/drive/app hanno avuto successo")
 
@@ -110,9 +121,9 @@ func _run_suite() -> void:
 	assert(serialized_dict.has("rooms") and serialized_dict["rooms"].size() == 10, "Dizionario deve contenere 10 stanze")
 	assert(serialized_dict.has("devices") and serialized_dict["devices"].size() == 11, "Dizionario deve contenere 11 dispositivi")
 	assert(serialized_dict.has("junctions") and serialized_dict["junctions"].size() == 8, "Dizionario deve contenere 8 snodi")
-	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 13, "Dizionario deve contenere 13 file drive")
-	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 5, "Dizionario deve contenere 5 password drive")
-	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 5, "Dizionario deve contenere 5 app mainframe")
+	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 15, "Dizionario deve contenere 15 file drive")
+	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 6, "Dizionario deve contenere 6 password drive")
+	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 6, "Dizionario deve contenere 6 app mainframe")
 
 	var reconstructed_bp := ShipBlueprint.new()
 	reconstructed_bp.from_dict(serialized_dict)
@@ -143,9 +154,9 @@ func _run_suite() -> void:
 	assert(imported_bp.ship_name == "Dark Nova Corvette", "Nome nave importato deve coincidere")
 	assert(imported_bp.rooms.size() == 10, "Stanze importate da JSON devono essere 10")
 	assert(imported_bp.devices.size() == 11, "Dispositivi importati da JSON devono essere 11")
-	assert(imported_bp.drive_files.size() == 13, "File drive importati da JSON devono essere 13")
-	assert(imported_bp.drive_passwords.size() == 5, "Password drive importate da JSON devono essere 5")
-	assert(imported_bp.installed_apps.size() == 5, "App mainframe importate da JSON devono essere 5")
+	assert(imported_bp.drive_files.size() == 15, "File drive importati da JSON devono essere 15")
+	assert(imported_bp.drive_passwords.size() == 6, "Password drive importate da JSON devono essere 6")
+	assert(imported_bp.installed_apps.size() == 6, "App mainframe importate da JSON devono essere 6")
 
 	# Test gestione errori su file inesistente
 	var missing_err := imported_bp.import_from_json("user://non_existing_file_12345.json")
@@ -192,16 +203,19 @@ func _run_suite() -> void:
 		assert(mgr_damages.size() == 8, "SpaceWorldManager.get_damage_zones() deve restituire 8 zone di danno")
 
 		var mgr_files := SpaceWorldManager.get_ship_drive_files()
-		assert(mgr_files.size() == 13, "SpaceWorldManager.get_ship_drive_files() deve restituire 13 file")
+		assert(mgr_files.size() == 15, "SpaceWorldManager.get_ship_drive_files() deve restituire 15 file")
 
 		var mgr_passwords := SpaceWorldManager.get_ship_drive_passwords()
-		assert(mgr_passwords.size() == 5, "SpaceWorldManager.get_ship_drive_passwords() deve restituire 5 password")
+		assert(mgr_passwords.size() == 6, "SpaceWorldManager.get_ship_drive_passwords() deve restituire 6 password")
 
 		var mgr_apps := SpaceWorldManager.get_installed_apps()
-		assert(mgr_apps.size() == 5, "SpaceWorldManager.get_installed_apps() deve restituire 5 app")
+		assert(mgr_apps.size() == 6, "SpaceWorldManager.get_installed_apps() deve restituire 6 app")
 
 		var mgr_pilot_apps := SpaceWorldManager.get_installed_apps_for_role("Pilota")
 		assert(mgr_pilot_apps.size() == 2, "SpaceWorldManager.get_installed_apps_for_role(Pilota) deve restituire 2 app")
+
+		var mgr_eng_apps := SpaceWorldManager.get_installed_apps_for_role("Ingegnere")
+		assert(mgr_eng_apps.size() == 3, "SpaceWorldManager.get_installed_apps_for_role(Ingegnere) deve restituire 3 app (Duct Drone, Power Grid e Shield Matrix)")
 
 		var mgr_soldier_apps := SpaceWorldManager.get_installed_apps_for_role("Soldato")
 		assert(mgr_soldier_apps.size() == 2, "SpaceWorldManager.get_installed_apps_for_role(Soldato) deve restituire 2 app (Cams e Weapons)")
@@ -352,7 +366,7 @@ func _run_suite() -> void:
 		await get_tree().process_frame
 		
 		eng_apps = bp.get_apps_for_role("Ingegnere", false)
-		assert(eng_apps.size() == 2, "Ingegnere deve avere accesso a 2 app (Power Grid e Duct Drone)")
+		assert(eng_apps.size() == 3, "Ingegnere deve avere accesso a 3 app (Power Grid, Duct Drone e Shield Matrix)")
 		
 		current_ship_apps.clear()
 		for child in vbox.get_children():
@@ -360,6 +374,7 @@ func _run_suite() -> void:
 				current_ship_apps.append(child.name)
 		assert(current_ship_apps.has("ShipApp_power_grid"), "Menu Start per Ingegnere deve contenere Power Grid")
 		assert(current_ship_apps.has("ShipApp_duct_drone"), "Menu Start per Ingegnere deve contenere Duct Drone")
+		assert(current_ship_apps.has("ShipApp_shield_matrix"), "Menu Start per Ingegnere deve contenere Shield Matrix")
 		assert(not current_ship_apps.has("ShipApp_flight_control"), "Menu Start per Ingegnere NON deve contenere Flight Control")
 		
 		# 4. Cambio ruolo in Capitano (Accesso totale a tutte le app installate)
@@ -371,8 +386,9 @@ func _run_suite() -> void:
 		for child in vbox.get_children():
 			if child.is_in_group("dynamic_ship_apps"):
 				current_ship_apps.append(child.name)
-		assert(current_ship_apps.size() == 5, "Menu Start per Capitano deve contenere tutte e 5 le app nave (inclusa Weapons)")
+		assert(current_ship_apps.size() == 6, "Menu Start per Capitano deve contenere tutte e 6 le app nave (inclusa Shield Matrix)")
 		assert(current_ship_apps.has("ShipApp_weapons"), "Menu Start per Capitano deve contenere Weapons")
+		assert(current_ship_apps.has("ShipApp_shield_matrix"), "Menu Start per Capitano deve contenere Shield Matrix")
 		
 		# 4b. Cambio ruolo in Soldato (Cams e Weapons)
 		net_mgr.request_role("Soldato")

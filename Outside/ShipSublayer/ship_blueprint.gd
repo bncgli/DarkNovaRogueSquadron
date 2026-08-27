@@ -606,6 +606,18 @@ func _init_default_drive() -> void:
 			"content": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n",
 			"is_protected": true,
 			"desc": "Balistica siluri, tracking anticipo di tiro e guadagno danno."
+		},
+		{
+			"path": "Ship Drive/Programs/ShieldMatrix/shields_config.dat",
+			"content": "# DARK NOVA SHIELD MATRIX RUNTIME CONFIGURATION\n# WARNING: SHIELD DEFLECTOR AND HULL PROTECTION MATRIX\n[SYSTEM]\napp_name=ShieldMatrix\nversion=1.0.4\nstatus=OPERATIONAL\nshield_subsystem=ACTIVE\n\n[SHIELD_SETTINGS]\nmax_capacity_per_quadrant=250.0\nrecharge_rate_per_sec=15.0\noverload_limit=1.3\nbase_power_draw_mw=90.0\nemergency_boost_power_mw=120.0\nemergency_boost_amount=75.0\nemergency_boost_cooldown=8.0\ndecay_rate_unpowered=25.0\n",
+			"is_protected": true,
+			"desc": "Capacità per quadrante, rigenerazione e assorbimento energetico matrice scudi."
+		},
+		{
+			"path": "Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat",
+			"content": "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX\n[HARMONICS]\nharmonic_frequency=440.0\nemergency_boost_multiplier=2.5\noverclock_absorption=1.0\nphase_sync_stability=0.98\ndispersion_damping=0.88\n",
+			"is_protected": true,
+			"desc": "Frequenza armonica deflettori e moltiplicatori boost scudi."
 		}
 	]
 	
@@ -614,7 +626,8 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/Cams": "CAMS-7815",
 		"Ship Drive/Programs/DuctDrone": "DRONE-7815",
 		"Ship Drive/Programs/PowerGrid": "GRID-7815",
-		"Ship Drive/Programs/Weapons": "WEAP-7815"
+		"Ship Drive/Programs/Weapons": "WEAP-7815",
+		"Ship Drive/Programs/ShieldMatrix": "SHLD-7815"
 	}
 
 func _init_default_installed_apps() -> void:
@@ -658,6 +671,14 @@ func _init_default_installed_apps() -> void:
 			"scene_path": "res://Applications/Weapons/weapons_app.tscn",
 			"icon_color": Color(0.95, 0.25, 0.25, 1.0),
 			"roles": ["Capitano", "Soldato", "Tattico / Armi", "Factotum"]
+		},
+		{
+			"id": "shield_matrix",
+			"title": "Shield Matrix",
+			"description": "Matrice deflettori a 4 quadranti e scudi energetici",
+			"scene_path": "res://Applications/ShieldMatrix/shield_matrix_app.tscn",
+			"icon_color": Color(0.2, 0.6, 1.0, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Factotum"]
 		}
 	]
 
