@@ -618,6 +618,18 @@ func _init_default_drive() -> void:
 			"content": "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX\n[HARMONICS]\nharmonic_frequency=440.0\nemergency_boost_multiplier=2.5\noverclock_absorption=1.0\nphase_sync_stability=0.98\ndispersion_damping=0.88\n",
 			"is_protected": true,
 			"desc": "Frequenza armonica deflettori e moltiplicatori boost scudi."
+		},
+		{
+			"path": "Ship Drive/Programs/Comms/comms_config.dat",
+			"content": "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION\n# WARNING: SUBSPACE RELAY AND CRYPTOGRAPHY MATRIX\n[SYSTEM]\napp_name=Comms\nversion=1.0.4\nstatus=OPERATIONAL\ncomms_subsystem=ACTIVE\n\n[COMMS_SETTINGS]\nbandwidth_hz=1420.0\ndecryption_speed_multiplier=1.0\nsubspace_relay_active=true\nauto_tune_sos=true\nsignal_amplification=1.2\n",
+			"is_protected": true,
+			"desc": "Configurazione larghezza di banda e ricezione subspaziale."
+		},
+		{
+			"path": "Ship Drive/Programs/Comms/crypto_tuning.dat",
+			"content": "# EW COUNTERMEASURES & CRYPTO TUNING MATRIX\n[ELECTRONIC_WARFARE]\njamming_power_mw=120.0\nsignal_noise_ratio=0.85\nspoofing_signature=CORVETTE_CIVILIAN\njamming_radius=15000.0\noverclock_ew_boost=1.0\ncrypto_crack_speed=1.0\n",
+			"is_protected": true,
+			"desc": "Taratura potenza Jamming, contromisure EW e violazione cifrari."
 		}
 	]
 	
@@ -627,7 +639,8 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/DuctDrone": "DRONE-7815",
 		"Ship Drive/Programs/PowerGrid": "GRID-7815",
 		"Ship Drive/Programs/Weapons": "WEAP-7815",
-		"Ship Drive/Programs/ShieldMatrix": "SHLD-7815"
+		"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
+		"Ship Drive/Programs/Comms": "COMM-7815"
 	}
 
 func _init_default_installed_apps() -> void:
@@ -679,6 +692,14 @@ func _init_default_installed_apps() -> void:
 			"scene_path": "res://Applications/ShieldMatrix/shield_matrix_app.tscn",
 			"icon_color": Color(0.2, 0.6, 1.0, 1.0),
 			"roles": ["Capitano", "Ingegnere", "Factotum"]
+		},
+		{
+			"id": "comms",
+			"title": "Comms & Electronic War",
+			"description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
+			"scene_path": "res://Applications/Comms/comms_app.tscn",
+			"icon_color": Color(0.4, 0.8, 1.0, 1.0),
+			"roles": ["Capitano", "Hacker", "Factotum"]
 		}
 	]
 

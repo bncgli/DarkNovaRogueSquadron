@@ -803,9 +803,42 @@ dispersion_damping=0.88
 "desc": "Frequenza armonica deflettori e moltiplicatori boost scudi.",
 "is_protected": true,
 "path": "Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat"
+}, {
+"content": "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION
+# WARNING: SUBSPACE RELAY AND CRYPTOGRAPHY MATRIX
+[SYSTEM]
+app_name=Comms
+version=1.0.4
+status=OPERATIONAL
+comms_subsystem=ACTIVE
+
+[COMMS_SETTINGS]
+bandwidth_hz=1420.0
+decryption_speed_multiplier=1.0
+subspace_relay_active=true
+auto_tune_sos=true
+signal_amplification=1.2
+",
+"desc": "Configurazione larghezza di banda e ricezione subspaziale.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Comms/comms_config.dat"
+}, {
+"content": "# EW COUNTERMEASURES & CRYPTO TUNING MATRIX
+[ELECTRONIC_WARFARE]
+jamming_power_mw=120.0
+signal_noise_ratio=0.85
+spoofing_signature=CORVETTE_CIVILIAN
+jamming_radius=15000.0
+overclock_ew_boost=1.0
+crypto_crack_speed=1.0
+",
+"desc": "Taratura potenza Jamming, contromisure EW e violazione cifrari.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Comms/crypto_tuning.dat"
 }])
 drive_passwords = {
 "Ship Drive/Programs/Cams": "CAMS-7815",
+"Ship Drive/Programs/Comms": "COMM-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
@@ -854,4 +887,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Capitano", "Ingegnere", "Factotum"],
 "scene_path": "res://Applications/ShieldMatrix/shield_matrix_app.tscn",
 "title": "Shield Matrix"
+}, {
+"description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
+"icon_color": Color(0.4, 0.8, 1, 1),
+"id": "comms",
+"roles": ["Capitano", "Hacker", "Factotum"],
+"scene_path": "res://Applications/Comms/comms_app.tscn",
+"title": "Comms & Electronic War"
 }])

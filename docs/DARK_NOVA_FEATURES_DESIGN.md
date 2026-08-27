@@ -152,10 +152,10 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 | **Cams CCTV Array** | `Ship Drive/Programs/Cams/` | `CAMS-7815` | `cams_config.dat`, `optics_tuning.dat` |
 | **Duct Drone** | `Ship Drive/Programs/DuctDrone/` | `DRONE-7815` | `duct_drone_config.dat`, `drone_tuning.dat` |
 | **Power Grid** | `Ship Drive/Programs/PowerGrid/` | `GRID-7815` | `power_grid_config.dat`, `grid_tuning.dat` |
-| **Weapons (Roadmap)** | `Ship Drive/Programs/Weapons/` | `WEAP-7815` | `weapons_config.dat`, `ammo_tuning.dat` |
+| **Weapons** | `Ship Drive/Programs/Weapons/` | `WEAP-7815` | `weapons_config.dat`, `ammo_tuning.dat` |
+| **Shield Matrix** | `Ship Drive/Programs/ShieldMatrix/` | `SHLD-7815` | `shields_config.dat`, `deflector_tuning.dat` |
+| **Comms & EW** | `Ship Drive/Programs/Comms/` | `COMM-7815` | `comms_config.dat`, `crypto_tuning.dat` |
 | **Sensors (Roadmap)** | `Ship Drive/Programs/Sensors/` | `SENS-7815` | `sensors_config.dat`, `radar_tuning.dat` |
-| **Shield Matrix (Roadmap)** | `Ship Drive/Programs/ShieldMatrix/` | `SHLD-7815` | `shields_config.dat`, `deflector_tuning.dat` |
-| **Comms & EW (Roadmap)** | `Ship Drive/Programs/Comms/` | `COMM-7815` | `comms_config.dat`, `crypto_tuning.dat` |
 | **Life Support (Roadmap)** | `Ship Drive/Programs/LifeSupport/` | `LIFE-7815` | `life_support_config.dat`, `atmo_tuning.dat` |
 | **Logbook (Roadmap)** | `Ship Drive/Programs/Logbook/` | `LOGS-7815` | `logbook_config.dat`, `journal_tuning.dat` |
 | **Diagnostics (Roadmap)** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
@@ -264,6 +264,18 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
 - **Ruolo**: **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ShieldMatrix/`, file `shields_config.dat` e `deflector_tuning.dat` (Password debug: `SHLD-7815`).
 
+### 4.9 Communications, Electronic Warfare & Hackwarfare (`Applications/Comms`)
+- **Scopo**: Suite integrata per comunicazioni subspaziali radio, ricezione di richieste di soccorso (SOS) da relitti o colonie, contromisure di guerra elettronica (Electronic Warfare - Jamming & Spoofing IFF) e strumenti di intrusione/decodifica crittografica (Hackwarfare).
+- **Finestra**: `comms_app.tscn` (Dimensioni: `680x480`).
+- **Flusso Utente**:
+  1. L'Hacker o il Capitano apre l'app dal menu Start o Taskbar.
+  2. Utilizza il sintonizzatore di frequenze RF e il visualizzatore Waterfall Display procedurale per agganciare le portanti attive (es. SOS Emergenza a 850.5 MHz, Relay Subspaziale a 1420.0 MHz, Canale Pirata a 2185.2 MHz).
+  3. Preme "Registra Trascrizione" per trascrivere i messaggi nel registro di bordo diegetico.
+  4. Attiva l'emettitore Jammer modulando la potenza da 50 a 180 MW per disturbare i radar nemici e deviare missili guidati, o seleziona una firma transponder per lo Spoofing IFF (`CORVETTE_CIVILIAN`, `CARGO_HAULER_MINING`, `DERELICT_DEBRIS`, `MILITARY_ESCORT`).
+  5. Nel modulo Hackwarfare, seleziona pacchetti crittografati recuperati da sonde o relitti, avvia la decodifica in tempo reale ed esporta le chiavi/password estratte direttamente su `Ship Drive` (`intercepted_crypto_key.txt`).
+- **Ruolo**: **Hacker** / **Capitano** (Override: Factotum; Solo Mode: controllo totale).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Comms/`, file `comms_config.dat` e `crypto_tuning.dat` (Password debug: `COMM-7815`).
+
 ---
 
 ## 5. Roadmap e Nuove Feature da Creare
@@ -277,7 +289,6 @@ Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni 
 │ Applicazione Pianificata     │ Ruolo Principale / Scopo Operativo                │
 ├──────────────────────────────┼───────────────────────────────────────────────────┤
 │ 2. Long-Range Sensor Array   │ Soldato / Hacker / Radar 50km e Spettrometria     │
-│ 4. Comms & Electronic War    │ Hacker / Capitano / EW Jamming, SOS & Decodifica  │
 │ 5. Life Support & Atmosphere │ Ingegnere / O2, CO2, Paratie e Antincendio        │
 │ 6. Mission Logbook & Sandbox │ Capitano / Tutti i Ruoli / Contratti & Black Box  │
 │ 7. System Diagnostics & ICE  │ Hacker / Ingegnere / Malware, Antivirus & Reset   │
@@ -305,27 +316,6 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
     - `sensors_config.dat`: frequenza e sensibilità (`sweep_frequency_hz=12.0`, `active_ping_radius=50000.0`, `noise_filter=0.92`).
     - `radar_tuning.dat`: calibrazione filtri e IFF (`spectrum_sensitivity=1.0`, `iff_auto_tag=true`, `stealth_detection_threshold=0.35`).
   - **Manomissione Firmware Clandestina**: Modificare clandestinamente `radar_tuning.dat` consente di abbattere i filtri di rumore per rilevare vascelli stealth o relitti mimetizzati, ma rende i sensori estremamente vulnerabili al jamming da parte di stazioni pirata.
-
----
-
-### 5.4 Nuova Feature 4: Communications, Electronic Warfare & Hackwarfare (`Applications/Comms`)
-- **Descrizione**: Suite integrata per comunicazioni subspaziali radio, ricezione di richieste di soccorso (SOS) da relitti o colonie, contromisure di guerra elettronica (Electronic Warfare - Jamming) e strumenti di intrusione/decodifica crittografica (Hackwarfare).
-- **Flusso Utente e Finestre**:
-  - **Finestra Principale (`comms_app.tscn`, `680x480`)**:
-    - Sintonizzatore frequenze radio RF/subspaziali con visualizzatore a cascata di spettro (Waterfall Display) per intercettare trasmissioni nascoste.
-    - Modulo **Guerra Elettronica (Jamming & Spoofing)**: emissione di segnali di disturbo per accecare i radar di navi nemiche, deviare missili a guida radar e falsificare i transponder IFF della corvetta.
-    - Modulo **Hackwarfare & Cifrari**: mini-gioco diegetico a riga di comando o a blocchi per la decodifica di pacchetti crittografati recuperati da droni o sonde spaziali, utile per estrarre password di cartelle protette (`.dat`) su navi nemiche e stazioni abbandonate.
-    - Registro messaggi in arrivo e ordini della corporazione.
-- **Ruolo Assegnato**: **Hacker** (Gestione offensiva EW, decodifica e hacking remoto) e **Capitano** (Comunicazioni diplomatiche, gestione canali ufficiali e patti di non aggressione).
-- **Integrazione con i Sublayer**:
-  - **Sublayer 3 (Rete Elettrica)**: L'antenna e i trasmettitori EW (`comms_ew`) richiedono energia modulabile in base alla potenza di disturbo erogata (da 50 a 180 MW).
-  - **Sublayer 5 (Ship Drive)**: Il modulo di decodifica salva direttamente i file e le password recuperate nello storage virtuale della nave per consentire all'equipaggio di consultarle.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Comms/` (Password debug: `COMM-7815`).
-  - **File di Configurazione Attivi**:
-    - `comms_config.dat`: larghezza di banda e segnale (`bandwidth_hz=1420.0`, `decryption_speed_multiplier=1.0`, `subspace_relay_active=true`).
-    - `crypto_tuning.dat`: contromisure e jamming (`jamming_power_mw=120.0`, `signal_noise_ratio=0.85`, `spoofing_signature=CORVETTE_CIVILIAN`).
-  - **Manomissione Firmware Clandestina**: L'Hacker può modificare `crypto_tuning.dat` per potenziare il raggio di jamming oltre le specifiche legali, consentendo di mandare in blackout i sistemi di comunicazione di un'intera stazione commerciale pirata.
 
 ---
 

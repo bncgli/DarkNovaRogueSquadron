@@ -13,3 +13,6 @@ res://Scenes/Taskbar/start_button.gd
 res://Scenes/Taskbar/start_menu_option.gd
 res://Applications/ShieldMatrix/shield_matrix_app.gd
 res://tests/test_shield_matrix_node.gd
+res://Applications/Comms/comms_app.gd
+res://tests/test_comms_node.gd
+res://Applications/Comms/comms_waterfall_canvas.gd
