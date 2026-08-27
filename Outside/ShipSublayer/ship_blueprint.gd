@@ -79,6 +79,26 @@ signal blueprint_changed()
 		damages = val
 		emit_changed()
 
+# --- SUBLAYER 5 / SEZIONE SHIP DRIVE: FILE SYSTEM & PASSWORD ---
+# Ogni elemento in drive_files: { "path": str, "content": str, "is_protected": bool, "desc": str }
+@export var drive_files: Array[Dictionary] = []:
+	set(val):
+		drive_files = val
+		emit_changed()
+
+# Mappa percorsi cartella -> password (es. "Ship Drive/Programs/FlightControls": "FLIGHT-7815")
+@export var drive_passwords: Dictionary = {}:
+	set(val):
+		drive_passwords = val
+		emit_changed()
+
+# --- SUBLAYER 6 / SEZIONE APPLICAZIONI MAINFRAME INSTALLATE ---
+# Ogni elemento in installed_apps: { "id": str, "title": str, "description": str, "scene_path": str, "icon_color": Color, "roles": Array[String] }
+@export var installed_apps: Array[Dictionary] = []:
+	set(val):
+		installed_apps = val
+		emit_changed()
+
 func _init() -> void:
 	if rooms.is_empty() and ducts.is_empty() and devices.is_empty():
 		create_default_ship()
@@ -96,6 +116,8 @@ func create_default_ship() -> void:
 	_init_default_ducts()
 	_init_default_power_grid()
 	_init_default_damages()
+	_init_default_drive()
+	_init_default_installed_apps()
 	emit_changed()
 
 func _init_default_rooms() -> void:
@@ -505,6 +527,140 @@ func _init_default_damages() -> void:
 		}
 	]
 
+func _init_default_drive() -> void:
+	drive_files = [
+		{
+			"path": "Ship Drive/Ship Systems.txt",
+			"content": "=== DARK NOVA - SISTEMI NAVE ===\nReattore Principale: ONLINE (100% Efficienza)\nPropulsione Sub-Luce: ATTIVA\nScudi Deflettori: OPERATIVI\nArray Sensori & Cams: 6 Canali Attivi (Prua, Poppa, Babordo, Tribordo, Dorsale, Ventrale)\nSottosistemi di Guida: Calibrati\n",
+			"is_protected": false,
+			"desc": "Riepilogo stato dei sistemi e della telemetria di bordo."
+		},
+		{
+			"path": "Ship Drive/Flight Log.txt",
+			"content": "=== REGISTRO DI BORDO ===\n[STARDATE 7815.4] Connessione al sistema centrale stabilita.\nTutti i sistemi della Dark Nova sono pronti alla navigazione spaziale.\nEquipaggio autorizzato ad accedere all'unita' condivisa Ship Drive.\n",
+			"is_protected": false,
+			"desc": "Registro eventi e cronologia di navigazione."
+		},
+		{
+			"path": "Ship Drive/Crew Directives.txt",
+			"content": "=== DIRETTIVE EQUIPAGGIO ===\n1. Mantenere monitorati i feed video delle telecamere esterne durante la navigazione.\n2. Coordinare le manovre di volo e la spinta propulsori con la plancia.\n3. Condividere report di missione e file di rotta all'interno dello Ship Drive.\n",
+			"is_protected": false,
+			"desc": "Protocolli operativi per l'equipaggio in missione."
+		},
+		{
+			"path": "Ship Drive/Programs/FlightControls/flight_config.dat",
+			"content": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING\n[SYSTEM]\napp_name=FlightControls\nversion=1.0.4\nstatus=OPERATIONAL\nrcs_subsystem=ACTIVE\n\n[FLIGHT_DYNAMICS]\nmax_linear_speed=20.0\nlinear_acceleration=35.0\nlinear_deceleration=20.0\nmax_angular_speed=2.5\nangular_acceleration=8.0\nangular_deceleration=6.0\n\n[SPEED_MODES]\nturbo_multiplier=2.0\nprecision_multiplier=0.4\n",
+			"is_protected": true,
+			"desc": "Parametri di dinamica e limiti di manovra del sistema di volo."
+		},
+		{
+			"path": "Ship Drive/Programs/FlightControls/thrusters_tuning.dat",
+			"content": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.0\npitch_thrust_mult=1.0\nyaw_thrust_mult=1.0\nroll_thrust_mult=1.0\nvertical_thrust_mult=1.0\noverclock_limit=1.5\n",
+			"is_protected": true,
+			"desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale."
+		},
+		{
+			"path": "Ship Drive/Programs/Cams/cams_config.dat",
+			"content": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION\n# WARNING: SENSORS & OPTICS CONFIGURATION FILE\n[SYSTEM]\napp_name=Cams\nversion=1.0.4\nstatus=OPERATIONAL\nsensor_array=CCTV_6CH\n\n[OPTICS]\ndefault_fov=75.0\nmin_fov=30.0\nmax_fov=100.0\nzoom_step=10.0\nnight_vision_intensity=0.18\ntactical_hud_contrast=0.18\nthermal_intensity=0.22\n",
+			"is_protected": true,
+			"desc": "Configurazione lenti e calibrazione array ottico a 6 canali."
+		},
+		{
+			"path": "Ship Drive/Programs/Cams/optics_tuning.dat",
+			"content": "# OPTICS & SENSOR CALIBRATION MATRIX\n[SENSORS]\nsignal_boost=1.0\nnoise_reduction=1.0\nrefresh_rate_hz=60.0\ncrosshair_style=STANDARD\noverclock_gain=1.0\n",
+			"is_protected": true,
+			"desc": "Taratura guadagno di segnale e filtri visivi CCTV."
+		},
+		{
+			"path": "Ship Drive/Programs/DuctDrone/duct_drone_config.dat",
+			"content": "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT\n[SYSTEM]\napp_name=DuctDrone\nversion=1.0.4\nstatus=OPERATIONAL\nmaintenance_subsystem=ACTIVE\n\n[DRONE_DYNAMICS]\nlinear_speed=175.0\nlinear_acceleration=650.0\nlinear_deceleration=750.0\nrotate_speed=3.0\n\n[BATTERY_MANAGEMENT]\nbattery_max=100.0\nbattery_drain_move=0.35\nbattery_drain_lights=0.75\nbattery_drain_radar=3.5\nbattery_drain_repair=6.0\n\n[MAINTENANCE]\nradar_scan_radius_max=160.0\nrepair_range=42.0\nrepair_speed_multiplier=1.0\n",
+			"is_protected": true,
+			"desc": "Configurazione dinamica e gestione energetica del drone di manutenzione."
+		},
+		{
+			"path": "Ship Drive/Programs/DuctDrone/drone_tuning.dat",
+			"content": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX\n[TUNING]\nturbo_multiplier=2.0\nprecision_multiplier=0.5\nrepair_efficiency=1.0\nradar_intensity=1.0\noverclock_speed_gain=1.0\n",
+			"is_protected": true,
+			"desc": "Coefficienti di efficienza riparazione e radar del drone."
+		},
+		{
+			"path": "Ship Drive/Programs/PowerGrid/power_grid_config.dat",
+			"content": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION\n# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX\n[SYSTEM]\napp_name=PowerGrid\nversion=1.0.4\nstatus=OPERATIONAL\nmode=AUTOMATIC_BALANCING\n\n[GRID_SETTINGS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\njunction_switch_delay=0.25\noverload_threshold_pct=110.0\nreroute_efficiency_loss=0.05\n\n[CIRCUIT_PROTECTION]\nbreaker_trip_threshold=1.4\nshort_circuit_damping=0.85\nauto_reroute_on_short=false\n",
+			"is_protected": true,
+			"desc": "Configurazione reattore, soglie di sovraccarico e disgiuntori della rete."
+		},
+		{
+			"path": "Ship Drive/Programs/PowerGrid/grid_tuning.dat",
+			"content": "# POWER GRID CALIBRATION & TUNING MATRIX\n[TUNING]\npower_efficiency_mult=1.0\nbackup_line_conductivity=0.95\nswitch_rate_hz=10.0\nregime_boost=1.0\noverclock_tolerance=1.2\n",
+			"is_protected": true,
+			"desc": "Matrice di conduttività e frequenza di commutazione snodi."
+		},
+		{
+			"path": "Ship Drive/Programs/Weapons/weapons_config.dat",
+			"content": "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION\n# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE\n[SYSTEM]\napp_name=Weapons\nversion=1.0.4\nstatus=OPERATIONAL\nweapons_subsystem=ACTIVE\n\n[WEAPONS]\nmax_range=4500.0\nfire_rate=1.8\ncooling_rate=0.75\nauto_pdg_enabled=true\nlaser_power_draw=250.0\ntorpedo_max_ammo=12\npdg_ammo_max=500\npdg_fire_rate=8.0\nemergency_vent_cooldown=10.0\n",
+			"is_protected": true,
+			"desc": "Parametri operativi armi pesanti, torrette laser e cadenza PDG."
+		},
+		{
+			"path": "Ship Drive/Programs/Weapons/ammo_tuning.dat",
+			"content": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n",
+			"is_protected": true,
+			"desc": "Balistica siluri, tracking anticipo di tiro e guadagno danno."
+		}
+	]
+	
+	drive_passwords = {
+		"Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+		"Ship Drive/Programs/Cams": "CAMS-7815",
+		"Ship Drive/Programs/DuctDrone": "DRONE-7815",
+		"Ship Drive/Programs/PowerGrid": "GRID-7815",
+		"Ship Drive/Programs/Weapons": "WEAP-7815"
+	}
+
+func _init_default_installed_apps() -> void:
+	installed_apps = [
+		{
+			"id": "flight_control",
+			"title": "Flight Control",
+			"description": "Controlli di manovra e navigazione nave",
+			"scene_path": "res://Applications/FlightControl/flight_control_app.tscn",
+			"icon_color": Color(1.0, 0.6, 0.2, 1.0),
+			"roles": ["Capitano", "Pilota", "Factotum"]
+		},
+		{
+			"id": "duct_drone",
+			"title": "Duct Drone",
+			"description": "Robottino manutenzione e schema condotti 2D",
+			"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
+			"icon_color": Color(1.0, 0.85, 0.2, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum"]
+		},
+		{
+			"id": "power_grid",
+			"title": "Power Grid",
+			"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+			"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
+			"icon_color": Color(0.95, 0.85, 0.2, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Factotum"]
+		},
+		{
+			"id": "cams",
+			"title": "Cams",
+			"description": "Telecamere esterne dell'astronave",
+			"scene_path": "res://Applications/Cams/cams_app.tscn",
+			"icon_color": Color(0.3, 0.9, 0.6, 1.0),
+			"roles": ["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Factotum"]
+		},
+		{
+			"id": "weapons",
+			"title": "Tactical Weapons",
+			"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+			"scene_path": "res://Applications/Weapons/weapons_app.tscn",
+			"icon_color": Color(0.95, 0.25, 0.25, 1.0),
+			"roles": ["Capitano", "Soldato", "Tattico / Armi", "Factotum"]
+		}
+	]
+
 # --- METODI DI QUERY E RICERCA ---
 
 func get_room_by_id(room_id: String) -> Dictionary:
@@ -543,6 +699,114 @@ func get_damage_by_id(dmg_id: String) -> Dictionary:
 		if d.get("id", "") == dmg_id:
 			return d
 	return {}
+
+func get_drive_file_by_path(path: String) -> Dictionary:
+	for f in drive_files:
+		if f.get("path", "") == path:
+			return f
+	return {}
+
+func set_drive_file(path: String, content: String, is_protected: bool = false, desc: String = "") -> void:
+	for i in range(drive_files.size()):
+		if drive_files[i].get("path", "") == path:
+			drive_files[i]["content"] = content
+			drive_files[i]["is_protected"] = is_protected
+			if desc != "":
+				drive_files[i]["desc"] = desc
+			emit_changed()
+			return
+	drive_files.append({
+		"path": path,
+		"content": content,
+		"is_protected": is_protected,
+		"desc": desc
+	})
+	emit_changed()
+
+func remove_drive_file(path: String) -> bool:
+	for i in range(drive_files.size()):
+		if drive_files[i].get("path", "") == path:
+			drive_files.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func get_drive_password(path: String) -> String:
+	return drive_passwords.get(path, "")
+
+func set_drive_password(path: String, password: String) -> void:
+	drive_passwords[path] = password
+	emit_changed()
+
+func remove_drive_password(path: String) -> bool:
+	if drive_passwords.has(path):
+		drive_passwords.erase(path)
+		emit_changed()
+		return true
+	return false
+
+func get_installed_app_by_id(app_id: String) -> Dictionary:
+	for app in installed_apps:
+		if app.get("id", "") == app_id:
+			return app
+	return {}
+
+func set_installed_app(app_id: String, app_data: Dictionary) -> void:
+	for i in range(installed_apps.size()):
+		if installed_apps[i].get("id", "") == app_id:
+			installed_apps[i] = app_data.duplicate(true)
+			installed_apps[i]["id"] = app_id
+			emit_changed()
+			return
+	var new_app := app_data.duplicate(true)
+	new_app["id"] = app_id
+	installed_apps.append(new_app)
+	emit_changed()
+
+func remove_installed_app(app_id: String) -> bool:
+	for i in range(installed_apps.size()):
+		if installed_apps[i].get("id", "") == app_id:
+			installed_apps.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func get_apps_for_role(role_name: String, _is_solo: bool = false) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var clean_role := role_name.strip_edges()
+	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Factotum" or clean_role == "HOST"
+	
+	for app in installed_apps:
+		if is_super:
+			result.append(app.duplicate(true))
+			continue
+		
+		var allowed: Array = app.get("roles", [])
+		if allowed.is_empty():
+			result.append(app.duplicate(true))
+			continue
+			
+		var role_matched := false
+		for r in allowed:
+			var r_str: String = str(r).strip_edges()
+			if r_str == "*" or r_str.to_lower() == "all":
+				role_matched = true
+				break
+			if r_str.to_lower() == clean_role.to_lower():
+				role_matched = true
+				break
+			if clean_role != "" and (r_str.to_lower() in clean_role.to_lower() or clean_role.to_lower() in r_str.to_lower()):
+				role_matched = true
+				break
+		
+		if role_matched:
+			result.append(app.duplicate(true))
+	
+	if result.is_empty() and (clean_role == "Non Assegnato" or clean_role == ""):
+		for app in installed_apps:
+			result.append(app.duplicate(true))
+	
+	return result
 
 ## Converte l'intera Blueprint in un dizionario serializzabile (es. per JSON o salvataggi di rete)
 func to_dict() -> Dictionary:
@@ -599,6 +863,18 @@ func to_dict() -> Dictionary:
 			dmg_c["pos"] = [dmg_c["pos"].x, dmg_c["pos"].y]
 		damages_copy.append(dmg_c)
 		
+	var drive_files_copy: Array = []
+	for df: Dictionary in drive_files:
+		drive_files_copy.append(df.duplicate(true))
+		
+	var installed_apps_copy: Array = []
+	for app: Dictionary in installed_apps:
+		var ac: Dictionary = app.duplicate(true)
+		if ac.has("icon_color") and ac["icon_color"] is Color:
+			var col: Color = ac["icon_color"]
+			ac["icon_color"] = [col.r, col.g, col.b, col.a]
+		installed_apps_copy.append(ac)
+		
 	return {
 		"ship_id": ship_id,
 		"ship_name": ship_name,
@@ -610,7 +886,10 @@ func to_dict() -> Dictionary:
 		"ducts": ducts_copy,
 		"devices": devices_copy,
 		"junctions": junctions_copy,
-		"damages": damages_copy
+		"damages": damages_copy,
+		"drive_files": drive_files_copy,
+		"drive_passwords": drive_passwords.duplicate(true),
+		"installed_apps": installed_apps_copy
 	}
 
 ## Ricostruisce la blueprint a partire da un dizionario deserializzato
@@ -705,6 +984,30 @@ func from_dict(data: Dictionary) -> void:
 					dmg_d["pos"] = Vector2(float(arr[0]), float(arr[1]))
 				new_damages.append(dmg_d)
 		damages = new_damages
+
+	if data.has("drive_files") and data["drive_files"] is Array:
+		var new_df: Array[Dictionary] = []
+		for item in data["drive_files"]:
+			if item is Dictionary:
+				new_df.append((item as Dictionary).duplicate(true))
+		drive_files = new_df
+
+	if data.has("drive_passwords") and data["drive_passwords"] is Dictionary:
+		drive_passwords = (data["drive_passwords"] as Dictionary).duplicate(true)
+
+	if data.has("installed_apps") and data["installed_apps"] is Array:
+		var new_apps: Array[Dictionary] = []
+		for app in data["installed_apps"]:
+			if app is Dictionary:
+				var ad := (app as Dictionary).duplicate(true)
+				if ad.has("icon_color") and ad["icon_color"] is Array and ad["icon_color"].size() >= 3:
+					var arr: Array = ad["icon_color"]
+					var a := float(arr[3]) if arr.size() > 3 else 1.0
+					ad["icon_color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
+				elif ad.has("icon_color") and ad["icon_color"] is String:
+					ad["icon_color"] = Color.from_string(ad["icon_color"], Color.WHITE)
+				new_apps.append(ad)
+		installed_apps = new_apps
 
 	emit_changed()
 

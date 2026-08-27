@@ -408,8 +408,12 @@ func _rpc_register_player(player_name: String) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_lobby(synced_players: Dictionary) -> void:
+	var old_role: String = players.get(local_peer_id, {}).get("role", "")
 	players = synced_players
 	local_peer_id = transport.get_unique_id()
+	var new_role: String = players.get(local_peer_id, {}).get("role", "")
+	if old_role != new_role and not new_role.is_empty():
+		player_role_changed.emit(local_peer_id, new_role)
 	lobby_updated.emit(players)
 
 @rpc("any_peer", "call_remote", "reliable")

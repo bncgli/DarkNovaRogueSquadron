@@ -67,50 +67,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 1
 
-[node name="Flight Control Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271893 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "res://Applications/FlightControl/flight_control_app.tscn"
-title_text = "Flight Control"
-description_text = "Controlli di manovra e navigazione nave"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Flight Control Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(1, 0.6, 0.2, 1)
-
-[node name="Duct Drone Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271894 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "res://Applications/DuctDrone/duct_drone_app.tscn"
-title_text = "Duct Drone"
-description_text = "Robottino manutenzione e schema condotti 2D"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Duct Drone Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(1, 0.85, 0.2, 1)
-
-[node name="Power Grid Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271895 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "res://Applications/PowerGrid/power_grid_app.tscn"
-title_text = "Power Grid"
-description_text = "Mappa elettrica 2D, snodi e flussi energetici nave"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Power Grid Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(0.95, 0.85, 0.2, 1)
-
-[node name="Cams Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271892 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "res://Applications/Cams/cams_app.tscn"
-title_text = "Cams"
-description_text = "Telecamere esterne dell'astronave"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Cams Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(0.3, 0.9, 0.6, 1)
-
 [node name="Lobby Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=1984271891 instance=ExtResource("2_1ualm")]
 layout_mode = 2
 game_scene = ""
@@ -121,6 +77,17 @@ use_generic_pause_menu = false
 
 [node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Lobby Option/HBoxContainer/MarginContainer" index="0"]
 modulate = Color(0.2, 0.8, 1, 1)
+
+[node name="Terminal Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=158647529 instance=ExtResource("2_1ualm")]
+layout_mode = 2
+game_scene = ""
+application_scene = "uid://boie5q3r1lqgy"
+title_text = "Terminal"
+description_text = "Type commands into a magic box"
+use_generic_pause_menu = false
+
+[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option/HBoxContainer/MarginContainer" index="0"]
+modulate = Color(0.91056484, 0.5161954, 0, 1)
 
 [node name="Godotris Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=776187856 instance=ExtResource("2_1ualm")]
 layout_mode = 2
@@ -150,17 +117,6 @@ description_text = "Timeless Classic"
 layout_mode = 2
 title_text = "Cube Scene"
 description_text = "THE CUBE. THE CUBE. THE CUBE."
-
-[node name="Terminal Option" parent="StartMenuAnchor/Start Menu/VBoxContainer" unique_id=158647529 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "uid://boie5q3r1lqgy"
-title_text = "Terminal"
-description_text = "Type commands into a magic box"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(0.91056484, 0.5161954, 0, 1)
 
 [node name="Power Button" type="Button" parent="StartMenuAnchor/Start Menu" unique_id=879138926]
 layout_mode = 1

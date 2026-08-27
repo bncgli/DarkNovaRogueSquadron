@@ -1,6 +1,9 @@
 res://Scenes/Main/MainScene.tscn
 res://Applications/Terminal/terminal_theme.tres
 res://Outside/ShipSublayer/ship_blueprint.gd
+res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd
 res://Outside/space_world_manager.gd
-res://Applications/PowerGrid/power_grid_app.gd
-res://addons/ship_sublayer_editor/ship_sublayer_editor.gd
+res://tests/test_ship_blueprint_node.gd
+res://tests/test_weapons_node.gd
+res://Applications/Weapons/weapons_app.gd

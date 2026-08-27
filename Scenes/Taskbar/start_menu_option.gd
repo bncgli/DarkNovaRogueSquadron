@@ -25,8 +25,26 @@ var is_mouse_over: bool
 
 func _ready() -> void:
 	$"Background Panel".visible = false
-	%"Menu Title".text = "[center]%s" % title_text
-	%"Menu Description".text = "[center]%s" % description_text
+	if has_node("%Menu Title"):
+		%"Menu Title".text = "[center]%s" % title_text
+	if has_node("%Menu Description"):
+		%"Menu Description".text = "[center]%s" % description_text
+
+func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null) -> void:
+	title_text = p_title
+	description_text = p_description
+	application_scene = p_app_scene
+	game_scene = ""
+	use_generic_pause_menu = false
+	if has_node("%Menu Title"):
+		%"Menu Title".text = "[center]%s" % title_text
+	if has_node("%Menu Description"):
+		%"Menu Description".text = "[center]%s" % description_text
+	var tex_rect: TextureRect = get_node_or_null("HBoxContainer/MarginContainer/TextureRect")
+	if tex_rect:
+		tex_rect.modulate = p_color
+		if p_texture:
+			tex_rect.texture = p_texture
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == 1 and event.is_pressed():
@@ -65,7 +83,7 @@ func spawn_window() -> void:
 		window = load("res://Scenes/Window/Application Window/application_window.tscn").instantiate()
 		window.get_node("%ApplicationContents").add_child(load(application_scene).instantiate())
 	
-	window.title_text = %"Menu Title".text
+	window.title_text = title_text if not title_text.is_empty() else %"Menu Title".text.replace("[center]", "").replace("[/center]", "")
 	get_tree().current_scene.add_child(window)
 	
 	var taskbar_button: Control = load("res://Scenes/Taskbar/taskbar_button.tscn").instantiate()

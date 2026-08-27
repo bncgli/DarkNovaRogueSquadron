@@ -138,10 +138,11 @@ func mount_drive() -> void:
 	var nm := _get_net_mgr()
 	var is_host: bool = nm.get("is_host") if nm else true
 	var is_solo: bool = nm.get("is_solo_mode") if nm else false
+	var is_net_connected: bool = nm.get("is_connected_to_network") if nm else false
 	
-	if is_host or is_solo:
+	if not is_net_connected or is_host or is_solo:
 		_populate_default_ship_drive_files()
-	elif nm and nm.get("is_connected_to_network"):
+	else:
 		# Chiedi la sincronizzazione completa all'Host
 		_rpc_request_full_sync.rpc_id(1)
 	
@@ -154,9 +155,6 @@ func mount_drive() -> void:
 	ship_drive_mounted.emit()
 
 func unmount_drive() -> void:
-	if not is_drive_mounted:
-		return
-	
 	is_drive_mounted = false
 	
 	# Chiudi tutte le finestre aperte relative a Ship Drive
@@ -184,6 +182,28 @@ func _populate_default_ship_drive_files() -> void:
 	if files.size() > 0 or dirs.size() > 0:
 		return
 	
+	var bp_files: Array[Dictionary] = []
+	var bp_passwords: Dictionary = {}
+	
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_drive_files"):
+			bp_files = SpaceWorldManager.get_ship_drive_files()
+		if SpaceWorldManager.has_method("get_ship_drive_passwords"):
+			bp_passwords = SpaceWorldManager.get_ship_drive_passwords()
+	
+	if bp_files.size() > 0:
+		for f in bp_files:
+			var path: String = str(f.get("path", ""))
+			var content: String = str(f.get("content", ""))
+			if not path.is_empty():
+				_write_file_content(path, content)
+		
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and bp_passwords.size() > 0:
+			for folder_path in bp_passwords:
+				fpm.set_password(str(folder_path), str(bp_passwords[folder_path]))
+		return
+	
 	_write_file_content("Ship Drive/Ship Systems.txt", "=== DARK NOVA - SISTEMI NAVE ===\nReattore Principale: ONLINE (100% Efficienza)\nPropulsione Sub-Luce: ATTIVA\nScudi Deflettori: OPERATIVI\nArray Sensori & Cams: 6 Canali Attivi (Prua, Poppa, Babordo, Tribordo, Dorsale, Ventrale)\nSottosistemi di Guida: Calibrati\n")
 	_write_file_content("Ship Drive/Flight Log.txt", "=== REGISTRO DI BORDO ===\n[STARDATE 7815.4] Connessione al sistema centrale stabilita.\nTutti i sistemi della Dark Nova sono pronti alla navigazione spaziale.\nEquipaggio autorizzato ad accedere all'unita' condivisa Ship Drive.\n")
 	_write_file_content("Ship Drive/Crew Directives.txt", "=== DIRETTIVE EQUIPAGGIO ===\n1. Mantenere monitorati i feed video delle telecamere esterne durante la navigazione.\n2. Coordinare le manovre di volo e la spinta propulsori con la plancia.\n3. Condividere report di missione e file di rotta all'interno dello Ship Drive.\n")
@@ -201,12 +221,16 @@ func _populate_default_ship_drive_files() -> void:
 	_write_file_content("Ship Drive/Programs/PowerGrid/power_grid_config.dat", "# DARK NOVA POWER GRID RUNTIME CONFIGURATION\n# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX\n[SYSTEM]\napp_name=PowerGrid\nversion=1.0.4\nstatus=OPERATIONAL\nmode=AUTOMATIC_BALANCING\n\n[GRID_SETTINGS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\njunction_switch_delay=0.25\noverload_threshold_pct=110.0\nreroute_efficiency_loss=0.05\n\n[CIRCUIT_PROTECTION]\nbreaker_trip_threshold=1.4\nshort_circuit_damping=0.85\nauto_reroute_on_short=false\n")
 	_write_file_content("Ship Drive/Programs/PowerGrid/grid_tuning.dat", "# POWER GRID CALIBRATION & TUNING MATRIX\n[TUNING]\npower_efficiency_mult=1.0\nbackup_line_conductivity=0.95\nswitch_rate_hz=10.0\nregime_boost=1.0\noverclock_tolerance=1.2\n")
 	
+	_write_file_content("Ship Drive/Programs/Weapons/weapons_config.dat", "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION\n# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE\n[SYSTEM]\napp_name=Weapons\nversion=1.0.4\nstatus=OPERATIONAL\nweapons_subsystem=ACTIVE\n\n[WEAPONS]\nmax_range=4500.0\nfire_rate=1.8\ncooling_rate=0.75\nauto_pdg_enabled=true\nlaser_power_draw=250.0\ntorpedo_max_ammo=12\npdg_ammo_max=500\npdg_fire_rate=8.0\nemergency_vent_cooldown=10.0\n")
+	_write_file_content("Ship Drive/Programs/Weapons/ammo_tuning.dat", "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n")
+	
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	if fpm:
 		fpm.set_password("Ship Drive/Programs/FlightControls", "FLIGHT-7815")
 		fpm.set_password("Ship Drive/Programs/Cams", "CAMS-7815")
 		fpm.set_password("Ship Drive/Programs/DuctDrone", "DRONE-7815")
 		fpm.set_password("Ship Drive/Programs/PowerGrid", "GRID-7815")
+		fpm.set_password("Ship Drive/Programs/Weapons", "WEAP-7815")
 
 func _close_ship_drive_windows() -> void:
 	if not is_inside_tree():
