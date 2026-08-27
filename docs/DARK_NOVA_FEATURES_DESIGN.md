@@ -276,9 +276,7 @@ Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni 
 ├──────────────────────────────┬───────────────────────────────────────────────────┤
 │ Applicazione Pianificata     │ Ruolo Principale / Scopo Operativo                │
 ├──────────────────────────────┼───────────────────────────────────────────────────┤
-│ 1. Tactical Weapons System   │ Soldato / Torrette Laser, Lanciasiluri e PDG      │
 │ 2. Long-Range Sensor Array   │ Soldato / Hacker / Radar 50km e Spettrometria     │
-│ 3. Shield Matrix & Deflectors│ Ingegnere / Scudi 4 Quadranti & Ricarica Rapida   │
 │ 4. Comms & Electronic War    │ Hacker / Capitano / EW Jamming, SOS & Decodifica  │
 │ 5. Life Support & Atmosphere │ Ingegnere / O2, CO2, Paratie e Antincendio        │
 │ 6. Mission Logbook & Sandbox │ Capitano / Tutti i Ruoli / Contratti & Black Box  │
@@ -286,30 +284,6 @@ Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni 
 └──────────────────────────────┴───────────────────────────────────────────────────┘
 ```
 NOTA: Il concetto di freemium-punk verrà impostato in seguito
----
-
-### 5.1 Nuova Feature 1: Tactical Weapons & Point Defense (`Applications/Weapons`)
-- **Descrizione**: Pannello diegetico di gestione, puntamento e ingaggio dei sistemi d'arma di bordo (Torrette Laser binate, Lanciasiluri a guida termica e torrette automatiche Point Defense Gatling - PDG - per intercettare asteroidi e missili nemici). 
-- **Flusso Utente e Finestre**:
-  - **Finestra Principale (`weapons_app.tscn`, `720x520`)**:
-    - Selettore gruppi d'arma (*Torrette Laser*, *Siluri Pesanti*, *PDG Difesa di Prossimità*).
-    - Radar di puntamento con acquisizione bersagli (Target Lock) e calcolo anticipo di tiro (Lead Indicator).
-    - Indicatori di stato munizioni, surriscaldamento canne e stato condensatori di carica.
-    - Pulsanti per fuoco manuale, abilitazione fuoco difensivo automatico PDG e scarico termico d'emergenza.
-    - Finestra della telecamera che indica a cosa sta puntando la torretta.
-    - Finestra di puntamento manuale
-- **Ruolo Assegnato**: **Soldato** (Controllo completo su fuoco, lock e gestione munizioni; Capitano/Factotum hanno override; Pilota e Ingegnere possono solo visualizzare lo stato di carica/munizioni).
-- **Integrazione con i Sublayer e la Rete Elettrica**:
-  - **Sublayer 3 (Rete Elettrica)**: Le torrette laser e i caricatori siluri assorbono picchi di potenza elevati (fino a 250 MW). Se l'Ingegnere taglia potenza all'Armeria (`armory_defense`), la velocità di ricarica si azzera o le torrette vanno offline.
-  - **Sublayer 4 (Danni)**: Impatti all'armeria o alle torrette provocano inceppamenti, dispersione di fuoco o surriscaldamento critico.
-  - **Sublayer 5 & Cams**: Puntamento sincronizzato con i canali visivi delle telecamere esterne CCTV.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Weapons/` (Password debug: `WEAP-7815`).
-  - **File di Configurazione Attivi**:
-    - `weapons_config.dat`: parametri operativi (`max_range=4500.0`, `fire_rate=1.8`, `cooling_rate=0.75`, `auto_pdg_enabled=true`).
-    - `ammo_tuning.dat`: balistica e tracking (`torpedo_velocity=85.0`, `auto_lead_tracking=true`, `overclock_damage_mult=1.0`).
-  - **Manomissione Firmware Clandestina**: L'Hacker può eseguire exploit sui file `.dat` delle armi per sbloccare la cadenza di tiro e il danno oltre i limiti di fabbrica (overclock illegale), al prezzo di un incremento drastico del calore generato e del rischio di detonazione interna del siluro.
-
 ---
 
 ### 5.2 Nuova Feature 2: Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
@@ -331,31 +305,6 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
     - `sensors_config.dat`: frequenza e sensibilità (`sweep_frequency_hz=12.0`, `active_ping_radius=50000.0`, `noise_filter=0.92`).
     - `radar_tuning.dat`: calibrazione filtri e IFF (`spectrum_sensitivity=1.0`, `iff_auto_tag=true`, `stealth_detection_threshold=0.35`).
   - **Manomissione Firmware Clandestina**: Modificare clandestinamente `radar_tuning.dat` consente di abbattere i filtri di rumore per rilevare vascelli stealth o relitti mimetizzati, ma rende i sensori estremamente vulnerabili al jamming da parte di stazioni pirata.
-
----
-
-### 5.3 Nuova Feature 3: Shield Matrix & Hull Deflectors (`Applications/ShieldMatrix`) [SVILUPPATA]
-- **Stato di Sviluppo**: **Completata e Integrata** (conforme ad `APP_ARCHITECTURE_STANDARD.md`, registrata in `ShipBlueprint` con suite di test headless `tests/test_shield_matrix.tscn`).
-- **Descrizione**: Gestione e distribuzione dinamica della barriera deflettente energetica della nave, suddivisa in 4 quadranti indipendenti (**Prua**, **Poppa**, **Babordo**, **Tribordo**).
-- **Flusso Utente e Finestre**:
-  - **Finestra Principale (`shield_matrix_app.tscn`, `620x460`)**:
-    - Visualizzatore olografico della corvetta con rendering wireframe, archi scudo dinamici e barre di integrità e stato energetico per ciascuno dei 4 quadranti.
-    - Pad direzionale / Vector Slider 2D e cursori ratio individuali per sbilanciare e concentrare l'energia difensiva verso la direzione d'impatto con normalizzazione automatica (somma 100%).
-    - Pulsante "Ricarica Rapida d'Emergenza": convoglia un boost immediato di ripristino scudi al costo di un picco di assorbimento da 80-120 MW dalla rete elettrica con cooldown attivo.
-    - Interruttore di sincronizzazione frequenza di fase (deflection harmonics a 440.0 Hz).
-    - Pulsante "🔄 Ricarica .DAT" per hot-reloading manuale e visualizzazione dello stato firmware.
-- **Ruolo Assegnato**: **Ingegnere** (Controllo totale sul bilanciamento e sulla ricarica; Capitano in override; Pilota e Soldato in sola visualizzazione telemetrica).
-- **Integrazione con i Sublayer**:
-  - **Sublayer 3 (Rete Elettrica)**: L'emettitore scudi (`shields_deflector`) è un'utenza primaria ad alto consumo continuo. La perdita di potenza causa il decadimento rapido della matrice.
-  - **Sublayer 4 (Danni)**: Danni all'emettitore o agli anelli di collimazione riducono la capacità massima del quadrante interessato e degradano la tenuta.
-  - **Sublayer 5 (Drive Files)**: Cartella protetta `Ship Drive/Programs/ShieldMatrix/` (Password debug: `SHLD-7815`).
-  - **Sublayer 6 (Mainframe Apps)**: Registrata in `ShipBlueprint` con visibilità nel menu Start per Ingegnere, Capitano e Factotum.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/ShieldMatrix/` (Password debug: `SHLD-7815`).
-  - **File di Configurazione Attivi**:
-    - `shields_config.dat`: capacità e rigenerazione (`max_capacity_per_quadrant=250.0`, `recharge_rate_per_sec=15.0`, `overload_limit=1.3`).
-    - `deflector_tuning.dat`: matrice armonica (`harmonic_frequency=440.0`, `emergency_boost_multiplier=2.5`, `overclock_absorption=1.0`).
-  - **Manomissione Firmware Clandestina**: Un firmware exploit su `deflector_tuning.dat` può incrementare l'assorbimento d'urto fino al 150%, ma se la frequenza armonica collassa durante un impatto energetico, provoca un arco voltaico che danneggia direttamente il generatore nel Sublayer 3.
 
 ---
 
