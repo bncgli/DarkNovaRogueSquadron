@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ShipBlueprint" format=3]
+[gd_resource type="Resource" script_class="ShipBlueprint" format=3 uid="uid://bt2kj0imakpbn"]
 
-[ext_resource type="Script" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="1_8ivkh"]
+[ext_resource type="Script" uid="uid://fb3y4b4gyx8x" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="1_8ivkh"]
 
 [resource]
 script = ExtResource("1_8ivkh")
@@ -555,4 +555,261 @@ damages = Array[Dictionary]([{
 "severity": 5.5,
 "system_impact": "cargo_depressurization",
 "type": "breach"
+}])
+drive_files = Array[Dictionary]([{
+"content": "=== DARK NOVA - SISTEMI NAVE ===
+Reattore Principale: ONLINE (100% Efficienza)
+Propulsione Sub-Luce: ATTIVA
+Scudi Deflettori: OPERATIVI
+Array Sensori & Cams: 6 Canali Attivi (Prua, Poppa, Babordo, Tribordo, Dorsale, Ventrale)
+Sottosistemi di Guida: Calibrati
+",
+"desc": "Riepilogo stato dei sistemi e della telemetria di bordo.",
+"is_protected": false,
+"path": "Ship Drive/Ship Systems.txt"
+}, {
+"content": "=== REGISTRO DI BORDO ===
+[STARDATE 7815.4] Connessione al sistema centrale stabilita.
+Tutti i sistemi della Dark Nova sono pronti alla navigazione spaziale.
+Equipaggio autorizzato ad accedere all'unita' condivisa Ship Drive.
+",
+"desc": "Registro eventi e cronologia di navigazione.",
+"is_protected": false,
+"path": "Ship Drive/Flight Log.txt"
+}, {
+"content": "=== DIRETTIVE EQUIPAGGIO ===
+1. Mantenere monitorati i feed video delle telecamere esterne durante la navigazione.
+2. Coordinare le manovre di volo e la spinta propulsori con la plancia.
+3. Condividere report di missione e file di rotta all'interno dello Ship Drive.
+",
+"desc": "Protocolli operativi per l'equipaggio in missione.",
+"is_protected": false,
+"path": "Ship Drive/Crew Directives.txt"
+}, {
+"content": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING
+[SYSTEM]
+app_name=FlightControls
+version=1.0.4
+status=OPERATIONAL
+rcs_subsystem=ACTIVE
+
+[FLIGHT_DYNAMICS]
+max_linear_speed=20.0
+linear_acceleration=35.0
+linear_deceleration=20.0
+max_angular_speed=2.5
+angular_acceleration=8.0
+angular_deceleration=6.0
+
+[SPEED_MODES]
+turbo_multiplier=2.0
+precision_multiplier=0.4
+",
+"desc": "Parametri di dinamica e limiti di manovra del sistema di volo.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/flight_config.dat"
+}, {
+"content": "# RCS & MAIN THRUSTERS TUNING MATRIX
+[THRUSTERS]
+rcs_power_rate=1.0
+pitch_thrust_mult=1.0
+yaw_thrust_mult=1.0
+roll_thrust_mult=1.0
+vertical_thrust_mult=1.0
+overclock_limit=1.5
+",
+"desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/thrusters_tuning.dat"
+}, {
+"content": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION
+# WARNING: SENSORS & OPTICS CONFIGURATION FILE
+[SYSTEM]
+app_name=Cams
+version=1.0.4
+status=OPERATIONAL
+sensor_array=CCTV_6CH
+
+[OPTICS]
+default_fov=75.0
+min_fov=30.0
+max_fov=100.0
+zoom_step=10.0
+night_vision_intensity=0.18
+tactical_hud_contrast=0.18
+thermal_intensity=0.22
+",
+"desc": "Configurazione lenti e calibrazione array ottico a 6 canali.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/cams_config.dat"
+}, {
+"content": "# OPTICS & SENSOR CALIBRATION MATRIX
+[SENSORS]
+signal_boost=1.0
+noise_reduction=1.0
+refresh_rate_hz=60.0
+crosshair_style=STANDARD
+overclock_gain=1.0
+",
+"desc": "Taratura guadagno di segnale e filtri visivi CCTV.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/optics_tuning.dat"
+}, {
+"content": "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT
+[SYSTEM]
+app_name=DuctDrone
+version=1.0.4
+status=OPERATIONAL
+maintenance_subsystem=ACTIVE
+
+[DRONE_DYNAMICS]
+linear_speed=175.0
+linear_acceleration=650.0
+linear_deceleration=750.0
+rotate_speed=3.0
+
+[BATTERY_MANAGEMENT]
+battery_max=100.0
+battery_drain_move=0.35
+battery_drain_lights=0.75
+battery_drain_radar=3.5
+battery_drain_repair=6.0
+
+[MAINTENANCE]
+radar_scan_radius_max=160.0
+repair_range=42.0
+repair_speed_multiplier=1.0
+",
+"desc": "Configurazione dinamica e gestione energetica del drone di manutenzione.",
+"is_protected": true,
+"path": "Ship Drive/Programs/DuctDrone/duct_drone_config.dat"
+}, {
+"content": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX
+[TUNING]
+turbo_multiplier=2.0
+precision_multiplier=0.5
+repair_efficiency=1.0
+radar_intensity=1.0
+overclock_speed_gain=1.0
+",
+"desc": "Coefficienti di efficienza riparazione e radar del drone.",
+"is_protected": true,
+"path": "Ship Drive/Programs/DuctDrone/drone_tuning.dat"
+}, {
+"content": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION
+# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX
+[SYSTEM]
+app_name=PowerGrid
+version=1.0.4
+status=OPERATIONAL
+mode=AUTOMATIC_BALANCING
+
+[GRID_SETTINGS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+junction_switch_delay=0.25
+overload_threshold_pct=110.0
+reroute_efficiency_loss=0.05
+
+[CIRCUIT_PROTECTION]
+breaker_trip_threshold=1.4
+short_circuit_damping=0.85
+auto_reroute_on_short=false
+",
+"desc": "Configurazione reattore, soglie di sovraccarico e disgiuntori della rete.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/power_grid_config.dat"
+}, {
+"content": "# POWER GRID CALIBRATION & TUNING MATRIX
+[TUNING]
+power_efficiency_mult=1.0
+backup_line_conductivity=0.95
+switch_rate_hz=10.0
+regime_boost=1.0
+overclock_tolerance=1.2
+",
+"desc": "Matrice di conduttività e frequenza di commutazione snodi.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/grid_tuning.dat"
+}, {
+"content": "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION
+# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE
+[SYSTEM]
+app_name=Weapons
+version=1.0.4
+status=OPERATIONAL
+weapons_subsystem=ACTIVE
+
+[WEAPONS]
+max_range=4500.0
+fire_rate=1.8
+cooling_rate=0.75
+auto_pdg_enabled=true
+laser_power_draw=250.0
+torpedo_max_ammo=12
+pdg_ammo_max=500
+pdg_fire_rate=8.0
+emergency_vent_cooldown=10.0
+",
+"desc": "Parametri operativi armi pesanti, torrette laser e cadenza PDG.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Weapons/weapons_config.dat"
+}, {
+"content": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX
+[BALLISTICS]
+torpedo_velocity=85.0
+auto_lead_tracking=true
+overclock_damage_mult=1.0
+heat_multiplier=1.0
+pdg_range=1200.0
+laser_beam_intensity=1.0
+",
+"desc": "Balistica siluri, tracking anticipo di tiro e guadagno danno.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Weapons/ammo_tuning.dat"
+}])
+drive_passwords = {
+"Ship Drive/Programs/Cams": "CAMS-7815",
+"Ship Drive/Programs/DuctDrone": "DRONE-7815",
+"Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+"Ship Drive/Programs/PowerGrid": "GRID-7815",
+"Ship Drive/Programs/Weapons": "WEAP-7815"
+}
+installed_apps = Array[Dictionary]([{
+"description": "Controlli di manovra e navigazione nave",
+"icon_color": Color(1, 0.6, 0.2, 1),
+"id": "flight_control",
+"roles": ["Capitano", "Pilota", "Factotum"],
+"scene_path": "res://Applications/FlightControl/flight_control_app.tscn",
+"title": "Flight Control"
+}, {
+"description": "Robottino manutenzione e schema condotti 2D",
+"icon_color": Color(1, 0.85, 0.2, 1),
+"id": "duct_drone",
+"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum"],
+"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
+"title": "Duct Drone"
+}, {
+"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+"icon_color": Color(0.95, 0.85, 0.2, 1),
+"id": "power_grid",
+"roles": ["Capitano", "Ingegnere", "Factotum"],
+"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
+"title": "Power Grid"
+}, {
+"description": "Telecamere esterne dell'astronave",
+"icon_color": Color(0.3, 0.9, 0.6, 1),
+"id": "cams",
+"roles": ["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Factotum"],
+"scene_path": "res://Applications/Cams/cams_app.tscn",
+"title": "Cams"
+}, {
+"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+"icon_color": Color(0.95, 0.25, 0.25, 1),
+"id": "weapons",
+"roles": ["Capitano", "Soldato", "Tattico / Armi", "Factotum"],
+"scene_path": "res://Applications/Weapons/weapons_app.tscn",
+"title": "Tactical Weapons"
 }])

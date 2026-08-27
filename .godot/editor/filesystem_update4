@@ -11,3 +11,6 @@ res://addons/ship_sublayer_editor/ship_sublayer_editor.gd
 res://Scenes/Networking/network_manager.gd
 res://Scenes/Taskbar/start_button.gd
 res://Scenes/Taskbar/start_menu_option.gd
+res://tests/test_ship_blueprint_node.gd
+res://tests/test_weapons_node.gd
+res://Applications/Weapons/weapons_app.gd

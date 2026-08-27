@@ -422,12 +422,14 @@ func _on_canvas_element_modified(elem_type: String, elem_id: String, elem_data: 
 func _update_stats_label() -> void:
 	if not current_blueprint or not lbl_status_stats:
 		return
-	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Snodi | %d Danni" % [
+	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Snodi | %d Danni | %d File Drive | %d App Mainframe" % [
 		current_blueprint.rooms.size(),
 		current_blueprint.ducts.size(),
 		current_blueprint.devices.size(),
 		current_blueprint.junctions.size(),
-		current_blueprint.damages.size()
+		current_blueprint.damages.size(),
+		current_blueprint.drive_files.size(),
+		current_blueprint.installed_apps.size()
 	]
 
 # --- PROPERTY INSPECTOR BUILDER ---
@@ -447,6 +449,7 @@ func _show_blueprint_metadata_props() -> void:
 	_add_string_field("Classe Nave:", current_blueprint.ship_class, func(v): current_blueprint.ship_class = v)
 	_add_vector2_field("Spawn Drone (X, Y):", current_blueprint.drone_spawn_pos, func(v): current_blueprint.drone_spawn_pos = v; canvas.queue_redraw())
 	_add_float_field("Heading Drone (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v): current_blueprint.drone_spawn_heading = deg_to_rad(v); canvas.queue_redraw())
+	_add_passwords_editor()
 
 func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Dictionary) -> void:
 	_clear_prop_editor()
@@ -524,11 +527,44 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 			_add_vector2_field("Posizione Spawn Drone:", current_blueprint.drone_spawn_pos, func(v): current_blueprint.drone_spawn_pos = v; current_blueprint.emit_changed(); canvas.queue_redraw())
 			_add_float_field("Heading Spawn (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v): current_blueprint.drone_spawn_heading = deg_to_rad(v); current_blueprint.emit_changed(); canvas.queue_redraw())
 
+		"drive_file":
+			var df := current_blueprint.get_drive_file_by_path(elem_id)
+			if df.is_empty():
+				return
+			_add_string_field("Percorso File:", str(df.get("path", "")), func(v): df["path"] = v; current_blueprint.emit_changed(); _refresh_outliner())
+			_add_bool_field("File Protetto (.dat):", bool(df.get("is_protected", false)), func(v): df["is_protected"] = v; current_blueprint.emit_changed(); _refresh_outliner())
+			_add_string_field("Descrizione:", str(df.get("desc", "")), func(v): df["desc"] = v; current_blueprint.emit_changed())
+			_add_multiline_text_field("Contenuto File:", str(df.get("content", "")), func(v): df["content"] = v; current_blueprint.emit_changed())
+
+		"installed_app":
+			var app := current_blueprint.get_installed_app_by_id(elem_id)
+			if app.is_empty():
+				return
+			_add_string_field("ID Applicazione:", str(app.get("id", "")), func(v): app["id"] = v; current_blueprint.emit_changed(); _refresh_outliner())
+			_add_string_field("Titolo Menu:", str(app.get("title", "")), func(v): app["title"] = v; current_blueprint.emit_changed(); _refresh_outliner())
+			_add_string_field("Descrizione:", str(app.get("description", "")), func(v): app["description"] = v; current_blueprint.emit_changed())
+			_add_string_field("Percorso Scena (.tscn):", str(app.get("scene_path", "")), func(v): app["scene_path"] = v; current_blueprint.emit_changed())
+			_add_color_field("Colore Icona:", app.get("icon_color", Color.CYAN), func(c): app["icon_color"] = c; current_blueprint.emit_changed())
+			_add_roles_editor(app)
+
 	# Pulsante per eliminare l'elemento
 	var btn_del_this := Button.new()
 	btn_del_this.text = "Elimina Elemento"
 	btn_del_this.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
-	btn_del_this.pressed.connect(func(): canvas.delete_element(elem_type, elem_id))
+	btn_del_this.pressed.connect(func():
+		if elem_type == "drive_file":
+			current_blueprint.remove_drive_file(elem_id)
+			_refresh_outliner()
+			_update_stats_label()
+			_show_blueprint_metadata_props()
+		elif elem_type == "installed_app":
+			current_blueprint.remove_installed_app(elem_id)
+			_refresh_outliner()
+			_update_stats_label()
+			_show_blueprint_metadata_props()
+		else:
+			canvas.delete_element(elem_type, elem_id)
+	)
 	prop_editor_vbox.add_child(btn_del_this)
 
 # Helper Campi UI
@@ -632,6 +668,44 @@ func _add_color_field(lbl: String, current_val: Color, callback: Callable) -> vo
 	h.add_child(cp)
 	prop_editor_vbox.add_child(h)
 
+func _add_multiline_text_field(lbl: String, current_val: String, callback: Callable) -> void:
+	var v_box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = lbl
+	v_box.add_child(l)
+	
+	var text_edit := TextEdit.new()
+	text_edit.custom_minimum_size = Vector2(0, 180)
+	text_edit.text = current_val
+	text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_edit.text_changed.connect(func(): callback.call(text_edit.text))
+	v_box.add_child(text_edit)
+	prop_editor_vbox.add_child(v_box)
+
+func _add_passwords_editor() -> void:
+	if not current_blueprint or current_blueprint.drive_passwords.is_empty():
+		return
+	var v_box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = "Password Cartelle Ship Drive:"
+	v_box.add_child(l)
+	
+	for path in current_blueprint.drive_passwords:
+		var h := HBoxContainer.new()
+		var lbl_p := Label.new()
+		lbl_p.text = str(path).get_file() + ":"
+		lbl_p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var ed_pwd := LineEdit.new()
+		ed_pwd.text = str(current_blueprint.drive_passwords[path])
+		ed_pwd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var cur_path: String = str(path)
+		ed_pwd.text_changed.connect(func(v: String): current_blueprint.drive_passwords[cur_path] = v; current_blueprint.emit_changed())
+		h.add_child(lbl_p)
+		h.add_child(ed_pwd)
+		v_box.add_child(h)
+		
+	prop_editor_vbox.add_child(v_box)
+
 func _add_branches_editor(junc: Dictionary) -> void:
 	var v_box := VBoxContainer.new()
 	var l := Label.new()
@@ -672,6 +746,32 @@ func _add_branches_editor(junc: Dictionary) -> void:
 		canvas.queue_redraw()
 	)
 	v_box.add_child(btn_add_branch)
+	prop_editor_vbox.add_child(v_box)
+
+func _add_roles_editor(app: Dictionary) -> void:
+	var v_box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = "Ruoli Autorizzati (separati da virgola):"
+	v_box.add_child(l)
+	
+	var ed_roles := LineEdit.new()
+	var current_roles: Array = app.get("roles", [])
+	var roles_str_arr: PackedStringArray = []
+	for r in current_roles:
+		roles_str_arr.append(str(r))
+	ed_roles.text = ", ".join(roles_str_arr)
+	ed_roles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ed_roles.text_changed.connect(func(v: String):
+		var parts := v.split(",")
+		var new_arr: Array = []
+		for p in parts:
+			var s := p.strip_edges()
+			if not s.is_empty():
+				new_arr.append(s)
+		app["roles"] = new_arr
+		current_blueprint.emit_changed()
+	)
+	v_box.add_child(ed_roles)
 	prop_editor_vbox.add_child(v_box)
 
 # --- OUTLINER TREE ---
@@ -719,6 +819,26 @@ func _refresh_outliner() -> void:
 		item.set_text(0, "💥 [%s] %s" % [str(dmg.get("id", "")), str(dmg.get("name", ""))])
 		item.set_metadata(0, {"type": "damage", "id": str(dmg.get("id", ""))})
 
+	# Gruppo 5: Ship Drive & File System
+	var cat_drive := outliner_tree.create_item(root)
+	cat_drive.set_text(0, "💾 Ship Drive & File System (%d File)" % current_blueprint.drive_files.size())
+	for df in current_blueprint.drive_files:
+		var item := outliner_tree.create_item(cat_drive)
+		var p: String = str(df.get("path", ""))
+		var lock_tag := " 🔒" if df.get("is_protected", false) else ""
+		item.set_text(0, "📄 %s%s" % [p.get_file(), lock_tag])
+		item.set_metadata(0, {"type": "drive_file", "id": p})
+
+	# Gruppo 6: Applicazioni Mainframe Installate
+	var cat_apps := outliner_tree.create_item(root)
+	cat_apps.set_text(0, "🖥️ Applicazioni Mainframe (%d App)" % current_blueprint.installed_apps.size())
+	for app in current_blueprint.installed_apps:
+		var item := outliner_tree.create_item(cat_apps)
+		var app_id: String = str(app.get("id", ""))
+		var app_title: String = str(app.get("title", app_id))
+		item.set_text(0, "📱 %s (%s)" % [app_title, app_id])
+		item.set_metadata(0, {"type": "installed_app", "id": app_id})
+
 func _on_outliner_tree_item_selected() -> void:
 	var selected_item := outliner_tree.get_selected()
 	if not selected_item:
@@ -727,6 +847,20 @@ func _on_outliner_tree_item_selected() -> void:
 	if meta is Dictionary:
 		var elem_type: String = str(meta.get("type", ""))
 		var elem_id: String = str(meta.get("id", ""))
+		if elem_type == "drive_file":
+			canvas.selected_type = ""
+			canvas.selected_id = ""
+			var file_data: Dictionary = current_blueprint.get_drive_file_by_path(elem_id)
+			_populate_property_editor(elem_type, elem_id, file_data)
+			canvas.queue_redraw()
+			return
+		if elem_type == "installed_app":
+			canvas.selected_type = ""
+			canvas.selected_id = ""
+			var app_data: Dictionary = current_blueprint.get_installed_app_by_id(elem_id)
+			_populate_property_editor(elem_type, elem_id, app_data)
+			canvas.queue_redraw()
+			return
 		canvas.selected_type = elem_type
 		canvas.selected_id = elem_id
 		var elem_data := canvas._get_selected_element_data()

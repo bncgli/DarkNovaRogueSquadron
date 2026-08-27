@@ -1,0 +1,670 @@
+[gd_scene format=3 uid="uid://cx6y8v2u0weap"]
+
+[ext_resource type="Script" path="res://Applications/Weapons/weapons_app.gd" id="1_weapons_script"]
+[ext_resource type="Script" path="res://Applications/Weapons/weapons_radar_canvas.gd" id="2_radar_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.05, 0.07, 0.1, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.25, 0.35, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_radar_bg"]
+bg_color = Color(0.02, 0.04, 0.07, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.45, 0.65, 0.5)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_fire"]
+bg_color = Color(0.55, 0.12, 0.14, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.35, 0.35, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_fire_hover"]
+bg_color = Color(0.75, 0.15, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.6, 0.6, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_feed_box"]
+bg_color = Color(0.01, 0.03, 0.06, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.6, 0.8, 0.4)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.06, 0.1, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.6, 0.2, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="WeaponsApp" type="Control"]
+custom_minimum_size = Vector2(720, 520)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_weapons_script")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 14
+text = "⚔️ TACTICAL WEAPONS & POINT DEFENSE"
+
+[node name="SubTitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "Sublayer 3/5 - Controllo Torrette Laser Binate, Lanciasiluri Pesanti e PDG Difensivo"
+
+[node name="BadgesVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="HBoxBadges" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox/HBoxBadges"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "RUOLO: SOLDATO"
+
+[node name="PowerBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox/HBoxBadges"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "PWR: 250 MW (OK)"
+
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox/HBoxBadges"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "STATO: OPERATIVO"
+
+[node name="DatStatusHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox/DatStatusHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 10
+text = "DAT: ATTIVO (FIRMWARE V1.0.4)"
+
+[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/BadgesVBox/DatStatusHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "🔄 Ricarica .DAT"
+
+[node name="GroupSelectorCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/GroupSelectorCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 11
+text = "GRUPPI D'ARMA:"
+
+[node name="BtnGroupLaser" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "⚡ Torrette Laser Binate"
+
+[node name="BtnGroupTorpedo" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "🚀 Siluri Pesanti"
+
+[node name="BtnGroupPDG" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "🛡️ PDG Difesa Prossimità"
+
+[node name="SelectedGroupLabel" type="Label" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "SISTEMA ATTIVO: TORRETTE LASER BINATE"
+
+[node name="TelemetryGaugesCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Grid" type="GridContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="CapacitorVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/CapacitorVBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/CapacitorVBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "CONDENSATORE LASER:"
+
+[node name="CapacitorValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/CapacitorVBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "100%"
+
+[node name="CapacitorProgress" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/CapacitorVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="HeatVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/HeatVBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/HeatVBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "TEMPERATURA CANNE:"
+
+[node name="HeatValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/HeatVBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "0%"
+
+[node name="HeatProgress" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/HeatVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+show_percentage = false
+
+[node name="AmmoTorpedoHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoTorpedoHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "SILURI DISPONIBILI:"
+
+[node name="AmmoTorpedoLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoTorpedoHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+text = "12 / 12"
+
+[node name="AmmoPDGHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoPDGHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "MUNIZIONI PDG GATLING:"
+
+[node name="AmmoPDGLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoPDGHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "500 / 500"
+
+[node name="OverheatWarningLabel" type="Label" parent="ScrollContainer/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.15, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "⚠️ ALLARME: BLOCCO DI SICUREZZA TERMICA ATTIVO - ATTENDERE DISSIPAZIONE O ATTIVARE SCARICO"
+horizontal_alignment = 1
+
+[node name="MainColumnsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="RadarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox"]
+custom_minimum_size = Vector2(340, 220)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "📡 RADAR PUNTAMENTO & TARGET LOCK"
+
+[node name="RadarCanvas" type="Control" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("2_radar_script")
+
+[node name="TargetHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TargetOptionButton" type="OptionButton" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox/TargetHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+
+[node name="LockButton" type="Button" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox/TargetHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "🎯 AGGANCIA LOCK"
+
+[node name="TargetInfoLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_font_sizes/font_size = 10
+text = "BERSAGLIO: NESSUNO SELEZIONATO"
+
+[node name="LeadCalcLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/RadarCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.45, 1)
+theme_override_font_sizes/font_size = 10
+text = "ANTICIPO TIRO (LEAD): STANDBY"
+
+[node name="CameraFeedCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox"]
+custom_minimum_size = Vector2(340, 220)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TurretFeedLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "CAMERA OTTICA PUNTAMENTO [YAW: +0.0° | PITCH: +0.0°]"
+
+[node name="FeedPanel" type="Panel" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_feed_box")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="FeedViewport" type="SubViewport" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel/SubViewportContainer"]
+unique_name_in_owner = true
+handle_input_locally = false
+size = Vector2i(2, 2)
+render_target_update_mode = 3
+
+[node name="FeedCamera3D" type="Camera3D" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel/SubViewportContainer/FeedViewport"]
+unique_name_in_owner = true
+current = true
+fov = 65.0
+
+[node name="TurretFeedRect" type="TextureRect" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FeedCrosshair" type="Control" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LineH" type="ColorRect" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel/FeedCrosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -1.0
+offset_right = 16.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.95, 1, 0.75)
+
+[node name="LineV" type="ColorRect" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel/FeedCrosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.0
+offset_top = -16.0
+offset_right = 1.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.95, 1, 0.75)
+
+[node name="AimSlidersGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+columns = 3
+
+[node name="LabelYaw" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "YAW (Azimuth):"
+
+[node name="AimYawSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -45.0
+max_value = 45.0
+step = 0.5
+
+[node name="AimCenterButton" type="Button" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "🎯 Centro"
+
+[node name="LabelPitch" type="Label" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "PITCH (Alzo):"
+
+[node name="AimPitchSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -30.0
+max_value = 30.0
+step = 0.5
+
+[node name="Empty" type="Control" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/AimSlidersGrid"]
+layout_mode = 2
+
+[node name="ActionsCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ActionsCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FireButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_fire")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_fire_hover")
+text = "🔥 FUOCO MANUALE"
+
+[node name="AutoPDGButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "PDG AUTO: ATTIVO"
+
+[node name="VentHeatButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "❄️ SCARICO TERMICO D'EMERGENZA"
+
+[node name="ReloadAmmoButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🔄 Ricarica Armeria"
+
+[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/ActionsCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "> SISTEMA PRONTO AL COMBATTIMENTO."
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Icon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "⚠️"
+horizontal_alignment = 1
+
+[node name="OfflineTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "SISTEMI D'ARMA OFFLINE"
+horizontal_alignment = 1
+
+[node name="OfflineSub" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "In attesa di decollo o connessione alla nave (Avvia Missione in Lobby)..."
+horizontal_alignment = 1

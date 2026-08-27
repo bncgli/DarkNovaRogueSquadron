@@ -1,6 +1,7 @@
 # Standard Architetturale per le Applicazioni GodotOS (Dark Nova: Rogue Squadron)
 
 > **Istruzioni per l'Agente AI**: Questo documento costituisce il set di istruzioni specifiche e vincolanti per l'agente AI incaricato della creazione, refactoring o manutenzione delle applicazioni all'interno del sistema operativo di bordo **GodotOS**.
+> Per la progettazione di nuove funzionalità o applicazioni prima dello sviluppo, fare riferimento al modello [Feature Design Document (FDD)](FEATURE_DESIGN_TEMPLATE.md).
 
 ### Flusso di Lavoro Git (Regola Obbligatoria per l'Agente AI)
 Prima di eseguire qualsiasi modifica o sviluppo su un'applicazione, l'agente AI deve seguire rigorosamente questo flusso Git:
@@ -46,8 +47,29 @@ Ogni applicazione deve disporre di una cartella protetta da password contenente 
 
 ### Proprietà e Comportamento dei File `.dat`
 * **Non leggibili dal File Reader**: I file `.dat` non sono leggibili tramite il lettore file / visualizzatore di testo standard del sistema operativo (blocco in `cat` e text editor per file protetti/binari).
+* **Natura Protetta e Modifica "Illegale" (Hackwarfare)**:
+  - All'interno dell'esperienza diegetica di gioco, i file `.dat` rappresentano i firmware critici di bordo e **non possono essere modificati tramite canali o editor "legali" standard**.
+  - Qualsiasi alterazione, overclock o manomissione a runtime dei parametri `.dat` costituisce un'azione clandestina/illecita che sarà gestita e approfondita all'interno della meccanica di **Hackwarfare (Cyber Warfare & Electronic Warfare)**.
 * **Valori attivi di runtime**: Contengono parametri e valori effettivi che il programma legge e utilizza attivamente durante l'esecuzione.
-* **Impatto sulle prestazioni**: La modifica di tali valori influenza direttamente le prestazioni, l'efficienza e il comportamento del programma, in positivo o in negativo (meccanica di tuning, sovraccarico, hacking o manomissione).
+* **Impatto sulle prestazioni**: La modifica di tali valori influenza direttamente le prestazioni, l'efficienza e il comportamento del programma, in positivo o in negativo (tuning, sovraccarico, hacking o contromisure).
+
+### Tabella Password di Debug (Sviluppo & Test)
+Per agevolare il testing e il debugging interno da parte dello sviluppatore, di seguito è riportata la lista delle password predefinite per le cartelle protette dei programmi in `Ship Drive/Programs/`:
+
+| Applicazione / Directory | Password di Debug | Note |
+| :--- | :---: | :--- |
+| `Ship Drive/Programs/FlightControls` | `FLIGHT-7815` | Sottosistemi propulsione e RCS |
+| `Ship Drive/Programs/Cams` | `CAMS-7815` | Array ottiche e CCTV 6CH |
+| `Ship Drive/Programs/DuctDrone` | `DRONE-7815` | Dinamiche drone e radar manutenzione |
+| `Ship Drive/Programs/PowerGrid` | `GRID-7815` | Reattore e soglie di rete elettrica |
+| `Ship Drive/Programs/Weapons` | `WEAP-7815` | Armi primarie e torrette difensive |
+| `Ship Drive/Programs/Sensors` | `SENS-7815` | Scansione stellare a lungo raggio |
+| `Ship Drive/Programs/ShieldMatrix` | `SHLD-7815` | Matrice deflettori e scudi quadrante |
+| `Ship Drive/Programs/Comms` | `COMM-7815` | Crittografia e guerra elettronica |
+| `Ship Drive/Programs/LifeSupport` | `LIFE-7815` | Supporto vitale e pressurizzazione |
+| `Ship Drive/Programs/Logbook` | `LOGS-7815` | Registro di bordo e diari |
+| `Ship Drive/Programs/Diagnostics` | `DIAG-7815` | Antivirus e scansione registri |
+| *Master Debug Override* | `ROOT-7815` | Bypass globale per test suites |
 
 ### Struttura Standard del Formato `.dat`
 I file `.dat` utilizzano un formato strutturato **INI / Key-Value** leggibile e configurabile:
@@ -321,6 +343,10 @@ func _update_permissions() -> void:
      * `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna le zone di danno predefinite.
      * `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i limiti dimensionali dello scafo.
      * `SpaceWorldManager.get_drone_spawn_pos() -> Vector2` & `get_drone_spawn_heading() -> float`: Ritorna le coordinate iniziali del Duct Drone.
+     * `SpaceWorldManager.get_ship_drive_files() -> Array[Dictionary]`: Ritorna l'elenco dei file iniziali del drive (`.txt`, `.dat`).
+     * `SpaceWorldManager.get_ship_drive_passwords() -> Dictionary`: Ritorna le password delle cartelle protette di bordo.
+     * `SpaceWorldManager.get_installed_apps() -> Array[Dictionary]`: Ritorna l'elenco delle applicazioni mainframe installate sulla nave.
+     * `SpaceWorldManager.get_installed_apps_for_role(role, is_solo) -> Array[Dictionary]`: Ritorna le applicazioni mainframe filtrate per il ruolo specificato.
 
 2. **`NetworkManager` (`Scenes/Networking/network_manager.gd`)**:
    * Gestisce socket ENet / P2P, stanze, equipaggio e chat.
@@ -404,7 +430,7 @@ I test all'interno di `tests/` per una nuova applicazione devono verificare:
 ## 10. Integrazione con ShipBlueprint / Sublayer della Nave
 
 ### A. Panoramica del Sublayer Unificato
-La risorsa centrale **`ShipBlueprint`** (`Outside/ShipSublayer/ship_blueprint.gd` e `default_ship_blueprint.tres`) definisce l'intera configurazione e geometria della nave attraverso 4 sublayer coordinati:
+La risorsa centrale **`ShipBlueprint`** (`Outside/ShipSublayer/ship_blueprint.gd` e `default_ship_blueprint.tres`) definisce l'intera configurazione e geometria della nave attraverso 6 sublayer coordinati:
 
 1. **Sublayer 1: Stanze e Settori (`rooms`)**:
    - Geometria dei compartimenti dello scafo (`Rect2`), nomi identificativi, categoria (`command`, `engineering`, `propulsion`, `sensors`, ecc.), colori primari e bordi.
@@ -415,6 +441,12 @@ La risorsa centrale **`ShipBlueprint`** (`Outside/ShipSublayer/ship_blueprint.gd
    - Snodi a commutazione dinamica (`junctions` con rami e linee `conduits`).
 4. **Sublayer 4: Zone di Danno e Vulnerabilità (`damages`)**:
    - Punti di danno strutturale (falle, cortocircuiti), gravità (`severity`), costi di riparazione e impatto sui sistemi.
+5. **Sublayer 5: File di Sistema e Ship Drive (`drive_files`, `drive_passwords`)**:
+   - File iniziali montati sul desktop (`.txt` di log/direttive e configurazioni binarie protette `.dat` per ogni programma di bordo).
+   - Mappa delle password di cartella (`FolderPasswordManager`) per le directory protette di bordo.
+6. **Sublayer 6: Applicazioni Mainframe Installate e Filtro Ruoli (`installed_apps`)**:
+   - Elenco dei programmi operativi installati nel mainframe della nave (`id`, `title`, `description`, `scene_path`, `icon_color`, `roles`).
+   - All'avvio della missione (`mission_started`), il menu Start di GodotOS popola dinamicamente solo le applicazioni installate autorizzate per il ruolo del giocatore locale (`get_apps_for_role`). Prima del decollo, le applicazioni della nave non appaiono nel menu, eliminando aperture accidentali e il problema dell'overlay *"connettiti ad una nave"*.
 
 Inoltre, la risorsa contiene i metadati dimensionali dello scafo (`ship_bounds`), le coordinate di spawn del drone (`drone_spawn_pos`) e l'orientamento iniziale (`drone_spawn_heading`).
 
@@ -431,6 +463,10 @@ Le applicazioni non devono includere coordinate o topologie hardcoded. Devono in
 * `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna l'elenco dei punti di danno predefiniti.
 * `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i confini dimensionali della nave.
 * `SpaceWorldManager.get_drone_spawn_pos() -> Vector2`: Ritorna la posizione di spawn del drone.
+* `SpaceWorldManager.get_ship_drive_files() -> Array[Dictionary]`: Ritorna l'elenco dei file iniziali del drive.
+* `SpaceWorldManager.get_ship_drive_passwords() -> Dictionary`: Ritorna le password delle cartelle protette di bordo.
+* `SpaceWorldManager.get_installed_apps() -> Array[Dictionary]`: Ritorna l'elenco dei programmi installati nel mainframe.
+* `SpaceWorldManager.get_installed_apps_for_role(role_name, is_solo) -> Array[Dictionary]`: Ritorna i programmi installati filtrati per ruolo.
 
 #### Pattern GDScript Consigliato per le Applicazioni
 

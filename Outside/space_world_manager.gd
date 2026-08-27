@@ -13,6 +13,8 @@ signal ship_damages_updated(damages: Array)
 signal ship_damage_discovered(damage: Dictionary)
 signal ship_damage_repaired(damage: Dictionary)
 signal duct_drone_repair_state_changed(is_repairing: bool, damage_id: String, progress: float)
+signal weapon_fired(weapon_type: String, origin: Vector3, target_pos: Vector3, hit_success: bool, target_id: String)
+signal weapon_target_locked(target_id: String, target_data: Dictionary)
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
@@ -840,6 +842,40 @@ func get_drone_spawn_heading() -> float:
 		return bp.drone_spawn_heading
 	return INITIAL_DUCT_DRONE_HEADING
 
+## Ritorna i file di sistema e file di bordo di Ship Drive da ShipBlueprint
+func get_ship_drive_files() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.drive_files.size() > 0:
+		return bp.drive_files
+	return []
+
+## Ritorna le password delle cartelle di Ship Drive da ShipBlueprint
+func get_ship_drive_passwords() -> Dictionary:
+	var bp := get_ship_blueprint()
+	if bp and bp.drive_passwords.size() > 0:
+		return bp.drive_passwords
+	return {}
+
+## Ritorna le applicazioni mainframe installate da ShipBlueprint
+func get_installed_apps() -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.installed_apps.size() > 0:
+		return bp.installed_apps
+	var def_bp := ShipBlueprint.get_default_blueprint()
+	if def_bp:
+		return def_bp.installed_apps
+	return []
+
+## Ritorna le applicazioni mainframe installate filtrate per il ruolo del giocatore
+func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
+	var bp := get_ship_blueprint()
+	if bp and bp.installed_apps.size() > 0:
+		return bp.get_apps_for_role(role_name, is_solo)
+	var def_bp := ShipBlueprint.get_default_blueprint()
+	if def_bp:
+		return def_bp.get_apps_for_role(role_name, is_solo)
+	return []
+
 func _is_duct_drone_position_valid(pos: Vector2) -> bool:
 	for room in get_duct_rooms():
 		var r: Rect2 = room["rect"]
@@ -1323,3 +1359,104 @@ func _position_camera_window(win: FakeWindow, cam_id: String) -> void:
 			win.position = Vector2(base_x + w + margin_x, base_y + h + margin_y)
 		_:
 			win.position = Vector2(base_x + randf_range(20, 60), base_y + randf_range(20, 60))
+
+# --- WEAPONS SYSTEM & TARGETING METHODS ---
+
+## Ritorna l'elenco dei bersagli rilevati nello spazio circostante (asteroidi o minacce).
+func get_weapon_targets() -> Array[Dictionary]:
+	var targets: Array[Dictionary] = []
+	var ship := get_spaceship()
+	var ship_pos := ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
+	var ship_vel := ship.linear_velocity if ship and is_instance_valid(ship) else Vector3.ZERO
+	
+	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
+		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
+		if asteroids_node and is_instance_valid(asteroids_node):
+			for child in asteroids_node.get_children():
+				if child is Node3D:
+					var a_pos: Vector3 = child.global_position
+					var diff: Vector3 = a_pos - ship_pos
+					var dist: float = diff.length()
+					var local_diff: Vector3 = ship_basis.inverse() * diff
+					var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+					var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+					
+					targets.append({
+						"id": child.name,
+						"name": child.name.replace("_", " "),
+						"pos": a_pos,
+						"rel_pos": diff,
+						"distance": dist,
+						"velocity": Vector3(0.1, 0.0, 0.2),
+						"bearing_deg": bearing_deg,
+						"elevation_deg": elevation_deg,
+						"type": "ASTEROID",
+						"threat_level": "NEUTRAL" if dist > 60.0 else "HAZARD"
+					})
+	
+	# Fallback se non ci sono nodi attivi (es. test headless)
+	if targets.is_empty():
+		var default_targets: Array[Dictionary] = [
+			{"id": "AST-ALPHA", "name": "AST-01 [Alpha]", "pos": Vector3(0, 8, -65), "vel": Vector3(0.2, 0, 0.5), "threat": "HAZARD"},
+			{"id": "AST-BETA", "name": "AST-02 [Beta]", "pos": Vector3(45, -6, -110), "vel": Vector3(-0.3, 0.1, 0.2), "threat": "NEUTRAL"},
+			{"id": "AST-GAMMA", "name": "AST-03 [Gamma]", "pos": Vector3(-32, 12, -50), "vel": Vector3(0.5, -0.2, 0.8), "threat": "HAZARD"},
+			{"id": "DRONE-HOSTILE", "name": "PROBE-7X [Sconosciuto]", "pos": Vector3(16, 5, -30), "vel": Vector3(-1.2, 0.4, 2.5), "threat": "HOSTILE"}
+		]
+		for dt in default_targets:
+			var d_pos: Vector3 = dt["pos"]
+			var diff: Vector3 = d_pos - ship_pos
+			var dist: float = diff.length()
+			var local_diff: Vector3 = ship_basis.inverse() * diff
+			var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+			var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+			
+			targets.append({
+				"id": dt["id"],
+				"name": dt["name"],
+				"pos": d_pos,
+				"rel_pos": diff,
+				"distance": dist,
+				"velocity": dt["vel"],
+				"bearing_deg": bearing_deg,
+				"elevation_deg": elevation_deg,
+				"type": "CONTACT",
+				"threat_level": dt["threat"]
+			})
+	
+	# Ordina per distanza crescente
+	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.get("distance", 0.0) < b.get("distance", 0.0)
+	)
+	return targets
+
+## Verifica se il sottosistema Armeria (Sublayer 3) riceve alimentazione sufficiente
+func is_armory_powered() -> bool:
+	var devices := get_power_devices()
+	for dev in devices:
+		if dev.get("id", "") == "armory_defense":
+			return dev.get("inputs_powered", 1) > 0
+	return true
+
+## Esegue una richiesta di fuoco per il tipo d'arma specificato
+func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim_dir: Vector3 = Vector3.ZERO) -> Dictionary:
+	var ship := get_spaceship()
+	var origin: Vector3 = ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	var target_pos: Vector3 = origin + (manual_aim_dir * 100.0 if manual_aim_dir.length_squared() > 0.01 else Vector3(0, 0, -100))
+	var hit_success: bool = false
+	
+	if not target_id.is_empty():
+		for t in get_weapon_targets():
+			if t.get("id", "") == target_id:
+				target_pos = t.get("pos", target_pos)
+				hit_success = true
+				break
+	
+	weapon_fired.emit(weapon_type, origin, target_pos, hit_success, target_id)
+	return {
+		"weapon_type": weapon_type,
+		"origin": origin,
+		"target_pos": target_pos,
+		"hit_success": hit_success,
+		"target_id": target_id
+	}
