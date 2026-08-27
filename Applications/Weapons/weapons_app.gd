@@ -52,7 +52,10 @@ enum WeaponGroup {
 @onready var aim_pitch_slider: HSlider = get_node_or_null("%AimPitchSlider")
 @onready var aim_center_button: Button = get_node_or_null("%AimCenterButton")
 
-# Feed Camera Torretta
+# Feed Camera Torretta & Viewport 3D
+@onready var sub_viewport_container: SubViewportContainer = get_node_or_null("%SubViewportContainer")
+@onready var feed_viewport: SubViewport = get_node_or_null("%FeedViewport")
+@onready var feed_camera_3d: Camera3D = get_node_or_null("%FeedCamera3D")
 @onready var turret_feed_rect: TextureRect = get_node_or_null("%TurretFeedRect")
 @onready var turret_feed_label: Label = get_node_or_null("%TurretFeedLabel")
 @onready var feed_crosshair: Control = get_node_or_null("%FeedCrosshair")
@@ -108,6 +111,7 @@ var detected_targets: Array[Dictionary] = []
 func _ready() -> void:
 	_configure_window()
 	_setup_ui_signals()
+	_setup_turret_camera()
 	load_dat_configuration()
 	_connect_system_signals()
 	_update_connection_state()
@@ -395,6 +399,7 @@ func _process(delta: float) -> void:
 	_update_cooling_and_power(delta)
 	_process_auto_pdg(delta)
 	_refresh_targets()
+	_update_turret_camera(delta)
 	_update_ui_displays()
 
 func _update_timers(delta: float) -> void:
@@ -590,6 +595,18 @@ func _update_target_info() -> void:
 		else:
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): STANDBY (AGGANCIARE BERSAGLIO)"
 
+func _setup_turret_camera() -> void:
+	if not is_inside_tree():
+		return
+	if feed_viewport and SpaceWorldManager:
+		feed_viewport.world_3d = SpaceWorldManager.get_world_3d()
+		feed_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		feed_viewport.handle_input_locally = false
+		feed_viewport.own_world_3d = false
+	if feed_camera_3d:
+		feed_camera_3d.current = true
+		feed_camera_3d.fov = 65.0
+
 func _on_aim_slider_changed(_val: float) -> void:
 	if aim_yaw_slider and aim_pitch_slider:
 		manual_aim = Vector2(aim_yaw_slider.value, aim_pitch_slider.value)
@@ -603,12 +620,54 @@ func _on_aim_center_pressed() -> void:
 	manual_aim = Vector2.ZERO
 	_update_turret_camera_feed()
 
+func _update_turret_camera(delta: float = 0.0) -> void:
+	# Se target locked e auto lead tracking abilitato, allinea la mira al bersaglio
+	if is_target_locked and not selected_target_id.is_empty() and bool(active_config.get("auto_lead_tracking", true)):
+		var t := _get_target_data(selected_target_id)
+		if not t.is_empty():
+			var target_bearing: float = float(t.get("bearing_deg", manual_aim.x))
+			var target_elev: float = float(t.get("elevation_deg", manual_aim.y))
+			if delta > 0.0:
+				manual_aim.x = clampf(lerpf(manual_aim.x, target_bearing, 8.0 * delta), -45.0, 45.0)
+				manual_aim.y = clampf(lerpf(manual_aim.y, target_elev, 8.0 * delta), -30.0, 30.0)
+			else:
+				manual_aim.x = clampf(target_bearing, -45.0, 45.0)
+				manual_aim.y = clampf(target_elev, -30.0, 30.0)
+			
+			if aim_yaw_slider:
+				aim_yaw_slider.set_value_no_signal(manual_aim.x)
+			if aim_pitch_slider:
+				aim_pitch_slider.set_value_no_signal(manual_aim.y)
+	
+	_update_turret_camera_feed()
+
 func _update_turret_camera_feed() -> void:
 	if turret_feed_label:
 		turret_feed_label.text = "CAMERA OTTICA PUNTAMENTO [YAW: %+.1f° | PITCH: %+.1f°]" % [manual_aim.x, manual_aim.y]
+	
+	# Aggiorna orientamento 3D della telecamera nel mondo di gioco
+	if feed_camera_3d and is_instance_valid(feed_camera_3d):
+		if feed_viewport and feed_viewport.world_3d == null and SpaceWorldManager:
+			feed_viewport.world_3d = SpaceWorldManager.get_world_3d()
+		
+		var ship_trans := Transform3D.IDENTITY
+		if SpaceWorldManager:
+			var ship := SpaceWorldManager.get_spaceship()
+			if ship and is_instance_valid(ship) and ship.is_inside_tree():
+				ship_trans = SpaceWorldManager.get_camera_transform("front")
+			else:
+				ship_trans = Transform3D(Basis.IDENTITY, Vector3(0.0, 0.25, -2.1))
+		
+		var yaw_rad: float = deg_to_rad(-manual_aim.x)
+		var pitch_rad: float = deg_to_rad(-manual_aim.y)
+		var rot_basis := Basis.from_euler(Vector3(pitch_rad, yaw_rad, 0.0), EulerOrder.EULER_ORDER_YXZ)
+		feed_camera_3d.global_transform = Transform3D(ship_trans.basis * rot_basis, ship_trans.origin)
+	
+	# Centratura reticolo HUD
 	if feed_crosshair:
-		var center := turret_feed_rect.size * 0.5 if turret_feed_rect else Vector2(160, 100)
-		var offset := Vector2(manual_aim.x * 2.0, -manual_aim.y * 2.0)
+		var parent_ctrl: Control = feed_crosshair.get_parent() as Control
+		var center := parent_ctrl.size * 0.5 if parent_ctrl else Vector2(160, 55)
+		var offset := Vector2(manual_aim.x * 1.5, -manual_aim.y * 1.5)
 		feed_crosshair.position = center + offset - feed_crosshair.size * 0.5
 
 # --- AZIONI DI FUOCO E GESTIONE GRUPPI D'ARMA ---

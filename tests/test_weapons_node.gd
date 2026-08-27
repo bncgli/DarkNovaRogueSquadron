@@ -227,6 +227,25 @@ func _run_suite() -> void:
 		print("✔ File .dat protetto dalla lettura in chiaro standard")
 		term.queue_free()
 	
+	# =========================================================================
+	# FASE 10: CAMERA OTTICA DI PUNTAMENTO & SUBVIEWPORT 3D
+	# =========================================================================
+	print("\n--- TEST 10: Camera Ottica di Puntamento e SubViewport 3D ---")
+	assert(weapons_app.feed_viewport != null, "Feed viewport deve essere presente")
+	assert(weapons_app.feed_camera_3d != null, "Feed Camera3D deve essere presente")
+	
+	# Test orientamento ottico manuale
+	weapons_app.aim_yaw_slider.value = 15.0
+	weapons_app.aim_pitch_slider.value = -10.0
+	weapons_app._on_aim_slider_changed(0.0)
+	assert(weapons_app.manual_aim == Vector2(15.0, -10.0), "La mira manuale deve essere aggiornata dai cursori")
+	assert(weapons_app.turret_feed_label.text.contains("+15.0°") and weapons_app.turret_feed_label.text.contains("-10.0°"), "Label telecamera deve riflettere yaw e pitch")
+	
+	# Test ricentratura mira
+	weapons_app._on_aim_center_pressed()
+	assert(weapons_app.manual_aim == Vector2.ZERO, "La pressione di Centro deve azzerare la mira")
+	print("✔ Camera ottica di puntamento, SubViewport 3D e orientamento verificati con successo")
+	
 	weapons_app.queue_free()
 	print("\n=======================================================")
 	print("✔ TUTTI I TEST TACTICAL WEAPONS COMPLETATI CON SUCCESSO!")
