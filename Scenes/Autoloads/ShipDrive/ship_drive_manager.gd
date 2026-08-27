@@ -224,6 +224,15 @@ func _populate_default_ship_drive_files() -> void:
 	_write_file_content("Ship Drive/Programs/Weapons/weapons_config.dat", "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION\n# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE\n[SYSTEM]\napp_name=Weapons\nversion=1.0.4\nstatus=OPERATIONAL\nweapons_subsystem=ACTIVE\n\n[WEAPONS]\nmax_range=4500.0\nfire_rate=1.8\ncooling_rate=0.75\nauto_pdg_enabled=true\nlaser_power_draw=250.0\ntorpedo_max_ammo=12\npdg_ammo_max=500\npdg_fire_rate=8.0\nemergency_vent_cooldown=10.0\n")
 	_write_file_content("Ship Drive/Programs/Weapons/ammo_tuning.dat", "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n")
 	
+	_write_file_content("Ship Drive/Programs/ShieldMatrix/shields_config.dat", "# DARK NOVA SHIELD MATRIX RUNTIME CONFIGURATION\n# WARNING: SHIELD DEFLECTOR AND HULL PROTECTION MATRIX\n[SYSTEM]\napp_name=ShieldMatrix\nversion=1.0.4\nstatus=OPERATIONAL\nshield_subsystem=ACTIVE\n\n[SHIELD_SETTINGS]\nmax_capacity_per_quadrant=250.0\nrecharge_rate_per_sec=15.0\noverload_limit=1.3\nbase_power_draw_mw=90.0\nemergency_boost_power_mw=120.0\nemergency_boost_amount=75.0\nemergency_boost_cooldown=8.0\ndecay_rate_unpowered=25.0\n")
+	_write_file_content("Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat", "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX\n[HARMONICS]\nharmonic_frequency=440.0\nemergency_boost_multiplier=2.5\noverclock_absorption=1.0\nphase_sync_stability=0.98\ndispersion_damping=0.88\n")
+	
+	_write_file_content("Ship Drive/Programs/Comms/comms_config.dat", "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION\n# WARNING: SUBSPACE RELAY AND CRYPTOGRAPHY MATRIX\n[SYSTEM]\napp_name=Comms\nversion=1.0.4\nstatus=OPERATIONAL\ncomms_subsystem=ACTIVE\n\n[COMMS_SETTINGS]\nbandwidth_hz=1420.0\ndecryption_speed_multiplier=1.0\nsubspace_relay_active=true\nauto_tune_sos=true\nsignal_amplification=1.2\n")
+	_write_file_content("Ship Drive/Programs/Comms/crypto_tuning.dat", "# EW COUNTERMEASURES & CRYPTO TUNING MATRIX\n[ELECTRONIC_WARFARE]\njamming_power_mw=120.0\nsignal_noise_ratio=0.85\nspoofing_signature=CORVETTE_CIVILIAN\njamming_radius=15000.0\noverclock_ew_boost=1.0\ncrypto_crack_speed=1.0\n")
+	
+	_write_file_content("Ship Drive/Programs/Diagnostics/diagnostics_config.dat", "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n")
+	_write_file_content("Ship Drive/Programs/Diagnostics/security_tuning.dat", "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n")
+	
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	if fpm:
 		fpm.set_password("Ship Drive/Programs/FlightControls", "FLIGHT-7815")
@@ -231,6 +240,9 @@ func _populate_default_ship_drive_files() -> void:
 		fpm.set_password("Ship Drive/Programs/DuctDrone", "DRONE-7815")
 		fpm.set_password("Ship Drive/Programs/PowerGrid", "GRID-7815")
 		fpm.set_password("Ship Drive/Programs/Weapons", "WEAP-7815")
+		fpm.set_password("Ship Drive/Programs/ShieldMatrix", "SHLD-7815")
+		fpm.set_password("Ship Drive/Programs/Comms", "COMM-7815")
+		fpm.set_password("Ship Drive/Programs/Diagnostics", "DIAG-7815")
 
 func _close_ship_drive_windows() -> void:
 	if not is_inside_tree():

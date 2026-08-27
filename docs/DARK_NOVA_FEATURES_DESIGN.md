@@ -155,10 +155,10 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 | **Weapons** | `Ship Drive/Programs/Weapons/` | `WEAP-7815` | `weapons_config.dat`, `ammo_tuning.dat` |
 | **Shield Matrix** | `Ship Drive/Programs/ShieldMatrix/` | `SHLD-7815` | `shields_config.dat`, `deflector_tuning.dat` |
 | **Comms & EW** | `Ship Drive/Programs/Comms/` | `COMM-7815` | `comms_config.dat`, `crypto_tuning.dat` |
+| **System Diagnostics** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
 | **Sensors (Roadmap)** | `Ship Drive/Programs/Sensors/` | `SENS-7815` | `sensors_config.dat`, `radar_tuning.dat` |
 | **Life Support (Roadmap)** | `Ship Drive/Programs/LifeSupport/` | `LIFE-7815` | `life_support_config.dat`, `atmo_tuning.dat` |
 | **Logbook (Roadmap)** | `Ship Drive/Programs/Logbook/` | `LOGS-7815` | `logbook_config.dat`, `journal_tuning.dat` |
-| **Diagnostics (Roadmap)** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
 | **Master Superuser** | *Root Drive & System Folders* | `ROOT-7815` | *Bypass universale per test suites e console* |
 
 ---
@@ -276,6 +276,18 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
 - **Ruolo**: **Hacker** / **Capitano** (Override: Factotum; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Comms/`, file `comms_config.dat` e `crypto_tuning.dat` (Password debug: `COMM-7815`).
 
+### 4.10 System Diagnostics, Cyber Security & ICE Defense (`Applications/Diagnostics`)
+- **Scopo**: Centro di sicurezza informatica, diagnostica d'integrità dei drive virtuali, scansione e bonifica da minacce malware/trojan, gestione nodi barriera ICE (Intrusion Countermeasure Electronics) e ripristino di fabbrica dei firmware `.dat`.
+- **Finestra**: `diagnostics_app.tscn` (Dimensioni: `640x450`).
+- **Flusso Utente**:
+  1. L'Hacker o l'Ingegnere apre l'app dal menu Start o Taskbar.
+  2. Nello **Scanner Minacce & Drive**, seleziona l'unità target (`Ship Drive`, `Terminal Drive` o `Tutti i Drive`) e la modalità (`Rapida` o `Profonda`), quindi preme "Avvia Scansione".
+  3. Visualizza l'indice di integrità complessivo e la lista dettagliata delle minacce/anomalie rilevate, procedendo alla bonifica manuale con "Purga Minacce" (o auto-quarantena automatica).
+  4. Nel pannello **Barriera ICE & Difesa**, monitora l'integrità dello scudo informatico (HP) e lo stato dei nodi sottosistema (`Avionica`, `Reattore`, `Comms`, `Armi`, `Mainframe`). Durante attacchi o intrusioni cyber, rinforza la barriera (+25% HP) o esegue il flush cache del firewall.
+  5. Nel modulo **Reset Firmware .DAT**, seleziona un sottosistema alterato da overclock instabili o corruzioni e avvia il "Factory Reset Firmware", ripristinando istantaneamente i parametri `.dat` ai valori di fabbrica certificati con propagazione hot-reload in tempo reale.
+- **Ruolo**: **Hacker** / **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Diagnostics/`, file `diagnostics_config.dat` e `security_tuning.dat` (Password debug: `DIAG-7815`).
+
 ---
 
 ## 5. Roadmap e Nuove Feature da Creare
@@ -291,7 +303,6 @@ Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni 
 │ 2. Long-Range Sensor Array   │ Soldato / Hacker / Radar 50km e Spettrometria     │
 │ 5. Life Support & Atmosphere │ Ingegnere / O2, CO2, Paratie e Antincendio        │
 │ 6. Mission Logbook & Sandbox │ Capitano / Tutti i Ruoli / Contratti & Black Box  │
-│ 7. System Diagnostics & ICE  │ Hacker / Ingegnere / Malware, Antivirus & Reset   │
 └──────────────────────────────┴───────────────────────────────────────────────────┘
 ```
 NOTA: Il concetto di freemium-punk verrà impostato in seguito
@@ -360,26 +371,6 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-### 5.7 Nuova Feature 7: System Diagnostics, Cyber Security & ICE Defense (`Applications/Diagnostics`)
-- **Descrizione**: Centro di sicurezza informatica e manutenzione logica di bordo per eseguire scansioni d'integrità dei drive, ripulire infezioni da malware/trojan contratti scaricando dati da relitti infetti, gestire contromisure ICE (Intrusion Countermeasure Electronics) e ripristinare configurazioni `.dat` danneggiate.
-- **Flusso Utente e Finestre**:
-  - **Finestra Principale (`diagnostics_app.tscn`, `640x450`)**:
-    - **Scanner Integrità Drive**: avvio scansione rapida o profonda su `Ship Drive` e `Terminal Drive` con barra di scansione diegetica e lista delle minacce rilevate (es. "Crypto-Miner clandestino", "Worm corporativo", "Firmware .DAT corrotto").
-    - **Pannello ICE & Firewall**: gestione nodi difensivi per bloccare intrusioni nemiche in tempo reale durante i combattimenti informatici (Hackwarfare).
-    - **Pulsante "Factory Reset Firmware"**: ripristina istantaneamente i file di configurazione `.dat` di un sottosistema ai valori di fabbrica standard, ripulendo overclock instabili o corruzioni logiche.
-- **Ruolo Assegnato**: **Hacker** / **Ingegnere** (Pieno controllo; Capitano in override).
-- **Integrazione con i Sublayer**:
-  - Monitora lo stato di integrità di Sublayer 5 (Drive Files) e Sublayer 6 (Applicazioni Mainframe).
-  - Connesso a `FolderPasswordManager` e `ShipDriveManager` per rilevare violazioni di cartelle protette o iniezioni anomale di file eseguibili.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Diagnostics/` (Password debug: `DIAG-7815`).
-  - **File di Configurazione Attivi**:
-    - `diagnostics_config.dat`: parametri scanner (`scan_depth=DEEP`, `auto_quarantine_malware=true`, `alert_sound=true`).
-    - `security_tuning.dat`: barriere ICE (`ice_firewall_strength=100.0`, `factory_reset_delay_sec=3.0`, `tamper_detection_level=HIGH`).
-  - **Manomissione Firmware Clandestina**: Modificando `security_tuning.dat`, un Hacker esperto può disattivare il controllo di integrità interno (tamper detection) per consentire all'equipaggio di installare overclock estremi sui motori o sulle armi senza far scattare gli allarmi di sistema del mainframe.
-
----
-
 ## 6. Schema Architetturale di Riferimento per Nuove App
 
 Ogni nuova applicazione pianificata nella Roadmap deve rispettare rigorosamente il modello architetturale definito in [`docs/APP_ARCHITECTURE_STANDARD.md`](APP_ARCHITECTURE_STANDARD.md):
@@ -421,4 +412,4 @@ Il presente documento fornisce la visione completa, organica e integrata di *Dar
 
 Attraverso la combinazione dell'atmosfera di frontiera in stile *Firefly*, della satira *Freemium-punk*, dell'interfaccia diegetica a finestre su **GodotOS** e della rigida matrice di cooperazione asimmetrica tra i 6 ruoli dell'equipaggio (**Capitano**, **Pilota**, **Soldato**, **Ingegnere**, **Hacker**, **Factotum**), il gioco garantisce un gameplay sandbox dinamico, teso e profondo.
 
-L'ecosistema complessivo delle 11 applicazioni della corvetta (4 esistenti + 7 pianificate nella roadmap), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.
+L'ecosistema complessivo delle 11 applicazioni della corvetta (8 esistenti/sviluppate + 3 pianificate nella roadmap), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.

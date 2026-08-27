@@ -16,3 +16,4 @@ res://tests/test_shield_matrix_node.gd
 res://Applications/Comms/comms_app.gd
 res://tests/test_comms_node.gd
 res://Applications/Comms/comms_waterfall_canvas.gd
+res://Applications/Diagnostics/diagnostics_app.gd
