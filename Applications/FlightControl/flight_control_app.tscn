@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cseqo2t1ppp2w"]
 
 [ext_resource type="Script" path="res://Applications/FlightControl/flight_control_app.gd" id="1_flight_script"]
+[ext_resource type="PackedScene" path="res://Applications/FlightControl/Componenti/cruise_control_panel.tscn" id="2_cruise_panel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.05, 0.07, 0.1, 0.8)
@@ -482,6 +483,10 @@ theme_override_colors/font_color = Color(0.5, 0.65, 0.8, 0.8)
 theme_override_font_sizes/font_size = 10
 text = "Usa WASD per traslazione, Q/E per roll, Spazio/Ctrl per quota, Frecce per orientamento."
 horizontal_alignment = 1
+
+[node name="CruiseControlPanel" parent="ScrollContainer/Margin/VBox" instance=ExtResource("2_cruise_panel")]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="DisconnectedOverlay" type="PanelContainer" parent="."]
 unique_name_in_owner = true

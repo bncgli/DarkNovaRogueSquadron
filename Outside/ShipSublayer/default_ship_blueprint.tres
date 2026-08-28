@@ -618,6 +618,10 @@ yaw_thrust_mult=1.0
 roll_thrust_mult=1.0
 vertical_thrust_mult=1.0
 overclock_limit=1.5
+cruise_multiplier=8.0
+warmup_time_sec=4.0
+proximity_drop_distance=250.0
+heat_penalty=45.0
 ",
 "desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale.",
 "is_protected": true,

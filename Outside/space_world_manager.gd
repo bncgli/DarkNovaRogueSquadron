@@ -1801,3 +1801,46 @@ func set_service_drone_config(cfg: Dictionary) -> void:
 	var drone := get_service_drone()
 	if drone:
 		drone.apply_config(cfg)
+
+# --- CRUISE DRIVE (SUB-FTL) API ---
+
+var _cruise_drive_instance: CruiseDriveController = null
+
+func get_cruise_drive_controller() -> CruiseDriveController:
+	if _cruise_drive_instance and is_instance_valid(_cruise_drive_instance):
+		return _cruise_drive_instance
+	
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		var existing = ship.get_node_or_null("CruiseDriveController")
+		if existing and existing is CruiseDriveController:
+			_cruise_drive_instance = existing
+			ship.set_cruise_controller(_cruise_drive_instance)
+			return _cruise_drive_instance
+		
+		# Istanzia e collega alla spaceship
+		var cdc = CruiseDriveController.new()
+		cdc.name = "CruiseDriveController"
+		ship.add_child(cdc)
+		ship.set_cruise_controller(cdc)
+		_cruise_drive_instance = cdc
+		return _cruise_drive_instance
+	
+	if _cruise_drive_instance == null or not is_instance_valid(_cruise_drive_instance):
+		var cdc_fb = CruiseDriveController.new()
+		cdc_fb.name = "CruiseDriveController"
+		add_child(cdc_fb)
+		_cruise_drive_instance = cdc_fb
+	
+	return _cruise_drive_instance
+
+func set_cruise_coils_power(power_mw: float) -> void:
+	var cdc := get_cruise_drive_controller()
+	if cdc:
+		cdc.set_cruise_coils_power(power_mw)
+
+func is_cruise_drive_powered() -> bool:
+	var cdc := get_cruise_drive_controller()
+	if cdc:
+		return cdc.get_is_powered()
+	return false

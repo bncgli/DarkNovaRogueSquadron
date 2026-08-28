@@ -37,6 +37,7 @@ var current_sector_data: SectorData = null
 var _sector_cache: Dictionary = {}
 
 # Catalogo macro-corpi del sistema stellare ("Dark Nova Helios System")
+var current_system_data: StarSystemData = null
 var system_celestial_bodies: Array[Dictionary] = [
 	{
 		"id": "STAR_SOL_PRIME",
@@ -330,6 +331,34 @@ func get_effective_solar_energy(coords: Vector3i = current_sector_coords) -> flo
 # =============================================================================
 # DISTANZE DI RENDER E SKYBOX DIEGETICO
 # =============================================================================
+
+## Carica una configurazione completa di sistema stellare da risorsa StarSystemData
+func load_star_system(sys_data: StarSystemData) -> void:
+	if sys_data == null:
+		return
+	current_system_data = sys_data
+	system_celestial_bodies = sys_data.celestial_bodies.duplicate(true)
+	_sector_cache.clear()
+	for sec_dict in sys_data.custom_sectors:
+		var sec := SectorData.new()
+		sec.from_dict(sec_dict)
+		_sector_cache[sec.sector_id] = sec
+	load_sector(current_sector_coords)
+
+## Esporta lo stato corrente in un oggetto StarSystemData
+func export_to_star_system_data() -> StarSystemData:
+	var sys := StarSystemData.new("SYS-CURRENT", "Current Star System")
+	sys.primary_star_coords = PRIMARY_STAR_COORDS
+	sys.primary_star_energy = PRIMARY_STAR_BASE_ENERGY
+	sys.primary_star_radius_km = PRIMARY_STAR_RADIUS_KM
+	sys.celestial_bodies = system_celestial_bodies.duplicate(true)
+	var customs: Array[Dictionary] = []
+	for sec_id in _sector_cache:
+		var sec_res = _sector_cache[sec_id]
+		if sec_res is SectorData:
+			customs.append(sec_res.to_dict())
+	sys.custom_sectors = customs
+	return sys
 
 ## Ritorna la lista di tutte le macro-entità del sistema visibili dal punto di vista dell'osservatore
 func get_visible_system_entities(observer_coords: Vector3i = current_sector_coords) -> Array[Dictionary]:

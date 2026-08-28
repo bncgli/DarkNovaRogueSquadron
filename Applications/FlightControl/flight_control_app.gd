@@ -50,6 +50,7 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 @onready var reset_button: Button = %ResetButton
 @onready var speed_mode_button: Button = %SpeedModeButton
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
+@onready var cruise_control_panel: CruiseControlPanel = get_node_or_null("%CruiseControlPanel")
 
 var parent_window: FakeWindow = null
 var can_control_flight: bool = true
@@ -209,6 +210,9 @@ func _update_permissions() -> void:
 			b.disabled = not can_control_flight
 	
 	# Aggiorna badge/indicatori visivi
+	if cruise_control_panel and is_instance_valid(cruise_control_panel):
+		cruise_control_panel.set_permission_control(can_control_flight)
+	
 	if not can_control_flight and is_operational():
 		if thrusters_badge:
 			thrusters_badge.text = "SOLO TELEMETRIA"

@@ -33,6 +33,9 @@ var angular_input: Vector3 = Vector3.ZERO
 
 var initial_transform: Transform3D = Transform3D.IDENTITY
 
+# Sistema di Propulsione a Velocità di Crociera (Cruise Mode)
+var cruise_controller: Node = null
+
 # Proprietà per la sincronizzazione di rete e stato di connessione
 var is_ship_connected: bool = false
 var is_network_client: bool = false
@@ -79,6 +82,18 @@ func get_camera_mount(cam_id: String) -> Marker3D:
 	if _camera_mounts.is_empty():
 		_init_camera_mounts()
 	return _camera_mounts.get(cam_id, null)
+
+func get_cruise_controller() -> Node:
+	if cruise_controller and is_instance_valid(cruise_controller):
+		return cruise_controller
+	var found = get_node_or_null("CruiseDriveController")
+	if found:
+		cruise_controller = found
+		return cruise_controller
+	return null
+
+func set_cruise_controller(controller: Node) -> void:
+	cruise_controller = controller
 
 func get_camera_global_transform(cam_id: String) -> Transform3D:
 	var mount: Marker3D = get_camera_mount(cam_id)
@@ -178,6 +193,13 @@ func get_network_state() -> Dictionary:
 	}
 
 func _apply_flight_physics(delta: float) -> void:
+	# Se Cruise Mode è attiva o RCS è bloccato da cruise controller, non applicare i controlli RCS ordinari
+	if cruise_controller and is_instance_valid(cruise_controller):
+		var ctrl_state: int = int(cruise_controller.get("current_state"))
+		var rcs_locked: bool = bool(cruise_controller.get("is_rcs_locked"))
+		if ctrl_state == 2 or rcs_locked: # 2 = State.ENGAGED
+			return
+	
 	var cur_basis := global_transform.basis if is_inside_tree() else transform.basis
 	
 	# Calcola velocità target locale

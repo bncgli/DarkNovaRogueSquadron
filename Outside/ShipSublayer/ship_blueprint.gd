@@ -555,7 +555,7 @@ func _init_default_drive() -> void:
 		},
 		{
 			"path": "Ship Drive/Programs/FlightControls/thrusters_tuning.dat",
-			"content": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.0\npitch_thrust_mult=1.0\nyaw_thrust_mult=1.0\nroll_thrust_mult=1.0\nvertical_thrust_mult=1.0\noverclock_limit=1.5\n",
+			"content": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.0\npitch_thrust_mult=1.0\nyaw_thrust_mult=1.0\nroll_thrust_mult=1.0\nvertical_thrust_mult=1.0\noverclock_limit=1.5\ncruise_multiplier=8.0\nwarmup_time_sec=4.0\nproximity_drop_distance=250.0\nheat_penalty=45.0\n",
 			"is_protected": true,
 			"desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale."
 		},

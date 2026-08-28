@@ -1,3 +1,15 @@
 res://Scenes/Main/MainScene.tscn
 res://Outside/Skybox/dynamic_space_skybox.gd
 res://tests/test_star_system_grid.gd
+res://Outside/StarSystemGrid/sector_data.gd
+res://Outside/StarSystemGrid/star_system_grid_manager.gd
+res://Outside/StarSystemGrid/star_system_data.gd
+res://addons/star_system_editor/star_system_editor.gd
+res://tests/test_star_system_editor.gd
+res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd
+res://Outside/ShipSublayer/ship_blueprint.gd
+res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Outside/spaceship.gd
+res://Outside/space_world_manager.gd
+res://Outside/ShipSystems/cruise_drive_controller.gd
+res://tests/test_cruise_drive.gd
