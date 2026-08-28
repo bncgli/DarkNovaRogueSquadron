@@ -869,6 +869,32 @@ overclock_bypass_security=false
 "is_protected": true,
 "path": "Ship Drive/Programs/Diagnostics/security_tuning.dat"
 }, {
+"content": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE
+[SYSTEM]
+app_name=SensorsApp
+version=1.0.0
+status=OPERATIONAL
+
+[SWEEP]
+sweep_frequency_hz=12.0
+active_ping_radius=50000.0
+noise_filter=0.92
+",
+"desc": "Configurazione frequenza sweep, raggio ping attivo e filtri rumore sensori.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Sensors/sensors_config.dat"
+}, {
+"content": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX
+[TUNING]
+spectrum_sensitivity=1.0
+iff_auto_tag=true
+stealth_detection_threshold=0.35
+",
+"desc": "Sensibilità spettrometrica, marcatura automatica IFF e soglia stealth.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Sensors/radar_tuning.dat"
+}, {
 "content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
 # WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
 [BLUEPRINT_METADATA]
@@ -889,8 +915,8 @@ ducts_count=14
 devices_count=11
 junctions_count=8
 damages_count=8
-drive_files_count=21
-installed_apps_count=8
+drive_files_count=23
+installed_apps_count=9
 ",
 "desc": "Specifiche generali del blueprint e metadati dimensionali scafo.",
 "is_protected": true,
@@ -930,6 +956,7 @@ drive_passwords = {
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
+"Ship Drive/Programs/Sensors": "SENS-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815",
 "Ship Drive/systems": "ROOT-7815"
@@ -990,4 +1017,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Capitano", "Hacker", "Ingegnere", "Factotum"],
 "scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
 "title": "System Diagnostics"
+}, {
+"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
+"icon_color": Color(0.2, 0.8, 0.4, 1),
+"id": "sensors",
+"roles": ["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"],
+"scene_path": "res://Applications/Sensors/sensors_app.tscn",
+"title": "Array Sensori & Mappa Tattica"
 }])

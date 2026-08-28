@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://b82ns5q14yv6u"]
+
+[ext_resource type="Script" path="res://Applications/Sensors/Components/radar_display.gd" id="1_radar_script"]
+
+[node name="RadarDisplay" type="Control"]
+custom_minimum_size = Vector2(380, 380)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+script = ExtResource("1_radar_script")

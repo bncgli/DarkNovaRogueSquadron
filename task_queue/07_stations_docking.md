@@ -6,8 +6,14 @@ L'equipaggio attracca alle stazioni tramite protocollo radio in *Comms & EW* e m
 
 ---
 
-## 2. Standard Architetturali e Git
-1. **Branch Git**: Creare ed eseguire il checkout sul branch `feature/StationsDocking`.
+## 2. Standard Architetturali e Flusso Git
+1. **Flusso Git (Obbligatorio)**:
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b feature/StationsDocking main`.
+   - Sviluppare il codice, scene, interfacce e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(stations): implementa stazioni spaziali, docking e hub servizi portuali"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge feature/StationsDocking`.
 2. **Posizione File**:
    - `Outside/Stations/space_station_entity.tscn` e `.gd` (Entità 3D stazione orbitale)
    - `Outside/Stations/docking_manager.gd` (Gestione procedura di aggancio e permessi)
@@ -30,8 +36,12 @@ L'equipaggio attracca alle stazioni tramite protocollo radio in *Comms & EW* e m
 
 ---
 
-## 4. Criteri di Accettazione e Test Headless
-Creare `tests/test_stations_docking.gd` per verificare:
-- Flusso di richiesta e concessione slot di docking tramite messaggistica radio.
-- Verifica vincoli cinematici di cattura magnetica e blocco nave in stato docked.
-- Apertura e popolamento corretto dell'app `StationHub` con i servizi attivi.
+## 4. Criteri di Accettazione, Test e Chiusura Task
+1. **Suite di Test Headless**: Creare ed eseguire `tests/test_stations_docking.gd` per verificare:
+   - Flusso di richiesta e concessione slot di docking tramite messaggistica radio.
+   - Verifica vincoli cinematici di cattura magnetica e blocco nave in stato docked.
+   - Apertura e popolamento corretto dell'app `StationHub` con i servizi attivi.
+2. **Chiusura Git**:
+   - [ ] Test headless superati con esito positivo.
+   - [ ] Commit di tutte le modifiche su branch `feature/StationsDocking`.
+   - [ ] Checkout su `main` e merge completato del branch.

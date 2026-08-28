@@ -156,6 +156,13 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 			"Ship Drive/Programs/Diagnostics/diagnostics_config.dat": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n",
 			"Ship Drive/Programs/Diagnostics/security_tuning.dat": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n"
 		}
+	},
+	"Sensors": {
+		"folder": "Ship Drive/Programs/Sensors",
+		"files": {
+			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
+			"Ship Drive/Programs/Sensors/radar_tuning.dat": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n"
+		}
 	}
 }
 
@@ -204,6 +211,7 @@ func _init_ui_dropdowns() -> void:
 		subsystem_option.add_item("Shield Matrix (Deflettori 4Q)", 6)
 		subsystem_option.add_item("Comms & EW (Subspazio & Cifrari)", 7)
 		subsystem_option.add_item("Diagnostics (Sicurezza & ICE)", 8)
+		subsystem_option.add_item("Sensors (Array Radar 50km)", 9)
 		subsystem_option.selected = 0
 
 func _connect_system_signals() -> void:
@@ -542,6 +550,7 @@ func _perform_actual_threat_scan() -> void:
 			"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 			"Ship Drive/Programs/Comms": "COMM-7815",
 			"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+			"Ship Drive/Programs/Sensors": "SENS-7815",
 			"Ship Drive/systems": "ROOT-7815",
 			"Terminal Drive/systems": "ROOT-7815"
 		}
@@ -777,6 +786,7 @@ func _on_factory_reset_pressed() -> void:
 		6: target_sub = "ShieldMatrix"
 		7: target_sub = "Comms"
 		8: target_sub = "Diagnostics"
+		9: target_sub = "Sensors"
 		_: target_sub = "ALL"
 	
 	start_factory_reset(target_sub)

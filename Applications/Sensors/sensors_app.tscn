@@ -1,0 +1,423 @@
+[gd_scene format=3 uid="uid://cx6y8v2u0sens"]
+
+[ext_resource type="Script" path="res://Applications/Sensors/sensors_app.gd" id="1_sensors_script"]
+[ext_resource type="PackedScene" uid="uid://b82ns5q14yv6u" path="res://Applications/Sensors/Components/radar_display.tscn" id="2_radar_scene"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.05, 0.07, 0.1, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.25, 0.35, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_radar_card"]
+bg_color = Color(0.02, 0.04, 0.07, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.45, 0.65, 0.5)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_ping"]
+bg_color = Color(0.1, 0.4, 0.6, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.8, 1, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.06, 0.1, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.6, 0.2, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="SensorsApp" type="Control"]
+custom_minimum_size = Vector2(750, 550)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sensors_script")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "📡 ARRAY SENSORI & MAPPA TATTICA (50 KM)"
+
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "RUOLO: SOLDATO"
+
+[node name="DatBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+text = "DAT: ATTIVO (FIRMWARE V1.0.0)"
+
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "STATO: OPERATIVO"
+
+[node name="BtnReloadDat" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🔄 Ricarica .DAT"
+
+[node name="ContentHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="RadarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.25
+theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToolbarHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OptionDisplayMode" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+selected = 0
+item_count = 3
+popup/item_0/text = "Vista Polare 2D"
+popup/item_0/id = 0
+popup/item_1/text = "Griglia Cartesiana"
+popup/item_1/id = 1
+popup/item_2/text = "Elevazione Spaziale 3D"
+popup/item_2/id = 2
+
+[node name="OptionRange" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+selected = 3
+item_count = 4
+popup/item_0/text = "Portata: 5 KM"
+popup/item_0/id = 0
+popup/item_1/text = "Portata: 10 KM"
+popup/item_1/id = 1
+popup/item_2/text = "Portata: 25 KM"
+popup/item_2/id = 2
+popup/item_3/text = "Portata: 50 KM"
+popup/item_3/id = 3
+
+[node name="OptionFilter" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+selected = 0
+item_count = 5
+popup/item_0/text = "Filtro: Tutti i Contatti"
+popup/item_0/id = 0
+popup/item_1/text = "Filtro: Minerali & Asteroidi"
+popup/item_1/id = 1
+popup/item_2/text = "Filtro: Relitti Spaziali"
+popup/item_2/id = 2
+popup/item_3/text = "Filtro: Minacce & Ostili"
+popup/item_3/id = 3
+popup/item_4/text = "Filtro: Fari & Stazioni"
+popup/item_4/id = 4
+
+[node name="RadarContainer" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+custom_minimum_size = Vector2(380, 360)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RadarDisplay" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarContainer" instance=ExtResource("2_radar_scene")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RadarActionsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnSweepToggle" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "📡 Sweep: ATTIVO"
+
+[node name="BtnActivePing" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_ping")
+text = "💥 PING ATTIVO (50km)"
+
+[node name="TelemetryPanel" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox"]
+custom_minimum_size = Vector2(290, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ContactSelectionLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "🎯 CONTATTO / BERSAGLIO ATTIVO:"
+
+[node name="TargetOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="TargetDetailsCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="TargetDetailsLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard/Margin"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 95)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 10
+theme_override_font_sizes/bold_font_size = 10
+bbcode_enabled = true
+text = "Nessun bersaglio selezionato."
+scroll_active = false
+
+[node name="SpectrometryCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/SpectrometryCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="SpectrometryLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/SpectrometryCard/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 10
+theme_override_font_sizes/bold_font_size = 10
+bbcode_enabled = true
+text = "In attesa di scansione spettrometrica..."
+
+[node name="TacticalActionsVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ActionButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnLockTarget" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🎯 Lock Bersaglio"
+
+[node name="BtnTransmitWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🛰️ Invia Waypoint"
+
+[node name="BtnClearWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "❌ Rimuovi Waypoint Attivo"
+
+[node name="StatusBarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "STATO RADAR: SCANSIONE OPERATIVA"
+
+[node name="PowerLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "PWR: 40 MW (SWEEP)"
+
+[node name="SweepLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "SWEEP: 12.0 Hz"
+
+[node name="PingLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "PING: PRONTO (50 km)"
+
+[node name="RadarDamageBadge" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 10
+text = "RADAR: INTEGRITÀ 100%"
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 18
+text = "⚠️ SISTEMI RADAR OFFLINE"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "In attesa di connessione alla nave / Avvio missione..."
+horizontal_alignment = 1

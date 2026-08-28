@@ -6,8 +6,14 @@ Il modulo gestisce gli ingaggi tattici contro caccia pirata, droni ostili e corv
 
 ---
 
-## 2. Standard Architetturali e Git
-1. **Branch Git**: Creare ed eseguire il checkout sul branch `feature/CombatDogfightTactics`.
+## 2. Standard Architetturali e Flusso Git
+1. **Flusso Git (Obbligatorio)**:
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b feature/CombatDogfightTactics main`.
+   - Sviluppare il codice, IA nemica, gestori di danno e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(combat): implementa combattimento spaziale, IA nemica e danni sistemici"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge feature/CombatDogfightTactics`.
 2. **Posizione File**:
    - `Outside/Combat/enemy_ship_ai.gd` (IA per caccia pirata e corvette nemiche)
    - `Outside/Combat/combat_director.gd` (Regia degli incontri ostili e spawn ondate)
@@ -29,8 +35,12 @@ Il modulo gestisce gli ingaggi tattici contro caccia pirata, droni ostili e corv
 
 ---
 
-## 4. Criteri di Accettazione e Test Headless
-Creare `tests/test_combat_dogfight.gd` per verificare:
-- Comportamento ad albero decisionale/state-machine dell'IA nemica in combattimento.
-- Propagazione dei danni localizzati dallo scafo ai rispettivi sottosistemi di bordo.
-- Trigger e propagazione degli stati di Allarme Giallo/Rosso in rete.
+## 4. Criteri di Accettazione, Test e Chiusura Task
+1. **Suite di Test Headless**: Creare ed eseguire `tests/test_combat_dogfight.gd` per verificare:
+   - Comportamento ad albero decisionale/state-machine dell'IA nemica in combattimento.
+   - Propagazione dei danni localizzati dallo scafo ai rispettivi sottosistemi di bordo.
+   - Trigger e propagazione degli stati di Allarme Giallo/Rosso in rete.
+2. **Chiusura Git**:
+   - [ ] Test headless superati con esito positivo.
+   - [ ] Commit di tutte le modifiche su branch `feature/CombatDogfightTactics`.
+   - [ ] Checkout su `main` e merge completato del branch.

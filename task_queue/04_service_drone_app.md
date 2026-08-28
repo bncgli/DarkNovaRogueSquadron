@@ -14,8 +14,12 @@ L'applicazione controlla un drone teleguidato extra-veicolare (EVA) per ispezion
 
 ## 2. Standard Architetturali e Flusso Git
 1. **Flusso Git (Obbligatorio)**:
-   - Prima di iniziare qualsiasi modifica, creare ed eseguire il checkout sul branch dedicato: `applications/ServiceDrone`.
-   - Eseguire tutte le modifiche esclusivamente all'interno di tale branch e concludere con un commit descrittivo.
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b applications/ServiceDrone main`.
+   - Sviluppare il codice, configurazioni e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(service-drone): implementa drone di servizio EVA"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge applications/ServiceDrone`.
 2. **Struttura dei File e Cartelle**:
    ```text
    Applications/
@@ -134,7 +138,7 @@ Creare i file di test headless secondo lo standard:
 ---
 
 ## 9. Checklist di Verifica Finale (Conforme a APP_ARCHITECTURE_STANDARD.md)
-- [ ] Flusso Git su branch `applications/ServiceDrone` con commit finale.
+- [ ] Flusso Git completato: sviluppo su `applications/ServiceDrone`, commit finale e merge in `main`.
 - [ ] Rispetto della tipologia Server (Nave) con blocco offline.
 - [ ] Cartella protetta `Ship Drive/Programs/ServiceDrone/` creata con password `SERV-7815`.
 - [ ] File `.dat` non leggibili da File Reader e parsing tramite `_parse_dat_file`.

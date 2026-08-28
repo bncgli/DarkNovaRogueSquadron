@@ -6,8 +6,14 @@ L'intero sistema stellare è strutturato in una griglia 3D/2D discreta di coordi
 
 ---
 
-## 2. Standard Architetturali e Git
-1. **Branch Git**: Creare ed eseguire il checkout sul branch `feature/StarSystemGrid`.
+## 2. Standard Architetturali e Flusso Git
+1. **Flusso Git (Obbligatorio)**:
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b feature/StarSystemGrid main`.
+   - Sviluppare il codice, risorse e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(grid): implementa griglia spaziale a settori e skybox diegetico"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge feature/StarSystemGrid`.
 2. **Posizione File**:
    - `Outside/StarSystemGrid/star_system_grid_manager.gd` (Autoload / Manager di settore)
    - `Outside/StarSystemGrid/sector_data.gd` (Risorsa dati settore)
@@ -39,8 +45,12 @@ L'intero sistema stellare è strutturato in una griglia 3D/2D discreta di coordi
 
 ---
 
-## 5. Criteri di Accettazione e Test Headless
-Creare `tests/test_star_system_grid.gd` per verificare:
-- Calcolo corretto delle coordinate di settore e transizioni tra caselle adiacenti.
-- Calcolo dell'occlusione e coni d'ombra planetari.
-- Visibilità scalare delle entità sullo skybox in base alla distanza di griglia.
+## 5. Criteri di Accettazione, Test e Chiusura Task
+1. **Suite di Test Headless**: Creare ed eseguire `tests/test_star_system_grid.gd` per verificare:
+   - Calcolo corretto delle coordinate di settore e transizioni tra caselle adiacenti.
+   - Calcolo dell'occlusione e coni d'ombra planetari.
+   - Visibilità scalare delle entità sullo skybox in base alla distanza di griglia.
+2. **Chiusura Git**:
+   - [ ] Test headless superati con esito positivo.
+   - [ ] Commit di tutte le modifiche su branch `feature/StarSystemGrid`.
+   - [ ] Checkout su `main` e merge completato del branch.

@@ -233,7 +233,10 @@ func _populate_default_ship_drive_files() -> void:
 	_write_file_content("Ship Drive/Programs/Diagnostics/diagnostics_config.dat", "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n")
 	_write_file_content("Ship Drive/Programs/Diagnostics/security_tuning.dat", "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n")
 	
-	_write_file_content("Ship Drive/systems/ship_blueprint.dat", "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=21\ninstalled_apps_count=8\n")
+	_write_file_content("Ship Drive/Programs/Sensors/sensors_config.dat", "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n")
+	_write_file_content("Ship Drive/Programs/Sensors/radar_tuning.dat", "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n")
+	
+	_write_file_content("Ship Drive/systems/ship_blueprint.dat", "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=23\ninstalled_apps_count=9\n")
 	_write_file_content("Ship Drive/systems/hull_specs.dat", "# SHIP HULL SECTORS & SUBLAYER TOPOLOGY MATRIX\n[HULL_SECTORS]\nsector_bridge=Ponte di Comando\nsector_crew=Alloggi Equipaggio\nsector_drone_bay=Baia di Lancio Droni\nsector_tech_corridor=Corridoio Tecnico Principale\nsector_cargo=Baia di Carico Principale\nsector_reactor=Sala Reattore Principale\nsector_engines=Sala Motori & Propulsione\nsector_armory=Sala Armeria & Scudi\n\n[POWER_GRID_SPECS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\ntotal_junctions=8\ntotal_devices=11\ngrid_balancing=AUTOMATIC\n\n[DAMAGE_TOLERANCE]\ncritical_integrity_threshold=25.0\nmax_structural_integrity=100.0\ntotal_damage_sectors=8\n")
 	
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
@@ -246,6 +249,7 @@ func _populate_default_ship_drive_files() -> void:
 		fpm.set_password("Ship Drive/Programs/ShieldMatrix", "SHLD-7815")
 		fpm.set_password("Ship Drive/Programs/Comms", "COMM-7815")
 		fpm.set_password("Ship Drive/Programs/Diagnostics", "DIAG-7815")
+		fpm.set_password("Ship Drive/Programs/Sensors", "SENS-7815")
 		fpm.set_password("Ship Drive/systems", "ROOT-7815")
 
 func _close_ship_drive_windows() -> void:

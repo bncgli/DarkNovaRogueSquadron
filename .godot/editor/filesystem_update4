@@ -3,3 +3,6 @@ res://Scenes/Autoloads/TerminalDrive/terminal_drive_manager.gd
 res://Outside/ShipSublayer/ship_blueprint.gd
 res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd
 res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Applications/Diagnostics/diagnostics_app.gd
+res://Outside/space_world_manager.gd
+res://Applications/Sensors/Components/radar_display.gd

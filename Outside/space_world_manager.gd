@@ -15,6 +15,9 @@ signal ship_damage_repaired(damage: Dictionary)
 signal duct_drone_repair_state_changed(is_repairing: bool, damage_id: String, progress: float)
 signal weapon_fired(weapon_type: String, origin: Vector3, target_pos: Vector3, hit_success: bool, target_id: String)
 signal weapon_target_locked(target_id: String, target_data: Dictionary)
+signal waypoint_updated(waypoint_data: Dictionary)
+signal active_ping_triggered(origin: Vector3, radius: float)
+signal sensors_scan_completed(contacts: Array)
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
@@ -1460,3 +1463,257 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 		"hit_success": hit_success,
 		"target_id": target_id
 	}
+
+# --- SENSORS & TACTICAL MAP METHODS ---
+
+var active_waypoint: Dictionary = {}
+
+func set_active_waypoint(wp_data: Dictionary) -> void:
+	active_waypoint = wp_data.duplicate(true)
+	waypoint_updated.emit(active_waypoint)
+
+func get_active_waypoint() -> Dictionary:
+	return active_waypoint
+
+func clear_active_waypoint() -> void:
+	active_waypoint.clear()
+	waypoint_updated.emit({})
+
+func trigger_active_ping(radius: float = 50000.0) -> void:
+	var ship := get_spaceship()
+	var origin: Vector3 = ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	active_ping_triggered.emit(origin, radius)
+
+func is_sensors_powered() -> bool:
+	var devices := get_power_devices()
+	for dev in devices:
+		if dev.get("id", "") == "sensors_radar":
+			return dev.get("inputs_powered", 1) > 0
+	return true
+
+func has_radar_damage() -> bool:
+	var dmgs := get_ship_damages()
+	for d in dmgs:
+		if (d.get("system_impact", "") == "radar_ghosts" or d.get("sector", "") == "Sensori & Avionica") and not d.get("repaired", false):
+			return true
+	return false
+
+## Ritorna tutti i contatti telemetrici/radar a lungo raggio (fino a 50 km) con spettrometria e IFF.
+func get_sensor_entities() -> Array[Dictionary]:
+	var entities: Array[Dictionary] = []
+	var ship := get_spaceship()
+	var ship_pos := ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
+	
+	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
+		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
+		if asteroids_node and is_instance_valid(asteroids_node):
+			for child in asteroids_node.get_children():
+				if child is Node3D:
+					var a_pos: Vector3 = child.global_position
+					var diff: Vector3 = a_pos - ship_pos
+					var dist: float = diff.length()
+					var local_diff: Vector3 = ship_basis.inverse() * diff
+					var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+					var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+					
+					var is_hazard := dist < 60.0
+					entities.append({
+						"id": child.name,
+						"name": child.name.replace("_", " "),
+						"pos": a_pos,
+						"rel_pos": diff,
+						"distance": dist,
+						"velocity": Vector3(0.1, 0.0, 0.2),
+						"bearing_deg": bearing_deg,
+						"elevation_deg": elevation_deg,
+						"type": "ASTEROID",
+						"iff_tag": "HAZARD" if is_hazard else "NEUTRAL",
+						"stealth_level": 0.0,
+						"composition": {
+							"Ferro (Fe)": 45.0,
+							"Nichel (Ni)": 28.0,
+							"Silicati": 18.0,
+							"Cobalto": 9.0
+						},
+						"integrity": 100.0,
+						"mass_tons": 2400.0,
+						"radiation_level": 0.05,
+						"signal_signature": 0.85,
+						"estimated_value_cr": 4500
+					})
+	
+	# Contatti diegetici aggiuntivi a lungo raggio / stazioni / relitti / sonde
+	var long_range_defaults: Array[Dictionary] = [
+		{
+			"id": "AST-ALPHA",
+			"name": "AST-01 [Alpha - Ricco di Titanio]",
+			"pos": Vector3(0, 8, -65),
+			"vel": Vector3(0.2, 0, 0.5),
+			"type": "MINERAL_ASTEROID",
+			"iff_tag": "HAZARD",
+			"stealth": 0.0,
+			"composition": {"Titanio (Ti)": 52.0, "Platino (Pt)": 18.0, "Ferro (Fe)": 20.0, "Silicati": 10.0},
+			"integrity": 100.0,
+			"mass_tons": 3200.0,
+			"radiation": 0.08,
+			"signature": 0.90,
+			"value": 14200
+		},
+		{
+			"id": "AST-BETA",
+			"name": "AST-02 [Beta - Ghiaccio & Silicio]",
+			"pos": Vector3(45, -6, -110),
+			"vel": Vector3(-0.3, 0.1, 0.2),
+			"type": "ASTEROID",
+			"iff_tag": "NEUTRAL",
+			"stealth": 0.0,
+			"composition": {"Ghiaccio d'Acqua": 65.0, "Silicati": 25.0, "Metano": 10.0},
+			"integrity": 95.0,
+			"mass_tons": 1800.0,
+			"radiation": 0.02,
+			"signature": 0.65,
+			"value": 3100
+		},
+		{
+			"id": "WRECK-VALKYRIE",
+			"name": "RELITTO-09 [Fregata Valkyrie]",
+			"pos": Vector3(-2400, 350, -4800),
+			"vel": Vector3(0.0, 0.0, 0.0),
+			"type": "WRECK",
+			"iff_tag": "NEUTRAL",
+			"stealth": 0.20,
+			"composition": {"Blindatura Scafo": 55.0, "Elettronica Avionica": 25.0, "Leghe Rare": 20.0},
+			"integrity": 32.0,
+			"mass_tons": 12500.0,
+			"radiation": 0.45,
+			"signature": 0.70,
+			"value": 38000
+		},
+		{
+			"id": "STATION-OUTPOST-7",
+			"name": "STAZIONE [Avamposto Minerario 7]",
+			"pos": Vector3(12000, -800, -18500),
+			"vel": Vector3(0.0, 0.0, 0.0),
+			"type": "STATION",
+			"iff_tag": "FRIENDLY",
+			"stealth": 0.0,
+			"composition": {"Struttura Modulare": 70.0, "Reattore Fusione": 20.0, "Serbatoi Idrogeno": 10.0},
+			"integrity": 100.0,
+			"mass_tons": 185000.0,
+			"radiation": 0.15,
+			"signature": 1.0,
+			"value": 250000
+		},
+		{
+			"id": "BEACON-NAV-04",
+			"name": "FARO-NAV [Settore Helios-4]",
+			"pos": Vector3(-8500, 1200, -12000),
+			"vel": Vector3(0.0, 0.0, 0.0),
+			"type": "BEACON",
+			"iff_tag": "FRIENDLY",
+			"stealth": 0.0,
+			"composition": {"Emettitore Subspaziale": 60.0, "Pannelli Solari": 40.0},
+			"integrity": 90.0,
+			"mass_tons": 450.0,
+			"radiation": 0.10,
+			"signature": 0.95,
+			"value": 8500
+		},
+		{
+			"id": "DRONE-HOSTILE",
+			"name": "SONDA-7X [Firma Clandestina]",
+			"pos": Vector3(16, 5, -30),
+			"vel": Vector3(-1.2, 0.4, 2.5),
+			"type": "SHIP_HOSTILE",
+			"iff_tag": "HOSTILE",
+			"stealth": 0.40,
+			"composition": {"Scafo Composito": 40.0, "Testata Energetica": 45.0, "Micro-Propulsore": 15.0},
+			"integrity": 80.0,
+			"mass_tons": 120.0,
+			"radiation": 0.85,
+			"signature": 0.45,
+			"value": 15000
+		},
+		{
+			"id": "STEALTH-CORVETTE-X",
+			"name": "CONTATTO-SCONOSCIUTO [Firma Stealth]",
+			"pos": Vector3(18000, -2100, -29500),
+			"vel": Vector3(12.5, -2.0, -8.0),
+			"type": "UNKNOWN",
+			"iff_tag": "UNKNOWN",
+			"stealth": 0.75,
+			"composition": {"Assorbitori Radar": 60.0, "ECM Array": 30.0, "Leghe Oscure": 10.0},
+			"integrity": 100.0,
+			"mass_tons": 4500.0,
+			"radiation": 0.30,
+			"signature": 0.25,
+			"value": 75000
+		}
+	]
+	
+	var existing_ids: Dictionary = {}
+	for e in entities:
+		existing_ids[e.get("id", "")] = true
+	
+	for lrd in long_range_defaults:
+		if not existing_ids.has(lrd["id"]):
+			var d_pos: Vector3 = lrd["pos"]
+			var diff: Vector3 = d_pos - ship_pos
+			var dist: float = diff.length()
+			var local_diff: Vector3 = ship_basis.inverse() * diff
+			var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+			var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+			
+			entities.append({
+				"id": lrd["id"],
+				"name": lrd["name"],
+				"pos": d_pos,
+				"rel_pos": diff,
+				"distance": dist,
+				"velocity": lrd["vel"],
+				"bearing_deg": bearing_deg,
+				"elevation_deg": elevation_deg,
+				"type": lrd["type"],
+				"iff_tag": lrd["iff_tag"],
+				"stealth_level": lrd["stealth"],
+				"composition": lrd["composition"],
+				"integrity": lrd["integrity"],
+				"mass_tons": lrd["mass_tons"],
+				"radiation_level": lrd["radiation"],
+				"signal_signature": lrd["signature"],
+				"estimated_value_cr": lrd["value"]
+			})
+	
+	if not active_waypoint.is_empty():
+		var wp_pos: Vector3 = active_waypoint.get("pos", Vector3.ZERO)
+		var diff: Vector3 = wp_pos - ship_pos
+		var dist: float = diff.length()
+		var local_diff: Vector3 = ship_basis.inverse() * diff
+		var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+		
+		entities.append({
+			"id": "ACTIVE_WAYPOINT",
+			"name": active_waypoint.get("name", "WAYPOINT TATTICO"),
+			"pos": wp_pos,
+			"rel_pos": diff,
+			"distance": dist,
+			"velocity": Vector3.ZERO,
+			"bearing_deg": bearing_deg,
+			"elevation_deg": elevation_deg,
+			"type": "WAYPOINT",
+			"iff_tag": "WAYPOINT",
+			"stealth_level": 0.0,
+			"composition": {},
+			"integrity": 100.0,
+			"mass_tons": 0.0,
+			"radiation_level": 0.0,
+			"signal_signature": 1.0,
+			"estimated_value_cr": 0
+		})
+	
+	entities.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.get("distance", 0.0) < b.get("distance", 0.0)
+	)
+	return entities

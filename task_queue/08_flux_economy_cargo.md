@@ -6,8 +6,14 @@ Il sistema gestisce l'inventario cargo della corvetta (celle energetiche, leghe,
 
 ---
 
-## 2. Standard Architetturali e Git
-1. **Branch Git**: Creare ed eseguire il checkout sul branch `feature/FluxEconomyCargo`.
+## 2. Standard Architetturali e Flusso Git
+1. **Flusso Git (Obbligatorio)**:
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b feature/FluxEconomyCargo main`.
+   - Sviluppare il codice, gestori, interfacce UI e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(economy): implementa rating FLUX, gestione stiva cargo e snapshot S-Net"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge feature/FluxEconomyCargo`.
 2. **Posizione File**:
    - `Economy/cargo_manager.gd` (Gestore stiva cargo e trasferimento merci)
    - `Economy/flux_economy_manager.gd` (Autoload / Rating FLUX, canoni e microtransazioni)
@@ -31,8 +37,12 @@ Il sistema gestisce l'inventario cargo della corvetta (celle energetiche, leghe,
 
 ---
 
-## 4. Criteri di Accettazione e Test Headless
-Creare `tests/test_flux_economy_cargo.gd` per verificare:
-- Calcolo corretto del peso/spazio occupato nella stiva e blocco sovraccarico.
-- Aggiornamento dinamico del punteggio FLUX ed emissione eventi di penalità in stato di insolvenza.
-- Trasferimento di risorse tra nave e drone o stazione.
+## 4. Criteri di Accettazione, Test e Chiusura Task
+1. **Suite di Test Headless**: Creare ed eseguire `tests/test_flux_economy_cargo.gd` per verificare:
+   - Calcolo corretto del peso/spazio occupato nella stiva e blocco sovraccarico.
+   - Aggiornamento dinamico del punteggio FLUX ed emissione eventi di penalità in stato di insolvenza.
+   - Trasferimento di risorse tra nave e drone o stazione.
+2. **Chiusura Git**:
+   - [ ] Test headless superati con esito positivo.
+   - [ ] Commit di tutte le modifiche su branch `feature/FluxEconomyCargo`.
+   - [ ] Checkout su `main` e merge completato del branch.

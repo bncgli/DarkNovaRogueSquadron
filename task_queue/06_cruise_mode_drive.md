@@ -6,8 +6,14 @@ La modalità consente alla corvetta di coprire grandi distanze tra settori ampli
 
 ---
 
-## 2. Standard Architetturali e Git
-1. **Branch Git**: Creare ed eseguire il checkout sul branch `feature/CruiseDrive`.
+## 2. Standard Architetturali e Flusso Git
+1. **Flusso Git (Obbligatorio)**:
+   - Creare ed eseguire il checkout sul branch dedicato partendo da `main`: `git checkout -b feature/CruiseDrive main`.
+   - Sviluppare il codice, configurazioni e test esclusivamente all'interno di tale branch.
+   - Al termine dello sviluppo e dopo aver validato con successo i test:
+     1. Eseguire il commit di tutte le modifiche: `git add .` e `git commit -m "feat(cruise-drive): implementa modalita velocita di crociera sub-FTL"`.
+     2. Passare al branch `main`: `git checkout main`.
+     3. Eseguire il merge del branch completato: `git merge feature/CruiseDrive`.
 2. **Posizione File**:
    - `Outside/ShipSystems/cruise_drive_controller.gd` (Logica di accelerazione, cooldown e warmup)
    - `Applications/FlightControl/Componenti/cruise_control_panel.tscn` e `.gd` (Widget UI in Flight Control)
@@ -35,9 +41,13 @@ La modalità consente alla corvetta di coprire grandi distanze tra settori ampli
 
 ---
 
-## 5. Criteri di Accettazione e Test Headless
-Creare `tests/test_cruise_drive.gd` per verificare:
-- Blocco dell'ingaggio se la nave è in movimento o disallineata.
-- Requisito di potenza energetica da `PowerGrid`.
-- Transizione corretta e moltiplicatore di velocità in Cruise Mode.
-- Trigger del Proximity Drop in presenza di ostacoli lungo la traiettoria.
+## 5. Criteri di Accettazione, Test e Chiusura Task
+1. **Suite di Test Headless**: Creare ed eseguire `tests/test_cruise_drive.gd` per verificare:
+   - Blocco dell'ingaggio se la nave è in movimento o disallineata.
+   - Requisito di potenza energetica da `PowerGrid`.
+   - Transizione corretta e moltiplicatore di velocità in Cruise Mode.
+   - Trigger del Proximity Drop in presenza di ostacoli lungo la traiettoria.
+2. **Chiusura Git**:
+   - [ ] Test headless superati con esito positivo.
+   - [ ] Commit di tutte le modifiche su branch `feature/CruiseDrive`.
+   - [ ] Checkout su `main` e merge completato del branch.

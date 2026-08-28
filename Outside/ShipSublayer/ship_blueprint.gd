@@ -644,8 +644,20 @@ func _init_default_drive() -> void:
 			"desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica."
 		},
 		{
+			"path": "Ship Drive/Programs/Sensors/sensors_config.dat",
+			"content": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
+			"is_protected": true,
+			"desc": "Configurazione frequenza sweep, raggio ping attivo e filtri rumore sensori."
+		},
+		{
+			"path": "Ship Drive/Programs/Sensors/radar_tuning.dat",
+			"content": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n",
+			"is_protected": true,
+			"desc": "Sensibilità spettrometrica, marcatura automatica IFF e soglia stealth."
+		},
+		{
 			"path": "Ship Drive/systems/ship_blueprint.dat",
-			"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=21\ninstalled_apps_count=8\n",
+			"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=23\ninstalled_apps_count=9\n",
 			"is_protected": true,
 			"desc": "Specifiche generali del blueprint e metadati dimensionali scafo."
 		},
@@ -666,6 +678,7 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 		"Ship Drive/Programs/Comms": "COMM-7815",
 		"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+		"Ship Drive/Programs/Sensors": "SENS-7815",
 		"Ship Drive/systems": "ROOT-7815"
 	}
 
@@ -734,6 +747,14 @@ func _init_default_installed_apps() -> void:
 			"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
 			"icon_color": Color(0.2, 0.9, 0.7, 1.0),
 			"roles": ["Capitano", "Hacker", "Ingegnere", "Factotum"]
+		},
+		{
+			"id": "sensors",
+			"title": "Array Sensori & Mappa Tattica",
+			"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
+			"scene_path": "res://Applications/Sensors/sensors_app.tscn",
+			"icon_color": Color(0.2, 0.8, 0.4, 1.0),
+			"roles": ["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"]
 		}
 	]
 
