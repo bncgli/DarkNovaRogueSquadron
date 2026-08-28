@@ -835,15 +835,104 @@ crypto_crack_speed=1.0
 "desc": "Taratura potenza Jamming, contromisure EW e violazione cifrari.",
 "is_protected": true,
 "path": "Ship Drive/Programs/Comms/crypto_tuning.dat"
+}, {
+"content": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION
+# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION
+[SYSTEM]
+app_name=Diagnostics
+version=1.0.4
+status=OPERATIONAL
+diagnostics_subsystem=ACTIVE
+
+[SCANNER_SETTINGS]
+scan_depth=DEEP
+auto_quarantine_malware=true
+alert_sound=true
+scan_speed_multiplier=1.0
+tamper_detection_level=HIGH
+log_telemetry_integrity=true
+",
+"desc": "Configurazione scanner di integrità, rilevamento malware e parametri di allarme.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/diagnostics_config.dat"
+}, {
+"content": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX
+[ICE_DEFENSE]
+ice_firewall_strength=100.0
+factory_reset_delay_sec=3.0
+tamper_detection_level=HIGH
+ice_recharge_rate=5.0
+malware_purge_efficiency=1.0
+overclock_bypass_security=false
+",
+"desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/security_tuning.dat"
+}, {
+"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
+# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
+[BLUEPRINT_METADATA]
+ship_id=dark_nova_corvette
+ship_name=Dark Nova Corvette
+ship_class=Corvetta d'Assalto & Ricognizione Leggera
+bounds_x=60.0
+bounds_y=30.0
+bounds_width=480.0
+bounds_height=420.0
+drone_spawn_x=300.0
+drone_spawn_y=80.0
+drone_spawn_heading=-1.5707963
+
+[BLUEPRINT_SUBLAYERS]
+rooms_count=10
+ducts_count=14
+devices_count=11
+junctions_count=8
+damages_count=8
+drive_files_count=21
+installed_apps_count=8
+",
+"desc": "Specifiche generali del blueprint e metadati dimensionali scafo.",
+"is_protected": true,
+"path": "Ship Drive/systems/ship_blueprint.dat"
+}, {
+"content": "# SHIP HULL SECTORS & SUBLAYER TOPOLOGY MATRIX
+[HULL_SECTORS]
+sector_bridge=Ponte di Comando
+sector_crew=Alloggi Equipaggio
+sector_drone_bay=Baia di Lancio Droni
+sector_tech_corridor=Corridoio Tecnico Principale
+sector_cargo=Baia di Carico Principale
+sector_reactor=Sala Reattore Principale
+sector_engines=Sala Motori & Propulsione
+sector_armory=Sala Armeria & Scudi
+
+[POWER_GRID_SPECS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+total_junctions=8
+total_devices=11
+grid_balancing=AUTOMATIC
+
+[DAMAGE_TOLERANCE]
+critical_integrity_threshold=25.0
+max_structural_integrity=100.0
+total_damage_sectors=8
+",
+"desc": "Topologia dei settori dello scafo, specifiche di alimentazione e tolleranze danni.",
+"is_protected": true,
+"path": "Ship Drive/systems/hull_specs.dat"
 }])
 drive_passwords = {
 "Ship Drive/Programs/Cams": "CAMS-7815",
 "Ship Drive/Programs/Comms": "COMM-7815",
+"Ship Drive/Programs/Diagnostics": "DIAG-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
-"Ship Drive/Programs/Weapons": "WEAP-7815"
+"Ship Drive/Programs/Weapons": "WEAP-7815",
+"Ship Drive/systems": "ROOT-7815"
 }
 installed_apps = Array[Dictionary]([{
 "description": "Controlli di manovra e navigazione nave",
@@ -894,4 +983,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Capitano", "Hacker", "Factotum"],
 "scene_path": "res://Applications/Comms/comms_app.tscn",
 "title": "Comms & Electronic War"
+}, {
+"description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
+"icon_color": Color(0.2, 0.9, 0.7, 1),
+"id": "diagnostics",
+"roles": ["Capitano", "Hacker", "Ingegnere", "Factotum"],
+"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
+"title": "System Diagnostics"
 }])

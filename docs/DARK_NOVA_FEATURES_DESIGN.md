@@ -155,10 +155,11 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 | **Weapons** | `Ship Drive/Programs/Weapons/` | `WEAP-7815` | `weapons_config.dat`, `ammo_tuning.dat` |
 | **Shield Matrix** | `Ship Drive/Programs/ShieldMatrix/` | `SHLD-7815` | `shields_config.dat`, `deflector_tuning.dat` |
 | **Comms & EW** | `Ship Drive/Programs/Comms/` | `COMM-7815` | `comms_config.dat`, `crypto_tuning.dat` |
+| **System Diagnostics** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
 | **Sensors (Roadmap)** | `Ship Drive/Programs/Sensors/` | `SENS-7815` | `sensors_config.dat`, `radar_tuning.dat` |
 | **Life Support (Roadmap)** | `Ship Drive/Programs/LifeSupport/` | `LIFE-7815` | `life_support_config.dat`, `atmo_tuning.dat` |
 | **Logbook (Roadmap)** | `Ship Drive/Programs/Logbook/` | `LOGS-7815` | `logbook_config.dat`, `journal_tuning.dat` |
-| **Diagnostics (Roadmap)** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
+| **Service Drone (Roadmap)** | `Ship Drive/Programs/ServiceDrone/` | `SERV-7815` | `service_drone_config.dat`, `manipulator_tuning.dat` |
 | **Master Superuser** | *Root Drive & System Folders* | `ROOT-7815` | *Bypass universale per test suites e console* |
 
 ---
@@ -174,15 +175,15 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 
 La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ruolo all'interno delle applicazioni di bordo (operative e pianificate):
 
-| Ruolo | Flight Control | Cams CCTV | Power Grid | Duct Drone | Weapons | Sensors | Shield Matrix | Comms & EW | Life Support | Logbook | Diagnostics | File Protetti .dat | Comandi Terminale |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Capitano** | Controllo + Override | Controllo + Zoom | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Target Lock | Controllo + Override | Controllo + Comms | Controllo + Override | Controllo + Modifica Log | Controllo + Override | Accesso Master | Tutti i Comandi |
-| **Factotum** | Controllo + Override | Controllo + Zoom | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Target Lock | Controllo + Override | Controllo + Comms | Controllo + Override | Controllo + Modifica Log | Controllo + Override | Accesso Master | Tutti i Comandi |
-| **Pilota** | **Controllo Completo** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Telemetria / Waypoint | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Lettura / Note | Sola Visualizzazione | Tuning Motori | Navigazione / Rotte |
-| **Soldato** | Sola Visualizzazione | **Controllo Completo** | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | **Controllo Target / Radar** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Lettura / Note | Sola Visualizzazione | Tuning Ottiche & Armi | Puntamento & Difesa |
-| **Ingegnere** | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | **Controllo (Riparazioni)** | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | Sola Visualizzazione | **Controllo Completo** | Lettura / Note | **Controllo Diagnostica** | Tuning Reattore, Griglia & Scudi | Energia & Supporto Vitale |
-| **Hacker** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | **Controllo (Infiltrazione)** | Sola Visualizzazione | **Controllo Scanner / EW** | Sola Visualizzazione | **Controllo EW & Hackwarfare** | Sola Visualizzazione | Lettura / Note | **Controllo Cyber Sec & ICE** | Exploit Clandestini .dat | Cracking, Jamming & Scripting |
-| **Solo Mode (Offline)** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Tutti i Comandi** |
+| Ruolo | Flight Control | Cams CCTV | Power Grid | Duct Drone | Service Drone | Weapons | Sensors | Shield Matrix | Comms & EW | Life Support | Logbook | Diagnostics | File Protetti .dat | Comandi Terminale |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Capitano** | Controllo + Override | Controllo + Zoom | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Target Lock | Controllo + Override | Controllo + Comms | Controllo + Override | Controllo + Modifica Log | Controllo + Override | Accesso Master | Tutti i Comandi |
+| **Factotum** | Controllo + Override | Controllo + Zoom | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Override | Controllo + Target Lock | Controllo + Override | Controllo + Comms | Controllo + Override | Controllo + Modifica Log | Controllo + Override | Accesso Master | Tutti i Comandi |
+| **Pilota** | **Controllo Completo** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Telemetria / Waypoint | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Lettura / Note | Sola Visualizzazione | Tuning Motori | Navigazione / Rotte |
+| **Soldato** | Sola Visualizzazione | **Controllo Completo** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | **Controllo Target / Radar** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | Lettura / Note | Sola Visualizzazione | Tuning Ottiche & Armi | Puntamento & Difesa |
+| **Ingegnere** | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | **Controllo (Riparazioni)** | **Controllo (Riparazioni/Recupero)** | Sola Visualizzazione | Sola Visualizzazione | **Controllo Completo** | Sola Visualizzazione | **Controllo Completo** | Lettura / Note | **Controllo Diagnostica** | Tuning Reattore, Griglia & Scudi | Energia & Supporto Vitale |
+| **Hacker** | Sola Visualizzazione | Sola Visualizzazione | Sola Visualizzazione | **Controllo (Infiltrazione)** | **Controllo (Recupero/Sabotaggio)** | Sola Visualizzazione | **Controllo Scanner / EW** | Sola Visualizzazione | **Controllo EW & Hackwarfare** | Sola Visualizzazione | Lettura / Note | **Controllo Cyber Sec & ICE** | Exploit Clandestini .dat | Cracking, Jamming & Scripting |
+| **Solo Mode (Offline)** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Controllo Totale** | **Tutti i Comandi** |
 
 ---
 
@@ -276,11 +277,25 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
 - **Ruolo**: **Hacker** / **Capitano** (Override: Factotum; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Comms/`, file `comms_config.dat` e `crypto_tuning.dat` (Password debug: `COMM-7815`).
 
+### 4.10 System Diagnostics, Cyber Security & ICE Defense (`Applications/Diagnostics`)
+- **Scopo**: Centro di sicurezza informatica, diagnostica d'integrità dei drive virtuali, scansione e bonifica da minacce malware/trojan, gestione nodi barriera ICE (Intrusion Countermeasure Electronics) e ripristino di fabbrica dei firmware `.dat`.
+- **Finestra**: `diagnostics_app.tscn` (Dimensioni: `640x450`).
+- **Flusso Utente**:
+  1. L'Hacker o l'Ingegnere apre l'app dal menu Start o Taskbar.
+  2. Nello **Scanner Minacce & Drive**, seleziona l'unità target (`Ship Drive`, `Terminal Drive` o `Tutti i Drive`) e la modalità (`Rapida` o `Profonda`), quindi preme "Avvia Scansione".
+  3. Visualizza l'indice di integrità complessivo e la lista dettagliata delle minacce/anomalie rilevate, procedendo alla bonifica manuale con "Purga Minacce" (o auto-quarantena automatica).
+  4. Nel pannello **Barriera ICE & Difesa**, monitora l'integrità dello scudo informatico (HP) e lo stato dei nodi sottosistema (`Avionica`, `Reattore`, `Comms`, `Armi`, `Mainframe`). Durante attacchi o intrusioni cyber, rinforza la barriera (+25% HP) o esegue il flush cache del firewall.
+  5. Nel modulo **Reset Firmware .DAT**, seleziona un sottosistema alterato da overclock instabili o corruzioni e avvia il "Factory Reset Firmware", ripristinando istantaneamente i parametri `.dat` ai valori di fabbrica certificati con propagazione hot-reload in tempo reale.
+- **Ruolo**: **Hacker** / **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Diagnostics/`, file `diagnostics_config.dat` e `security_tuning.dat` (Password debug: `DIAG-7815`).
+
 ---
 
 ## 5. Roadmap e Nuove Feature da Creare
 
 Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni proprietarie della nave da sviluppare nelle prossime milestone, coerentemente con i ruoli RBAC, il tema sandbox Freemium-punk / Firefly e la suite di configurazione `.dat`.
+
+### 5.1 Roadmap nuove applicazioni
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -291,13 +306,13 @@ Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni 
 │ 2. Long-Range Sensor Array   │ Soldato / Hacker / Radar 50km e Spettrometria     │
 │ 5. Life Support & Atmosphere │ Ingegnere / O2, CO2, Paratie e Antincendio        │
 │ 6. Mission Logbook & Sandbox │ Capitano / Tutti i Ruoli / Contratti & Black Box  │
-│ 7. System Diagnostics & ICE  │ Hacker / Ingegnere / Malware, Antivirus & Reset   │
+│ 7. External Service Drone    │ Ingegnere / Hacker / EVA, Riparazioni & Salvage   │
 └──────────────────────────────┴───────────────────────────────────────────────────┘
 ```
 NOTA: Il concetto di freemium-punk verrà impostato in seguito
 ---
 
-### 5.2 Nuova Feature 2: Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
+#### 5.1.2 Nuova Feature 2: Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
 - **Descrizione**: Sistema di scansione e telemetria subspaziale a lungo raggio per mappare corpi celesti, campi di asteroidi, stazioni orbitali, navi nemiche e relitti derelitti fino a 50 km di distanza.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`sensors_app.tscn`, `750x550`)**:
@@ -319,7 +334,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-### 5.5 Nuova Feature 5: Life Support & Atmosphere Control (`Applications/LifeSupport`)
+#### 5.1.5 Nuova Feature 5: Life Support & Atmosphere Control (`Applications/LifeSupport`)
 - **Descrizione**: Monitoraggio telemetrico e controllo attivo dei parametri vitali (percentuale di O2, accumulo di CO2, pressione barometrica, temperatura e presenza di focolai d'incendio) per ciascuna stanza e compartimento della nave.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`life_support_app.tscn`, `700x500`)**:
@@ -341,7 +356,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-### 5.6 Nuova Feature 6: Mission Logbook & Tactical Objectives (`Applications/Logbook`)
+#### 5.1.6 Nuova Feature 6: Mission Logbook & Tactical Objectives (`Applications/Logbook`)
 - **Descrizione**: Registro di bordo ufficiale, diario delle operazioni di volo, monitoraggio dei contratti sandbox per "continuare a volare" (es. trasporto merci di contrabbando, riparazione relitti, estrazione minerali rari) e archivio note personali dell'equipaggio.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`logbook_app.tscn`, `560x420`)**:
@@ -357,31 +372,152 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
     - `logbook_config.dat`: impostazioni registro (`auto_log_events=true`, `max_history_entries=200`, `log_telemetry_errors=true`).
     - `journal_tuning.dat`: sincronizzazione drive (`sync_to_ship_drive=true`, `timestamp_format=STAR_DATE`, `cloud_backup=false`).
   - **Manomissione Firmware Clandestina**: L'Hacker può falsificare le registrazioni della scatola nera su `logbook_config.dat` per cancellare le prove di contrabbando o manomissioni illegali prima di attraccare a una stazione governativa.
+---
+
+#### 5.1.7 Nuova Feature 7: External Service Drone & EVA Operations (`Applications/ServiceDrone`)
+- **Descrizione**: Drone di servizio teleguidato per operazioni extra-veicolari (EVA), ispezioni e riparazioni strutturali esterne dello scafo, saldatura di falle nello spazio profondo, raccolta cargo/detriti spaziali e manomissione o taglio di componenti da relitti e navi disabilitate.
+- **Flusso Utente e Finestre**:
+  - **Finestra Principale (`service_drone_app.tscn`, `720x520`)**:
+    - Feed video frontale diegetico in tempo reale ad alta risoluzione (telecamera montata sul muso del drone via `SubViewport` 3D).
+    - Pannello di pilotaggio con controlli e telemetria analoghi a *Flight Control* (vettori di spinta RCS 6-DOF, slider del throttle lineare, bussola spaziale di rotta e indicatore distanza relativa dalla corvetta madre).
+    - Braccio manipolatore polivalente multifunzione con selettore modalità:
+      - **Modalità Riparazione Scafo / Saldatura**: ripristina l'integrità dei punti di impatto esterni e salda falle strutturali (`dmg_breach`), consumando naniti di riparazione o energia della batteria.
+      - **Modalità Taglio Laser / Danneggiamento**: incide paratie esterne di relitti per sbloccare l'accesso o disabilitare selettivamente moduli esterni ostili (antenne, sensori, propulsori di manovra).
+      - **Modalità Fascio Magnetico / Raccolta Cargo (Harpoon)**: aggancia container fluttuanti, minerali estratti da asteroidi e rottami preziosi, stivandoli nel vano cargo integrato del drone (capacità: 4 slot / 500 kg).
+    - Pulsante "Attracco / Rientro Baia (Auto-Dock)": guida autonoma di rientro verso la baia di lancio della corvetta. All'attracco, le risorse e il cargo raccolti nella stiva del drone vengono trasferiti automaticamente e istantaneamente nella stiva principale della nave (`Cargo Bay`).
+- **Ruolo Assegnato**: **Ingegnere** / **Hacker** (Ingegnere per riparazioni strutturali e recupero risorse; Hacker per sabotaggio moduli esterni e hacking ravvicinato; Capitano/Factotum in override).
+- **Integrazione con i Sublayer e la Simulazione 3D**:
+  - **Simulazione 3D (`SpaceWorldManager`)**: Istanzia l'entità fisica 3D del service drone nello spazio attorno alla corvetta, con raggio operativo limitato dal segnale radio della baia (max 1500 m prima del disingaggio telemetrico).
+  - **Sublayer 3 (Rete Elettrica)**: La baia droni esterna (`service_bay`) assorbe 80 MW in standby e 140 MW in fase di ricarica rapida della batteria del drone.
+  - **Sublayer 4 (Danni)**: Ripara direttamente le coordinate dei danni allo scafo esterno registrati dal sistema di diagnostica (`dmg_breach` e usura scafo).
+- **Configurazione `.DAT` e Meccanica Hackwarfare**:
+  - **Percorso Cartella Protetta**: `Ship Drive/Programs/ServiceDrone/` (Password debug: `SERV-7815`).
+  - **File di Configurazione Attivi**:
+    - `service_drone_config.dat`: parametri di volo e batteria (`max_thrust=35.0`, `battery_capacity_sec=240.0`, `tether_range=1500.0`, `auto_dock_speed=12.0`).
+    - `manipulator_tuning.dat`: parametri attrezzi e stiva (`repair_rate=15.0`, `cutting_laser_power=25.0`, `cargo_capacity_kg=500.0`, `magnet_range=18.0`).
+  - **Manomissione Firmware Clandestina**: Manomettere `service_drone_config.dat` consente di rimuovere il limitatore di raggio operativo (*tether limit*) e raddoppiare la spinta dei micro-propulsori, al costo di un drastico aumento del degrado della batteria e dell'instabilità termica.
 
 ---
 
-### 5.7 Nuova Feature 7: System Diagnostics, Cyber Security & ICE Defense (`Applications/Diagnostics`)
-- **Descrizione**: Centro di sicurezza informatica e manutenzione logica di bordo per eseguire scansioni d'integrità dei drive, ripulire infezioni da malware/trojan contratti scaricando dati da relitti infetti, gestire contromisure ICE (Intrusion Countermeasure Electronics) e ripristinare configurazioni `.dat` danneggiate.
-- **Flusso Utente e Finestre**:
-  - **Finestra Principale (`diagnostics_app.tscn`, `640x450`)**:
-    - **Scanner Integrità Drive**: avvio scansione rapida o profonda su `Ship Drive` e `Terminal Drive` con barra di scansione diegetica e lista delle minacce rilevate (es. "Crypto-Miner clandestino", "Worm corporativo", "Firmware .DAT corrotto").
-    - **Pannello ICE & Firewall**: gestione nodi difensivi per bloccare intrusioni nemiche in tempo reale durante i combattimenti informatici (Hackwarfare).
-    - **Pulsante "Factory Reset Firmware"**: ripristina istantaneamente i file di configurazione `.dat` di un sottosistema ai valori di fabbrica standard, ripulendo overclock instabili o corruzioni logiche.
-- **Ruolo Assegnato**: **Hacker** / **Ingegnere** (Pieno controllo; Capitano in override).
-- **Integrazione con i Sublayer**:
-  - Monitora lo stato di integrità di Sublayer 5 (Drive Files) e Sublayer 6 (Applicazioni Mainframe).
-  - Connesso a `FolderPasswordManager` e `ShipDriveManager` per rilevare violazioni di cartelle protette o iniezioni anomale di file eseguibili.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Diagnostics/` (Password debug: `DIAG-7815`).
-  - **File di Configurazione Attivi**:
-    - `diagnostics_config.dat`: parametri scanner (`scan_depth=DEEP`, `auto_quarantine_malware=true`, `alert_sound=true`).
-    - `security_tuning.dat`: barriere ICE (`ice_firewall_strength=100.0`, `factory_reset_delay_sec=3.0`, `tamper_detection_level=HIGH`).
-  - **Manomissione Firmware Clandestina**: Modificando `security_tuning.dat`, un Hacker esperto può disattivare il controllo di integrità interno (tamper detection) per consentire all'equipaggio di installare overclock estremi sui motori o sulle armi senza far scattare gli allarmi di sistema del mainframe.
+### 5.2 Mappa del Sistema Stellare e Gameplay di Settore
 
+```text
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                     MAPPA SISTEMA STELLARE & MECCANICHE SETTORE                  │
+├──────────────────────────────┬───────────────────────────────────────────────────┤
+│ Feature                      │ Descrizione e Scopo Operativo                     │
+├──────────────────────────────┼───────────────────────────────────────────────────┤
+│ 1. Architettura Griglia      │ Coordinate spaziali a celle, skybox e illuminazione│
+│ 2. Propulsione di Crociera   │ Navigazione interplanetaria sub-FTL vettorizzata  │
+│ 3. Stazioni Orbitali & Dock  │ Interfaccia di docking via Comms e servizi porto  │
+│ 4. Economia a FLUX & Cargo   │ Gestione stiva, rating FLUX e corrieri dati S-Net │
+│ 5. Mining & Scavenging       │ Estrazione asteroidi e recupero relitti derelitti │
+│ 6. Dogfight & Ingaggi Tattici│ Combattimento asimmetrico e guerra elettronica    │
+└──────────────────────────────┴───────────────────────────────────────────────────┘
+```
+
+---
+
+#### 5.2.1 Architettura del Sistema Stellare e Griglia Spaziale
+- **Modello a Griglia e Coordinate di Settore**:
+  - L'intero sistema solare è strutturato come una griglia 3D/2D discreta di coordinate di settore (celle spaziali indicizzate, es. `SEC-04-12`).
+  - Ciascuna casella della griglia non rappresenta un singolo punto geometrico, ma un'intera macro-area di simulazione (scena 3D attiva generata da `SpaceWorldManager`), popolata da corpi celesti, campi di detriti, fasce di asteroidi, stazioni orbitali, navi mercantili o vascelli pirata.
+  - La griglia costituisce il layer logico utilizzato dal computer di bordo per calcolare in tempo reale vettori di navigazione, consumi propellente, distanze cinematiche e rendering diegetico dei corpi celesti sullo skymap/skybox.
+- **Illuminazione Dinamica e Occlusione Planetaria**:
+  - L'illuminazione direzionale del settore viene calcolata dinamicamente in base alla distanza e all'angolo relativo della stella primaria (o delle stelle binarie) rispetto alla posizione della nave nella griglia.
+  - Pianeti massicci, lune e megalopoli spaziali generano realistici coni d'ombra e zone di eclissi/occlusione in cui la visibilità ottica perimetrale cala drasticamente e l'assorbimento fotovoltaico o dei collettori di radiazione si azzera, costringendo l'equipaggio ad affidarsi interamente ai fari di bordo e ai sensori termici.
+- **Distanza di Render e Skybox Diegetico**:
+  - Ogni macro-entità del sistema possiede un raggio di visibilità scalare misurato in caselle di griglia:
+    - *Stella Primaria*: visibile fino a 30+ caselle di distanza.
+    - *Giganti Gassosi / Pianeti Maggiori*: visibili entro un raggio di 10-15 caselle.
+    - *Stazioni Spaziali / Fasce di Asteroidi*: visibili entro 2-4 caselle prima dell'ingresso nel settore di rendering dettagliato in locale.
+  - Gli oggetti astronomici distanti vengono proiettati dinamicamente sullo skybox della scena 3D come indicatori ottici e telemetrici per il Pilota (*Flight Control*), le telecamere esterne (*Cams*) e la mappa tattica (*Sensors*).
+- **Vincolo Tecnologico Diegetico (No-FTL)**:
+  - L'ambientazione è rigorosamente priva di motori FTL (Faster-Than-Light / Iperspazio convenzionale). L'esperienza è interamente circoscritta all'interno di un singolo, denso sistema stellare colonizzato, caratterizzato da forti contrasti tra potenti corporazioni centrali, stazioni orbitali sovraffollate e colonie minerarie di frontiera derelitte.
+
+---
+
+#### 5.2.2 Modalità Velocità di Crociera (Cruise Mode / Sub-FTL)
+- **Meccanica di Propulsione Accelerata**:
+  - Per coprire le immense distanze interplanetarie tra le caselle del sistema senza viaggi istantanei, la corvetta impiega la modalità **Velocità di Crociera (Cruise Drive)**.
+  - In assetto ordinario la nave opera a velocità manovriera ($V$) con pieno controllo manuale dei vettori RCS (beccheggio, imbardata, rollio).
+  - In modalità Crociera la spinta propulsiva viene amplificata a valori esponenziali ($V^2$ o boost moltiplicativo), mentre il controllo del timone manuale viene temporaneamente bloccato: la rotta viene vincolata dal computer di navigazione in linea retta verso il settore o quadrante di destinazione selezionato.
+- **Procedura di Ingaggio e Warmup del Reattore**:
+  - L'attivazione della velocità di crociera non è istantanea, ma richiede una sequenza coordinata:
+    1. **Stato di Quiete**: La nave deve mantenere una velocità relativa quasi nulla e azzerare le manovre brusche per $N$ secondi.
+    2. **Allineamento Vettoriale**: Il Pilota orienta la prua verso il vettore del settore bersaglio indicato dai *Sensors*.
+    3. **Warmup & Distribuzione Energetica**: L'Ingegnere convoglia un picco di potenza ausiliaria dai generatori (*Power Grid*) per alimentare le bobine di spinta.
+    4. **Difesa & Copertura**: In situazioni di combattimento, Soldato e Hacker devono fornire copertura difensiva (chaff, flare e jamming contromisure) per impedire a proiettili o missili nemici di interrompere la sequenza di carica.
+- **Sistemi di Sicurezza e Disingaggio d'Emergenza (Proximity Drop)**:
+  - Se la traiettoria di crociera intercetta la massa critica di un asteroide gigante, una stazione, un relitto o una nave ostile (o in presenza di un'allerta collisione imminente), l'avionica di bordo esegue automaticamente un **Emergency Drop**.
+  - Il disingaggio brusco riporta istantaneamente la nave a velocità ordinaria, provocando un temporaneo surriscaldamento dei propulsori e lasciando la corvetta vulnerabile per alcuni secondi.
+- **Flusso Operativo UI**:
+  - La rotta di crociera viene impostata attraverso le finestre *Sensors / Flight Control*: si seleziona la coordinata di destinazione sulla mappa di sistema, si calcola il vettore di rotta e si avvia la sequenza di spinta coordinata tra Pilota e Ingegnere.
+
+---
+
+#### 5.2.3 Stazioni Spaziali, Docking e Servizi Portuali
+- **Protocollo di Attracco Diegetico (Docking Protocol)**:
+  - In prossimità di una stazione spaziale orbitale, l'equipaggio non controlla un avatar fisico a piedi, ma interagisce unicamente attraverso i protocolli e le comunicazioni diegetiche del sistema operativo **GodotOS**.
+  - La sequenza di attracco si avvia tramite l'applicazione *Comms & EW*: l'Hacker o il Capitano aggancia la frequenza del controllo traffico portuale, invia la firma transponder IFF e riceve l'assegnazione dello slot di docking o del braccio magnetico.
+  - Il Pilota allinea la corvetta entro i coni telemetrici di cattura per completare la procedura di aggancio.
+- **Servizi e Hub di Stazione su GodotOS**:
+  - A docking completato, su GodotOS si rendono accessibili finestre e pannelli di servizio proprietari forniti dal porto (in stile *Sid Meier's Pirates!* spaziale):
+    - **Cantiere Navale & Officina Riparazioni**: ripristino dell'integrità strutturale dello scafo, manutenzione e spurgo dei condotti tecnici, ricarica delle batterie e approvvigionamento di naniti e ricambi per l'Ingegnere.
+    - **Mercato Software & Repository Firmware**: compravendita di nuovi programmi diegetici, driver di periferica, script di automazione per il terminale e patch firmware legali o clandestine per l'Hacker e il Capitano.
+    - **Bacheca Contratti & Ufficio Taglie**: consultazione e stipula di contratti corporativi, incarichi di scorta, bonifica relitti, tratte mercantili o contrabbando illegale, sincronizzati con l'app *Logbook*.
+    - **Taverna Spaziale & Intercettazione Frequenze**: ascolto di trasmissioni radio locali, intercettazione di rumors su carichi preziosi in transito e coordinate di relitti abbandonati ricchi di risorse.
+- **Restrizione Mobilità Diegetica**:
+  - Nessuna transizione a piedi o ambiente 3D in prima persona per gli interni di stazione: tutta l'interazione resta ancorata alle applicazioni del desktop di bordo, preservando l'identità diegetica pura del gioco.
+
+---
+
+#### 5.2.4 Commercio, Logistica Cargo ed Economia a "FLUX"
+- **Gestione della Stiva (Cargo Bay & Material Flow)**:
+  - Interfaccia per il trasferimento merci bidirezionale tra i magazzini di stazione (o le stive di navi abbordate/amiche) e i compartimenti di carico della nave.
+  - Catalogazione merci diversificata: celle energetiche, minerali grezzi, leghe raffinate, ricambi per condotti, munizioni per torrette balistiche, pacchetti software e merci di contrabbando sotto sigillo.
+- **La Rete Dati S-Net (System Network) e i Corrieri Fisici**:
+  - Nell'universo di gioco, a causa delle immense distanze astronomiche e dell'assenza di comunicazioni FTL istantanee ad alta banda, la rete dati interplanetaria **S-Net (System Network)** non è sincronizzata in tempo reale tra pianeti e stazioni distanti.
+  - Le informazioni, i notiziari, le banche dati economiche e i listini prezzi viaggiano attraverso navi cargo dedicate che trasportano array fisici di hard disk contenenti snapshot aggiornati della S-Net di ciascun settore.
+  - L'Hacker può intercettare o connettersi ai terminali dati di queste navi corriere per estrarre informazioni riservate, coordinate segrete e dati finanziari, affrontando le barriere ICE e i nodi firewall integrati nell'hard disk.
+- **Il Sistema Economico dei "FLUX" (Freemium-punk)**:
+  - Nel contesto satirico Freemium-punk non esiste una moneta cartacea fissa: l'unità e indice economico universale è il **FLUX**.
+  - Il FLUX è un indice dinamico di rating finanziario e liquidità di flusso (simile a un credit score continuo), calcolato sulla base del volume, della frequenza e della regolarità delle transazioni in entrata e in uscita associate all'identità della nave.
+  - Carburante, rifornimenti, riparazioni e persino licenze software dei sistemi operativi di bordo operano tramite canoni di abbonamento, microtransazioni di sistema e royalty settoriali.
+  - **Impatti del Rating FLUX**:
+    - *FLUX Elevato (Rating A/S)*: garantisce tariffe agevolate di porto, priorità di fornitura energetica nei settori corporativi e sblocco di contratti commerciali prestigiosi.
+    - *FLUX Negativo o Insolvente (Rating D/F)*: comporta disattivazione remota di feature software da parte delle corporazioni fornitrici, sovraccosti sui servizi portuali, emissione di taglie da parte dei creditori fino all'**impound (sequestro della nave)** con conseguente fallimento della sessione (Game Over).
+
+---
+
+#### 5.2.5 Mining ed Estrazione Risorse (Asteroidi & Scavenging)
+- **Estrazione Mineraria su Asteroidi (Deep Core Mining)**:
+  - Scansione preliminare geologica dei campi di asteroidi tramite *Sensors* (analisi spettrometrica per identificare vene di metalli pesanti, leghe rare, cristalli energetici e ghiaccio d'acqua per il supporto vitale).
+  - Frantumazione calibrata dei massi rocciosi tramite i laser minerari o torrette controllate dal Soldato (*Weapons*), mentre il Pilota mantiene un hovering ravvicinato stabile per evitare collisioni da rinculo o frammentazione.
+  - Recupero dei frammenti minerali fluttuanti tramite il fascio magnetico del *Service Drone* e stivaggio istantaneo nella stiva cargo della nave.
+- **Scavenging e Spoglio di Relitti Spaziali (Derelict Salvage)**:
+  - Esplorazione e spoglio di vascelli distrutti, stazioni abbandonate e detriti bellici nello spazio profondo.
+  - L'Hacker neutralizza i sistemi di sicurezza automatizzati, bypassa le serrature elettroniche e abbatte i nodi ICE residui della carcassa per sbloccare i portelloni di carico.
+  - L'Ingegnere (o l'Hacker) pilota il *Service Drone* all'esterno o il *Duct Drone* all'interno dei compartimenti pressurizzati del relitto per tagliare piastre corazzate, estrarre moduli avionici integri e recuperare black box con crediti o chiavi crittografiche.
+
+---
+
+#### 5.2.6 Combattimenti Spaziali, Dogfight e Guerra Tattica Asimmetrica
+- **Cooperazione Multiruolo in Combattimento**:
+  - Gli ingaggi a fuoco contro caccia pirata, droni da ricognizione corporativi o incrociatori di pattuglia richiedono la sinergia assoluta di tutti i membri dell'equipaggio:
+    - **Pilota**: esegue manovre evasive, controlla la spinta lineare per mantenere la distanza ottimale di tiro e allinea la corvetta per garantire l'arco di tiro ottimale delle torrette dorsali e ventrali.
+    - **Soldato**: gestisce il raffreddamento e la cadenza di fuoco delle torrette laser e balistiche (*Weapons*), calcola il punto di anticipo balistico e attiva le mitragliatrici Point-Defense (PDG) contro sciami di missili in arrivo.
+    - **Ingegnere**: bilancia la distribuzione energetica dei 4 quadranti deflettenti (*Shield Matrix*), gestisce i picchi di assorbimento del generatore (*Power Grid*) e interviene tempestivamente sulle falle strutturali e sugli incendi con *Life Support*, *Duct Drone* e *Service Drone*.
+    - **Hacker**: conduce operazioni di guerra elettronica offensive e difensive (*Comms & EW*, *Diagnostics*), manomette a distanza i motori o il puntamento radar nemico con iniezioni di exploit firmware, e contrasta i virus o attacchi ICE lanciati contro i drive virtuali della corvetta.
+- **Integrazione Danni Sistemici e Stati di Allarme**:
+  - I colpi subiti non riducono una semplice barra di vita astratta, ma generano danni fisici localizzati ai componenti della nave: falle strutturali (`dmg_breach`), cortocircuiti nei condotti elettrici, guasti all'array radar, avarie ai giroscopi RCS e perdite progressive di atmosfera.
+  - Troppi danni accumulati possono determinare lo spegnimento a cascata dei sistemi ausiliari, il collasso del reattore principale o la distruzione dell'unità.
+  - Un indicatore diegetico di **Emergenza** viene mostrato su tutti i display di bordo:
+    - *Allarme Giallo (Avaria Grave)*: integrità scafo compromessa o disattivazione di un sottosistema primario.
+    - *Allarme Rosso (Pericolo Distruzione Imminente / Breccia Critica)*: fallimento catastrofico dei sistemi con conto alla rovescia per l'evacuazione o la perdita totale della corvetta.
 ---
 
 ## 6. Schema Architetturale di Riferimento per Nuove App
-
 Ogni nuova applicazione pianificata nella Roadmap deve rispettare rigorosamente il modello architetturale definito in [`docs/APP_ARCHITECTURE_STANDARD.md`](APP_ARCHITECTURE_STANDARD.md):
 
 ```text
@@ -421,4 +557,4 @@ Il presente documento fornisce la visione completa, organica e integrata di *Dar
 
 Attraverso la combinazione dell'atmosfera di frontiera in stile *Firefly*, della satira *Freemium-punk*, dell'interfaccia diegetica a finestre su **GodotOS** e della rigida matrice di cooperazione asimmetrica tra i 6 ruoli dell'equipaggio (**Capitano**, **Pilota**, **Soldato**, **Ingegnere**, **Hacker**, **Factotum**), il gioco garantisce un gameplay sandbox dinamico, teso e profondo.
 
-L'ecosistema complessivo delle 11 applicazioni della corvetta (4 esistenti + 7 pianificate nella roadmap), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.
+L'ecosistema complessivo delle 12 applicazioni della corvetta (8 esistenti/sviluppate + 4 pianificate nella roadmap), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.

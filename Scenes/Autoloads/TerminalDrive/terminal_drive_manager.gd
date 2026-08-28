@@ -97,6 +97,65 @@ config=cat "Terminal Settings.txt"
 manual=cat "Commands Reference.txt"
 """)
 
+	var term_dat_path := "%s/systems/terminal_config.dat" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(term_dat_path):
+		_write_file_content("Terminal Drive/systems/terminal_config.dat", """# GODOTOS TERMINAL RUNTIME CONFIGURATION
+# WARNING: TERMINAL CORE FIRMWARE FILE - DIRECT EDITING RESTRICTED
+[TERMINAL]
+terminal_id=DN-TERM-01
+shell=/bin/godotos-sh
+prompt_style=folder_arrow
+font_size=14
+theme_accent=matrix_green
+auto_scroll=true
+auto_focus=true
+show_welcome_banner=true
+history_max_entries=100
+security_level=OPERATIONAL
+""")
+
+	var os_dat_path := "%s/systems/godotos_core.dat" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(os_dat_path):
+		_write_file_content("Terminal Drive/systems/godotos_core.dat", """# GODOTOS CORE SYSTEM CONFIGURATION
+# WARNING: SYSTEM KERNEL FIRMWARE - DIEGETIC OS CONFIGURATION
+[OS_CORE]
+os_name=GodotOS
+version=1.2.0
+build=2026.08
+kernel=GodotOS-Kernel-v4.7
+architecture=x86_64_diegetic
+security_level=OPERATIONAL
+locale=it_IT.UTF-8
+drive_mount=LOCAL
+desktop_mode=MULTI_WINDOW
+window_manager=GODOTOS_WM
+vram_allocation_mb=512
+swap_enabled=true
+max_open_windows=16
+
+[SYSTEM_DRIVES]
+terminal_drive_mounted=true
+ship_drive_sync=NETWORK_SYNC
+network_sync=DISABLED
+""")
+
+	var desktop_dat_path := "%s/systems/desktop_config.dat" % TERMINAL_DRIVE_ROOT_DIR
+	if not FileAccess.file_exists(desktop_dat_path):
+		_write_file_content("Terminal Drive/systems/desktop_config.dat", """# GODOTOS DESKTOP & DISPLAY RUNTIME MATRIX
+[DESKTOP]
+wallpaper=default
+theme=matrix_green
+taskbar_position=BOTTOM
+animations_enabled=true
+notification_sound=true
+clock_format=24H
+resolution_scaling=1.0
+""")
+
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	if fpm:
+		fpm.set_password("Terminal Drive/systems", "ROOT-7815")
+
 func _write_file_content(rel_path: String, content: String) -> void:
 	var abs_path := "user://files/%s" % rel_path
 	var base_dir := abs_path.get_base_dir()

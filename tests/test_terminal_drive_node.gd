@@ -21,7 +21,15 @@ func _ready() -> void:
 	assert(FileAccess.file_exists("user://files/Terminal Drive/Commands Reference.txt"), "Commands Reference.txt deve esistere!")
 	assert(FileAccess.file_exists("user://files/Terminal Drive/Environment.txt"), "Environment.txt deve esistere!")
 	assert(FileAccess.file_exists("user://files/Terminal Drive/Aliases.txt"), "Aliases.txt deve esistere!")
-	print("TEST 3: File predefiniti di configurazione presenti -> OK")
+	assert(FileAccess.file_exists("user://files/Terminal Drive/systems/terminal_config.dat"), "terminal_config.dat deve esistere in systems!")
+	assert(FileAccess.file_exists("user://files/Terminal Drive/systems/godotos_core.dat"), "godotos_core.dat deve esistere in systems!")
+	assert(FileAccess.file_exists("user://files/Terminal Drive/systems/desktop_config.dat"), "desktop_config.dat deve esistere in systems!")
+	
+	var fpm: Node = get_node_or_null("/root/FolderPasswordManager")
+	if fpm:
+		assert(fpm.has_password("Terminal Drive/systems"), "Terminal Drive/systems deve essere protetto da password!")
+		assert(fpm.get_password("Terminal Drive/systems") == "ROOT-7815", "Password Terminal Drive/systems deve essere ROOT-7815")
+	print("TEST 3: File predefiniti di configurazione e cartella systems con file .dat protetti -> OK")
 	
 	# 4. Verifica lettura configurazioni con get_setting
 	var font_size: String = tdm.get_setting("FONT_SIZE", "0")
