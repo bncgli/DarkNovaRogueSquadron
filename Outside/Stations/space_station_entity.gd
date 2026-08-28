@@ -61,6 +61,7 @@ signal station_scanned(station_data: Dictionary)
 var market_catalog: Array[Dictionary] = []
 var active_contracts: Array[Dictionary] = []
 var tavern_rumors: Array[Dictionary] = []
+var warehouse_cargo: Array[Dictionary] = []
 
 func _ready() -> void:
 	_init_station_defaults()

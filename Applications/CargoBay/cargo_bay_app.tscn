@@ -1,0 +1,406 @@
+[gd_scene load_steps=2 format=3 uid="uid://cargo_bay_app_scene_001"]
+
+[ext_resource type="Script" path="res://Applications/CargoBay/cargo_bay_app.gd" id="1_cargo_script"]
+
+[node name="CargoBayApp" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cargo_script")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderPanel" type="PanelContainer" parent="MainLayout"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="MainLayout/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+
+[node name="HBox" type="HBoxContainer" parent="MainLayout/HeaderPanel/Margin"]
+layout_mode = 2
+
+[node name="Titles" type="VBoxContainer" parent="MainLayout/HeaderPanel/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "📦 GESTIONE STIVA CARGO & ECONOMIA FLUX"
+
+[node name="StatusSubLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+text = "Sistemi Cargo & Sublayer Operativi."
+
+[node name="CreditsLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "Crediti: 5000 CR"
+
+[node name="VSeparator" type="VSeparator" parent="MainLayout/HeaderPanel/Margin/HBox"]
+layout_mode = 2
+
+[node name="FluxRatingLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "FLUX Rating: [B] 720.0 pts"
+
+[node name="ContentMargin" type="MarginContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="TabContainer" type="TabContainer" parent="MainLayout/ContentMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+current_tab = 0
+
+[node name="📦 Inventario Stiva" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="CargoVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CapacitiesGrid" type="GridContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="MassStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/CapacitiesGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Massa Stiva: 0.0 / 2000.0 kg (0.0%)"
+
+[node name="VolStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/CapacitiesGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Volume Stiva: 0.0 / 100.0 m³ (0.0%)"
+
+[node name="MassProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/CapacitiesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+max_value = 2000.0
+
+[node name="VolProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/CapacitiesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+max_value = 100.0
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox"]
+layout_mode = 2
+
+[node name="HSplit" type="HSplitContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 320
+
+[node name="LeftListVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit"]
+layout_mode = 2
+
+[node name="ListLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/LeftListVBox"]
+layout_mode = 2
+text = "Merci e Moduli a Bordo:"
+
+[node name="CargoItemList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/LeftListVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BtnJettison" type="Button" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/LeftListVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🗑 Getta / Espelli Nello Spazio (Jettison)"
+
+[node name="RightDetailVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit"]
+layout_mode = 2
+
+[node name="DetailHeader" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/RightDetailVBox"]
+layout_mode = 2
+text = "Specifiche Merce Selezionata:"
+
+[node name="ItemDetailsPanel" type="PanelContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/RightDetailVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemMargin" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="ItemDetailsLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/📦 Inventario Stiva/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel/ItemMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+text = "Seleziona un articolo dalla stiva per i dettagli."
+
+[node name="🔄 Trasferimenti Logistica" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="TransferVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TransferTitle" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox"]
+layout_mode = 2
+text = "Logistica di Trasferimento Bidirezionale:"
+
+[node name="ControlsGrid" type="GridContainer" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="LblTarget" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+layout_mode = 2
+text = "Entità Bersaglio:"
+
+[node name="TargetOptionBtn" type="OptionButton" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LblDir" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+layout_mode = 2
+text = "Direzione Flusso:"
+
+[node name="DirectionOptionBtn" type="OptionButton" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LblQty" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+layout_mode = 2
+text = "Quantità Unità:"
+
+[node name="TransferSpinbox" type="SpinBox" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox/ControlsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 500.0
+value = 1.0
+
+[node name="TransferItemList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BtnExecuteTransfer" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "🔄 Esegui Trasferimento Merce"
+
+[node name="TransferStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔄 Trasferimenti Logistica/TransferVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+text = "Pronto per il trasferimento."
+
+[node name="💳 Rating FLUX & Canoni" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="FluxVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FluxScoreNumLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Punteggio Creditizio: 720.0 / 1000.0 [Rating B]"
+
+[node name="FluxScoreBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+max_value = 1000.0
+value = 720.0
+
+[node name="FluxTierDetailsLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+bbcode_enabled = true
+text = "Dettagli rating FLUX."
+
+[node name="ImpoundWarningPanel" type="PanelContainer" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="ImpoundMargin" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox/ImpoundWarningPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ImpoundWarningLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox/ImpoundWarningPanel/ImpoundMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+text = "⚠ ALLERTA SEQUESTRO NAVE IN CORSO"
+
+[node name="SubsTitle" type="Label" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+layout_mode = 2
+text = "Canoni Ricorrenti e Abbonamenti Sublayer:"
+
+[node name="SubscriptionsItemList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SubsButtonsHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+layout_mode = 2
+
+[node name="BtnPaySub" type="Button" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox/SubsButtonsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💳 Salda Canone Selezionato"
+
+[node name="BtnPayAllDebt" type="Button" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox/SubsButtonsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Estingui Tutti i Debiti"
+
+[node name="OsLockoutLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💳 Rating FLUX & Canoni/FluxVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+bbcode_enabled = true
+text = "Stato moduli OS."
+
+[node name="💾 Snapshot S-Net & ICE Hack" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="SnetVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SnetHSplit" type="HSplitContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 280
+
+[node name="SnetListVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit"]
+layout_mode = 2
+
+[node name="SnetDisksLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetListVBox"]
+layout_mode = 2
+text = "Array Dati S-Net nella Stiva:"
+
+[node name="SnetDiskList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetListVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BtnHackIce" type="Button" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetListVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "⚡ Viola Barriera ICE (Hacker)"
+
+[node name="HackStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetListVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Seleziona un array S-Net per tentare la decrittazione."
+
+[node name="SnetRightVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit"]
+layout_mode = 2
+
+[node name="SnetDiskInfoLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetRightVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+bbcode_enabled = true
+text = "Dettagli supporto dati."
+
+[node name="IntelOutputBox" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💾 Snapshot S-Net & ICE Hack/SnetVBox/SnetHSplit/SnetRightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[color=#888888]Nessun dato decifrato al momento.[/color]"
+
+[node name="DisconnectedOverlay" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="IconLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "📦 ⚠"
+horizontal_alignment = 1
+
+[node name="StatusTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "STIVA CARGO & SISTEMA FLUX OFFLINE"
+horizontal_alignment = 1
+
+[node name="StatusDesc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Nessun collegamento con i sublayer della corvetta. Avviare la missione per attivare la telemetria."
+horizontal_alignment = 1

@@ -43,6 +43,8 @@ TerminalDriveManager="*res://Scenes/Autoloads/TerminalDrive/terminal_drive_manag
 FolderPasswordManager="*res://Scenes/Autoloads/FolderPasswordManager/folder_password_manager.gd"
 ShipSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd"
 TerminalSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd"
+CargoManager="*res://Economy/cargo_manager.gd"
+FluxEconomyManager="*res://Economy/flux_economy_manager.gd"
 
 [debug]
 

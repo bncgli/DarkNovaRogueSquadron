@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_cargores"]
+
+[resource]
+script = ExtResource("1_cargores")
+roles = Array[String](["Captain", "Engineer", "Hacker", "Pilot", "Factotum", "Capitano", "Ingegnere", "Pilota"])
+power_draw_mw = 35.0
+required_subsystems = Array[String](["cargo", "comms"])
+app_id = "cargo_bay"
+title = "Stiva Cargo & FLUX"
+description = "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net."
+category = "Sistemi Nave"
+icon_color = Color(0.95, 0.65, 0.15, 1)
+scene_path = "res://Applications/CargoBay/cargo_bay_app.tscn"
+default_window_size = Vector2(760, 560)
+drive_folder = "Programs/CargoBay"
+default_password = "CARG-7815"
+default_files = Array[Dictionary]([{
+"content": "[SYSTEM]
+app_name=CargoBayApp
+version=1.0.0
+status=OPERATIONAL
+
+[LIMITS]
+max_mass_kg=2000.0
+max_volume_m3=100.0
+
+[ECONOMY]
+default_flux_score=720.0
+impound_warning_sec=120.0
+",
+"desc": "Configurazione stiva cargo, capacità volumetrica/massa e rating creditizio FLUX.",
+"is_protected": true,
+"path": "Ship Drive/Programs/CargoBay/cargo_bay_config.dat"
+}])

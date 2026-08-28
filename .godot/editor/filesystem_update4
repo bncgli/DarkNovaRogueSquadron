@@ -21,3 +21,8 @@ res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
 res://Applications/StationHub/station_hub_app.gd
 res://tests/test_stations_docking.gd
 res://Outside/Stations/docking_manager.gd
+res://Outside/Stations/space_station_entity.gd
+res://Economy/cargo_manager.gd
+res://Economy/flux_economy_manager.gd
+res://Applications/CargoBay/cargo_bay_app.gd
+res://tests/test_flux_economy_cargo.gd

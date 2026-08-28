@@ -718,6 +718,7 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/LifeSupport": "LIFE-7815",
 		"Ship Drive/Programs/Logbook": "LOGS-7815",
 		"Ship Drive/Programs/ServiceDrone": "SERV-7815",
+		"Ship Drive/Programs/CargoBay": "CARG-7815",
 		"Ship Drive/systems": "ROOT-7815"
 	}
 
@@ -818,6 +819,14 @@ func _init_default_installed_apps() -> void:
 			"scene_path": "res://Applications/ServiceDrone/service_drone_app.tscn",
 			"icon_color": Color(0.9, 0.5, 0.2, 1.0),
 			"roles": ["Ingegnere", "Hacker", "Capitano", "Factotum", "Engineer", "Captain"]
+		},
+		{
+			"id": "cargo_bay",
+			"title": "Stiva Cargo & FLUX",
+			"description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
+			"scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
+			"icon_color": Color(0.95, 0.65, 0.15, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Hacker", "Pilota", "Factotum", "Captain", "Engineer", "Pilot"]
 		}
 	]
 
