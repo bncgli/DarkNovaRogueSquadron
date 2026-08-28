@@ -26,6 +26,7 @@ Il sistema fornisce una mappa tattica spaziale 2D/3D con radar a lungo raggio fi
    └── Sensors/
        ├── sensors_app.tscn          # Scena principale (Control UI, dimensioni 750x550)
        ├── sensors_app.gd            # Script controller interfaccia
+       ├── sensors_app.tres          # Risorsa ShipAppResource con metadati, RBAC e file .dat
        └── Components/               # Componenti e widget dedicati
            ├── radar_display.tscn    # Widget radar polare/cartesiano
            └── radar_display.gd
@@ -104,16 +105,22 @@ Lo script controller deve implementare il pattern standard di `APP_ARCHITECTURE_
 
 ---
 
-## 7. Integrazione con ShipBlueprint & Sublayer
-- **Sublayer 3 (Rete Elettrica)**: Consumo associato al dispositivo `sensors_radar` (40 MW in sweep passivo, 120 MW in ping attivo).
-- **Sublayer 4 (Danni)**: Generazione di falsi positivi / "radar ghosts" o zone d'ombra in caso di danni al radar.
-- **Sublayer 6 (Mainframe Installed Apps)**: Registrare l'app in `installed_apps` di `ShipBlueprint`:
-  - `id`: `"sensors"`
+## 7. Integrazione con ShipSoftwareManager, ShipBlueprint & Sublayer
+- **ShipAppResource (`sensors_app.tres`)**:
+  - `app_id`: `"sensors"`
   - `title`: `"Array Sensori & Mappa Tattica"`
   - `description`: `"Mappa telemetrica spaziale a lungo raggio e spettrometria"`
   - `scene_path`: `"res://Applications/Sensors/sensors_app.tscn"`
   - `icon_color`: `Color(0.2, 0.8, 0.4)`
   - `roles`: `["Soldier", "Hacker", "Captain", "Factotum"]`
+  - `power_draw_mw`: `40.0` (fino a 120 MW in ping attivo)
+  - `required_subsystems`: `["sensors_array"]`
+  - `drive_folder`: `"Programs/Sensors"`
+  - `default_password`: `"SENS-7815"`
+  - `default_files`: configurazioni `sensors_config.dat` e `radar_tuning.dat`.
+- **Sublayer 3 (Rete Elettrica)**: Consumo associato al dispositivo `sensors_radar` (40 MW in sweep passivo, 120 MW in ping attivo).
+- **Sublayer 4 (Danni)**: Generazione di falsi positivi / "radar ghosts" o zone d'ombra in caso di danni al radar.
+- **Sublayer 6 (Mainframe Installed Apps)**: Registrare la risorsa in `DEFAULT_SHIP_APP_PATHS` di `ShipSoftwareManager` e in `installed_apps` di `ShipBlueprint`.
 
 ---
 
@@ -124,13 +131,15 @@ Creare i file di test headless secondo lo standard:
   1. **Overlay / Ciclo di Vita**: Verifica che `%DisconnectedOverlay` sia visibile offline e scompaia al segnale `ship_connection_changed(true)`.
   2. **RBAC**: Verifica che i controlli di scansione attiva siano abilitati solo per Soldato, Hacker, Capitano, Factotum e Solo Mode.
   3. **File .DAT e Hot-Reload**: Verifica parsing corretto di `sensors_config.dat` e `radar_tuning.dat` e ricaricamento su modifica.
-  4. **Pulizia Segnali**: Verifica assenza di leak o segnali orfani dopo `_exit_tree()`.
+  4. **Risorsa e Software Manager**: Verifica che `sensors_app.tres` sia registrata e caricata correttamente da `ShipSoftwareManager`.
+  5. **Pulizia Segnali**: Verifica assenza di leak o segnali orfani dopo `_exit_tree()`.
 
 ---
 
 ## 9. Checklist di Verifica Finale (Conforme a APP_ARCHITECTURE_STANDARD.md)
 - [ ] Flusso Git completato: sviluppo su `applications/Sensors`, commit finale e merge in `main`.
 - [ ] Rispetto della tipologia Server (Nave) con blocco offline.
+- [ ] Creata risorsa `ShipAppResource` (`sensors_app.tres`) e registrata in `ShipSoftwareManager` e `ShipBlueprint`.
 - [ ] Cartella protetta `Ship Drive/Programs/Sensors/` creata con password `SENS-7815`.
 - [ ] File `.dat` non leggibili da File Reader e parsing tramite `_parse_dat_file`.
 - [ ] Hot-reloading attivo su `file_modified` e pulsante `🔄 Ricarica .DAT` presente nella UI.

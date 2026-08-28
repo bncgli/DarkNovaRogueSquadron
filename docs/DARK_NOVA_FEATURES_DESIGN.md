@@ -524,30 +524,34 @@ Ogni nuova applicazione pianificata nella Roadmap deve rispettare rigorosamente 
 Applications/NomeApplicazione/
 ├── nome_app.tscn           # Scena UI (Control) con %DisconnectedOverlay
 ├── nome_app.gd             # Controller con parsing .DAT, hot-reloading e RBAC
+├── nome_app.tres           # Risorsa ShipAppResource o TerminalAppResource
 ├── Componenti/             # Sotto-scene, widget modulari o finestre figlie
-└── tests/test_nome_app.gd  # Test headless per verificare overlay offline/online, RBAC e .DAT
+└── tests/test_nome_app.gd  # Test headless per verificare overlay offline/online, risorsa .tres, RBAC e .DAT
 ```
 
 ### Regole Vincolanti per lo Sviluppo:
 1. **Branch Dedicato**: Creare e utilizzare sempre il branch `applications/[NomeApp]` prima di apportare modifiche (es. `applications/Weapons`).
-2. **Ciclo di Vita e Overlay Offline**: Tutte le applicazioni della nave devono includere il nodo `%DisconnectedOverlay` ed essere disabilitate prima del decollo (`not SpaceWorldManager.is_ship_connected()`).
-3. **Cartella Protetta e File `.dat`**:
+2. **Definizione Risorsa `.tres`**: Creare la risorsa esportabile (`ShipAppResource` per app di bordo o `TerminalAppResource` per app locali) impostando ID, metadati, percorsi scene, dimensioni finestra, assorbimento energetico e array dei ruoli RBAC.
+3. **Ciclo di Vita e Overlay Offline**: Tutte le applicazioni della nave devono includere il nodo `%DisconnectedOverlay` ed essere disabilitate prima del decollo (`not SpaceWorldManager.is_ship_connected()`).
+4. **Cartella Protetta e File `.dat`**:
    - Salvataggio in `Ship Drive/Programs/[NomeApp]/` con password predefinita dal Cheat-Sheet Master (Sezione 2.6).
+   - I file `.dat` e le password di default sono definiti nella proprietà `default_files` e `default_password` della risorsa e popolati automaticamente da `ShipSoftwareManager`.
    - Utilizzo del metodo standard `_parse_dat_file()` per il parsing INI con type-casting.
-   - Iscrizione al segnale `ShipDriveManager.file_written` per supportare l'**Hot-Reloading** immediato dei parametri a runtime.
-4. **Adattamento Dimensionale**: Impostare `custom_minimum_size` calibrata senza sbordamenti oltre i confini della finestra, con layout reattivo (`Anchors` e `Containers`).
-5. **Integrazione con `ShipBlueprint` (Sublayer 6)**:
-   - Registrazione dell'applicazione nel catalogo `installed_apps` della blueprint con ID, titolo, icona e array dei ruoli autorizzati (`roles`).
+   - Iscrizione al segnale `ShipDriveManager.file_modified` per supportare l'**Hot-Reloading** immediato dei parametri a runtime.
+5. **Adattamento Dimensionale**: Impostare `custom_minimum_size` calibrata senza sbordamenti oltre i confini della finestra, con layout reattivo (`Anchors` e `Containers`).
+6. **Integrazione con `ShipSoftwareManager` e `ShipBlueprint` (Sublayer 6)**:
+   - Registrazione della risorsa nel catalogo `ShipSoftwareManager` e nell'array `installed_apps` di `ShipBlueprint`.
    - Popolamento dinamico nel menu Start di GodotOS all'evento `start_mission()`, visualizzando solo le app consentite per il ruolo del giocatore locale.
-6. **Protezione Diegetica e Hackwarfare**:
+7. **Protezione Diegetica e Hackwarfare**:
    - I file `.dat` non sono leggibili né modificabili via `cat` o text editor standard (blocco per file binari/protetti).
    - Qualsiasi modifica clandestina deve avvenire tramite le meccaniche dedicate dell'Hacker o del modulo Diagnostics.
-7. **Suite di Test Headless**:
+8. **Suite di Test Headless**:
    - Creazione del test in `tests/test_[nome_app].gd` che verifichi:
      - Overlay visibile in stato disconnesso / offline.
      - Sblocco e reattività in stato connesso (`start_mission()`).
      - Rispetto dei permessi RBAC (azioni consentite per il ruolo assegnato e bloccate/in sola lettura per gli altri).
      - Caricamento e aggiornamento dei parametri `.dat`.
+     - Integrazione con la risorsa `.tres` e il relativo Software Manager.
 
 ---
 

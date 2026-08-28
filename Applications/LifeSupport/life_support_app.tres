@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_lifesup"]
+
+[resource]
+script = ExtResource("1_lifesup")
+roles = Array[String](["Engineer", "Captain", "Factotum", "Ingegnere", "Capitano"])
+power_draw_mw = 20.0
+required_subsystems = Array[String](["life_support_generator"])
+app_id = "life_support"
+title = "Supporto Vitale & Atmosfera"
+description = "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio"
+category = "Sistemi Nave"
+icon_color = Color(0.2, 0.7, 0.9, 1)
+scene_path = "res://Applications/LifeSupport/life_support_app.tscn"
+default_window_size = Vector2(700, 500)
+drive_folder = "Programs/LifeSupport"
+default_password = "LIFE-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA LIFE SUPPORT & ATMOSPHERE CONTROL CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME ATMOSPHERE FIRMWARE
+[SYSTEM]
+app_name=LifeSupportApp
+version=1.0.0
+status=OPERATIONAL
+
+[OXYGEN]
+o2_generation_rate=1.2
+seal_door_speed=0.5
+auto_fire_suppress=false
+",
+"desc": "Configurazione generazione O2, velocità sigillatura paratie e automazione antincendio.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/life_support_config.dat"
+}, {
+"content": "# ATMOSPHERE TUNING & DECOMPRESSION PARAMETERS MATRIX
+[PARAMETERS]
+decompression_rate=1.8
+fire_suppression_co2_level=0.45
+scrubber_efficiency=0.98
+",
+"desc": "Parametri di decompressione rapida, livelli gas inerte e efficienza scrubber CO2.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/atmo_tuning.dat"
+}])

@@ -25,7 +25,8 @@ L'applicazione funge da registro di bordo ufficiale, diario delle operazioni di 
    Applications/
    └── Logbook/
        ├── logbook_app.tscn          # Scena principale (Control UI, dimensioni 600x450)
-       └── logbook_app.gd            # Script controller interfaccia
+       ├── logbook_app.gd            # Script controller interfaccia
+       └── logbook_app.tres          # Risorsa ShipAppResource con metadati, RBAC e file .dat
 
    tests/
    ├── test_logbook_app.tscn         # Scena runner per test headless
@@ -104,14 +105,20 @@ Lo script controller deve implementare il pattern standard di `APP_ARCHITECTURE_
 
 ---
 
-## 7. Integrazione con ShipBlueprint & Sessione di Gioco
-- **Sublayer 6 (Mainframe Installed Apps)**: Registrare l'app in `installed_apps` di `ShipBlueprint`:
-  - `id`: `"logbook"`
+## 7. Integrazione con ShipSoftwareManager, ShipBlueprint & Sessione di Gioco
+- **ShipAppResource (`logbook_app.tres`)**:
+  - `app_id`: `"logbook"`
   - `title`: `"Registro di Bordo & Obiettivi"`
   - `description`: `"Diario di volo, contratti sandbox, scatola nera ed eventi"`
   - `scene_path`: `"res://Applications/Logbook/logbook_app.tscn"`
   - `icon_color`: `Color(0.8, 0.7, 0.2)`
   - `roles`: `["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker"]`
+  - `power_draw_mw`: `5.0`
+  - `required_subsystems`: `[]`
+  - `drive_folder`: `"Programs/Logbook"`
+  - `default_password`: `"LOGS-7815"`
+  - `default_files`: configurazioni `logbook_config.dat` e `journal_tuning.dat`.
+- **Sublayer 6 (Mainframe Installed Apps)**: Registrare la risorsa in `DEFAULT_SHIP_APP_PATHS` di `ShipSoftwareManager` e in `installed_apps` di `ShipBlueprint`.
 - **Economia Persistente**: Connessione con il registro di fondi FLUX e crediti nave per riscossione contratti.
 
 ---
@@ -123,13 +130,15 @@ Creare i file di test headless secondo lo standard:
   1. **Overlay / Ciclo di Vita**: Verifica che `%DisconnectedOverlay` sia visibile offline e scompaia al segnale `ship_connection_changed(true)`.
   2. **RBAC**: Verifica che le azioni contrattuali siano riservate al Capitano/Factotum mentre la lettura e l'inserimento note siano aperti a tutti.
   3. **File .DAT e Hot-Reload**: Verifica parsing corretto di `logbook_config.dat` e `journal_tuning.dat` e hot-reloading su modifica.
-  4. **Pulizia Segnali**: Verifica assenza di memory leak o segnali orfani dopo `_exit_tree()`.
+  4. **Risorsa e Software Manager**: Verifica che `logbook_app.tres` sia registrata e gestita correttamente da `ShipSoftwareManager`.
+  5. **Pulizia Segnali**: Verifica assenza di memory leak o segnali orfani dopo `_exit_tree()`.
 
 ---
 
 ## 9. Checklist di Verifica Finale (Conforme a APP_ARCHITECTURE_STANDARD.md)
 - [ ] Flusso Git completato: sviluppo su `applications/Logbook`, commit finale e merge in `main`.
 - [ ] Rispetto della tipologia Server (Nave) con blocco offline.
+- [ ] Creata risorsa `ShipAppResource` (`logbook_app.tres`) e registrata in `ShipSoftwareManager` e `ShipBlueprint`.
 - [ ] Cartella protetta `Ship Drive/Programs/Logbook/` creata con password `LOGS-7815`.
 - [ ] File `.dat` non leggibili da File Reader e parsing tramite `_parse_dat_file`.
 - [ ] Hot-reloading attivo su `file_modified` e pulsante `🔄 Ricarica .DAT` presente nella UI.

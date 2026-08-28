@@ -895,6 +895,32 @@ stealth_detection_threshold=0.35
 "is_protected": true,
 "path": "Ship Drive/Programs/Sensors/radar_tuning.dat"
 }, {
+"content": "# DARK NOVA LIFE SUPPORT & ATMOSPHERE CONTROL CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME ATMOSPHERE FIRMWARE
+[SYSTEM]
+app_name=LifeSupportApp
+version=1.0.0
+status=OPERATIONAL
+
+[OXYGEN]
+o2_generation_rate=1.2
+seal_door_speed=0.5
+auto_fire_suppress=false
+",
+"desc": "Configurazione generazione O2, velocità sigillatura paratie e automazione antincendio.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/life_support_config.dat"
+}, {
+"content": "# ATMOSPHERE TUNING & DECOMPRESSION PARAMETERS MATRIX
+[PARAMETERS]
+decompression_rate=1.8
+fire_suppression_co2_level=0.45
+scrubber_efficiency=0.98
+",
+"desc": "Parametri di decompressione rapida, livelli gas inerte e efficienza scrubber CO2.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/atmo_tuning.dat"
+}, {
 "content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
 # WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
 [BLUEPRINT_METADATA]
@@ -957,6 +983,7 @@ drive_passwords = {
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/Sensors": "SENS-7815",
+"Ship Drive/Programs/LifeSupport": "LIFE-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815",
 "Ship Drive/systems": "ROOT-7815"
@@ -1024,4 +1051,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"],
 "scene_path": "res://Applications/Sensors/sensors_app.tscn",
 "title": "Array Sensori & Mappa Tattica"
+}, {
+"description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
+"icon_color": Color(0.2, 0.7, 0.9, 1),
+"id": "life_support",
+"roles": ["Ingegnere", "Capitano", "Factotum", "Engineer", "Captain"],
+"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
+"title": "Supporto Vitale & Atmosfera"
 }])

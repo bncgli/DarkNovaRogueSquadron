@@ -26,6 +26,7 @@ L'applicazione controlla un drone teleguidato extra-veicolare (EVA) per ispezion
    └── ServiceDrone/
        ├── service_drone_app.tscn         # Scena principale (Control UI, dimensioni 720x520)
        ├── service_drone_app.gd           # Script controller interfaccia
+       ├── service_drone_app.tres         # Risorsa ShipAppResource con metadati, RBAC e file .dat
        └── Components/                    # Componenti e widget UI di controllo braccio/thruster
            ├── manipulator_control.tscn
            └── manipulator_control.gd
@@ -112,17 +113,23 @@ Lo script controller deve implementare il pattern standard di `APP_ARCHITECTURE_
 
 ---
 
-## 7. Integrazione con Sublayer ed Entità 3D
-- **Simulazione 3D (`SpaceWorldManager`)**: Spawning e gestione dell'entità 3D `ServiceDrone` attorno alla corvetta (raggio max 1500 m).
-- **Sublayer 3 (Rete Elettrica)**: Baia droni esterna (`service_bay`, 80 MW in standby, 140 MW in ricarica rapida).
-- **Sublayer 4 (Danni)**: Interazione diretta con le coordinate di breccia scafo per la saldatura e il ripristino.
-- **Sublayer 6 (Mainframe Installed Apps)**: Registrare l'app in `installed_apps` di `ShipBlueprint`:
-  - `id`: `"service_drone"`
+## 7. Integrazione con ShipSoftwareManager, Sublayer ed Entità 3D
+- **ShipAppResource (`service_drone_app.tres`)**:
+  - `app_id`: `"service_drone"`
   - `title`: `"Drone di Servizio EVA"`
   - `description`: `"Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser"`
   - `scene_path`: `"res://Applications/ServiceDrone/service_drone_app.tscn"`
   - `icon_color`: `Color(0.9, 0.5, 0.2)`
   - `roles`: `["Engineer", "Hacker", "Captain", "Factotum"]`
+  - `power_draw_mw`: `80.0`
+  - `required_subsystems`: `["service_bay"]`
+  - `drive_folder`: `"Programs/ServiceDrone"`
+  - `default_password`: `"SERV-7815"`
+  - `default_files`: configurazioni `service_drone_config.dat` e `manipulator_tuning.dat`.
+- **Simulazione 3D (`SpaceWorldManager`)**: Spawning e gestione dell'entità 3D `ServiceDrone` attorno alla corvetta (raggio max 1500 m).
+- **Sublayer 3 (Rete Elettrica)**: Baia droni esterna (`service_bay`, 80 MW in standby, 140 MW in ricarica rapida).
+- **Sublayer 4 (Danni)**: Interazione diretta con le coordinate di breccia scafo per la saldatura e il ripristino.
+- **Sublayer 6 (Mainframe Installed Apps)**: Registrare la risorsa in `DEFAULT_SHIP_APP_PATHS` di `ShipSoftwareManager` e in `installed_apps` di `ShipBlueprint`.
 
 ---
 
@@ -133,13 +140,15 @@ Creare i file di test headless secondo lo standard:
   1. **Overlay / Ciclo di Vita**: Verifica che `%DisconnectedOverlay` sia visibile offline e scompaia al segnale `ship_connection_changed(true)`.
   2. **RBAC**: Verifica che i comandi di decollo drone e braccio siano attivi solo per Ingegnere, Hacker, Capitano, Factotum e Solo Mode.
   3. **File .DAT e Hot-Reload**: Verifica parsing corretto di `service_drone_config.dat` e `manipulator_tuning.dat` e hot-reloading su modifica.
-  4. **Pulizia Segnali**: Verifica assenza di memory leak o segnali orfani dopo `_exit_tree()`.
+  4. **Risorsa e Software Manager**: Verifica che `service_drone_app.tres` sia registrata e caricata correttamente da `ShipSoftwareManager`.
+  5. **Pulizia Segnali**: Verifica assenza di memory leak o segnali orfani dopo `_exit_tree()`.
 
 ---
 
 ## 9. Checklist di Verifica Finale (Conforme a APP_ARCHITECTURE_STANDARD.md)
 - [ ] Flusso Git completato: sviluppo su `applications/ServiceDrone`, commit finale e merge in `main`.
 - [ ] Rispetto della tipologia Server (Nave) con blocco offline.
+- [ ] Creata risorsa `ShipAppResource` (`service_drone_app.tres`) e registrata in `ShipSoftwareManager` e `ShipBlueprint`.
 - [ ] Cartella protetta `Ship Drive/Programs/ServiceDrone/` creata con password `SERV-7815`.
 - [ ] File `.dat` non leggibili da File Reader e parsing tramite `_parse_dat_file`.
 - [ ] Hot-reloading attivo su `file_modified` e pulsante `🔄 Ricarica .DAT` presente nella UI.

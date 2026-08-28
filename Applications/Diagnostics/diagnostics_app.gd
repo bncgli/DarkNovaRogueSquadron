@@ -163,6 +163,13 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
 			"Ship Drive/Programs/Sensors/radar_tuning.dat": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n"
 		}
+	},
+	"LifeSupport": {
+		"folder": "Ship Drive/Programs/LifeSupport",
+		"files": {
+			"Ship Drive/Programs/LifeSupport/life_support_config.dat": "# DARK NOVA LIFE SUPPORT & ATMOSPHERE CONTROL CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME ATMOSPHERE FIRMWARE\n[SYSTEM]\napp_name=LifeSupportApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[OXYGEN]\no2_generation_rate=1.2\nseal_door_speed=0.5\nauto_fire_suppress=false\n",
+			"Ship Drive/Programs/LifeSupport/atmo_tuning.dat": "# ATMOSPHERE TUNING & DECOMPRESSION PARAMETERS MATRIX\n[PARAMETERS]\ndecompression_rate=1.8\nfire_suppression_co2_level=0.45\nscrubber_efficiency=0.98\n"
+		}
 	}
 }
 
@@ -212,6 +219,7 @@ func _init_ui_dropdowns() -> void:
 		subsystem_option.add_item("Comms & EW (Subspazio & Cifrari)", 7)
 		subsystem_option.add_item("Diagnostics (Sicurezza & ICE)", 8)
 		subsystem_option.add_item("Sensors (Array Radar 50km)", 9)
+		subsystem_option.add_item("Life Support (Supporto Vitale & O2)", 10)
 		subsystem_option.selected = 0
 
 func _connect_system_signals() -> void:
@@ -551,6 +559,7 @@ func _perform_actual_threat_scan() -> void:
 			"Ship Drive/Programs/Comms": "COMM-7815",
 			"Ship Drive/Programs/Diagnostics": "DIAG-7815",
 			"Ship Drive/Programs/Sensors": "SENS-7815",
+			"Ship Drive/Programs/LifeSupport": "LIFE-7815",
 			"Ship Drive/systems": "ROOT-7815",
 			"Terminal Drive/systems": "ROOT-7815"
 		}
@@ -787,6 +796,7 @@ func _on_factory_reset_pressed() -> void:
 		7: target_sub = "Comms"
 		8: target_sub = "Diagnostics"
 		9: target_sub = "Sensors"
+		10: target_sub = "LifeSupport"
 		_: target_sub = "ALL"
 	
 	start_factory_reset(target_sub)

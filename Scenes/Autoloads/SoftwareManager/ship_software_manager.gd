@@ -21,7 +21,8 @@ const DEFAULT_SHIP_APP_PATHS: Array[String] = [
 	"res://Applications/Weapons/weapons_app.tres",
 	"res://Applications/ShieldMatrix/shield_matrix_app.tres",
 	"res://Applications/Diagnostics/diagnostics_app.tres",
-	"res://Applications/Sensors/sensors_app.tres"
+	"res://Applications/Sensors/sensors_app.tres",
+	"res://Applications/LifeSupport/life_support_app.tres"
 ]
 
 func _ready() -> void:
