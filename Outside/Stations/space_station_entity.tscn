@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://station_alpha_outpost_001"]
+
+[ext_resource type="Script" path="res://Outside/Stations/space_station_entity.gd" id="1_station_script"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_station_core"]
+top_radius = 12.0
+bottom_radius = 12.0
+height = 30.0
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 25.0
+outer_radius = 32.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(65.0, 35.0, 65.0)
+
+[node name="SpaceStationEntity" type="Node3D"]
+script = ExtResource("1_station_script")
+
+[node name="MeshCore" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_station_core")
+
+[node name="MeshHabitatRing" type="MeshInstance3D" parent="."]
+mesh = SubResource("TorusMesh_ring")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+shape = SubResource("BoxShape3D_collision")
+
+[node name="DockingBay01" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 15)
+
+[node name="DockingBay02" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, 0)
+
+[node name="DockingBay03" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)

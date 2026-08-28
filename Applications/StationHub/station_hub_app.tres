@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_shres"]
+
+[resource]
+script = ExtResource("1_shres")
+roles = Array[String](["Captain", "Engineer", "Hacker", "Pilot", "Factotum", "Capitano", "Ingegnere", "Pilota"])
+power_draw_mw = 40.0
+required_subsystems = Array[String](["comms", "navigation"])
+app_id = "station_hub"
+title = "Hub Servizi Portuali"
+description = "Interfaccia diegetica servizi di stazione: Cantiere, Mercato Firmware, Bacheca Contratti e Taverna."
+category = "Sistemi Nave"
+icon_color = Color(0.2, 0.8, 0.7, 1)
+scene_path = "res://Applications/StationHub/station_hub_app.tscn"
+default_window_size = Vector2(740, 540)
+drive_folder = "Programs/StationHub"
+default_password = "STTN-7815"
+default_files = Array[Dictionary]([{
+"content": "[SYSTEM]
+app_name=StationHubApp
+version=1.0.0
+status=OPERATIONAL
+
+[SERVICES]
+auto_handshake=true
+default_credits=5000
+allow_firmware_trade=true
+logbook_sync=true
+",
+"desc": "Configurazione docking suite, crediti e autorizzazioni servizi portuali.",
+"is_protected": true,
+"path": "Ship Drive/Programs/StationHub/station_hub_config.dat"
+}])

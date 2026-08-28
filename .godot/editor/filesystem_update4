@@ -13,3 +13,11 @@ res://Outside/spaceship.gd
 res://Outside/space_world_manager.gd
 res://Outside/ShipSystems/cruise_drive_controller.gd
 res://tests/test_cruise_drive.gd
+res://addons/star_system_editor/star_system_canvas.gd
+res://addons/star_system_editor/star_system_editor_plugin.gd
+res://Applications/FlightControl/flight_control_app.gd
+res://Applications/FlightControl/Componenti/cruise_control_panel.gd
+res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
+res://Applications/StationHub/station_hub_app.gd
+res://tests/test_stations_docking.gd
+res://Outside/Stations/docking_manager.gd
