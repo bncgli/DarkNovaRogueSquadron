@@ -40,6 +40,8 @@ SpaceWorldManager="*res://Outside/space_world_manager.gd"
 ShipDriveManager="*res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd"
 TerminalDriveManager="*res://Scenes/Autoloads/TerminalDrive/terminal_drive_manager.gd"
 FolderPasswordManager="*res://Scenes/Autoloads/FolderPasswordManager/folder_password_manager.gd"
+ShipSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd"
+TerminalSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd"
 
 [debug]
 

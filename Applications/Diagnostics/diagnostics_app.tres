@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_8e5iy"]
+
+[resource]
+script = ExtResource("1_8e5iy")
+roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Factotum"])
+power_draw_mw = 10.0
+required_subsystems = Array[String](["ship_core", "security_ice"])
+app_id = "diagnostics"
+title = "System Diagnostics"
+description = "Centro sicurezza cyber, scansione minacce drive e barriere ICE"
+category = "Sistemi Nave"
+icon_color = Color(0.2, 0.9, 0.7, 1)
+scene_path = "res://Applications/Diagnostics/diagnostics_app.tscn"
+default_window_size = Vector2(680, 500)
+drive_folder = "Programs/Diagnostics"
+default_password = "DIAG-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION
+# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION
+[SYSTEM]
+app_name=Diagnostics
+version=1.0.4
+status=OPERATIONAL
+diagnostics_subsystem=ACTIVE
+
+[SCANNER_SETTINGS]
+scan_depth=DEEP
+auto_quarantine_malware=true
+alert_sound=true
+scan_speed_multiplier=1.0
+tamper_detection_level=HIGH
+log_telemetry_integrity=true
+",
+"desc": "Configurazione scanner di integrità, rilevamento malware e parametri di allarme.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/diagnostics_config.dat"
+}, {
+"content": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX
+[ICE_DEFENSE]
+ice_firewall_strength=100.0
+factory_reset_delay_sec=3.0
+tamper_detection_level=HIGH
+ice_recharge_rate=5.0
+malware_purge_efficiency=1.0
+overclock_bypass_security=false
+",
+"desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/security_tuning.dat"
+}])

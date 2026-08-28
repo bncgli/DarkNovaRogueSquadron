@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_eoua1"]
+
+[resource]
+script = ExtResource("1_eoua1")
+roles = Array[String](["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"])
+power_draw_mw = 18.0
+required_subsystems = Array[String](["sensors_array", "tactical_radar"])
+app_id = "sensors"
+title = "Array Sensori & Mappa Tattica"
+description = "Mappa telemetrica spaziale a lungo raggio e spettrometria"
+category = "Sistemi Nave"
+icon_color = Color(0.2, 0.8, 0.4, 1)
+scene_path = "res://Applications/Sensors/sensors_app.tscn"
+default_window_size = Vector2(750, 520)
+drive_folder = "Programs/Sensors"
+default_password = "SENS-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE
+[SYSTEM]
+app_name=SensorsApp
+version=1.0.0
+status=OPERATIONAL
+
+[SWEEP]
+sweep_frequency_hz=12.0
+active_ping_radius=50000.0
+noise_filter=0.92
+",
+"desc": "Configurazione frequenza sweep, raggio ping attivo e filtri rumore sensori.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Sensors/sensors_config.dat"
+}, {
+"content": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX
+[TUNING]
+spectrum_sensitivity=1.0
+iff_auto_tag=true
+stealth_detection_threshold=0.35
+",
+"desc": "Sensibilità spettrometrica, marcatura automatica IFF e soglia stealth.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Sensors/radar_tuning.dat"
+}])

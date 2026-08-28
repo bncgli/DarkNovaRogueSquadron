@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="TerminalAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/terminal_app_resource.gd" id="1_ykulu"]
+
+[resource]
+script = ExtResource("1_ykulu")
+is_system_app = true
+terminal_command = "terminal"
+is_pinned_to_taskbar = true
+app_id = "terminal"
+title = "Terminale Shell UNIX"
+description = "Terminale Shell diegetico UNIX GodotOS"
+category = "Terminale Locale"
+icon_color = Color(0.2, 0.9, 0.4, 1)
+scene_path = "res://Applications/Terminal/src/terminal_scene.tscn"
+default_window_size = Vector2(700, 450)
+drive_folder = "systems"
+default_password = "ROOT-7815"
+default_files = Array[Dictionary]([{
+"content": "# GODOTOS TERMINAL RUNTIME CONFIGURATION
+# WARNING: TERMINAL CORE FIRMWARE FILE - DIRECT EDITING RESTRICTED
+[TERMINAL]
+terminal_id=DN-TERM-01
+shell=/bin/godotos-sh
+prompt_style=folder_arrow
+font_size=14
+theme_accent=matrix_green
+auto_scroll=true
+auto_focus=true
+show_welcome_banner=true
+history_max_entries=100
+security_level=OPERATIONAL
+",
+"desc": "Configurazione runtime del terminale UNIX",
+"is_protected": true,
+"path": "Terminal Drive/systems/terminal_config.dat"
+}, {
+"content": "# GODOTOS CORE SYSTEM CONFIGURATION
+# WARNING: SYSTEM KERNEL FIRMWARE - DIEGETIC OS CONFIGURATION
+[OS_CORE]
+os_name=GodotOS
+version=1.2.0
+build=2026.08
+kernel=GodotOS-Kernel-v4.7
+architecture=x86_64_diegetic
+security_level=OPERATIONAL
+locale=it_IT.UTF-8
+drive_mount=LOCAL
+desktop_mode=MULTI_WINDOW
+window_manager=GODOTOS_WM
+vram_allocation_mb=512
+swap_enabled=true
+max_open_windows=16
+
+[SYSTEM_DRIVES]
+terminal_drive_mounted=true
+ship_drive_sync=NETWORK_SYNC
+network_sync=DISABLED
+",
+"desc": "Configurazione kernel di sistema",
+"is_protected": true,
+"path": "Terminal Drive/systems/godotos_core.dat"
+}, {
+"content": "# GODOTOS DESKTOP & DISPLAY RUNTIME MATRIX
+[DESKTOP]
+wallpaper=default
+theme=matrix_green
+taskbar_position=BOTTOM
+animations_enabled=true
+notification_sound=true
+clock_format=24H
+resolution_scaling=1.0
+",
+"desc": "Parametri display e window manager",
+"is_protected": true,
+"path": "Terminal Drive/systems/desktop_config.dat"
+}])

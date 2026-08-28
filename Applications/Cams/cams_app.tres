@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_656yp"]
+
+[resource]
+script = ExtResource("1_656yp")
+roles = Array[String](["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Factotum"])
+power_draw_mw = 8.0
+required_subsystems = Array[String](["sensors_optics"])
+app_id = "cams"
+title = "Cams"
+description = "Telecamere esterne dell'astronave"
+category = "Sistemi Nave"
+icon_color = Color(0.3, 0.9, 0.6, 1)
+scene_path = "res://Applications/Cams/cams_app.tscn"
+default_window_size = Vector2(600, 420)
+drive_folder = "Programs/Cams"
+default_password = "CAMS-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION
+# WARNING: SENSORS & OPTICS CONFIGURATION FILE
+[SYSTEM]
+app_name=Cams
+version=1.0.4
+status=OPERATIONAL
+sensor_array=CCTV_6CH
+
+[OPTICS]
+default_fov=75.0
+min_fov=30.0
+max_fov=100.0
+zoom_step=10.0
+night_vision_intensity=0.18
+tactical_hud_contrast=0.18
+thermal_intensity=0.22
+",
+"desc": "Configurazione lenti e calibrazione array ottico a 6 canali.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/cams_config.dat"
+}, {
+"content": "# OPTICS & SENSOR CALIBRATION MATRIX
+[SENSORS]
+signal_boost=1.0
+noise_reduction=1.0
+refresh_rate_hz=60.0
+crosshair_style=STANDARD
+overclock_gain=1.0
+",
+"desc": "Taratura guadagno di segnale e filtri visivi CCTV.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/optics_tuning.dat"
+}])

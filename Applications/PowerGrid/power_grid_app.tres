@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_s1kw6"]
+
+[resource]
+script = ExtResource("1_s1kw6")
+roles = Array[String](["Capitano", "Ingegnere", "Factotum"])
+power_draw_mw = 12.0
+required_subsystems = Array[String](["reactor", "power_junctions"])
+app_id = "power_grid"
+title = "Power Grid"
+description = "Mappa elettrica 2D, snodi e flussi energetici nave"
+category = "Sistemi Nave"
+icon_color = Color(0.95, 0.85, 0.2, 1)
+scene_path = "res://Applications/PowerGrid/power_grid_app.tscn"
+default_window_size = Vector2(800, 550)
+drive_folder = "Programs/PowerGrid"
+default_password = "GRID-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION
+# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX
+[SYSTEM]
+app_name=PowerGrid
+version=1.0.4
+status=OPERATIONAL
+mode=AUTOMATIC_BALANCING
+
+[GRID_SETTINGS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+junction_switch_delay=0.25
+overload_threshold_pct=110.0
+reroute_efficiency_loss=0.05
+
+[CIRCUIT_PROTECTION]
+breaker_trip_threshold=1.4
+short_circuit_damping=0.85
+auto_reroute_on_short=false
+",
+"desc": "Configurazione reattore, soglie di sovraccarico e disgiuntori della rete.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/power_grid_config.dat"
+}, {
+"content": "# POWER GRID CALIBRATION & TUNING MATRIX
+[TUNING]
+power_efficiency_mult=1.0
+backup_line_conductivity=0.95
+switch_rate_hz=10.0
+regime_boost=1.0
+overclock_tolerance=1.2
+",
+"desc": "Matrice di conduttività e frequenza di commutazione snodi.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/grid_tuning.dat"
+}])

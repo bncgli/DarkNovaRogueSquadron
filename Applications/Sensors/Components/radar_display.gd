@@ -100,9 +100,9 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		var center := size * 0.5
 		var radius := minf(center.x, center.y) - 15.0
-		var m_pos := event.position
-		var delta_pos := m_pos - center
-		var click_dist_ratio := delta_pos.length() / radius
+		var m_pos: Vector2 = event.position
+		var delta_pos: Vector2 = m_pos - center
+		var click_dist_ratio: float = delta_pos.length() / radius
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# Controlla se è stato cliccato un contatto
@@ -117,10 +117,10 @@ func _gui_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			# Crea un waypoint tattico alle coordinate cliccate
 			if click_dist_ratio <= 1.05:
-				var world_dist := click_dist_ratio * max_range
+				var world_dist: float = click_dist_ratio * max_range
 				var angle := atan2(delta_pos.y, delta_pos.x) + PI * 0.5
-				var wx := sin(angle) * world_dist
-				var wz := -cos(angle) * world_dist
+				var wx: float = sin(angle) * world_dist
+				var wz: float = -cos(angle) * world_dist
 				var wp_pos := Vector3(wx, 0.0, wz)
 				waypoint_placed.emit(wp_pos)
 

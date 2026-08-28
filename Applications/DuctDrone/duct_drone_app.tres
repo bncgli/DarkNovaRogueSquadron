@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_j062u"]
+
+[resource]
+script = ExtResource("1_j062u")
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Factotum"])
+power_draw_mw = 10.0
+required_subsystems = Array[String](["drone_bay"])
+app_id = "duct_drone"
+title = "Duct Drone"
+description = "Robottino manutenzione e schema condotti 2D"
+category = "Sistemi Nave"
+icon_color = Color(1, 0.85, 0.2, 1)
+scene_path = "res://Applications/DuctDrone/duct_drone_app.tscn"
+drive_folder = "Programs/DuctDrone"
+default_password = "DRONE-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT
+[SYSTEM]
+app_name=DuctDrone
+version=1.0.4
+status=OPERATIONAL
+maintenance_subsystem=ACTIVE
+
+[DRONE_DYNAMICS]
+linear_speed=175.0
+linear_acceleration=650.0
+linear_deceleration=750.0
+rotate_speed=3.0
+
+[BATTERY_MANAGEMENT]
+battery_max=100.0
+battery_drain_move=0.35
+battery_drain_lights=0.75
+battery_drain_radar=3.5
+battery_drain_repair=6.0
+
+[MAINTENANCE]
+radar_scan_radius_max=160.0
+repair_range=42.0
+repair_speed_multiplier=1.0
+",
+"desc": "Configurazione dinamica e gestione energetica del drone di manutenzione.",
+"is_protected": true,
+"path": "Ship Drive/Programs/DuctDrone/duct_drone_config.dat"
+}, {
+"content": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX
+[TUNING]
+turbo_multiplier=2.0
+precision_multiplier=0.5
+repair_efficiency=1.0
+radar_intensity=1.0
+overclock_speed_gain=1.0
+",
+"desc": "Coefficienti di efficienza riparazione e radar del drone.",
+"is_protected": true,
+"path": "Ship Drive/Programs/DuctDrone/drone_tuning.dat"
+}])

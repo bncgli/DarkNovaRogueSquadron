@@ -7,6 +7,8 @@ extends Control
 
 const APP_TITLE: String = "ARRAY SENSORI & RADAR"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(750, 550)
+const BASE_POWER_MW: float = 40.0
+const ACTIVE_PING_POWER_MW: float = 120.0
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/Sensors/sensors_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/Sensors/sensors_config.dat"
@@ -259,11 +261,10 @@ func _update_permissions() -> void:
 	# - Soldato, Hacker, Captain, Factotum, Solo Mode: Controllo Completo
 	# - Pilota, Ingegnere: Sola Visualizzazione
 	var role_lower := my_role.to_lower()
-	can_control_sensors = (
-		is_solo or
-		role_lower in ["soldier", "soldato", "hacker", "captain", "capitano", "factotum", "sensori / radar", "admin", "host"] or
-		my_role.is_empty()
-	)
+	if not my_role.is_empty():
+		can_control_sensors = role_lower in ["soldier", "soldato", "hacker", "captain", "capitano", "factotum", "sensori / radar", "admin", "host"]
+	else:
+		can_control_sensors = is_solo
 	
 	if role_badge:
 		var display_role := my_role if not my_role.is_empty() else ("SOLO MODE" if is_solo else "SPETTATORE")
@@ -288,7 +289,7 @@ func _update_permissions() -> void:
 
 # --- GESTIONE FILE .DAT E HOT-RELOADING ---
 
-func _on_drive_file_event(path: String) -> void:
+func _on_drive_file_event(path: String, _content: String = "") -> void:
 	if "Programs/Sensors" in path and path.ends_with(".dat"):
 		load_dat_configuration()
 
@@ -423,7 +424,7 @@ func _update_power_and_damage_state(_delta: float) -> void:
 		radar_display.has_radar_ghosts = has_radar_damage
 	
 	# Calcolo potenza elettrica (Sublayer 3)
-	current_power_mw = active_ping_power_mw if is_pinging else (base_power_mw if is_passive_sweep_active else 10.0)
+	current_power_mw = ACTIVE_PING_POWER_MW if is_pinging else (BASE_POWER_MW if is_passive_sweep_active else 10.0)
 	
 	if power_label:
 		if is_radar_powered:

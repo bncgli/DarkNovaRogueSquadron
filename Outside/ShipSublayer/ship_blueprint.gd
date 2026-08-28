@@ -905,6 +905,55 @@ func get_apps_for_role(role_name: String, _is_solo: bool = false) -> Array[Dicti
 	
 	return result
 
+## Installa una ShipAppResource nel blueprint registrando app, file di drive e password
+func install_app_resource(res: ShipAppResource) -> void:
+	if not res:
+		return
+	set_installed_app(res.app_id, res.to_dict())
+	var df_list := res.get_formatted_drive_files("Ship Drive")
+	for df in df_list:
+		set_drive_file(df["path"], df["content"], df["is_protected"], df["desc"])
+	if not res.drive_folder.is_empty() and not res.default_password.is_empty():
+		var folder_rel: String = res.drive_folder.trim_prefix("/").trim_suffix("/")
+		var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
+		set_drive_password(full_folder, res.default_password)
+
+## Restituisce le ShipAppResource installate (usando ShipSoftwareManager o ricostruendole dai dati)
+func get_installed_app_resources() -> Array[ShipAppResource]:
+	var result: Array[ShipAppResource] = []
+	for app_dict in installed_apps:
+		var app_id: String = str(app_dict.get("id", ""))
+		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
+		var res: ShipAppResource = null
+		if ssm and ssm.has_method("get_registered_app"):
+			res = ssm.get_registered_app(app_id)
+		if not res:
+			var res_path := "res://Applications/%s/%s_app.tres" % [app_id.to_pascal_case(), app_id]
+			if ResourceLoader.exists(res_path):
+				res = load(res_path) as ShipAppResource
+		if not res:
+			res = ShipAppResource.new()
+			res.app_id = app_id
+			res.title = str(app_dict.get("title", app_id))
+			res.description = str(app_dict.get("description", ""))
+			res.scene_path = str(app_dict.get("scene_path", ""))
+			res.icon_color = app_dict.get("icon_color", Color(0, 0.79, 0.95, 1.0))
+			var raw_roles = app_dict.get("roles", [])
+			if raw_roles is Array:
+				for r in raw_roles:
+					res.roles.append(str(r))
+		result.append(res)
+	return result
+
+## Restituisce le ShipAppResource autorizzate per il ruolo specificato
+func get_app_resources_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppResource]:
+	var all_res := get_installed_app_resources()
+	var filtered: Array[ShipAppResource] = []
+	for r in all_res:
+		if r.is_role_allowed(role_name, is_solo):
+			filtered.append(r)
+	return filtered
+
 ## Converte l'intera Blueprint in un dizionario serializzabile (es. per JSON o salvataggi di rete)
 func to_dict() -> Dictionary:
 	var rooms_copy: Array = []

@@ -251,6 +251,10 @@ func _populate_default_ship_drive_files() -> void:
 		fpm.set_password("Ship Drive/Programs/Diagnostics", "DIAG-7815")
 		fpm.set_password("Ship Drive/Programs/Sensors", "SENS-7815")
 		fpm.set_password("Ship Drive/systems", "ROOT-7815")
+		
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
+	if ssm and ssm.has_method("populate_all_installed_ship_drive_apps"):
+		ssm.populate_all_installed_ship_drive_apps()
 
 func _close_ship_drive_windows() -> void:
 	if not is_inside_tree():

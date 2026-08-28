@@ -54,26 +54,7 @@ DRIVE_MOUNT=LOCAL
 
 	var commands_path := "%s/Commands Reference.txt" % TERMINAL_DRIVE_ROOT_DIR
 	if not FileAccess.file_exists(commands_path):
-		_write_file_content("Terminal Drive/Commands Reference.txt", """=== GUIDA COMANDI TERMINALE ===
-
-COMANDI DISPONIBILI:
-----------------------------------------------------------------------
-  help [comando]     Mostra la lista dei comandi o i dettagli di un comando.
-  ls [percorso]      Elenca file e cartelle nella directory corrente o nel percorso specificato.
-  cd <percorso>      Cambia la cartella di lavoro corrente (supporta '..', '/', o percorsi relativi).
-  pwd                Visualizza il percorso virtuale corrente.
-  cat <file>         Mostra a schermo il contenuto di un file di testo.
-  touch <file>       Crea un nuovo file vuoto nella directory indicata.
-  mkdir <cartella>   Crea una nuova cartella nel percorso indicato.
-  echo <testo>       Stampa il testo specificato sul terminale.
-  clear              Pulisce l'output della schermata del terminale.
-  date               Mostra data e ora correnti di sistema.
-
-UNITA' DI SISTEMA:
-----------------------------------------------------------------------
-  - Terminal Drive : Impostazioni e configurazioni locali della shell.
-  - Ship Drive     : File di bordo condivisi in rete (attivo quando connessi).
-""")
+		_write_file_content("Terminal Drive/Commands Reference.txt", "=== GUIDA COMANDI TERMINALE ===\n\nCOMANDI DISPONIBILI:\n----------------------------------------------------------------------\n  help [comando]     Mostra la lista dei comandi o i dettagli di un comando.\n  ls [percorso]      Elenca file e cartelle nella directory corrente o nel percorso specificato.\n  cd <percorso>      Cambia la cartella di lavoro corrente (supporta '..', '/', o percorsi relativi).\n  pwd                Visualizza il percorso virtuale corrente.\n  cat <file>         Mostra a schermo il contenuto di un file di testo.\n  touch <file>       Crea un nuovo file vuoto nella directory indicata.\n  mkdir <cartella>   Crea una nuova cartella nel percorso indicato.\n  echo <testo>       Stampa il testo specificato sul terminale.\n  clear              Pulisce l'output della schermata del terminale.\n  date               Mostra data e ora correnti di sistema.\n\nUNITA' DI SISTEMA:\n----------------------------------------------------------------------\n  - Terminal Drive : Impostazioni e configurazioni locali della shell.\n  - Ship Drive     : File di bordo condivisi in rete (attivo quando connessi).\n")
 
 	var env_path := "%s/Environment.txt" % TERMINAL_DRIVE_ROOT_DIR
 	if not FileAccess.file_exists(env_path):
@@ -155,6 +136,10 @@ resolution_scaling=1.0
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	if fpm:
 		fpm.set_password("Terminal Drive/systems", "ROOT-7815")
+		
+	var tsm := get_node_or_null("/root/TerminalSoftwareManager")
+	if tsm and tsm.has_method("populate_all_terminal_drive_apps"):
+		tsm.populate_all_terminal_drive_apps()
 
 func _write_file_content(rel_path: String, content: String) -> void:
 	var abs_path := "user://files/%s" % rel_path

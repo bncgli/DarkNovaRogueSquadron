@@ -297,7 +297,11 @@ func _on_network_mission_ended() -> void:
 	
 	ship_connection_changed.emit(false)
 
+var is_ship_connected_state: bool = false
+
 func is_ship_connected() -> bool:
+	if is_ship_connected_state:
+		return true
 	var nm := _get_net_mgr()
 	if nm and nm.has_method("is_ship_connected"):
 		return nm.is_ship_connected()

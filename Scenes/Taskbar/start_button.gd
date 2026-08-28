@@ -102,8 +102,16 @@ func _refresh_ship_apps() -> void:
 		var my_role: String = nm.get_local_player_role() if nm else ""
 		var is_solo: bool = nm.is_solo_mode if nm else false
 		
-		var apps: Array[Dictionary] = []
-		if SpaceWorldManager and SpaceWorldManager.has_method("get_installed_apps_for_role"):
+		var apps: Array = []
+		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("get_apps_for_role"):
+			var app_resources: Array = ssm.get_apps_for_role(my_role, is_solo)
+			for r in app_resources:
+				if r is Resource and r.has_method("to_dict"):
+					apps.append(r.to_dict())
+				elif r is Dictionary:
+					apps.append(r)
+		elif SpaceWorldManager and SpaceWorldManager.has_method("get_installed_apps_for_role"):
 			apps = SpaceWorldManager.get_installed_apps_for_role(my_role, is_solo)
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
 			var bp = SpaceWorldManager.get_ship_blueprint()

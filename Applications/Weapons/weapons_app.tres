@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_4nhf5"]
+
+[resource]
+script = ExtResource("1_4nhf5")
+roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Factotum"])
+power_draw_mw = 25.0
+required_subsystems = Array[String](["weapons_array", "targeting_radar"])
+is_critical = true
+app_id = "weapons"
+title = "Tactical Weapons"
+description = "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG"
+category = "Sistemi Nave"
+icon_color = Color(0.95, 0.25, 0.25, 1)
+scene_path = "res://Applications/Weapons/weapons_app.tscn"
+default_window_size = Vector2(720, 520)
+drive_folder = "Programs/Weapons"
+default_password = "WEAP-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION
+# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE
+[SYSTEM]
+app_name=Weapons
+version=1.0.4
+status=OPERATIONAL
+weapons_subsystem=ACTIVE
+
+[WEAPONS]
+max_range=4500.0
+fire_rate=1.8
+cooling_rate=0.75
+auto_pdg_enabled=true
+laser_power_draw=250.0
+torpedo_max_ammo=12
+pdg_ammo_max=500
+pdg_fire_rate=8.0
+emergency_vent_cooldown=10.0
+",
+"desc": "Parametri operativi armi pesanti, torrette laser e cadenza PDG.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Weapons/weapons_config.dat"
+}, {
+"content": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX
+[BALLISTICS]
+torpedo_velocity=85.0
+auto_lead_tracking=true
+overclock_damage_mult=1.0
+heat_multiplier=1.0
+pdg_range=1200.0
+laser_beam_intensity=1.0
+",
+"desc": "Balistica siluri, tracking anticipo di tiro e guadagno danno.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Weapons/ammo_tuning.dat"
+}])

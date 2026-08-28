@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_ylkgj"]
+
+[resource]
+script = ExtResource("1_ylkgj")
+roles = Array[String](["Capitano", "Pilota", "Factotum"])
+power_draw_mw = 15.0
+required_subsystems = Array[String](["engines", "nav_computer"])
+is_critical = true
+app_id = "flight_control"
+title = "Flight Control"
+description = "Controlli di manovra e navigazione nave"
+category = "Sistemi Nave"
+icon_color = Color(1, 0.6, 0.2, 1)
+scene_path = "res://Applications/FlightControl/flight_control_app.tscn"
+default_window_size = Vector2(650, 480)
+drive_folder = "Programs/FlightControls"
+default_password = "FLIGHT-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING
+[SYSTEM]
+app_name=FlightControls
+version=1.0.4
+status=OPERATIONAL
+rcs_subsystem=ACTIVE
+
+[FLIGHT_DYNAMICS]
+max_linear_speed=20.0
+linear_acceleration=35.0
+linear_deceleration=20.0
+max_angular_speed=2.5
+angular_acceleration=8.0
+angular_deceleration=6.0
+
+[SPEED_MODES]
+turbo_multiplier=2.0
+precision_multiplier=0.4
+",
+"desc": "Parametri di dinamica e limiti di manovra del sistema di volo.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/flight_config.dat"
+}, {
+"content": "# RCS & MAIN THRUSTERS TUNING MATRIX
+[THRUSTERS]
+rcs_power_rate=1.0
+pitch_thrust_mult=1.0
+yaw_thrust_mult=1.0
+roll_thrust_mult=1.0
+vertical_thrust_mult=1.0
+overclock_limit=1.5
+",
+"desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/thrusters_tuning.dat"
+}])

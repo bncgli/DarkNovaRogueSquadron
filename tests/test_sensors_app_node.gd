@@ -55,6 +55,9 @@ func _run_all_tests() -> void:
 	# =========================================================================
 	print("\n--- TEST 2: Matrice RBAC (Permessi Ruolo e Controlli) ---")
 	if net_mgr:
+		net_mgr.host_game("OperatoreTest")
+		await get_tree().process_frame
+		
 		# 2.1 Pilota: Sola Lettura
 		net_mgr.request_role("Pilota")
 		await get_tree().process_frame
@@ -101,6 +104,10 @@ func _run_all_tests() -> void:
 	# TEST 3: FILE .DAT E HOT-RELOADING
 	# =========================================================================
 	print("\n--- TEST 3: Parsing file .DAT e Hot-Reloading ---")
+	if sdm:
+		sdm.mount_drive()
+	app.load_dat_configuration()
+	await get_tree().process_frame
 	assert(app.active_config.get("is_dat_loaded") == true, "Configurazioni .DAT devono essere caricate")
 	assert(app.active_config.get("sweep_frequency_hz") == 12.0, "sweep_frequency_hz deve corrispondere a 12.0 Hz")
 	assert(app.active_config.get("active_ping_radius") == 50000.0, "active_ping_radius deve corrispondere a 50 km")
@@ -109,12 +116,12 @@ func _run_all_tests() -> void:
 	assert(app.active_config.get("stealth_detection_threshold") == 0.35, "stealth_detection_threshold deve corrispondere a 0.35")
 	print("✔ Parsing .DAT iniziale valido e coerente con firmware")
 	
-	# Simula hot-reload file_modified
+	# Simula hot-reload file_synced
 	if sdm:
-		sdm.file_modified.emit("Ship Drive/Programs/Sensors/sensors_config.dat")
+		sdm.file_synced.emit("Ship Drive/Programs/Sensors/sensors_config.dat", "")
 		await get_tree().process_frame
 		assert(app.active_config.get("is_dat_loaded") == true, "Hot-reloading deve ricaricare la configurazione")
-		print("✔ Hot-reloading su file_modified verificato con successo")
+		print("✔ Hot-reloading su file_synced verificato con successo")
 	
 	# Simula pressione tasto ricarica .DAT
 	app.btn_reload_dat.emit_signal("pressed")
