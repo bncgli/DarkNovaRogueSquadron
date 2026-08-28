@@ -30,3 +30,8 @@ res://Gameplay/Mining/mining_manager.gd
 res://tests/test_mining_scavenging.gd
 res://Outside/Mining/derelict_ship_entity.gd
 res://Outside/Mining/mineral_deposit_entity.gd
+res://Outside/Mining/derelict_ship_entity.tscn
+res://Outside/Mining/mineral_deposit_entity.tscn
+res://Outside/Combat/enemy_ship_ai.gd
+res://Outside/Combat/systemic_damage_handler.gd
+res://tests/test_combat_dogfight.gd
