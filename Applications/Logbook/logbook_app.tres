@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_logbook"]
+
+[resource]
+script = ExtResource("1_logbook")
+roles = Array[String](["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"])
+power_draw_mw = 5.0
+required_subsystems = Array[String]([])
+app_id = "logbook"
+title = "Registro di Bordo & Obiettivi"
+description = "Diario di volo, contratti sandbox, scatola nera ed eventi"
+category = "Sistemi Nave"
+icon_color = Color(0.8, 0.7, 0.2, 1)
+scene_path = "res://Applications/Logbook/logbook_app.tscn"
+default_window_size = Vector2(600, 450)
+drive_folder = "Programs/Logbook"
+default_password = "LOGS-7815"
+default_files = Array[Dictionary]([{
+"content": "[SYSTEM]
+app_name=LogbookApp
+version=1.0.0
+status=OPERATIONAL
+
+[LOGGING]
+auto_log_events=true
+max_history_entries=200
+log_telemetry_errors=true
+",
+"desc": "Configurazione sistema di logging eventi e telemetria scatola nera.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/logbook_config.dat"
+}, {
+"content": "[SYNC]
+sync_to_ship_drive=true
+timestamp_format=STAR_DATE
+cloud_backup=false
+",
+"desc": "Parametri di sincronizzazione diario e formattazione timestamp.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/journal_tuning.dat"
+}])

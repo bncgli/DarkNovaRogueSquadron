@@ -921,6 +921,29 @@ scrubber_efficiency=0.98
 "is_protected": true,
 "path": "Ship Drive/Programs/LifeSupport/atmo_tuning.dat"
 }, {
+"content": "[SYSTEM]
+app_name=LogbookApp
+version=1.0.0
+status=OPERATIONAL
+
+[LOGGING]
+auto_log_events=true
+max_history_entries=200
+log_telemetry_errors=true
+",
+"desc": "Configurazione sistema di logging eventi e telemetria scatola nera.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/logbook_config.dat"
+}, {
+"content": "[SYNC]
+sync_to_ship_drive=true
+timestamp_format=STAR_DATE
+cloud_backup=false
+",
+"desc": "Parametri di sincronizzazione diario e formattazione timestamp.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/journal_tuning.dat"
+}, {
 "content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
 # WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
 [BLUEPRINT_METADATA]
@@ -941,8 +964,8 @@ ducts_count=14
 devices_count=11
 junctions_count=8
 damages_count=8
-drive_files_count=23
-installed_apps_count=9
+drive_files_count=27
+installed_apps_count=11
 ",
 "desc": "Specifiche generali del blueprint e metadati dimensionali scafo.",
 "is_protected": true,
@@ -981,9 +1004,10 @@ drive_passwords = {
 "Ship Drive/Programs/Diagnostics": "DIAG-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+"Ship Drive/Programs/LifeSupport": "LIFE-7815",
+"Ship Drive/Programs/Logbook": "LOGS-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/Sensors": "SENS-7815",
-"Ship Drive/Programs/LifeSupport": "LIFE-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815",
 "Ship Drive/systems": "ROOT-7815"
@@ -1058,4 +1082,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Ingegnere", "Capitano", "Factotum", "Engineer", "Captain"],
 "scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
 "title": "Supporto Vitale & Atmosfera"
+}, {
+"description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
+"icon_color": Color(0.8, 0.7, 0.2, 1),
+"id": "logbook",
+"roles": ["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"],
+"scene_path": "res://Applications/Logbook/logbook_app.tscn",
+"title": "Registro di Bordo & Obiettivi"
 }])

@@ -668,8 +668,20 @@ func _init_default_drive() -> void:
 			"desc": "Parametri di decompressione rapida, livelli gas inerte e efficienza scrubber CO2."
 		},
 		{
+			"path": "Ship Drive/Programs/Logbook/logbook_config.dat",
+			"content": "[SYSTEM]\napp_name=LogbookApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[LOGGING]\nauto_log_events=true\nmax_history_entries=200\nlog_telemetry_errors=true\n",
+			"is_protected": true,
+			"desc": "Configurazione sistema di logging eventi e telemetria scatola nera."
+		},
+		{
+			"path": "Ship Drive/Programs/Logbook/journal_tuning.dat",
+			"content": "[SYNC]\nsync_to_ship_drive=true\ntimestamp_format=STAR_DATE\ncloud_backup=false\n",
+			"is_protected": true,
+			"desc": "Parametri di sincronizzazione diario e formattazione timestamp."
+		},
+		{
 			"path": "Ship Drive/systems/ship_blueprint.dat",
-			"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=23\ninstalled_apps_count=9\n",
+			"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=27\ninstalled_apps_count=11\n",
 			"is_protected": true,
 			"desc": "Specifiche generali del blueprint e metadati dimensionali scafo."
 		},
@@ -692,6 +704,7 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/Diagnostics": "DIAG-7815",
 		"Ship Drive/Programs/Sensors": "SENS-7815",
 		"Ship Drive/Programs/LifeSupport": "LIFE-7815",
+		"Ship Drive/Programs/Logbook": "LOGS-7815",
 		"Ship Drive/systems": "ROOT-7815"
 	}
 
@@ -776,6 +789,14 @@ func _init_default_installed_apps() -> void:
 			"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
 			"icon_color": Color(0.2, 0.7, 0.9, 1.0),
 			"roles": ["Ingegnere", "Capitano", "Factotum", "Engineer", "Captain"]
+		},
+		{
+			"id": "logbook",
+			"title": "Registro di Bordo & Obiettivi",
+			"description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
+			"scene_path": "res://Applications/Logbook/logbook_app.tscn",
+			"icon_color": Color(0.8, 0.7, 0.2, 1.0),
+			"roles": ["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"]
 		}
 	]
 

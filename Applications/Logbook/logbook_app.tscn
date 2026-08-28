@@ -1,0 +1,207 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Applications/Logbook/logbook_app.gd" id="1_logbook_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0.04, 0.05, 0.07, 0.95)
+
+[node name="LogbookApp" type="Control"]
+custom_minimum_size = Vector2(600, 450)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_logbook_script")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderBar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.85, 0.3, 1)
+text = "📜 REGISTRO DI BORDO & MISSIONI"
+
+[node name="ReloadDatButton" type="Button" parent="MainLayout/HeaderBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🔄 Ricarica .DAT"
+
+[node name="ContentTabs" type="TabContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Contratti & Obiettivi" type="MarginContainer" parent="MainLayout/ContentTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="MainLayout/ContentTabs/Contratti & Obiettivi"]
+layout_mode = 2
+
+[node name="TopControls" type="HBoxContainer" parent="MainLayout/ContentTabs/Contratti & Obiettivi/VBox"]
+layout_mode = 2
+
+[node name="SectionTitle" type="Label" parent="MainLayout/ContentTabs/Contratti & Obiettivi/VBox/TopControls"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CONTRATTI ATTIVI & OBIETTIVI TATTICI"
+
+[node name="NewContractBtn" type="Button" parent="MainLayout/ContentTabs/Contratti & Obiettivi/VBox/TopControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "➕ Nuovo Contratto"
+
+[node name="ContractsScroll" type="ScrollContainer" parent="MainLayout/ContentTabs/Contratti & Obiettivi/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContractsContainer" type="VBoxContainer" parent="MainLayout/ContentTabs/Contratti & Obiettivi/VBox/ContractsScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Scatola Nera" type="MarginContainer" parent="MainLayout/ContentTabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="MainLayout/ContentTabs/Scatola Nera"]
+layout_mode = 2
+
+[node name="TopControls" type="HBoxContainer" parent="MainLayout/ContentTabs/Scatola Nera/VBox"]
+layout_mode = 2
+
+[node name="SectionTitle" type="Label" parent="MainLayout/ContentTabs/Scatola Nera/VBox/TopControls"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "STORICO EVENTI E TELEMETRIA NAVE"
+
+[node name="ClearLogBtn" type="Button" parent="MainLayout/ContentTabs/Scatola Nera/VBox/TopControls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🗑️ Resetta Log"
+
+[node name="EventLogText" type="RichTextLabel" parent="MainLayout/ContentTabs/Scatola Nera/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+bbcode_enabled = true
+scroll_following = true
+selection_enabled = true
+
+[node name="Note di Plancia" type="MarginContainer" parent="MainLayout/ContentTabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="MainLayout/ContentTabs/Note di Plancia"]
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="MainLayout/ContentTabs/Note di Plancia/VBox"]
+layout_mode = 2
+
+[node name="NotesOptionBtn" type="OptionButton" parent="MainLayout/ContentTabs/Note di Plancia/VBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NoteStorageTypeBtn" type="OptionButton" parent="MainLayout/ContentTabs/Note di Plancia/VBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 2
+popup/item_0/text = "Ship Drive (Condiviso)"
+popup/item_0/id = 0
+popup/item_1/text = "Terminal Drive (Privato)"
+popup/item_1/id = 1
+
+[node name="SaveNoteBtn" type="Button" parent="MainLayout/ContentTabs/Note di Plancia/VBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "💾 Salva Nota"
+
+[node name="NoteEditText" type="TextEdit" parent="MainLayout/ContentTabs/Note di Plancia/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "Inserisci qui le annotazioni per l'equipaggio o gli appunti personali..."
+wrap_mode = 1
+
+[node name="StatusBar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainLayout/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "STATO: OPERATIVO"
+
+[node name="ActiveContractsLabel" type="Label" parent="MainLayout/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CONTRATTI ATTIVI: 0"
+
+[node name="VSeparator" type="VSeparator" parent="MainLayout/StatusBar"]
+layout_mode = 2
+
+[node name="StorageNotesLabel" type="Label" parent="MainLayout/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "STORAGE: Ship Drive"
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="CenterContainer" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DisconnectedOverlay/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="WarningTitle" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "⚠️ REGISTRO DI BORDO OFFLINE"
+horizontal_alignment = 1
+
+[node name="WarningSubtitle" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "In attesa di connessione alla nave / Avvio missione..."
+horizontal_alignment = 1
