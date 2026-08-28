@@ -642,6 +642,18 @@ func _init_default_drive() -> void:
 			"content": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n",
 			"is_protected": true,
 			"desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica."
+		},
+		{
+			"path": "Ship Drive/systems/ship_blueprint.dat",
+			"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndevices_count=11\njunctions_count=8\ndamages_count=8\ndrive_files_count=21\ninstalled_apps_count=8\n",
+			"is_protected": true,
+			"desc": "Specifiche generali del blueprint e metadati dimensionali scafo."
+		},
+		{
+			"path": "Ship Drive/systems/hull_specs.dat",
+			"content": "# SHIP HULL SECTORS & SUBLAYER TOPOLOGY MATRIX\n[HULL_SECTORS]\nsector_bridge=Ponte di Comando\nsector_crew=Alloggi Equipaggio\nsector_drone_bay=Baia di Lancio Droni\nsector_tech_corridor=Corridoio Tecnico Principale\nsector_cargo=Baia di Carico Principale\nsector_reactor=Sala Reattore Principale\nsector_engines=Sala Motori & Propulsione\nsector_armory=Sala Armeria & Scudi\n\n[POWER_GRID_SPECS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\ntotal_junctions=8\ntotal_devices=11\ngrid_balancing=AUTOMATIC\n\n[DAMAGE_TOLERANCE]\ncritical_integrity_threshold=25.0\nmax_structural_integrity=100.0\ntotal_damage_sectors=8\n",
+			"is_protected": true,
+			"desc": "Topologia dei settori dello scafo, specifiche di alimentazione e tolleranze danni."
 		}
 	]
 	
@@ -653,7 +665,8 @@ func _init_default_drive() -> void:
 		"Ship Drive/Programs/Weapons": "WEAP-7815",
 		"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 		"Ship Drive/Programs/Comms": "COMM-7815",
-		"Ship Drive/Programs/Diagnostics": "DIAG-7815"
+		"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+		"Ship Drive/systems": "ROOT-7815"
 	}
 
 func _init_default_installed_apps() -> void:

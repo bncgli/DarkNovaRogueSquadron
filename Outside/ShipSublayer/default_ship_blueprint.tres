@@ -868,6 +868,60 @@ overclock_bypass_security=false
 "desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica.",
 "is_protected": true,
 "path": "Ship Drive/Programs/Diagnostics/security_tuning.dat"
+}, {
+"content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
+# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
+[BLUEPRINT_METADATA]
+ship_id=dark_nova_corvette
+ship_name=Dark Nova Corvette
+ship_class=Corvetta d'Assalto & Ricognizione Leggera
+bounds_x=60.0
+bounds_y=30.0
+bounds_width=480.0
+bounds_height=420.0
+drone_spawn_x=300.0
+drone_spawn_y=80.0
+drone_spawn_heading=-1.5707963
+
+[BLUEPRINT_SUBLAYERS]
+rooms_count=10
+ducts_count=14
+devices_count=11
+junctions_count=8
+damages_count=8
+drive_files_count=21
+installed_apps_count=8
+",
+"desc": "Specifiche generali del blueprint e metadati dimensionali scafo.",
+"is_protected": true,
+"path": "Ship Drive/systems/ship_blueprint.dat"
+}, {
+"content": "# SHIP HULL SECTORS & SUBLAYER TOPOLOGY MATRIX
+[HULL_SECTORS]
+sector_bridge=Ponte di Comando
+sector_crew=Alloggi Equipaggio
+sector_drone_bay=Baia di Lancio Droni
+sector_tech_corridor=Corridoio Tecnico Principale
+sector_cargo=Baia di Carico Principale
+sector_reactor=Sala Reattore Principale
+sector_engines=Sala Motori & Propulsione
+sector_armory=Sala Armeria & Scudi
+
+[POWER_GRID_SPECS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+total_junctions=8
+total_devices=11
+grid_balancing=AUTOMATIC
+
+[DAMAGE_TOLERANCE]
+critical_integrity_threshold=25.0
+max_structural_integrity=100.0
+total_damage_sectors=8
+",
+"desc": "Topologia dei settori dello scafo, specifiche di alimentazione e tolleranze danni.",
+"is_protected": true,
+"path": "Ship Drive/systems/hull_specs.dat"
 }])
 drive_passwords = {
 "Ship Drive/Programs/Cams": "CAMS-7815",
@@ -877,7 +931,8 @@ drive_passwords = {
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
-"Ship Drive/Programs/Weapons": "WEAP-7815"
+"Ship Drive/Programs/Weapons": "WEAP-7815",
+"Ship Drive/systems": "ROOT-7815"
 }
 installed_apps = Array[Dictionary]([{
 "description": "Controlli di manovra e navigazione nave",

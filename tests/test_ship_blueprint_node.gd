@@ -22,8 +22,8 @@ func _run_suite() -> void:
 	assert(bp.devices.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
 	assert(bp.junctions.size() == 8, "La Blueprint deve contenere 8 snodi elettrici di default")
 	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
-	assert(bp.drive_files.size() == 19, "La Blueprint deve contenere 19 file di default per Ship Drive (inclusi Weapons, ShieldMatrix, Comms e Diagnostics)")
-	assert(bp.drive_passwords.size() == 8, "La Blueprint deve contenere 8 password cartelle per Ship Drive (inclusi Weapons, ShieldMatrix, Comms e Diagnostics)")
+	assert(bp.drive_files.size() == 21, "La Blueprint deve contenere 21 file di default per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics e systems)")
+	assert(bp.drive_passwords.size() == 9, "La Blueprint deve contenere 9 password cartelle per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics e systems)")
 	assert(bp.installed_apps.size() == 8, "La Blueprint deve contenere 8 applicazioni mainframe installate di default (inclusi Weapons, ShieldMatrix, Comms e Diagnostics)")
 	print("✔ Struttura dati e 6 sublayer (incluso Mainframe Apps & Ship Drive) inizializzati con successo")
 
@@ -94,6 +94,17 @@ func _run_suite() -> void:
 	var diag_pwd := bp.get_drive_password("Ship Drive/Programs/Diagnostics")
 	assert(diag_pwd == "DIAG-7815", "Password Diagnostics deve essere DIAG-7815")
 
+	var sys_bp_cfg := bp.get_drive_file_by_path("Ship Drive/systems/ship_blueprint.dat")
+	assert(not sys_bp_cfg.is_empty(), "get_drive_file_by_path deve trovare ship_blueprint.dat")
+	assert(sys_bp_cfg.get("is_protected") == true, "ship_blueprint.dat deve essere protetto")
+
+	var sys_hull_cfg := bp.get_drive_file_by_path("Ship Drive/systems/hull_specs.dat")
+	assert(not sys_hull_cfg.is_empty(), "get_drive_file_by_path deve trovare hull_specs.dat")
+	assert(sys_hull_cfg.get("is_protected") == true, "hull_specs.dat deve essere protetto")
+
+	var sys_pwd := bp.get_drive_password("Ship Drive/systems")
+	assert(sys_pwd == "ROOT-7815", "Password systems deve essere ROOT-7815")
+
 	# Test aggiunta e rimozione file dinamico
 	bp.set_drive_file("Ship Drive/test_note.txt", "Note test", false, "Descrizione")
 	assert(not bp.get_drive_file_by_path("Ship Drive/test_note.txt").is_empty(), "File temporaneo aggiunto con successo")
@@ -146,8 +157,8 @@ func _run_suite() -> void:
 	assert(serialized_dict.has("rooms") and serialized_dict["rooms"].size() == 10, "Dizionario deve contenere 10 stanze")
 	assert(serialized_dict.has("devices") and serialized_dict["devices"].size() == 11, "Dizionario deve contenere 11 dispositivi")
 	assert(serialized_dict.has("junctions") and serialized_dict["junctions"].size() == 8, "Dizionario deve contenere 8 snodi")
-	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 19, "Dizionario deve contenere 19 file drive")
-	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 8, "Dizionario deve contenere 8 password drive")
+	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 21, "Dizionario deve contenere 21 file drive")
+	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 9, "Dizionario deve contenere 9 password drive")
 	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 8, "Dizionario deve contenere 8 app mainframe")
 
 	var reconstructed_bp := ShipBlueprint.new()
@@ -179,8 +190,8 @@ func _run_suite() -> void:
 	assert(imported_bp.ship_name == "Dark Nova Corvette", "Nome nave importato deve coincidere")
 	assert(imported_bp.rooms.size() == 10, "Stanze importate da JSON devono essere 10")
 	assert(imported_bp.devices.size() == 11, "Dispositivi importati da JSON devono essere 11")
-	assert(imported_bp.drive_files.size() == 19, "File drive importati da JSON devono essere 19")
-	assert(imported_bp.drive_passwords.size() == 8, "Password drive importate da JSON devono essere 8")
+	assert(imported_bp.drive_files.size() == 21, "File drive importati da JSON devono essere 21")
+	assert(imported_bp.drive_passwords.size() == 9, "Password drive importate da JSON devono essere 9")
 	assert(imported_bp.installed_apps.size() == 8, "App mainframe importate da JSON devono essere 8")
 
 	# Test gestione errori su file inesistente
@@ -228,10 +239,10 @@ func _run_suite() -> void:
 		assert(mgr_damages.size() == 8, "SpaceWorldManager.get_damage_zones() deve restituire 8 zone di danno")
 
 		var mgr_files := SpaceWorldManager.get_ship_drive_files()
-		assert(mgr_files.size() == 19, "SpaceWorldManager.get_ship_drive_files() deve restituire 19 file")
+		assert(mgr_files.size() == 21, "SpaceWorldManager.get_ship_drive_files() deve restituire 21 file")
 
 		var mgr_passwords := SpaceWorldManager.get_ship_drive_passwords()
-		assert(mgr_passwords.size() == 8, "SpaceWorldManager.get_ship_drive_passwords() deve restituire 8 password")
+		assert(mgr_passwords.size() == 9, "SpaceWorldManager.get_ship_drive_passwords() deve restituire 9 password")
 
 		var mgr_apps := SpaceWorldManager.get_installed_apps()
 		assert(mgr_apps.size() == 8, "SpaceWorldManager.get_installed_apps() deve restituire 8 app")
@@ -335,6 +346,8 @@ func _run_suite() -> void:
 		assert(FileAccess.file_exists("user://files/Ship Drive/Programs/FlightControls/flight_config.dat"), "flight_config.dat deve esistere su disco")
 		assert(FileAccess.file_exists("user://files/Ship Drive/Programs/PowerGrid/power_grid_config.dat"), "power_grid_config.dat deve esistere su disco")
 		assert(FileAccess.file_exists("user://files/Ship Drive/Programs/Comms/comms_config.dat"), "comms_config.dat deve esistere su disco")
+		assert(FileAccess.file_exists("user://files/Ship Drive/systems/ship_blueprint.dat"), "ship_blueprint.dat deve esistere su disco")
+		assert(FileAccess.file_exists("user://files/Ship Drive/systems/hull_specs.dat"), "hull_specs.dat deve esistere su disco")
 		
 		# Verifica che le password cartella siano state applicate
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
@@ -342,6 +355,7 @@ func _run_suite() -> void:
 			assert(fpm.has_password("Ship Drive/Programs/FlightControls"), "Password FlightControls deve essere impostata")
 			assert(fpm.has_password("Ship Drive/Programs/PowerGrid"), "Password PowerGrid deve essere impostata")
 			assert(fpm.has_password("Ship Drive/Programs/Comms"), "Password Comms deve essere impostata")
+			assert(fpm.has_password("Ship Drive/systems"), "Password systems deve essere impostata")
 			
 		sdm.unmount_drive()
 		if net_mgr:

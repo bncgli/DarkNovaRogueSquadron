@@ -541,7 +541,9 @@ func _perform_actual_threat_scan() -> void:
 			"Ship Drive/Programs/Weapons": "WEAP-7815",
 			"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 			"Ship Drive/Programs/Comms": "COMM-7815",
-			"Ship Drive/Programs/Diagnostics": "DIAG-7815"
+			"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+			"Ship Drive/systems": "ROOT-7815",
+			"Terminal Drive/systems": "ROOT-7815"
 		}
 		
 		for folder: String in expected_passwords:
