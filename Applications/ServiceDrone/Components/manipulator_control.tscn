@@ -1,0 +1,176 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Applications/ServiceDrone/Components/manipulator_control.gd" id="1_manip_script"]
+
+[node name="ManipulatorControl" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+script = ExtResource("1_manip_script")
+
+[node name="FlightSection" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SectionTitle" type="Label" parent="FlightSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.65, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "STATO VOLO & DOCKING"
+
+[node name="DockingBar" type="HBoxContainer" parent="FlightSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnUndock" type="Button" parent="FlightSection/DockingBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🚀 Decollo"
+
+[node name="BtnAutoDock" type="Button" parent="FlightSection/DockingBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⚓ Auto-Dock"
+
+[node name="FlightModes" type="HBoxContainer" parent="FlightSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnToggleLights" type="Button" parent="FlightSection/FlightModes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💡 Fari EVA"
+
+[node name="BtnToggleBoost" type="Button" parent="FlightSection/FlightModes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⚡ Boost: OFF"
+
+[node name="ThrusterSection" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ThrusterTitle" type="Label" parent="ThrusterSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.65, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "CONTROLLI RCS (MANUALI / TASTIERA: W/A/S/D/Q/E)"
+
+[node name="RCSGrid" type="GridContainer" parent="ThrusterSection"]
+layout_mode = 2
+columns = 3
+
+[node name="BtnUp" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▲ Su (Q)"
+
+[node name="BtnFwd" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▲ Avanti (W)"
+
+[node name="BtnRotLeft" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "◀ Imb. SX"
+
+[node name="BtnLeft" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "◀ SX (A)"
+
+[node name="BtnStopThrusters" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "⏹ Stop (Spazio)"
+
+[node name="BtnRight" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶ DX (D)"
+
+[node name="BtnDown" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▼ Giù (E)"
+
+[node name="BtnBack" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▼ Indietro (S)"
+
+[node name="BtnRotRight" type="Button" parent="ThrusterSection/RCSGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶ Imb. DX"
+
+[node name="ToolSection" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ToolTitle" type="Label" parent="ToolSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.65, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "BRACCIO MANIPOLATORE EVA"
+
+[node name="ToolSelector" type="HBoxContainer" parent="ToolSection"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnWelder" type="Button" parent="ToolSection/ToolSelector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "⚡ Saldatrice"
+
+[node name="BtnLaser" type="Button" parent="ToolSection/ToolSelector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "🔥 Taglio Laser"
+
+[node name="BtnMagnet" type="Button" parent="ToolSection/ToolSelector"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "🧲 Harpoon"
+
+[node name="ToolInfoLabel" type="Label" parent="ToolSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "SALDATRICE: Tasso 15.0%/s | Target: Falle Scafo"
+
+[node name="ToolProgressBar" type="ProgressBar" parent="ToolSection"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnActivateTool" type="Button" parent="ToolSection"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶ ATTIVA STRUMENTO (T)"
+
+[node name="CargoInfoLabel" type="Label" parent="ToolSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "STIVA CARGO: 0 slot | 0.0 / 500 kg"

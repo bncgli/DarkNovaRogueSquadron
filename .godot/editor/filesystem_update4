@@ -19,3 +19,4 @@ res://tests/test_life_support_app_node.gd
 res://Applications/LifeSupport/life_support_app.gd
 res://Applications/LifeSupport/Components/room_atmo_card.gd
 res://Applications/Logbook/logbook_app.gd
+res://tests/test_logbook_app_node.gd

@@ -18,6 +18,7 @@ signal weapon_target_locked(target_id: String, target_data: Dictionary)
 signal waypoint_updated(waypoint_data: Dictionary)
 signal active_ping_triggered(origin: Vector3, radius: float)
 signal sensors_scan_completed(contacts: Array)
+signal service_drone_state_changed(telemetry: Dictionary)
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
@@ -1721,3 +1722,82 @@ func get_sensor_entities() -> Array[Dictionary]:
 		return a.get("distance", 0.0) < b.get("distance", 0.0)
 	)
 	return entities
+
+# --- SERVICE DRONE (EVA OPERATIONS) API ---
+
+var _service_drone_instance: ServiceDroneEntity = null
+
+func get_service_drone() -> ServiceDroneEntity:
+	if _service_drone_instance and is_instance_valid(_service_drone_instance):
+		return _service_drone_instance
+	
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		var existing := _space_scene_instance.get_node_or_null("ServiceDrone") as ServiceDroneEntity
+		if existing:
+			_service_drone_instance = existing
+			return _service_drone_instance
+		
+		var packed := load("res://Outside/ServiceDrone/service_drone_entity.tscn") as PackedScene
+		if packed:
+			var inst := packed.instantiate() as ServiceDroneEntity
+			inst.name = "ServiceDrone"
+			_space_scene_instance.add_child(inst)
+			_service_drone_instance = inst
+			return _service_drone_instance
+	
+	# Fallback per test headless o ambiente senza master viewport
+	if _service_drone_instance == null or not is_instance_valid(_service_drone_instance):
+		var packed_fb := load("res://Outside/ServiceDrone/service_drone_entity.tscn") as PackedScene
+		if packed_fb:
+			var inst_fb := packed_fb.instantiate() as ServiceDroneEntity
+			inst_fb.name = "ServiceDrone"
+			add_child(inst_fb)
+			_service_drone_instance = inst_fb
+	
+	return _service_drone_instance
+
+func get_service_drone_telemetry() -> Dictionary:
+	var drone := get_service_drone()
+	if drone:
+		return drone.get_telemetry()
+	return {}
+
+func set_service_drone_inputs(move_vec: Vector3, rot_vec: Vector3, boost: bool = false) -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.set_inputs(move_vec, rot_vec, boost)
+
+func set_service_drone_lights(enabled: bool) -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.set_lights(enabled)
+
+func launch_service_drone() -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.undock()
+
+func dock_service_drone() -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.dock()
+
+func start_service_drone_auto_dock() -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.start_auto_dock()
+
+func set_service_drone_active_tool(tool_name: String) -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.set_active_tool(tool_name)
+
+func set_service_drone_tool_trigger(active: bool, target_id: String = "") -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.set_tool_trigger(active, target_id)
+
+func set_service_drone_config(cfg: Dictionary) -> void:
+	var drone := get_service_drone()
+	if drone:
+		drone.apply_config(cfg)

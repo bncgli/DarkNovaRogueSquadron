@@ -944,6 +944,31 @@ cloud_backup=false
 "is_protected": true,
 "path": "Ship Drive/Programs/Logbook/journal_tuning.dat"
 }, {
+"content": "[SYSTEM]
+app_name=ServiceDroneApp
+version=1.0.0
+status=OPERATIONAL
+
+[FLIGHT]
+max_thrust=35.0
+battery_capacity_sec=240.0
+tether_range=1500.0
+auto_dock_speed=12.0
+",
+"desc": "Configurazione dinamica di spinta, batteria, raggio tether e auto-docking.",
+"is_protected": true,
+"path": "Ship Drive/Programs/ServiceDrone/service_drone_config.dat"
+}, {
+"content": "[TOOLS]
+repair_rate=15.0
+cutting_laser_power=25.0
+cargo_capacity_kg=500.0
+magnet_range=18.0
+",
+"desc": "Calibrazione braccio manipolatore, tasso saldatura, laser e raggio magnete.",
+"is_protected": true,
+"path": "Ship Drive/Programs/ServiceDrone/manipulator_tuning.dat"
+}, {
 "content": "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
 # WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
 [BLUEPRINT_METADATA]
@@ -1008,6 +1033,7 @@ drive_passwords = {
 "Ship Drive/Programs/Logbook": "LOGS-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/Sensors": "SENS-7815",
+"Ship Drive/Programs/ServiceDrone": "SERV-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815",
 "Ship Drive/systems": "ROOT-7815"
@@ -1089,4 +1115,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"],
 "scene_path": "res://Applications/Logbook/logbook_app.tscn",
 "title": "Registro di Bordo & Obiettivi"
+}, {
+"description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
+"icon_color": Color(0.9, 0.5, 0.2, 1),
+"id": "service_drone",
+"roles": ["Ingegnere", "Hacker", "Capitano", "Factotum", "Engineer", "Captain"],
+"scene_path": "res://Applications/ServiceDrone/service_drone_app.tscn",
+"title": "Drone di Servizio EVA"
 }])

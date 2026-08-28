@@ -177,6 +177,13 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 			"Ship Drive/Programs/Logbook/logbook_config.dat": "[SYSTEM]\napp_name=LogbookApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[LOGGING]\nauto_log_events=true\nmax_history_entries=200\nlog_telemetry_errors=true\n",
 			"Ship Drive/Programs/Logbook/journal_tuning.dat": "[SYNC]\nsync_to_ship_drive=true\ntimestamp_format=STAR_DATE\ncloud_backup=false\n"
 		}
+	},
+	"ServiceDrone": {
+		"folder": "Ship Drive/Programs/ServiceDrone",
+		"files": {
+			"Ship Drive/Programs/ServiceDrone/service_drone_config.dat": "[SYSTEM]\napp_name=ServiceDroneApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[FLIGHT]\nmax_thrust=35.0\nbattery_capacity_sec=240.0\ntether_range=1500.0\nauto_dock_speed=12.0\n",
+			"Ship Drive/Programs/ServiceDrone/manipulator_tuning.dat": "[TOOLS]\nrepair_rate=15.0\ncutting_laser_power=25.0\ncargo_capacity_kg=500.0\nmagnet_range=18.0\n"
+		}
 	}
 }
 
@@ -228,6 +235,7 @@ func _init_ui_dropdowns() -> void:
 		subsystem_option.add_item("Sensors (Array Radar 50km)", 9)
 		subsystem_option.add_item("Life Support (Supporto Vitale & O2)", 10)
 		subsystem_option.add_item("Logbook (Registro di Bordo & Note)", 11)
+		subsystem_option.add_item("Service Drone (EVA & Riparazioni)", 12)
 		subsystem_option.selected = 0
 
 func _connect_system_signals() -> void:
@@ -569,6 +577,7 @@ func _perform_actual_threat_scan() -> void:
 			"Ship Drive/Programs/Sensors": "SENS-7815",
 			"Ship Drive/Programs/LifeSupport": "LIFE-7815",
 			"Ship Drive/Programs/Logbook": "LOGS-7815",
+			"Ship Drive/Programs/ServiceDrone": "SERV-7815",
 			"Ship Drive/systems": "ROOT-7815",
 			"Terminal Drive/systems": "ROOT-7815"
 		}
@@ -807,6 +816,7 @@ func _on_factory_reset_pressed() -> void:
 		9: target_sub = "Sensors"
 		10: target_sub = "LifeSupport"
 		11: target_sub = "Logbook"
+		12: target_sub = "ServiceDrone"
 		_: target_sub = "ALL"
 	
 	start_factory_reset(target_sub)
