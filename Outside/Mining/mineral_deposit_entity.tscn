@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3 uid="uid://mineral_deposit_entity_scene_001"]
+
+[ext_resource type="Script" path="res://Outside/Mining/mineral_deposit_entity.gd" id="1_script"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.3, 0.6, 0.9, 1)
+metallic = 0.8
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.1, 0.4, 0.8, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+material = SubResource("StandardMaterial3D_1")
+radius = 0.5
+height = 1.0
+
+[node name="MineralDepositEntity" type="RigidBody3D" groups=["mineral_deposits", "scannable_entities"]]
+collision_layer = 4
+collision_mask = 7
+gravity_scale = 0.0
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_1")

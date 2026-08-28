@@ -26,3 +26,7 @@ res://Economy/cargo_manager.gd
 res://Economy/flux_economy_manager.gd
 res://Applications/CargoBay/cargo_bay_app.gd
 res://tests/test_flux_economy_cargo.gd
+res://Gameplay/Mining/mining_manager.gd
+res://tests/test_mining_scavenging.gd
+res://Outside/Mining/derelict_ship_entity.gd
+res://Outside/Mining/mineral_deposit_entity.gd
