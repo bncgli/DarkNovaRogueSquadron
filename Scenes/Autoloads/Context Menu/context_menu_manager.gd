@@ -167,18 +167,24 @@ func _handle_folder_password() -> void:
 		if fpm:
 			fpm.prompt_set_password(target.folder_path, target.folder_name)
 
+func _get_terminal_option() -> Node:
+	var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer/Terminal Option")
+	if not term_option:
+		term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
+	return term_option
+
 func _handle_open_terminal() -> void:
 	if target is FakeFolder and target.file_type == FakeFolder.file_type_enum.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(target.folder_path):
 			var saved_target = target
 			fpm.prompt_enter_password(saved_target.folder_path, saved_target.folder_name, func(_removed_pass: bool) -> void:
-				var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
+				var term_option = _get_terminal_option()
 				if term_option:
 					term_option.spawn_window()
 			)
 			return
-	var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
+	var term_option = _get_terminal_option()
 	if term_option:
 		term_option.spawn_window()
 

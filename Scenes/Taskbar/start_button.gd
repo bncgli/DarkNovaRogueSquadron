@@ -3,7 +3,8 @@ extends MarginContainer
 ## The start menu in the taskbar. Handles showing and hiding the start menu.
 
 @onready var start_menu: Panel = $"../../StartMenuAnchor/Start Menu"
-@onready var vbox_container: VBoxContainer = $"../../StartMenuAnchor/Start Menu/VBoxContainer"
+@onready var scroll_container: ScrollContainer = $"../../StartMenuAnchor/Start Menu/ScrollContainer" if has_node("../../StartMenuAnchor/Start Menu/ScrollContainer") else null
+@onready var vbox_container: VBoxContainer = ($"../../StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" if has_node("../../StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer") else $"../../StartMenuAnchor/Start Menu/VBoxContainer") as VBoxContainer
 
 var is_mouse_over_menu: bool
 var is_mouse_over: bool

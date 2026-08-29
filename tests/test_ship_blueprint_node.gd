@@ -381,7 +381,7 @@ func _run_suite() -> void:
 	await get_tree().process_frame
 	
 	var start_btn = taskbar_inst.get_node("Taskbar/Start Button")
-	var vbox = taskbar_inst.get_node("StartMenuAnchor/Start Menu/VBoxContainer")
+	var vbox = taskbar_inst.get_node_or_null("StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer") if taskbar_inst.has_node("StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer") else taskbar_inst.get_node("StartMenuAnchor/Start Menu/VBoxContainer")
 	assert(start_btn != null and vbox != null, "Nodi Start Button e VBoxContainer presenti in Taskbar")
 	
 	# 1. Stato Offline / Lobby: le app della nave NON devono essere presenti nel menu
