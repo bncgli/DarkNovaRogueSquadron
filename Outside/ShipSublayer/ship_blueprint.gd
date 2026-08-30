@@ -869,6 +869,60 @@ func get_damage_by_id(dmg_id: String) -> Dictionary:
 			return d
 	return {}
 
+func get_conduit_by_id(conduit_id: String) -> Dictionary:
+	for c in conduits:
+		if c.get("id", "") == conduit_id:
+			return c
+	return {}
+
+func remove_room(room_id: String) -> bool:
+	for i in range(rooms.size()):
+		if rooms[i].get("id", "") == room_id:
+			rooms.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func remove_duct(duct_id: String) -> bool:
+	for i in range(ducts.size()):
+		if ducts[i].get("id", "") == duct_id:
+			ducts.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func remove_device(dev_id: String) -> bool:
+	for i in range(devices.size()):
+		if devices[i].get("id", "") == dev_id:
+			devices.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func remove_junction(junc_id: String) -> bool:
+	for i in range(junctions.size()):
+		if junctions[i].get("id", "") == junc_id:
+			junctions.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func remove_conduit(conduit_id: String) -> bool:
+	for i in range(conduits.size()):
+		if conduits[i].get("id", "") == conduit_id:
+			conduits.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
+func remove_damage(dmg_id: String) -> bool:
+	for i in range(damages.size()):
+		if damages[i].get("id", "") == dmg_id:
+			damages.remove_at(i)
+			emit_changed()
+			return true
+	return false
+
 func get_drive_file_by_path(path: String) -> Dictionary:
 	for f in drive_files:
 		if f.get("path", "") == path:
@@ -966,10 +1020,7 @@ func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictio
 				role_matched = true
 				break
 			# Verifica sinonimi comuni (es. Pilota / Pilot, Soldato / Soldier, Ingegnere / Engineer)
-			if (c_str in ["pilota", "pilot"] and r_str in ["pilota", "pilot"]) or \
-			   (c_str in ["ingegnere", "engineer"] and r_str in ["ingegnere", "engineer"]) or \
-			   (c_str in ["soldato", "soldier", "tattico"] and r_str in ["soldato", "soldier", "tattico", "tattico / armi", "armi"]) or \
-			   (c_str in ["hacker", "cyber"] and r_str in ["hacker", "cyber"]):
+			if (c_str in ["pilota", "pilot"] and r_str in ["pilota", "pilot"]) or (c_str in ["ingegnere", "engineer"] and r_str in ["ingegnere", "engineer"]) or (c_str in ["soldato", "soldier", "tattico"] and r_str in ["soldato", "soldier", "tattico", "tattico / armi", "armi"]) or (c_str in ["hacker", "cyber"] and r_str in ["hacker", "cyber"]):
 				role_matched = true
 				break
 		
@@ -1079,6 +1130,15 @@ func to_dict() -> Dictionary:
 			jc["branches"] = branches_copy
 		junctions_copy.append(jc)
 
+	var conduits_copy: Array = []
+	for c: Dictionary in conduits:
+		var cc: Dictionary = c.duplicate(true)
+		if cc.has("from_pos") and cc["from_pos"] is Vector2:
+			cc["from_pos"] = [cc["from_pos"].x, cc["from_pos"].y]
+		if cc.has("to_pos") and cc["to_pos"] is Vector2:
+			cc["to_pos"] = [cc["to_pos"].x, cc["to_pos"].y]
+		conduits_copy.append(cc)
+
 	var damages_copy: Array = []
 	for dmg: Dictionary in damages:
 		var dmg_c: Dictionary = dmg.duplicate(true)
@@ -1109,6 +1169,7 @@ func to_dict() -> Dictionary:
 		"ducts": ducts_copy,
 		"devices": devices_copy,
 		"junctions": junctions_copy,
+		"conduits": conduits_copy,
 		"damages": damages_copy,
 		"drive_files": drive_files_copy,
 		"drive_passwords": drive_passwords.duplicate(true),
@@ -1196,6 +1257,20 @@ func from_dict(data: Dictionary) -> void:
 					jd["branches"] = new_branches
 				new_juncs.append(jd)
 		junctions = new_juncs
+
+	if data.has("conduits") and data["conduits"] is Array:
+		var new_conduits: Array[Dictionary] = []
+		for c in data["conduits"]:
+			if c is Dictionary:
+				var cd := (c as Dictionary).duplicate(true)
+				if cd.has("from_pos") and cd["from_pos"] is Array and cd["from_pos"].size() == 2:
+					var arr: Array = cd["from_pos"]
+					cd["from_pos"] = Vector2(float(arr[0]), float(arr[1]))
+				if cd.has("to_pos") and cd["to_pos"] is Array and cd["to_pos"].size() == 2:
+					var arr: Array = cd["to_pos"]
+					cd["to_pos"] = Vector2(float(arr[0]), float(arr[1]))
+				new_conduits.append(cd)
+		conduits = new_conduits
 
 	if data.has("damages") and data["damages"] is Array:
 		var new_damages: Array[Dictionary] = []

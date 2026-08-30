@@ -6,9 +6,14 @@ extends Control
 ## Funziona sia come pannello integrato nell'Editor di Godot sia come applicazione standalone.
 
 const DEFAULT_BLUEPRINT_PATH := "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+const MAX_UNDO_DEPTH := 50
 
 var current_blueprint: ShipBlueprint = null
 var current_file_path: String = DEFAULT_BLUEPRINT_PATH
+
+# Stack per Undo / Redo
+var _undo_stack: Array[Dictionary] = []
+var _redo_stack: Array[Dictionary] = []
 
 # Riferimenti UI interni
 var canvas: ShipBlueprintCanvas = null
@@ -16,25 +21,31 @@ var tool_btn_group: ButtonGroup = ButtonGroup.new()
 
 # Toolbar Controlli
 var lbl_current_file: Label = null
+var btn_undo: Button = null
+var btn_redo: Button = null
+
 var btn_select: Button = null
 var btn_add_room: Button = null
 var btn_add_duct: Button = null
 var btn_add_device: Button = null
 var btn_add_junction: Button = null
+var btn_add_conduit: Button = null
 var btn_add_damage: Button = null
 var btn_delete: Button = null
 
 var chk_layer_rooms: CheckBox = null
 var chk_layer_ducts: CheckBox = null
-var chk_layer_power: CheckBox = null
+var chk_layer_devices: CheckBox = null
+var chk_layer_junctions: CheckBox = null
+var chk_layer_conduits: CheckBox = null
 var chk_layer_damages: CheckBox = null
 var chk_layer_spawn: CheckBox = null
+var chk_layer_bounds: CheckBox = null
 var chk_layer_grid: CheckBox = null
 var chk_layer_labels: CheckBox = null
 
 var chk_snap: CheckBox = null
 var opt_snap_size: OptionButton = null
-var zoom_slider: HSlider = null
 var lbl_zoom: Label = null
 
 # Inspector & Outliner
@@ -52,7 +63,7 @@ var lbl_status_msg: Label = null
 # Dialogs
 var file_dialog: FileDialog = null
 var confirm_dialog: ConfirmationDialog = null
-var _pending_file_action: String = "" # "open_tres", "save_tres", "export_json", "import_json"
+var _pending_file_action: String = ""
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(800, 500)
@@ -78,6 +89,10 @@ func load_blueprint(bp: ShipBlueprint, path: String = "") -> void:
 	current_blueprint = bp
 	current_file_path = path
 	
+	_undo_stack.clear()
+	_redo_stack.clear()
+	_update_undo_redo_buttons()
+	
 	if current_blueprint:
 		if not current_blueprint.blueprint_changed.is_connected(_on_blueprint_changed):
 			current_blueprint.blueprint_changed.connect(_on_blueprint_changed)
@@ -101,8 +116,135 @@ func _on_blueprint_changed() -> void:
 	_refresh_outliner()
 	_update_stats_label()
 
+# --- GESTIONE UNDO / REDO ---
+
+func save_undo_state(action_name: String = "") -> void:
+	if not current_blueprint:
+		return
+	var snapshot: Dictionary = {
+		"action": action_name,
+		"data": current_blueprint.to_dict(),
+		"selected_type": canvas.selected_type if canvas else "",
+		"selected_id": canvas.selected_id if canvas else ""
+	}
+	_undo_stack.append(snapshot)
+	if _undo_stack.size() > MAX_UNDO_DEPTH:
+		_undo_stack.pop_front()
+	_redo_stack.clear()
+	_update_undo_redo_buttons()
+
+func undo() -> void:
+	if _undo_stack.is_empty() or not current_blueprint:
+		_set_status_msg("Nessuna azione da annullare.")
+		return
+	
+	# Salva stato attuale nello stack di Redo
+	var current_snapshot: Dictionary = {
+		"data": current_blueprint.to_dict(),
+		"selected_type": canvas.selected_type if canvas else "",
+		"selected_id": canvas.selected_id if canvas else ""
+	}
+	_redo_stack.append(current_snapshot)
+	
+	var prev_state: Dictionary = _undo_stack.pop_back()
+	current_blueprint.from_dict(prev_state.get("data", {}))
+	
+	var sel_type: String = str(prev_state.get("selected_type", ""))
+	var sel_id: String = str(prev_state.get("selected_id", ""))
+	if canvas:
+		canvas.selected_type = sel_type
+		canvas.selected_id = sel_id
+		canvas.queue_redraw()
+	
+	_refresh_outliner()
+	_update_stats_label()
+	if canvas:
+		_populate_property_editor(sel_type, sel_id, canvas._get_selected_element_data())
+	_update_undo_redo_buttons()
+	var act_name: String = str(prev_state.get("action", ""))
+	_set_status_msg("Annullata azione: %s" % act_name if not act_name.is_empty() else "Annullata ultima azione.")
+
+func redo() -> void:
+	if _redo_stack.is_empty() or not current_blueprint:
+		_set_status_msg("Nessuna azione da ripristinare.")
+		return
+	
+	# Salva stato attuale nello stack di Undo
+	var current_snapshot: Dictionary = {
+		"data": current_blueprint.to_dict(),
+		"selected_type": canvas.selected_type if canvas else "",
+		"selected_id": canvas.selected_id if canvas else ""
+	}
+	_undo_stack.append(current_snapshot)
+	
+	var next_state: Dictionary = _redo_stack.pop_back()
+	current_blueprint.from_dict(next_state.get("data", {}))
+	
+	var sel_type: String = str(next_state.get("selected_type", ""))
+	var sel_id: String = str(next_state.get("selected_id", ""))
+	if canvas:
+		canvas.selected_type = sel_type
+		canvas.selected_id = sel_id
+		canvas.queue_redraw()
+		
+	_refresh_outliner()
+	_update_stats_label()
+	if canvas:
+		_populate_property_editor(sel_type, sel_id, canvas._get_selected_element_data())
+	_update_undo_redo_buttons()
+	_set_status_msg("Ripristinata azione.")
+
+func _update_undo_redo_buttons() -> void:
+	if btn_undo:
+		btn_undo.disabled = _undo_stack.is_empty()
+		if not _undo_stack.is_empty():
+			var last_act: String = str(_undo_stack.back().get("action", ""))
+			btn_undo.tooltip_text = "Annulla: %s (Ctrl+Z)" % last_act if not last_act.is_empty() else "Annulla (Ctrl+Z)"
+		else:
+			btn_undo.tooltip_text = "Annulla (Ctrl+Z)"
+			
+	if btn_redo:
+		btn_redo.disabled = _redo_stack.is_empty()
+		btn_redo.tooltip_text = "Ripristina (Ctrl+Y / Ctrl+Shift+Z)"
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		var is_ctrl := key_event.ctrl_pressed or key_event.meta_pressed
+		
+		# Undo (Ctrl+Z) / Redo (Ctrl+Y o Ctrl+Shift+Z)
+		if is_ctrl:
+			if key_event.keycode == KEY_Z:
+				if key_event.shift_pressed:
+					redo()
+				else:
+					undo()
+				get_viewport().set_input_as_handled()
+				return
+			elif key_event.keycode == KEY_Y:
+				redo()
+				get_viewport().set_input_as_handled()
+				return
+		
+		# Tasto Cancella / Backspace per eliminare l'elemento selezionato
+		if (key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE) and not is_ctrl:
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused is LineEdit or focused is TextEdit:
+				return # Lascia scrivere nei campi di testo
+			if canvas and not canvas.selected_type.is_empty() and not canvas.selected_id.is_empty():
+				save_undo_state("Elimina " + canvas.selected_type)
+				canvas.delete_element(canvas.selected_type, canvas.selected_id)
+				_refresh_outliner()
+				_update_stats_label()
+				_show_blueprint_metadata_props()
+				get_viewport().set_input_as_handled()
+				return
+
+# --- COSTRUZIONE INTERFACCIA UTENTE ---
+
 func _build_ui() -> void:
-	# Pulisce figli preesistenti
 	for c in get_children():
 		c.queue_free()
 		
@@ -112,22 +254,33 @@ func _build_ui() -> void:
 	main_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(main_vbox)
 	
-	# 1. TOP TOOLBAR
+	# 1. TOP TOOLBAR (Organizzata su 2 righe per evitare overflow dei checkbox dei layer)
 	var toolbar := _create_toolbar()
 	main_vbox.add_child(toolbar)
 	
-	# 2. MAIN SPLIT (Canvas a sinistra, Inspector/Outliner a destra)
-	var hsplit := HSplitContainer.new()
-	hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hsplit.split_offset = 640
-	main_vbox.add_child(hsplit)
+	# 2. MAIN SPLIT (Pannello Tutti i Layer a sinistra, Canvas al centro, Inspector a destra)
+	var main_hsplit := HSplitContainer.new()
+	main_hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_hsplit.split_offset = 280
+	main_vbox.add_child(main_hsplit)
 	
-	# Canvas Viewport
+	# Left Panel: Tutti i Layer (Outliner gerarchico e Creazione Rapida)
+	var left_panel := _create_left_panel()
+	main_hsplit.add_child(left_panel)
+	
+	# Sub Split: Canvas al centro e Inspector a destra
+	var right_hsplit := HSplitContainer.new()
+	right_hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_hsplit.split_offset = 580
+	main_hsplit.add_child(right_hsplit)
+	
+	# Canvas Panel (Centro)
 	var canvas_panel := PanelContainer.new()
 	canvas_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	canvas_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hsplit.add_child(canvas_panel)
+	right_hsplit.add_child(canvas_panel)
 	
 	canvas = ShipBlueprintCanvas.new()
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -135,11 +288,13 @@ func _build_ui() -> void:
 	canvas.element_selected.connect(_on_canvas_element_selected)
 	canvas.element_modified.connect(_on_canvas_element_modified)
 	canvas.cursor_coords_changed.connect(_on_canvas_cursor_coords_changed)
+	canvas.action_committed.connect(_on_canvas_action_committed)
+	canvas.tool_changed.connect(_on_canvas_tool_changed)
 	canvas_panel.add_child(canvas)
 	
-	# Right Panel (TabContainer per Inspector e Outliner)
+	# Right Panel: Inspector Proprietà (Destra)
 	var right_panel := _create_right_panel()
-	hsplit.add_child(right_panel)
+	right_hsplit.add_child(right_panel)
 	
 	# 3. BOTTOM STATUS BAR
 	var status_bar := _create_status_bar()
@@ -150,108 +305,149 @@ func _build_ui() -> void:
 
 func _create_toolbar() -> Control:
 	var bar := PanelContainer.new()
-	bar.custom_minimum_size = Vector2(0, 36)
+	var toolbar_vbox := VBoxContainer.new()
+	toolbar_vbox.add_theme_constant_override("separation", 3)
+	bar.add_child(toolbar_vbox)
 	
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	bar.add_child(hbox)
+	# --- RIGA 1: FILE, UNDO/REDO & STRUMENTI MODIFICA ---
+	var row1 := HBoxContainer.new()
+	row1.add_theme_constant_override("separation", 5)
+	toolbar_vbox.add_child(row1)
 	
-	# Menu File / Azioni Rapide
+	# Menu File
 	var btn_new := Button.new()
 	btn_new.text = "Nuovo"
 	btn_new.pressed.connect(_on_btn_new_pressed)
-	hbox.add_child(btn_new)
+	row1.add_child(btn_new)
 	
 	var btn_open := Button.new()
 	btn_open.text = "Apri .tres"
 	btn_open.pressed.connect(_on_btn_open_tres_pressed)
-	hbox.add_child(btn_open)
+	row1.add_child(btn_open)
 	
 	var btn_save := Button.new()
 	btn_save.text = "Salva"
 	btn_save.pressed.connect(_on_btn_save_tres_pressed)
-	hbox.add_child(btn_save)
+	row1.add_child(btn_save)
 
 	var btn_save_as := Button.new()
 	btn_save_as.text = "Salva come..."
 	btn_save_as.pressed.connect(_on_btn_save_as_tres_pressed)
-	hbox.add_child(btn_save_as)
+	row1.add_child(btn_save_as)
 	
 	var btn_json_export := Button.new()
 	btn_json_export.text = "Exp JSON"
 	btn_json_export.pressed.connect(_on_btn_export_json_pressed)
-	hbox.add_child(btn_json_export)
+	row1.add_child(btn_json_export)
 
 	var btn_json_import := Button.new()
 	btn_json_import.text = "Imp JSON"
 	btn_json_import.pressed.connect(_on_btn_import_json_pressed)
-	hbox.add_child(btn_json_import)
+	row1.add_child(btn_json_import)
 	
 	var btn_reset_def := Button.new()
-	btn_reset_def.text = "Reset Default"
+	btn_reset_def.text = "Reset Def."
 	btn_reset_def.pressed.connect(_on_btn_reset_default_pressed)
-	hbox.add_child(btn_reset_def)
+	row1.add_child(btn_reset_def)
 	
-	hbox.add_child(VSeparator.new())
+	row1.add_child(VSeparator.new())
+	
+	# Undo / Redo
+	btn_undo = Button.new()
+	btn_undo.text = "↩️ Undo"
+	btn_undo.tooltip_text = "Annulla (Ctrl+Z)"
+	btn_undo.disabled = true
+	btn_undo.pressed.connect(undo)
+	row1.add_child(btn_undo)
+	
+	btn_redo = Button.new()
+	btn_redo.text = "↪️ Redo"
+	btn_redo.tooltip_text = "Ripristina (Ctrl+Y / Ctrl+Shift+Z)"
+	btn_redo.disabled = true
+	btn_redo.pressed.connect(redo)
+	row1.add_child(btn_redo)
+	
+	row1.add_child(VSeparator.new())
 	
 	# Strumenti di modifica (ToolButtons)
 	btn_select = _create_tool_button("🖐️ Sposta", ShipBlueprintCanvas.ToolMode.SELECT, true)
-	hbox.add_child(btn_select)
+	row1.add_child(btn_select)
 	
 	btn_add_room = _create_tool_button("🔲 Stanza", ShipBlueprintCanvas.ToolMode.ADD_ROOM, false)
-	hbox.add_child(btn_add_room)
+	row1.add_child(btn_add_room)
 	
 	btn_add_duct = _create_tool_button("🔧 Condotto", ShipBlueprintCanvas.ToolMode.ADD_DUCT, false)
-	hbox.add_child(btn_add_duct)
+	row1.add_child(btn_add_duct)
 	
 	btn_add_device = _create_tool_button("⚡ Dispositivo", ShipBlueprintCanvas.ToolMode.ADD_DEVICE, false)
-	hbox.add_child(btn_add_device)
+	row1.add_child(btn_add_device)
 	
 	btn_add_junction = _create_tool_button("🟡 Snodo", ShipBlueprintCanvas.ToolMode.ADD_JUNCTION, false)
-	hbox.add_child(btn_add_junction)
+	row1.add_child(btn_add_junction)
+	
+	btn_add_conduit = _create_tool_button("🔌 Cablaggio", ShipBlueprintCanvas.ToolMode.ADD_CONDUIT, false)
+	row1.add_child(btn_add_conduit)
 	
 	btn_add_damage = _create_tool_button("💥 Danno", ShipBlueprintCanvas.ToolMode.ADD_DAMAGE, false)
-	hbox.add_child(btn_add_damage)
+	row1.add_child(btn_add_damage)
 	
 	btn_delete = _create_tool_button("🗑️ Elimina", ShipBlueprintCanvas.ToolMode.DELETE, false)
-	hbox.add_child(btn_delete)
+	row1.add_child(btn_delete)
 	
-	hbox.add_child(VSeparator.new())
+	# Label File Corrente
+	lbl_current_file = Label.new()
+	lbl_current_file.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_current_file.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl_current_file.text = "default_ship_blueprint.tres"
+	row1.add_child(lbl_current_file)
 	
-	# Layer Toggles
+	# --- RIGA 2: VISIBILITÀ TUTTI I LAYER, SNAP & ZOOM ---
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 6)
+	toolbar_vbox.add_child(row2)
+	
 	var lbl_layers := Label.new()
-	lbl_layers.text = "Layer:"
-	hbox.add_child(lbl_layers)
+	lbl_layers.text = "Layer Visibili:"
+	row2.add_child(lbl_layers)
 	
 	chk_layer_rooms = _create_layer_check("Stanze", true, func(v): canvas.show_rooms = v)
-	hbox.add_child(chk_layer_rooms)
+	row2.add_child(chk_layer_rooms)
 	
 	chk_layer_ducts = _create_layer_check("Condotti", true, func(v): canvas.show_ducts = v)
-	hbox.add_child(chk_layer_ducts)
+	row2.add_child(chk_layer_ducts)
 	
-	chk_layer_power = _create_layer_check("Rete", true, func(v): canvas.show_power_grid = v)
-	hbox.add_child(chk_layer_power)
+	chk_layer_devices = _create_layer_check("Dispositivi", true, func(v): canvas.show_devices = v)
+	row2.add_child(chk_layer_devices)
+	
+	chk_layer_junctions = _create_layer_check("Snodi", true, func(v): canvas.show_junctions = v)
+	row2.add_child(chk_layer_junctions)
+	
+	chk_layer_conduits = _create_layer_check("Cablaggi", true, func(v): canvas.show_conduits = v)
+	row2.add_child(chk_layer_conduits)
 	
 	chk_layer_damages = _create_layer_check("Danni", true, func(v): canvas.show_damages = v)
-	hbox.add_child(chk_layer_damages)
+	row2.add_child(chk_layer_damages)
 	
-	chk_layer_spawn = _create_layer_check("Spawn", true, func(v): canvas.show_spawn = v)
-	hbox.add_child(chk_layer_spawn)
+	chk_layer_spawn = _create_layer_check("Spawn Drone", true, func(v): canvas.show_spawn = v)
+	row2.add_child(chk_layer_spawn)
+	
+	chk_layer_bounds = _create_layer_check("Scafo", true, func(v): canvas.show_bounds = v)
+	row2.add_child(chk_layer_bounds)
 	
 	chk_layer_grid = _create_layer_check("Griglia", true, func(v): canvas.show_grid = v)
-	hbox.add_child(chk_layer_grid)
+	row2.add_child(chk_layer_grid)
 	
 	chk_layer_labels = _create_layer_check("Testo", true, func(v): canvas.show_labels = v)
-	hbox.add_child(chk_layer_labels)
+	row2.add_child(chk_layer_labels)
 	
-	hbox.add_child(VSeparator.new())
+	row2.add_child(VSeparator.new())
 	
 	# Snap
 	chk_snap = CheckBox.new()
 	chk_snap.text = "Snap"
 	chk_snap.button_pressed = true
 	chk_snap.toggled.connect(func(v: bool): canvas.snap_enabled = v)
-	hbox.add_child(chk_snap)
+	row2.add_child(chk_snap)
 	
 	opt_snap_size = OptionButton.new()
 	opt_snap_size.add_item("5px", 0)
@@ -260,33 +456,47 @@ func _create_toolbar() -> Control:
 	opt_snap_size.add_item("50px", 3)
 	opt_snap_size.select(1) # 10px default
 	opt_snap_size.item_selected.connect(_on_snap_size_selected)
-	hbox.add_child(opt_snap_size)
+	row2.add_child(opt_snap_size)
 	
-	hbox.add_child(VSeparator.new())
+	row2.add_child(VSeparator.new())
 	
 	# Zoom & Reset View
 	var btn_zoom_out := Button.new()
 	btn_zoom_out.text = "－"
-	btn_zoom_out.pressed.connect(func(): canvas.set_zoom(canvas.zoom_level / 1.25))
-	hbox.add_child(btn_zoom_out)
+	btn_zoom_out.tooltip_text = "Zoom Out"
+	btn_zoom_out.pressed.connect(func():
+		canvas.set_zoom(canvas.zoom_level / 1.25)
+		_update_zoom_label()
+	)
+	row2.add_child(btn_zoom_out)
 	
 	var btn_zoom_in := Button.new()
 	btn_zoom_in.text = "＋"
-	btn_zoom_in.pressed.connect(func(): canvas.set_zoom(canvas.zoom_level * 1.25))
-	hbox.add_child(btn_zoom_in)
+	btn_zoom_in.tooltip_text = "Zoom In"
+	btn_zoom_in.pressed.connect(func():
+		canvas.set_zoom(canvas.zoom_level * 1.25)
+		_update_zoom_label()
+	)
+	row2.add_child(btn_zoom_in)
 	
 	var btn_reset_view := Button.new()
 	btn_reset_view.text = "Centra"
-	btn_reset_view.pressed.connect(func(): canvas.reset_view())
-	hbox.add_child(btn_reset_view)
+	btn_reset_view.tooltip_text = "Centra Vista su Scafo"
+	btn_reset_view.pressed.connect(func():
+		canvas.reset_view()
+		_update_zoom_label()
+	)
+	row2.add_child(btn_reset_view)
 	
-	lbl_current_file = Label.new()
-	lbl_current_file.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_current_file.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	lbl_current_file.text = "default_ship_blueprint.tres"
-	hbox.add_child(lbl_current_file)
+	lbl_zoom = Label.new()
+	lbl_zoom.text = "100%"
+	row2.add_child(lbl_zoom)
 	
 	return bar
+
+func _update_zoom_label() -> void:
+	if lbl_zoom and canvas:
+		lbl_zoom.text = "%d%%" % int(canvas.zoom_level * 100.0)
 
 func _create_tool_button(btn_text: String, tool_mode: int, is_default: bool) -> Button:
 	var btn := Button.new()
@@ -304,21 +514,77 @@ func _create_layer_check(lbl_text: String, is_active: bool, callback: Callable) 
 	chk.toggled.connect(callback)
 	return chk
 
+func _create_left_panel() -> Control:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(260, 0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
+	var vbox_tree := VBoxContainer.new()
+	vbox_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox_tree.add_theme_constant_override("separation", 6)
+	panel.add_child(vbox_tree)
+	
+	# Header
+	var lbl_header := Label.new()
+	lbl_header.text = "🗂️ Tutti i Layer (Outliner)"
+	lbl_header.add_theme_font_size_override("font_size", 13)
+	vbox_tree.add_child(lbl_header)
+	
+	# Pulsanti di creazione rapida nell'outliner
+	var outliner_toolbar := HFlowContainer.new()
+	outliner_toolbar.add_theme_constant_override("h_separation", 4)
+	outliner_toolbar.add_theme_constant_override("v_separation", 4)
+	vbox_tree.add_child(outliner_toolbar)
+	
+	var btn_add_df := Button.new()
+	btn_add_df.text = "+ File Drive"
+	btn_add_df.tooltip_text = "Aggiungi file di configurazione (.dat / script)"
+	btn_add_df.pressed.connect(_on_btn_add_drive_file_pressed)
+	outliner_toolbar.add_child(btn_add_df)
+	
+	var btn_add_pwd := Button.new()
+	btn_add_pwd.text = "+ Password"
+	btn_add_pwd.tooltip_text = "Imposta password per una cartella di sistema"
+	btn_add_pwd.pressed.connect(_on_btn_add_drive_password_pressed)
+	outliner_toolbar.add_child(btn_add_pwd)
+	
+	var btn_add_ap := Button.new()
+	btn_add_ap.text = "+ App"
+	btn_add_ap.tooltip_text = "Registra una nuova applicazione mainframe"
+	btn_add_ap.pressed.connect(_on_btn_add_app_pressed)
+	outliner_toolbar.add_child(btn_add_ap)
+	
+	outliner_tree = Tree.new()
+	outliner_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outliner_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outliner_tree.hide_root = true
+	outliner_tree.item_selected.connect(_on_outliner_tree_item_selected)
+	vbox_tree.add_child(outliner_tree)
+	
+	return panel
+
 func _create_right_panel() -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(280, 0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
-	var tabs := TabContainer.new()
-	tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(tabs)
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 6)
+	panel.add_child(vbox)
 	
-	# TAB 1: Inspector Proprietà
+	var lbl_header := Label.new()
+	lbl_header.text = "🔍 Inspector Proprietà"
+	lbl_header.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(lbl_header)
+	
+	# ScrollContainer per Inspector Proprietà
 	var scroll_insp := ScrollContainer.new()
-	scroll_insp.name = "Inspector"
 	scroll_insp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll_insp.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.add_child(scroll_insp)
+	vbox.add_child(scroll_insp)
 	
 	prop_container = VBoxContainer.new()
 	prop_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -327,26 +593,12 @@ func _create_right_panel() -> Control:
 	
 	lbl_selected_title = Label.new()
 	lbl_selected_title.text = "Nessun elemento selezionato"
-	lbl_selected_title.add_theme_font_size_override("font_size", 14)
+	lbl_selected_title.add_theme_font_size_override("font_size", 12)
 	prop_container.add_child(lbl_selected_title)
 	
 	prop_editor_vbox = VBoxContainer.new()
 	prop_editor_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	prop_container.add_child(prop_editor_vbox)
-	
-	# TAB 2: Gerarchia / Outliner
-	var vbox_tree := VBoxContainer.new()
-	vbox_tree.name = "Gerarchia Sublayer"
-	vbox_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.add_child(vbox_tree)
-	
-	outliner_tree = Tree.new()
-	outliner_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	outliner_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outliner_tree.hide_root = true
-	outliner_tree.item_selected.connect(_on_outliner_tree_item_selected)
-	vbox_tree.add_child(outliner_tree)
 	
 	return panel
 
@@ -371,7 +623,7 @@ func _create_status_bar() -> Control:
 	hbox.add_child(VSeparator.new())
 	
 	lbl_status_stats = Label.new()
-	lbl_status_stats.text = "10 Stanze | 14 Condotti | 11 Dispositivi | 7 Snodi | 8 Danni"
+	lbl_status_stats.text = "0 Stanze | 0 Condotti | 0 Dispositivi | 0 Snodi | 0 Cablaggi | 0 Danni"
 	hbox.add_child(lbl_status_stats)
 	
 	lbl_status_msg = Label.new()
@@ -384,7 +636,6 @@ func _create_status_bar() -> Control:
 
 func _create_dialogs() -> void:
 	file_dialog = FileDialog.new()
-	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	file_dialog.access = FileDialog.ACCESS_RESOURCES
 	file_dialog.file_selected.connect(_on_file_dialog_file_selected)
 	add_child(file_dialog)
@@ -419,20 +670,30 @@ func _on_canvas_element_modified(elem_type: String, elem_id: String, elem_data: 
 	_refresh_outliner()
 	_update_stats_label()
 
+func _on_canvas_action_committed(action_name: String) -> void:
+	save_undo_state(action_name)
+	_refresh_outliner()
+	_update_stats_label()
+
+func _on_canvas_tool_changed(new_tool: int) -> void:
+	if new_tool == ShipBlueprintCanvas.ToolMode.SELECT and btn_select:
+		btn_select.button_pressed = true
+
 func _update_stats_label() -> void:
 	if not current_blueprint or not lbl_status_stats:
 		return
-	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Snodi | %d Danni | %d File Drive | %d App Mainframe" % [
+	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Snodi | %d Cablaggi | %d Danni | %d File | %d App" % [
 		current_blueprint.rooms.size(),
 		current_blueprint.ducts.size(),
 		current_blueprint.devices.size(),
 		current_blueprint.junctions.size(),
+		current_blueprint.conduits.size(),
 		current_blueprint.damages.size(),
 		current_blueprint.drive_files.size(),
 		current_blueprint.installed_apps.size()
 	]
 
-# --- PROPERTY INSPECTOR BUILDER ---
+# --- PROPERTY INSPECTOR BUILDER (SUPPORTO PER TUTTI I LAYER E MODIFICA COMPLETA) ---
 
 func _clear_prop_editor() -> void:
 	for c in prop_editor_vbox.get_children():
@@ -442,13 +703,41 @@ func _show_blueprint_metadata_props() -> void:
 	_clear_prop_editor()
 	if not current_blueprint:
 		return
-	lbl_selected_title.text = "Blueprint Astronave"
+	lbl_selected_title.text = "Blueprint Astronave & Scafo"
 	
-	_add_string_field("ID Nave:", current_blueprint.ship_id, func(v): current_blueprint.ship_id = v)
-	_add_string_field("Nome Nave:", current_blueprint.ship_name, func(v): current_blueprint.ship_name = v)
-	_add_string_field("Classe Nave:", current_blueprint.ship_class, func(v): current_blueprint.ship_class = v)
-	_add_vector2_field("Spawn Drone (X, Y):", current_blueprint.drone_spawn_pos, func(v): current_blueprint.drone_spawn_pos = v; canvas.queue_redraw())
-	_add_float_field("Heading Drone (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v): current_blueprint.drone_spawn_heading = deg_to_rad(v); canvas.queue_redraw())
+	_add_string_field("ID Nave:", current_blueprint.ship_id, func(v):
+		save_undo_state("Modifica ID Nave")
+		current_blueprint.ship_id = v
+	)
+	_add_string_field("Nome Nave:", current_blueprint.ship_name, func(v):
+		save_undo_state("Modifica Nome Nave")
+		current_blueprint.ship_name = v
+	)
+	_add_string_field("Classe Nave:", current_blueprint.ship_class, func(v):
+		save_undo_state("Modifica Classe Nave")
+		current_blueprint.ship_class = v
+	)
+	
+	# Limiti Scafo (Bounds)
+	_add_rect2_field("Limiti Scafo (Pos X,Y / Dim W,H):", current_blueprint.ship_bounds, func(v: Rect2):
+		save_undo_state("Modifica Limiti Scafo")
+		current_blueprint.ship_bounds = v
+		if canvas:
+			canvas.queue_redraw()
+	)
+	
+	_add_vector2_field("Spawn Drone (X, Y):", current_blueprint.drone_spawn_pos, func(v):
+		save_undo_state("Modifica Spawn Drone")
+		current_blueprint.drone_spawn_pos = v
+		if canvas:
+			canvas.queue_redraw()
+	)
+	_add_float_field("Heading Drone (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v):
+		save_undo_state("Modifica Heading Drone")
+		current_blueprint.drone_spawn_heading = deg_to_rad(v)
+		if canvas:
+			canvas.queue_redraw()
+	)
 	_add_passwords_editor()
 
 func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Dictionary) -> void:
@@ -460,98 +749,351 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 	lbl_selected_title.text = "[%s] %s" % [elem_type.to_upper(), elem_id]
 	
 	match elem_type:
+		"bounds":
+			_show_blueprint_metadata_props()
+			return
+
 		"room":
 			var room := current_blueprint.get_room_by_id(elem_id)
 			if room.is_empty():
 				return
-			_add_string_field("ID Stanza:", str(room.get("id", "")), func(v): room["id"] = v; current_blueprint.emit_changed())
-			_add_string_field("Nome Settore:", str(room.get("name", "")), func(v): room["name"] = v; current_blueprint.emit_changed())
-			_add_string_field("Categoria:", str(room.get("category", "command")), func(v): room["category"] = v; current_blueprint.emit_changed())
+			_add_string_field("ID Stanza:", str(room.get("id", "")), func(v):
+				save_undo_state("Rinomina Stanza")
+				room["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Nome Settore:", str(room.get("name", "")), func(v):
+				save_undo_state("Modifica Nome Stanza")
+				room["name"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Categoria:", str(room.get("category", "command")), func(v):
+				save_undo_state("Modifica Categoria Stanza")
+				room["category"] = v
+				current_blueprint.emit_changed()
+			)
 			
 			var r_rect: Rect2 = room.get("rect", Rect2())
-			_add_vector2_field("Posizione (X, Y):", r_rect.position, func(v): room["rect"] = Rect2(v, room["rect"].size); current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_vector2_field("Dimensioni (W, H):", r_rect.size, func(v): room["rect"] = Rect2(room["rect"].position, v); current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_color_field("Colore Sfondo:", room.get("color", Color.WHITE), func(c): room["color"] = c; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_color_field("Colore Bordo:", room.get("border_color", Color.CYAN), func(c): room["border_color"] = c; current_blueprint.emit_changed(); canvas.queue_redraw())
+			_add_vector2_field("Posizione (X, Y):", r_rect.position, func(v):
+				save_undo_state("Sposta Stanza")
+				room["rect"] = Rect2(v, room["rect"].size)
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_vector2_field("Dimensioni (W, H):", r_rect.size, func(v):
+				save_undo_state("Ridimensiona Stanza")
+				room["rect"] = Rect2(room["rect"].position, v)
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_color_field("Colore Sfondo:", room.get("color", Color.WHITE), func(c):
+				save_undo_state("Colore Stanza")
+				room["color"] = c
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_color_field("Colore Bordo:", room.get("border_color", Color.CYAN), func(c):
+				save_undo_state("Colore Bordo Stanza")
+				room["border_color"] = c
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
 
 		"duct":
 			var duct := current_blueprint.get_duct_by_id(elem_id)
 			if duct.is_empty():
 				return
-			_add_string_field("ID Condotto:", str(duct.get("id", "")), func(v): duct["id"] = v; current_blueprint.emit_changed())
-			_add_string_field("Nome Condotto:", str(duct.get("name", "")), func(v): duct["name"] = v; current_blueprint.emit_changed())
-			_add_vector2_field("Da Punto (X, Y):", duct.get("from", Vector2.ZERO), func(v): duct["from"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_vector2_field("A Punto (X, Y):", duct.get("to", Vector2.ZERO), func(v): duct["to"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_float_field("Larghezza:", float(duct.get("width", 14.0)), func(v): duct["width"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_bool_field("Bloccato / Ostruito:", bool(duct.get("is_blocked", false)), func(v): duct["is_blocked"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
+			_add_string_field("ID Condotto:", str(duct.get("id", "")), func(v):
+				save_undo_state("Rinomina Condotto")
+				duct["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Nome Condotto:", str(duct.get("name", "")), func(v):
+				save_undo_state("Modifica Nome Condotto")
+				duct["name"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_vector2_field("Da Punto (X, Y):", duct.get("from", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Inizio Condotto")
+				duct["from"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_vector2_field("A Punto (X, Y):", duct.get("to", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Fine Condotto")
+				duct["to"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_float_field("Larghezza:", float(duct.get("width", 14.0)), func(v):
+				save_undo_state("Larghezza Condotto")
+				duct["width"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_bool_field("Bloccato / Ostruito:", bool(duct.get("is_blocked", false)), func(v):
+				save_undo_state("Stato Blocco Condotto")
+				duct["is_blocked"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
 
 		"device":
 			var dev := current_blueprint.get_device_by_id(elem_id)
 			if dev.is_empty():
 				return
-			_add_string_field("ID Dispositivo:", str(dev.get("id", "")), func(v): dev["id"] = v; current_blueprint.emit_changed())
-			_add_string_field("Nome:", str(dev.get("name", "")), func(v): dev["name"] = v; current_blueprint.emit_changed())
-			_add_string_field("Settore:", str(dev.get("sector", "")), func(v): dev["sector"] = v; current_blueprint.emit_changed())
-			_add_vector2_field("Posizione (X, Y):", dev.get("pos", Vector2.ZERO), func(v): dev["pos"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_bool_field("È Generatore:", bool(dev.get("is_generator", false)), func(v): dev["is_generator"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_float_field("Potenza (MW):", float(dev.get("power_mw", 100.0)), func(v): dev["power_mw"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_int_field("Numero Input:", int(dev.get("inputs_count", 1)), func(v): dev["inputs_count"] = v; current_blueprint.emit_changed())
-			_add_string_field("Descrizione:", str(dev.get("desc", "")), func(v): dev["desc"] = v; current_blueprint.emit_changed())
+			_add_string_field("ID Dispositivo:", str(dev.get("id", "")), func(v):
+				save_undo_state("Rinomina Dispositivo")
+				dev["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Nome:", str(dev.get("name", "")), func(v):
+				save_undo_state("Modifica Nome Dispositivo")
+				dev["name"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_sector_selector_field("Settore:", str(dev.get("sector", "")), func(v):
+				save_undo_state("Modifica Settore Dispositivo")
+				dev["sector"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_vector2_field("Posizione (X, Y):", dev.get("pos", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Dispositivo")
+				dev["pos"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_bool_field("È Generatore:", bool(dev.get("is_generator", false)), func(v):
+				save_undo_state("Tipo Generatore Dispositivo")
+				dev["is_generator"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_float_field("Potenza (MW):", float(dev.get("power_mw", 100.0)), func(v):
+				save_undo_state("Modifica Potenza Dispositivo")
+				dev["power_mw"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_int_field("Numero Input:", int(dev.get("inputs_count", 1)), func(v):
+				save_undo_state("Modifica Input Dispositivo")
+				dev["inputs_count"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_multiline_text_field("Descrizione:", str(dev.get("desc", "")), func(v):
+				save_undo_state("Modifica Descrizione Dispositivo")
+				dev["desc"] = v
+				current_blueprint.emit_changed()
+			)
 
 		"junction":
 			var junc := current_blueprint.get_junction_by_id(elem_id)
 			if junc.is_empty():
 				return
-			_add_string_field("ID Snodo:", str(junc.get("id", "")), func(v): junc["id"] = v; current_blueprint.emit_changed())
-			_add_string_field("Nome Snodo:", str(junc.get("name", "")), func(v): junc["name"] = v; current_blueprint.emit_changed())
-			_add_vector2_field("Posizione (X, Y):", junc.get("pos", Vector2.ZERO), func(v): junc["pos"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_string_field("Fonte Input:", str(junc.get("input_source", "")), func(v): junc["input_source"] = v; current_blueprint.emit_changed())
-			_add_int_field("Ramo Attivo:", int(junc.get("active_branch", 0)), func(v): junc["active_branch"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
+			_add_string_field("ID Snodo:", str(junc.get("id", "")), func(v):
+				save_undo_state("Rinomina Snodo")
+				junc["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Nome Snodo:", str(junc.get("name", "")), func(v):
+				save_undo_state("Modifica Nome Snodo")
+				junc["name"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_vector2_field("Posizione (X, Y):", junc.get("pos", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Snodo")
+				junc["pos"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_string_field("Fonte Input:", str(junc.get("input_source", "")), func(v):
+				save_undo_state("Modifica Fonte Input Snodo")
+				junc["input_source"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_int_field("Ramo Attivo (Indice):", int(junc.get("active_branch", 0)), func(v):
+				save_undo_state("Cambia Ramo Attivo Snodo")
+				junc["active_branch"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
 			_add_branches_editor(junc)
+
+		"conduit":
+			var cnd := current_blueprint.get_conduit_by_id(elem_id)
+			if cnd.is_empty():
+				return
+			_add_string_field("ID Cablaggio:", str(cnd.get("id", "")), func(v):
+				save_undo_state("Rinomina Cablaggio")
+				cnd["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_vector2_field("Da Posizione (X, Y):", cnd.get("from_pos", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Origine Cablaggio")
+				cnd["from_pos"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_vector2_field("A Posizione (X, Y):", cnd.get("to_pos", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Destinazione Cablaggio")
+				cnd["to_pos"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_string_field("Da Snodo:", str(cnd.get("from_junction", "")), func(v):
+				save_undo_state("Modifica Snodo Origine Cablaggio")
+				cnd["from_junction"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Target ID Dispositivo:", str(cnd.get("target_id", "")), func(v):
+				save_undo_state("Modifica Target Cablaggio")
+				cnd["target_id"] = v
+				current_blueprint.emit_changed()
+			)
 
 		"damage":
 			var dmg := current_blueprint.get_damage_by_id(elem_id)
 			if dmg.is_empty():
 				return
-			_add_string_field("ID Danno:", str(dmg.get("id", "")), func(v): dmg["id"] = v; current_blueprint.emit_changed())
-			_add_string_field("Tipo Danno:", str(dmg.get("type", "breach")), func(v): dmg["type"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_string_field("Nome:", str(dmg.get("name", "")), func(v): dmg["name"] = v; current_blueprint.emit_changed())
-			_add_vector2_field("Posizione (X, Y):", dmg.get("pos", Vector2.ZERO), func(v): dmg["pos"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_string_field("Settore:", str(dmg.get("sector", "")), func(v): dmg["sector"] = v; current_blueprint.emit_changed())
-			_add_float_field("Gravità (Severity):", float(dmg.get("severity", 5.0)), func(v): dmg["severity"] = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_float_field("Costo Riparazione:", float(dmg.get("repair_cost", 10.0)), func(v): dmg["repair_cost"] = v; current_blueprint.emit_changed())
-			_add_string_field("Impatto Sistema:", str(dmg.get("system_impact", "")), func(v): dmg["system_impact"] = v; current_blueprint.emit_changed())
-			_add_string_field("Descrizione:", str(dmg.get("desc", "")), func(v): dmg["desc"] = v; current_blueprint.emit_changed())
+			_add_string_field("ID Danno:", str(dmg.get("id", "")), func(v):
+				save_undo_state("Rinomina Danno")
+				dmg["id"] = v
+				canvas.selected_id = v
+				current_blueprint.emit_changed()
+			)
+			_add_option_field("Tipo Danno:", str(dmg.get("type", "breach")), [
+				"breach", "fire", "electrical_short", "radiation_leak", "hull_crack", "system_failure", "coolant_leak"
+			], func(v):
+				save_undo_state("Tipo Danno")
+				dmg["type"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_string_field("Nome:", str(dmg.get("name", "")), func(v):
+				save_undo_state("Modifica Nome Danno")
+				dmg["name"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_vector2_field("Posizione (X, Y):", dmg.get("pos", Vector2.ZERO), func(v):
+				save_undo_state("Sposta Danno")
+				dmg["pos"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_sector_selector_field("Settore:", str(dmg.get("sector", "")), func(v):
+				save_undo_state("Modifica Settore Danno")
+				dmg["sector"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_float_field("Gravità (Severity):", float(dmg.get("severity", 5.0)), func(v):
+				save_undo_state("Modifica Gravità Danno")
+				dmg["severity"] = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_float_field("Costo Riparazione:", float(dmg.get("repair_cost", 10.0)), func(v):
+				save_undo_state("Modifica Costo Riparazione Danno")
+				dmg["repair_cost"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_option_field("Impatto Sistema:", str(dmg.get("system_impact", "integrity_warning")), [
+				"integrity_warning", "life_support_compromised", "power_conduit_cut", "weapons_offline", "shields_destabilized", "sensor_blind", "engines_disabled", "none"
+			], func(v):
+				save_undo_state("Impatto Sistema Danno")
+				dmg["system_impact"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_multiline_text_field("Descrizione:", str(dmg.get("desc", "")), func(v):
+				save_undo_state("Descrizione Danno")
+				dmg["desc"] = v
+				current_blueprint.emit_changed()
+			)
 
 		"spawn":
-			_add_vector2_field("Posizione Spawn Drone:", current_blueprint.drone_spawn_pos, func(v): current_blueprint.drone_spawn_pos = v; current_blueprint.emit_changed(); canvas.queue_redraw())
-			_add_float_field("Heading Spawn (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v): current_blueprint.drone_spawn_heading = deg_to_rad(v); current_blueprint.emit_changed(); canvas.queue_redraw())
+			_add_vector2_field("Posizione Spawn Drone:", current_blueprint.drone_spawn_pos, func(v):
+				save_undo_state("Sposta Spawn Drone")
+				current_blueprint.drone_spawn_pos = v
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
+			_add_float_field("Heading Spawn (Gradi):", rad_to_deg(current_blueprint.drone_spawn_heading), func(v):
+				save_undo_state("Heading Drone")
+				current_blueprint.drone_spawn_heading = deg_to_rad(v)
+				current_blueprint.emit_changed()
+				canvas.queue_redraw()
+			)
 
 		"drive_file":
 			var df := current_blueprint.get_drive_file_by_path(elem_id)
 			if df.is_empty():
 				return
-			_add_string_field("Percorso File:", str(df.get("path", "")), func(v): df["path"] = v; current_blueprint.emit_changed(); _refresh_outliner())
-			_add_bool_field("File Protetto (.dat):", bool(df.get("is_protected", false)), func(v): df["is_protected"] = v; current_blueprint.emit_changed(); _refresh_outliner())
-			_add_string_field("Descrizione:", str(df.get("desc", "")), func(v): df["desc"] = v; current_blueprint.emit_changed())
-			_add_multiline_text_field("Contenuto File:", str(df.get("content", "")), func(v): df["content"] = v; current_blueprint.emit_changed())
+			_add_string_field("Percorso File:", str(df.get("path", "")), func(v):
+				save_undo_state("Percorso File Drive")
+				df["path"] = v
+				current_blueprint.emit_changed()
+				_refresh_outliner()
+			)
+			_add_bool_field("File Protetto (.dat):", bool(df.get("is_protected", false)), func(v):
+				save_undo_state("Protezione File Drive")
+				df["is_protected"] = v
+				current_blueprint.emit_changed()
+				_refresh_outliner()
+			)
+			_add_string_field("Descrizione:", str(df.get("desc", "")), func(v):
+				save_undo_state("Descrizione File Drive")
+				df["desc"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_multiline_text_field("Contenuto File:", str(df.get("content", "")), func(v):
+				save_undo_state("Contenuto File Drive")
+				df["content"] = v
+				current_blueprint.emit_changed()
+			)
 
 		"installed_app":
 			var app := current_blueprint.get_installed_app_by_id(elem_id)
 			if app.is_empty():
 				return
-			_add_string_field("ID Applicazione:", str(app.get("id", "")), func(v): app["id"] = v; current_blueprint.emit_changed(); _refresh_outliner())
-			_add_string_field("Titolo Menu:", str(app.get("title", "")), func(v): app["title"] = v; current_blueprint.emit_changed(); _refresh_outliner())
-			_add_string_field("Descrizione:", str(app.get("description", "")), func(v): app["description"] = v; current_blueprint.emit_changed())
-			_add_string_field("Percorso Scena (.tscn):", str(app.get("scene_path", "")), func(v): app["scene_path"] = v; current_blueprint.emit_changed())
-			_add_color_field("Colore Icona:", app.get("icon_color", Color.CYAN), func(c): app["icon_color"] = c; current_blueprint.emit_changed())
+			_add_string_field("ID Applicazione:", str(app.get("id", "")), func(v):
+				save_undo_state("ID App Mainframe")
+				app["id"] = v
+				current_blueprint.emit_changed()
+				_refresh_outliner()
+			)
+			_add_string_field("Titolo Menu:", str(app.get("title", "")), func(v):
+				save_undo_state("Titolo App Mainframe")
+				app["title"] = v
+				current_blueprint.emit_changed()
+				_refresh_outliner()
+			)
+			_add_string_field("Descrizione:", str(app.get("description", "")), func(v):
+				save_undo_state("Descrizione App Mainframe")
+				app["description"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_string_field("Percorso Scena (.tscn):", str(app.get("scene_path", "")), func(v):
+				save_undo_state("Scena App Mainframe")
+				app["scene_path"] = v
+				current_blueprint.emit_changed()
+			)
+			_add_color_field("Colore Icona:", app.get("icon_color", Color.CYAN), func(c):
+				save_undo_state("Colore App Mainframe")
+				app["icon_color"] = c
+				current_blueprint.emit_changed()
+			)
 			_add_roles_editor(app)
 
 	# Pulsante per eliminare l'elemento
 	var btn_del_this := Button.new()
-	btn_del_this.text = "Elimina Elemento"
+	btn_del_this.text = "🗑️ Elimina Questo Elemento"
 	btn_del_this.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 	btn_del_this.pressed.connect(func():
+		save_undo_state("Elimina " + elem_type)
 		if elem_type == "drive_file":
 			current_blueprint.remove_drive_file(elem_id)
 			_refresh_outliner()
@@ -567,7 +1109,8 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 	)
 	prop_editor_vbox.add_child(btn_del_this)
 
-# Helper Campi UI
+# --- HELPER CAMPI UI INSPECTOR ---
+
 func _add_string_field(lbl: String, current_val: String, callback: Callable) -> void:
 	var h := HBoxContainer.new()
 	var l := Label.new()
@@ -580,6 +1123,58 @@ func _add_string_field(lbl: String, current_val: String, callback: Callable) -> 
 	h.add_child(l)
 	h.add_child(ed)
 	prop_editor_vbox.add_child(h)
+
+func _add_option_field(lbl: String, current_val: String, options: Array[String], callback: Callable) -> void:
+	var h := HBoxContainer.new()
+	var l := Label.new()
+	l.text = lbl
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var opt := OptionButton.new()
+	opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	var sel_idx := 0
+	for i in range(options.size()):
+		opt.add_item(options[i], i)
+		if options[i] == current_val:
+			sel_idx = i
+	opt.select(sel_idx)
+	opt.item_selected.connect(func(idx: int):
+		callback.call(options[idx])
+	)
+	h.add_child(l)
+	h.add_child(opt)
+	prop_editor_vbox.add_child(h)
+
+func _add_sector_selector_field(lbl: String, current_val: String, callback: Callable) -> void:
+	var v_box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = lbl
+	v_box.add_child(l)
+	
+	var h := HBoxContainer.new()
+	var ed := LineEdit.new()
+	ed.text = current_val
+	ed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ed.text_changed.connect(callback)
+	h.add_child(ed)
+	
+	var opt := OptionButton.new()
+	opt.text = "Scegli Settore..."
+	opt.add_item("(Seleziona Stanza)", 0)
+	var room_names: Array[String] = []
+	if current_blueprint:
+		for r in current_blueprint.rooms:
+			var r_name: String = str(r.get("name", r.get("id", "")))
+			room_names.append(r_name)
+			opt.add_item(r_name)
+	opt.item_selected.connect(func(idx: int):
+		if idx > 0 and idx - 1 < room_names.size():
+			ed.text = room_names[idx - 1]
+			callback.call(room_names[idx - 1])
+	)
+	h.add_child(opt)
+	v_box.add_child(h)
+	prop_editor_vbox.add_child(v_box)
 
 func _add_float_field(lbl: String, current_val: float, callback: Callable) -> void:
 	var h := HBoxContainer.new()
@@ -637,6 +1232,7 @@ func _add_vector2_field(lbl: String, current_val: Vector2, callback: Callable) -
 	spin_x.max_value = 9999.0
 	spin_x.step = 5.0
 	spin_x.value = current_val.x
+	spin_x.prefix = "X: "
 	spin_x.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	var spin_y := SpinBox.new()
@@ -644,6 +1240,7 @@ func _add_vector2_field(lbl: String, current_val: Vector2, callback: Callable) -
 	spin_y.max_value = 9999.0
 	spin_y.step = 5.0
 	spin_y.value = current_val.y
+	spin_y.prefix = "Y: "
 	spin_y.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	spin_x.value_changed.connect(func(v: float): callback.call(Vector2(v, spin_y.value)))
@@ -652,6 +1249,63 @@ func _add_vector2_field(lbl: String, current_val: Vector2, callback: Callable) -
 	h.add_child(spin_x)
 	h.add_child(spin_y)
 	v_box.add_child(h)
+	prop_editor_vbox.add_child(v_box)
+
+func _add_rect2_field(lbl: String, current_val: Rect2, callback: Callable) -> void:
+	var v_box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = lbl
+	v_box.add_child(l)
+	
+	var h1 := HBoxContainer.new()
+	var spin_x := SpinBox.new()
+	spin_x.min_value = -9999.0
+	spin_x.max_value = 9999.0
+	spin_x.step = 5.0
+	spin_x.value = current_val.position.x
+	spin_x.prefix = "Pos X: "
+	spin_x.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	var spin_y := SpinBox.new()
+	spin_y.min_value = -9999.0
+	spin_y.max_value = 9999.0
+	spin_y.step = 5.0
+	spin_y.value = current_val.position.y
+	spin_y.prefix = "Pos Y: "
+	spin_y.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h1.add_child(spin_x)
+	h1.add_child(spin_y)
+	v_box.add_child(h1)
+	
+	var h2 := HBoxContainer.new()
+	var spin_w := SpinBox.new()
+	spin_w.min_value = 20.0
+	spin_w.max_value = 9999.0
+	spin_w.step = 5.0
+	spin_w.value = current_val.size.x
+	spin_w.prefix = "W: "
+	spin_w.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	var spin_h := SpinBox.new()
+	spin_h.min_value = 20.0
+	spin_h.max_value = 9999.0
+	spin_h.step = 5.0
+	spin_h.value = current_val.size.y
+	spin_h.prefix = "H: "
+	spin_h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h2.add_child(spin_w)
+	h2.add_child(spin_h)
+	v_box.add_child(h2)
+	
+	var update_rect := func():
+		var r := Rect2(Vector2(spin_x.value, spin_y.value), Vector2(spin_w.value, spin_h.value))
+		callback.call(r)
+	
+	spin_x.value_changed.connect(func(_v): update_rect.call())
+	spin_y.value_changed.connect(func(_v): update_rect.call())
+	spin_w.value_changed.connect(func(_v): update_rect.call())
+	spin_h.value_changed.connect(func(_v): update_rect.call())
+	
 	prop_editor_vbox.add_child(v_box)
 
 func _add_color_field(lbl: String, current_val: Color, callback: Callable) -> void:
@@ -675,7 +1329,7 @@ func _add_multiline_text_field(lbl: String, current_val: String, callback: Calla
 	v_box.add_child(l)
 	
 	var text_edit := TextEdit.new()
-	text_edit.custom_minimum_size = Vector2(0, 180)
+	text_edit.custom_minimum_size = Vector2(0, 120)
 	text_edit.text = current_val
 	text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_edit.text_changed.connect(func(): callback.call(text_edit.text))
@@ -683,14 +1337,14 @@ func _add_multiline_text_field(lbl: String, current_val: String, callback: Calla
 	prop_editor_vbox.add_child(v_box)
 
 func _add_passwords_editor() -> void:
-	if not current_blueprint or current_blueprint.drive_passwords.is_empty():
+	if not current_blueprint:
 		return
 	var v_box := VBoxContainer.new()
 	var l := Label.new()
-	l.text = "Password Cartelle Ship Drive:"
+	l.text = "Password Cartelle Ship Drive (%d registrate):" % current_blueprint.drive_passwords.size()
 	v_box.add_child(l)
 	
-	for path in current_blueprint.drive_passwords:
+	for path in current_blueprint.drive_passwords.keys():
 		var h := HBoxContainer.new()
 		var lbl_p := Label.new()
 		lbl_p.text = str(path).get_file() + ":"
@@ -699,17 +1353,35 @@ func _add_passwords_editor() -> void:
 		ed_pwd.text = str(current_blueprint.drive_passwords[path])
 		ed_pwd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var cur_path: String = str(path)
-		ed_pwd.text_changed.connect(func(v: String): current_blueprint.drive_passwords[cur_path] = v; current_blueprint.emit_changed())
+		ed_pwd.text_changed.connect(func(v: String):
+			save_undo_state("Modifica Password " + cur_path)
+			current_blueprint.drive_passwords[cur_path] = v
+			current_blueprint.emit_changed()
+		)
+		var btn_del_pwd := Button.new()
+		btn_del_pwd.text = "🗑️"
+		btn_del_pwd.tooltip_text = "Rimuovi Password"
+		btn_del_pwd.pressed.connect(func():
+			save_undo_state("Rimuovi Password")
+			current_blueprint.remove_drive_password(cur_path)
+			_show_blueprint_metadata_props()
+		)
 		h.add_child(lbl_p)
 		h.add_child(ed_pwd)
+		h.add_child(btn_del_pwd)
 		v_box.add_child(h)
 		
+	var btn_add_p := Button.new()
+	btn_add_p.text = "+ Aggiungi Nuova Password"
+	btn_add_p.pressed.connect(_on_btn_add_drive_password_pressed)
+	v_box.add_child(btn_add_p)
+	
 	prop_editor_vbox.add_child(v_box)
 
 func _add_branches_editor(junc: Dictionary) -> void:
 	var v_box := VBoxContainer.new()
 	var l := Label.new()
-	l.text = "Rami dello Snodo:"
+	l.text = "Rami e Circuiti dello Snodo:"
 	v_box.add_child(l)
 	
 	var branches: Array = junc.get("branches", [])
@@ -719,27 +1391,129 @@ func _add_branches_editor(junc: Dictionary) -> void:
 		var b_vbox := VBoxContainer.new()
 		b_box.add_child(b_vbox)
 		
+		var b_top_row := HBoxContainer.new()
 		var b_lbl := Label.new()
-		b_lbl.text = "Ramo %d: %s" % [b_idx, str(b.get("name", "Ramo"))]
-		b_vbox.add_child(b_lbl)
+		b_lbl.text = "Ramo %d" % b_idx
+		b_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		
+		var btn_del_b := Button.new()
+		btn_del_b.text = "🗑️ Rimuovi Ramo"
+		var cur_idx := b_idx
+		btn_del_b.pressed.connect(func():
+			save_undo_state("Rimuovi Ramo Snodo")
+			branches.remove_at(cur_idx)
+			current_blueprint.emit_changed()
+			_populate_property_editor("junction", str(junc.get("id", "")), junc)
+			canvas.queue_redraw()
+		)
+		b_top_row.add_child(b_lbl)
+		b_top_row.add_child(btn_del_b)
+		b_vbox.add_child(b_top_row)
+		
+		# Nome Ramo
 		var ed_name := LineEdit.new()
+		ed_name.placeholder_text = "Nome Ramo"
 		ed_name.text = str(b.get("name", ""))
-		ed_name.text_changed.connect(func(v: String): b["name"] = v; current_blueprint.emit_changed())
+		ed_name.text_changed.connect(func(v: String):
+			save_undo_state("Nome Ramo")
+			b["name"] = v
+			current_blueprint.emit_changed()
+		)
 		b_vbox.add_child(ed_name)
 		
+		# Tipo Target & Target ID
+		var h_target := HBoxContainer.new()
+		var opt_ttype := OptionButton.new()
+		opt_ttype.add_item("dead_end", 0)
+		opt_ttype.add_item("device", 1)
+		opt_ttype.add_item("sub_junction", 2)
+		opt_ttype.add_item("system", 3)
+		var ttype_str: String = str(b.get("target_type", "dead_end"))
+		match ttype_str:
+			"dead_end": opt_ttype.select(0)
+			"device": opt_ttype.select(1)
+			"sub_junction": opt_ttype.select(2)
+			"system": opt_ttype.select(3)
+		opt_ttype.item_selected.connect(func(idx: int):
+			save_undo_state("Tipo Target Ramo")
+			b["target_type"] = opt_ttype.get_item_text(idx)
+			current_blueprint.emit_changed()
+			canvas.queue_redraw()
+		)
+		h_target.add_child(opt_ttype)
+		
 		var ed_target := LineEdit.new()
+		ed_target.placeholder_text = "Target ID (es. DEV_1 o DEAD_1)"
 		ed_target.text = str(b.get("target_id", ""))
-		ed_target.text_changed.connect(func(v: String): b["target_id"] = v; current_blueprint.emit_changed())
-		b_vbox.add_child(ed_target)
+		ed_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ed_target.text_changed.connect(func(v: String):
+			save_undo_state("Target ID Ramo")
+			b["target_id"] = v
+			current_blueprint.emit_changed()
+		)
+		h_target.add_child(ed_target)
+		b_vbox.add_child(h_target)
+		
+		# Line ID
+		var ed_line := LineEdit.new()
+		ed_line.placeholder_text = "Line ID (es. L_J1_B0)"
+		ed_line.text = str(b.get("line_id", ""))
+		ed_line.text_changed.connect(func(v: String):
+			save_undo_state("Line ID Ramo")
+			b["line_id"] = v
+			current_blueprint.emit_changed()
+		)
+		b_vbox.add_child(ed_line)
+		
+		# Destinazione Cavo to_pos
+		var cur_to_pos: Vector2 = b.get("to_pos", junc.get("pos", Vector2.ZERO))
+		var h_pos := HBoxContainer.new()
+		var spin_bx := SpinBox.new()
+		spin_bx.min_value = -9999.0
+		spin_bx.max_value = 9999.0
+		spin_bx.step = 5.0
+		spin_bx.value = cur_to_pos.x
+		spin_bx.prefix = "To X: "
+		spin_bx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		
+		var spin_by := SpinBox.new()
+		spin_by.min_value = -9999.0
+		spin_by.max_value = 9999.0
+		spin_by.step = 5.0
+		spin_by.value = cur_to_pos.y
+		spin_by.prefix = "To Y: "
+		spin_by.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		
+		spin_bx.value_changed.connect(func(v: float):
+			save_undo_state("Destinazione Cavo")
+			b["to_pos"] = Vector2(v, spin_by.value)
+			current_blueprint.emit_changed()
+			canvas.queue_redraw()
+		)
+		spin_by.value_changed.connect(func(v: float):
+			save_undo_state("Destinazione Cavo")
+			b["to_pos"] = Vector2(spin_bx.value, v)
+			current_blueprint.emit_changed()
+			canvas.queue_redraw()
+		)
+		h_pos.add_child(spin_bx)
+		h_pos.add_child(spin_by)
+		b_vbox.add_child(h_pos)
 		
 		v_box.add_child(b_box)
 		
 	var btn_add_branch := Button.new()
-	btn_add_branch.text = "+ Aggiungi Ramo"
+	btn_add_branch.text = "+ Aggiungi Nuovo Ramo"
 	btn_add_branch.pressed.connect(func():
+		save_undo_state("Aggiungi Ramo Snodo")
 		var j_pos: Vector2 = junc.get("pos", Vector2.ZERO)
-		var new_b := {"name": "Nuovo Ramo", "target_type": "dead_end", "target_id": "DEAD_%d" % (branches.size() + 1), "line_id": "L_%s_B%d" % [junc.get("id", "J"), branches.size()], "to_pos": j_pos + Vector2(30, 0)}
+		var new_b := {
+			"name": "Ramo %d" % (branches.size() + 1),
+			"target_type": "dead_end",
+			"target_id": "DEAD_%d" % (branches.size() + 1),
+			"line_id": "L_%s_B%d" % [junc.get("id", "J"), branches.size()],
+			"to_pos": j_pos + Vector2(40, 20 * branches.size())
+		}
 		branches.append(new_b)
 		current_blueprint.emit_changed()
 		_populate_property_editor("junction", str(junc.get("id", "")), junc)
@@ -751,7 +1525,7 @@ func _add_branches_editor(junc: Dictionary) -> void:
 func _add_roles_editor(app: Dictionary) -> void:
 	var v_box := VBoxContainer.new()
 	var l := Label.new()
-	l.text = "Ruoli Autorizzati (separati da virgola):"
+	l.text = "Ruoli Autorizzati (RBAC):"
 	v_box.add_child(l)
 	
 	var ed_roles := LineEdit.new()
@@ -762,6 +1536,7 @@ func _add_roles_editor(app: Dictionary) -> void:
 	ed_roles.text = ", ".join(roles_str_arr)
 	ed_roles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ed_roles.text_changed.connect(func(v: String):
+		save_undo_state("Modifica Ruoli App")
 		var parts := v.split(",")
 		var new_arr: Array = []
 		for p in parts:
@@ -774,7 +1549,7 @@ func _add_roles_editor(app: Dictionary) -> void:
 	v_box.add_child(ed_roles)
 	prop_editor_vbox.add_child(v_box)
 
-# --- OUTLINER TREE ---
+# --- OUTLINER TREE (GERARCHIA COMPLETA DI TUTTI I LAYER) ---
 
 func _refresh_outliner() -> void:
 	if not outliner_tree or not current_blueprint:
@@ -782,7 +1557,16 @@ func _refresh_outliner() -> void:
 	outliner_tree.clear()
 	var root := outliner_tree.create_item()
 	
-	# Gruppo 1: Stanze
+	# Gruppo 0: Parametri Nave & Scafo
+	var cat_hull := outliner_tree.create_item(root)
+	cat_hull.set_text(0, "🚀 Scafo & Metadati Nave")
+	cat_hull.set_metadata(0, {"type": "bounds", "id": "ship_bounds"})
+	
+	var item_spawn := outliner_tree.create_item(cat_hull)
+	item_spawn.set_text(0, "🎯 Spawn Drone (Pos: %s)" % str(current_blueprint.drone_spawn_pos))
+	item_spawn.set_metadata(0, {"type": "spawn", "id": "drone_spawn"})
+	
+	# Gruppo 1: Stanze e Settori
 	var cat_rooms := outliner_tree.create_item(root)
 	cat_rooms.set_text(0, "🔲 Stanze e Settori (%d)" % current_blueprint.rooms.size())
 	for r in current_blueprint.rooms:
@@ -790,44 +1574,59 @@ func _refresh_outliner() -> void:
 		item.set_text(0, "[%s] %s" % [str(r.get("id", "")), str(r.get("name", ""))])
 		item.set_metadata(0, {"type": "room", "id": str(r.get("id", ""))})
 		
-	# Gruppo 2: Condotti
+	# Gruppo 2: Condotti di Manutenzione
 	var cat_ducts := outliner_tree.create_item(root)
 	cat_ducts.set_text(0, "🔧 Condotti di Manutenzione (%d)" % current_blueprint.ducts.size())
 	for d in current_blueprint.ducts:
 		var item := outliner_tree.create_item(cat_ducts)
-		item.set_text(0, "[%s] %s" % [str(d.get("id", "")), str(d.get("name", ""))])
+		var blk := " [BLOCCATO]" if d.get("is_blocked", false) else ""
+		item.set_text(0, "[%s] %s%s" % [str(d.get("id", "")), str(d.get("name", "")), blk])
 		item.set_metadata(0, {"type": "duct", "id": str(d.get("id", ""))})
 
 	# Gruppo 3: Rete Elettrica
 	var cat_power := outliner_tree.create_item(root)
-	cat_power.set_text(0, "⚡ Rete Elettrica (%d Dev / %d Snodi)" % [current_blueprint.devices.size(), current_blueprint.junctions.size()])
+	cat_power.set_text(0, "⚡ Rete Elettrica (%d Dev / %d Snodi / %d Cablaggi)" % [
+		current_blueprint.devices.size(),
+		current_blueprint.junctions.size(),
+		current_blueprint.conduits.size()
+	])
+	
+	# Sottogruppo Dispositivi
 	for dev in current_blueprint.devices:
 		var item := outliner_tree.create_item(cat_power)
-		var gen_tag := " [GEN]" if dev.get("is_generator", false) else ""
+		var gen_tag := " [GEN %d MW]" % int(dev.get("power_mw", 0)) if dev.get("is_generator", false) else ""
 		item.set_text(0, "⚡ [%s] %s%s" % [str(dev.get("id", "")), str(dev.get("name", "")), gen_tag])
 		item.set_metadata(0, {"type": "device", "id": str(dev.get("id", ""))})
+		
+	# Sottogruppo Snodi
 	for j in current_blueprint.junctions:
 		var item := outliner_tree.create_item(cat_power)
-		item.set_text(0, "🟡 [%s] %s" % [str(j.get("id", "")), str(j.get("name", ""))])
+		var b_count: int = (j.get("branches", []) as Array).size()
+		item.set_text(0, "🟡 [%s] %s (%d rami)" % [str(j.get("id", "")), str(j.get("name", "")), b_count])
 		item.set_metadata(0, {"type": "junction", "id": str(j.get("id", ""))})
+		
+	# Sottogruppo Cablaggi
+	for cnd in current_blueprint.conduits:
+		var item := outliner_tree.create_item(cat_power)
+		item.set_text(0, "🔌 [%s] Cablaggio -> %s" % [str(cnd.get("id", "")), str(cnd.get("target_id", "Libero"))])
+		item.set_metadata(0, {"type": "conduit", "id": str(cnd.get("id", ""))})
 
-	# Gruppo 4: Danni
+	# Gruppo 4: Zone di Danno
 	var cat_damages := outliner_tree.create_item(root)
-	cat_damages.set_text(0, "💥 Zone Danni & Anomalie (%d)" % current_blueprint.damages.size())
+	cat_damages.set_text(0, "💥 Zone di Danno (%d)" % current_blueprint.damages.size())
 	for dmg in current_blueprint.damages:
 		var item := outliner_tree.create_item(cat_damages)
-		item.set_text(0, "💥 [%s] %s" % [str(dmg.get("id", "")), str(dmg.get("name", ""))])
+		item.set_text(0, "💥 [%s] %s (%s, Sev: %d)" % [str(dmg.get("id", "")), str(dmg.get("name", "")), str(dmg.get("type", "breach")), int(dmg.get("severity", 1))])
 		item.set_metadata(0, {"type": "damage", "id": str(dmg.get("id", ""))})
 
-	# Gruppo 5: Ship Drive & File System
+	# Gruppo 5: Ship Drive (File System & Password)
 	var cat_drive := outliner_tree.create_item(root)
-	cat_drive.set_text(0, "💾 Ship Drive & File System (%d File)" % current_blueprint.drive_files.size())
+	cat_drive.set_text(0, "📁 Ship Drive File & Passwords (%d File)" % current_blueprint.drive_files.size())
 	for df in current_blueprint.drive_files:
 		var item := outliner_tree.create_item(cat_drive)
-		var p: String = str(df.get("path", ""))
-		var lock_tag := " 🔒" if df.get("is_protected", false) else ""
-		item.set_text(0, "📄 %s%s" % [p.get_file(), lock_tag])
-		item.set_metadata(0, {"type": "drive_file", "id": p})
+		var prot_tag := " 🔒" if df.get("is_protected", false) else ""
+		item.set_text(0, "📄 %s%s" % [str(df.get("path", "")), prot_tag])
+		item.set_metadata(0, {"type": "drive_file", "id": str(df.get("path", ""))})
 
 	# Gruppo 6: Applicazioni Mainframe Installate
 	var cat_apps := outliner_tree.create_item(root)
@@ -861,15 +1660,60 @@ func _on_outliner_tree_item_selected() -> void:
 			_populate_property_editor(elem_type, elem_id, app_data)
 			canvas.queue_redraw()
 			return
+		if elem_type == "bounds":
+			canvas.selected_type = "bounds"
+			canvas.selected_id = "ship_bounds"
+			_show_blueprint_metadata_props()
+			canvas.queue_redraw()
+			return
+			
 		canvas.selected_type = elem_type
 		canvas.selected_id = elem_id
 		var elem_data := canvas._get_selected_element_data()
 		_populate_property_editor(elem_type, elem_id, elem_data)
 		canvas.queue_redraw()
 
+# --- AZIONI DI AGGIUNTA FILE / APP / PASSWORD ---
+
+func _on_btn_add_drive_file_pressed() -> void:
+	save_undo_state("Aggiungi File Drive")
+	var next_idx := current_blueprint.drive_files.size() + 1
+	var new_path := "Ship Drive/documents/doc_%d.txt" % next_idx
+	current_blueprint.set_drive_file(new_path, "# Nuovo documento Dark Nova\n", false, "Documento utente")
+	_refresh_outliner()
+	_update_stats_label()
+	_populate_property_editor("drive_file", new_path, current_blueprint.get_drive_file_by_path(new_path))
+	_set_status_msg("File creato: %s" % new_path)
+
+func _on_btn_add_drive_password_pressed() -> void:
+	save_undo_state("Aggiungi Password")
+	var path_key := "Ship Drive/Programs/SecureFolder_%d" % (current_blueprint.drive_passwords.size() + 1)
+	current_blueprint.set_drive_password(path_key, "SEC-%04d" % randi_range(1000, 9999))
+	_show_blueprint_metadata_props()
+	_set_status_msg("Nuova password cartella creata.")
+
+func _on_btn_add_app_pressed() -> void:
+	save_undo_state("Aggiungi App Mainframe")
+	var next_idx := current_blueprint.installed_apps.size() + 1
+	var app_id := "custom_app_%d" % next_idx
+	var new_app: Dictionary = {
+		"id": app_id,
+		"title": "Nuova App %d" % next_idx,
+		"description": "Applicazione personalizzata Dark Nova.",
+		"scene_path": "",
+		"icon_color": Color.CYAN,
+		"roles": ["Capitano", "Factotum"]
+	}
+	current_blueprint.set_installed_app(app_id, new_app)
+	_refresh_outliner()
+	_update_stats_label()
+	_populate_property_editor("installed_app", app_id, new_app)
+	_set_status_msg("App creata: %s" % app_id)
+
 # --- AZIONI TOOLBAR & SALVATAGGIO ---
 
 func _on_btn_new_pressed() -> void:
+	save_undo_state("Nuova Blueprint")
 	var bp := ShipBlueprint.new()
 	bp.create_default_ship()
 	load_blueprint(bp, "")
@@ -914,6 +1758,7 @@ func _on_btn_reset_default_pressed() -> void:
 
 func _on_confirm_reset_default() -> void:
 	if current_blueprint:
+		save_undo_state("Reset Default Blueprint")
 		current_blueprint.create_default_ship()
 		_save_to_path(DEFAULT_BLUEPRINT_PATH)
 		_refresh_outliner()
@@ -940,6 +1785,7 @@ func _on_file_dialog_file_selected(path: String) -> void:
 					_set_status_msg("Errore esportazione JSON (codice %d)" % err)
 		"import_json":
 			if current_blueprint:
+				save_undo_state("Import JSON")
 				var err := current_blueprint.import_from_json(path)
 				if err == OK:
 					_refresh_outliner()
@@ -958,6 +1804,6 @@ func _save_to_path(path: String) -> void:
 		if lbl_current_file:
 			lbl_current_file.text = path.get_file()
 			lbl_current_file.tooltip_text = path
-		_set_status_msg("Blueprint salvata con successo in %s" % path)
+		_set_status_msg("Salvata con successo: %s" % path)
 	else:
-		_set_status_msg("Errore durante il salvataggio (codice %d)" % err)
+		_set_status_msg("Errore nel salvataggio della Blueprint (codice %d)" % err)

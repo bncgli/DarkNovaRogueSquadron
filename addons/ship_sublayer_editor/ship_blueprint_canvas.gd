@@ -2,11 +2,13 @@
 class_name ShipBlueprintCanvas
 extends Control
 
-## Canvas 2D interattivo per la visualizzazione e modifica dei vari layer della nave.
+## Canvas 2D interattivo per la visualizzazione e modifica di tutti i layer della nave.
 
 signal element_selected(element_type: String, element_id: String, element_data: Dictionary)
 signal element_modified(element_type: String, element_id: String, element_data: Dictionary)
 signal cursor_coords_changed(world_pos: Vector2)
+signal action_committed(action_name: String)
+signal tool_changed(new_tool: int)
 
 enum ToolMode {
 	SELECT,
@@ -14,6 +16,7 @@ enum ToolMode {
 	ADD_DUCT,
 	ADD_DEVICE,
 	ADD_JUNCTION,
+	ADD_CONDUIT,
 	ADD_DAMAGE,
 	DELETE
 }
@@ -44,9 +47,28 @@ var show_ducts: bool = true:
 		show_ducts = val
 		queue_redraw()
 
-var show_power_grid: bool = true:
+var show_devices: bool = true:
 	set(val):
-		show_power_grid = val
+		show_devices = val
+		queue_redraw()
+
+var show_junctions: bool = true:
+	set(val):
+		show_junctions = val
+		queue_redraw()
+
+var show_conduits: bool = true:
+	set(val):
+		show_conduits = val
+		queue_redraw()
+
+var show_power_grid: bool:
+	get:
+		return show_devices or show_junctions or show_conduits
+	set(val):
+		show_devices = val
+		show_junctions = val
+		show_conduits = val
 		queue_redraw()
 
 var show_damages: bool = true:
@@ -57,6 +79,11 @@ var show_damages: bool = true:
 var show_spawn: bool = true:
 	set(val):
 		show_spawn = val
+		queue_redraw()
+
+var show_bounds: bool = true:
+	set(val):
+		show_bounds = val
 		queue_redraw()
 
 var show_grid: bool = true:
@@ -77,11 +104,12 @@ var view_offset: Vector2 = Vector2(80, 40)
 var zoom_level: float = 1.0
 
 # Stato selezione e manipolazione
-var selected_type: String = "" # "room", "duct", "device", "junction", "damage", "spawn", "bounds"
+var selected_type: String = "" # "room", "duct", "device", "junction", "conduit", "damage", "spawn", "bounds"
 var selected_id: String = ""
 var is_dragging_element: bool = false
 var drag_start_world_pos: Vector2 = Vector2.ZERO
 var drag_element_start_state: Dictionary = {}
+var _has_dragged_significantly: bool = false
 var is_resizing_room: bool = false
 var resize_handle_index: int = -1
 
@@ -137,8 +165,9 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var mouse_event: InputEventMouseMotion = event as InputEventMouseMotion
 		var world_pos: Vector2 = screen_to_world(mouse_event.position)
-		emit_signal("cursor_coords_changed", snap_pos(world_pos))
-		_creation_preview_pos = snap_pos(world_pos)
+		var snapped_w: Vector2 = snap_pos(world_pos)
+		emit_signal("cursor_coords_changed", snapped_w)
+		_creation_preview_pos = snapped_w
 		
 		if is_panning:
 			view_offset = pan_start_view_offset + (mouse_event.position - pan_start_mouse_pos)
@@ -153,7 +182,7 @@ func _gui_input(event: InputEvent) -> void:
 		var world_pos: Vector2 = screen_to_world(btn_event.position)
 		var snapped_world: Vector2 = snap_pos(world_pos)
 		
-		# Zoom con la rotellina del mouse centrato sul cursore
+		# Zoom con rotellina del mouse centrato sul cursore
 		if btn_event.button_index == MOUSE_BUTTON_WHEEL_UP and btn_event.pressed:
 			var prev_world := screen_to_world(btn_event.position)
 			zoom_level = clampf(zoom_level * 1.15, 0.25, 4.0)
@@ -203,6 +232,7 @@ func _handle_left_click_pressed(world_pos: Vector2, snapped_world: Vector2) -> v
 						resize_handle_index = handle_idx
 						drag_start_world_pos = snapped_world
 						drag_element_start_state = room.duplicate(true)
+						_has_dragged_significantly = false
 						return
 
 			# Altrimenti prova a selezionare un elemento cliccato
@@ -212,7 +242,8 @@ func _handle_left_click_pressed(world_pos: Vector2, snapped_world: Vector2) -> v
 				selected_id = str(hit["id"])
 				is_dragging_element = true
 				drag_start_world_pos = snapped_world
-				drag_element_start_state = hit["data"].duplicate(true)
+				drag_element_start_state = (hit["data"] as Dictionary).duplicate(true)
+				_has_dragged_significantly = false
 				emit_signal("element_selected", selected_type, selected_id, hit["data"])
 			else:
 				selected_type = ""
@@ -246,6 +277,15 @@ func _handle_left_click_pressed(world_pos: Vector2, snapped_world: Vector2) -> v
 			_finish_add_junction(snapped_world)
 			queue_redraw()
 
+		ToolMode.ADD_CONDUIT:
+			if _creation_step == 0:
+				_creation_start_pos = snapped_world
+				_creation_step = 1
+			else:
+				_finish_add_conduit(_creation_start_pos, snapped_world)
+				_creation_step = 0
+			queue_redraw()
+
 		ToolMode.ADD_DAMAGE:
 			_finish_add_damage(snapped_world)
 			queue_redraw()
@@ -262,9 +302,13 @@ func _handle_left_click_released(world_pos: Vector2, snapped_world: Vector2) -> 
 		resize_handle_index = -1
 		if selected_type == "room":
 			var room := blueprint.get_room_by_id(selected_id)
+			if _has_dragged_significantly:
+				emit_signal("action_committed", "Ridimensiona Stanza")
 			emit_signal("element_modified", "room", selected_id, room)
 	elif is_dragging_element:
 		is_dragging_element = false
+		if _has_dragged_significantly:
+			emit_signal("action_committed", "Sposta Elemento")
 		if not selected_type.is_empty() and not selected_id.is_empty():
 			var elem_data := _get_selected_element_data()
 			emit_signal("element_modified", selected_type, selected_id, elem_data)
@@ -295,12 +339,15 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 				new_rect.size.y += delta_pos.y
 		if new_rect.size.x >= 20.0 and new_rect.size.y >= 20.0:
 			room["rect"] = new_rect
+			_has_dragged_significantly = true
 			blueprint.emit_changed()
 			queue_redraw()
 		return
 
 	if not is_dragging_element or delta_pos == Vector2.ZERO:
 		return
+
+	_has_dragged_significantly = true
 
 	match selected_type:
 		"room":
@@ -333,6 +380,15 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 				j["pos"] = orig_pos + delta_pos
 				blueprint.emit_changed()
 				queue_redraw()
+		"conduit":
+			var c := blueprint.get_conduit_by_id(selected_id)
+			if not c.is_empty():
+				var orig_from: Vector2 = drag_element_start_state.get("from_pos", Vector2.ZERO)
+				var orig_to: Vector2 = drag_element_start_state.get("to_pos", Vector2.ZERO)
+				c["from_pos"] = orig_from + delta_pos
+				c["to_pos"] = orig_to + delta_pos
+				blueprint.emit_changed()
+				queue_redraw()
 		"damage":
 			var dmg := blueprint.get_damage_by_id(selected_id)
 			if not dmg.is_empty():
@@ -345,36 +401,52 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 			blueprint.drone_spawn_pos = orig_pos + delta_pos
 			blueprint.emit_changed()
 			queue_redraw()
+		"bounds":
+			var orig_bounds: Rect2 = drag_element_start_state.get("bounds", Rect2())
+			blueprint.ship_bounds = Rect2(orig_bounds.position + delta_pos, orig_bounds.size)
+			blueprint.emit_changed()
+			queue_redraw()
 
 func _pick_element_at(world_pos: Vector2) -> Dictionary:
-	# Priorità di selezione (dall'alto in basso): Spawn -> Danni -> Snodi -> Dispositivi -> Condotti -> Stanze
+	var pick_rad := maxf(16.0, 14.0 / zoom_level)
+	
+	# Priorità di selezione: Spawn -> Danni -> Snodi -> Dispositivi -> Cablaggi -> Condotti -> Stanze -> Scafo
 	if show_spawn:
-		if world_pos.distance_to(blueprint.drone_spawn_pos) <= 16.0:
+		if world_pos.distance_to(blueprint.drone_spawn_pos) <= pick_rad:
 			return {"type": "spawn", "id": "drone_spawn", "data": {"pos": blueprint.drone_spawn_pos, "heading": blueprint.drone_spawn_heading}}
 
 	if show_damages:
 		for dmg in blueprint.damages:
 			var pos: Vector2 = dmg.get("pos", Vector2.ZERO)
-			if world_pos.distance_to(pos) <= 16.0:
+			if world_pos.distance_to(pos) <= pick_rad:
 				return {"type": "damage", "id": dmg.get("id", ""), "data": dmg}
 
-	if show_power_grid:
+	if show_junctions:
 		for j in blueprint.junctions:
 			var pos: Vector2 = j.get("pos", Vector2.ZERO)
-			if world_pos.distance_to(pos) <= 14.0:
+			if world_pos.distance_to(pos) <= pick_rad:
 				return {"type": "junction", "id": j.get("id", ""), "data": j}
+
+	if show_devices:
 		for dev in blueprint.devices:
 			var pos: Vector2 = dev.get("pos", Vector2.ZERO)
 			var box := Rect2(pos - Vector2(16, 16), Vector2(32, 32))
-			if box.has_point(world_pos):
+			if box.has_point(world_pos) or world_pos.distance_to(pos) <= pick_rad:
 				return {"type": "device", "id": dev.get("id", ""), "data": dev}
+
+	if show_conduits:
+		for c in blueprint.conduits:
+			var p1: Vector2 = c.get("from_pos", Vector2.ZERO)
+			var p2: Vector2 = c.get("to_pos", Vector2.ZERO)
+			if _distance_to_segment(world_pos, p1, p2) <= maxf(8.0, 6.0 / zoom_level):
+				return {"type": "conduit", "id": c.get("id", ""), "data": c}
 
 	if show_ducts:
 		for d in blueprint.ducts:
 			var p1: Vector2 = d.get("from", Vector2.ZERO)
 			var p2: Vector2 = d.get("to", Vector2.ZERO)
 			var w: float = float(d.get("width", 14.0))
-			if _distance_to_segment(world_pos, p1, p2) <= (w * 0.5 + 4.0):
+			if _distance_to_segment(world_pos, p1, p2) <= maxf(w * 0.5 + 4.0, 8.0 / zoom_level):
 				return {"type": "duct", "id": d.get("id", ""), "data": d}
 
 	if show_rooms:
@@ -382,6 +454,13 @@ func _pick_element_at(world_pos: Vector2) -> Dictionary:
 			var rect: Rect2 = r.get("rect", Rect2())
 			if rect.has_point(world_pos):
 				return {"type": "room", "id": r.get("id", ""), "data": r}
+
+	if show_bounds:
+		var b: Rect2 = blueprint.ship_bounds
+		var border_box := Rect2(b.position - Vector2(8, 8), b.size + Vector2(16, 16))
+		var inner_box := Rect2(b.position + Vector2(8, 8), b.size - Vector2(16, 16))
+		if border_box.has_point(world_pos) and not inner_box.has_point(world_pos):
+			return {"type": "bounds", "id": "ship_bounds", "data": {"bounds": blueprint.ship_bounds}}
 
 	return {}
 
@@ -401,8 +480,9 @@ func _get_resize_handle_at(world_pos: Vector2, rect: Rect2) -> int:
 		rect.end,
 		Vector2(rect.position.x, rect.end.y)
 	]
+	var hit_dist := maxf(8.0, 8.0 / zoom_level)
 	for i in range(handles.size()):
-		if world_pos.distance_to(handles[i]) <= (8.0 / zoom_level):
+		if world_pos.distance_to(handles[i]) <= hit_dist:
 			return i
 	return -1
 
@@ -418,10 +498,14 @@ func _get_selected_element_data() -> Dictionary:
 			return blueprint.get_device_by_id(selected_id)
 		"junction":
 			return blueprint.get_junction_by_id(selected_id)
+		"conduit":
+			return blueprint.get_conduit_by_id(selected_id)
 		"damage":
 			return blueprint.get_damage_by_id(selected_id)
 		"spawn":
 			return {"pos": blueprint.drone_spawn_pos, "heading": blueprint.drone_spawn_heading}
+		"bounds":
+			return {"bounds": blueprint.ship_bounds}
 	return {}
 
 # --- CREAZIONE NUOVI ELEMENTI ---
@@ -441,11 +525,14 @@ func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 		"border_color": Color(0.4, 0.7, 0.9, 0.8),
 		"category": "utility"
 	}
+	emit_signal("action_committed", "Aggiungi Stanza")
 	blueprint.rooms.append(new_room)
 	blueprint.emit_changed()
 	selected_type = "room"
 	selected_id = new_id
 	emit_signal("element_selected", selected_type, selected_id, new_room)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
 
 func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 	if p1.distance_to(p2) < 10.0:
@@ -460,11 +547,14 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 		"width": 14.0,
 		"is_blocked": false
 	}
+	emit_signal("action_committed", "Aggiungi Condotto")
 	blueprint.ducts.append(new_duct)
 	blueprint.emit_changed()
 	selected_type = "duct"
 	selected_id = new_id
 	emit_signal("element_selected", selected_type, selected_id, new_duct)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
 
 func _finish_add_device(pos: Vector2) -> void:
 	var next_idx := blueprint.devices.size() + 1
@@ -481,11 +571,14 @@ func _finish_add_device(pos: Vector2) -> void:
 		"inputs_count": 1,
 		"desc": "Nuovo dispositivo della rete elettrica."
 	}
+	emit_signal("action_committed", "Aggiungi Dispositivo")
 	blueprint.devices.append(new_dev)
 	blueprint.emit_changed()
 	selected_type = "device"
 	selected_id = new_id
 	emit_signal("element_selected", selected_type, selected_id, new_dev)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
 
 func _finish_add_junction(pos: Vector2) -> void:
 	var next_idx := blueprint.junctions.size() + 1
@@ -500,11 +593,35 @@ func _finish_add_junction(pos: Vector2) -> void:
 			{"name": "Ramo Principale", "target_type": "dead_end", "target_id": "DEAD_1", "line_id": "L_%s_B0" % new_id, "to_pos": pos + Vector2(40, 0)}
 		]
 	}
+	emit_signal("action_committed", "Aggiungi Snodo")
 	blueprint.junctions.append(new_junc)
 	blueprint.emit_changed()
 	selected_type = "junction"
 	selected_id = new_id
 	emit_signal("element_selected", selected_type, selected_id, new_junc)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
+
+func _finish_add_conduit(p1: Vector2, p2: Vector2) -> void:
+	if p1.distance_to(p2) < 10.0:
+		p2 = p1 + Vector2(60, 0)
+	var next_idx := blueprint.conduits.size() + 1
+	var new_id := "CND_%d" % next_idx
+	var new_cnd: Dictionary = {
+		"id": new_id,
+		"from_pos": p1,
+		"to_pos": p2,
+		"from_junction": "",
+		"target_id": ""
+	}
+	emit_signal("action_committed", "Aggiungi Cablaggio")
+	blueprint.conduits.append(new_cnd)
+	blueprint.emit_changed()
+	selected_type = "conduit"
+	selected_id = new_id
+	emit_signal("element_selected", selected_type, selected_id, new_cnd)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
 
 func _finish_add_damage(pos: Vector2) -> void:
 	var next_idx := blueprint.damages.size() + 1
@@ -522,41 +639,32 @@ func _finish_add_damage(pos: Vector2) -> void:
 		"desc": "Falla o anomalia rilevata nel compartimento.",
 		"system_impact": "integrity_warning"
 	}
+	emit_signal("action_committed", "Aggiungi Danno")
 	blueprint.damages.append(new_dmg)
 	blueprint.emit_changed()
 	selected_type = "damage"
 	selected_id = new_id
 	emit_signal("element_selected", selected_type, selected_id, new_dmg)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
 
 func delete_element(elem_type: String, elem_id: String) -> void:
 	if not blueprint:
 		return
+	emit_signal("action_committed", "Elimina Elemento")
 	match elem_type:
 		"room":
-			for i in range(blueprint.rooms.size()):
-				if blueprint.rooms[i].get("id", "") == elem_id:
-					blueprint.rooms.remove_at(i)
-					break
+			blueprint.remove_room(elem_id)
 		"duct":
-			for i in range(blueprint.ducts.size()):
-				if blueprint.ducts[i].get("id", "") == elem_id:
-					blueprint.ducts.remove_at(i)
-					break
+			blueprint.remove_duct(elem_id)
 		"device":
-			for i in range(blueprint.devices.size()):
-				if blueprint.devices[i].get("id", "") == elem_id:
-					blueprint.devices.remove_at(i)
-					break
+			blueprint.remove_device(elem_id)
 		"junction":
-			for i in range(blueprint.junctions.size()):
-				if blueprint.junctions[i].get("id", "") == elem_id:
-					blueprint.junctions.remove_at(i)
-					break
+			blueprint.remove_junction(elem_id)
+		"conduit":
+			blueprint.remove_conduit(elem_id)
 		"damage":
-			for i in range(blueprint.damages.size()):
-				if blueprint.damages[i].get("id", "") == elem_id:
-					blueprint.damages.remove_at(i)
-					break
+			blueprint.remove_damage(elem_id)
 	if selected_id == elem_id:
 		selected_type = ""
 		selected_id = ""
@@ -579,17 +687,27 @@ func _draw() -> void:
 		return
 
 	# Disegna limite scafo/bounds
-	var screen_bounds_pos := world_to_screen(blueprint.ship_bounds.position)
-	var screen_bounds_size := blueprint.ship_bounds.size * zoom_level
-	draw_rect(Rect2(screen_bounds_pos, screen_bounds_size), COLOR_BOUNDS, false, 2.0)
+	if show_bounds:
+		var screen_bounds_pos := world_to_screen(blueprint.ship_bounds.position)
+		var screen_bounds_size := blueprint.ship_bounds.size * zoom_level
+		var is_bounds_sel := (selected_type == "bounds")
+		var b_col := COLOR_SELECTION if is_bounds_sel else COLOR_BOUNDS
+		var b_w := 3.0 if is_bounds_sel else 2.0
+		draw_rect(Rect2(screen_bounds_pos, screen_bounds_size), b_col, false, b_w)
+		if show_labels and zoom_level >= 0.7:
+			var font: Font = ThemeDB.fallback_font
+			draw_string(font, screen_bounds_pos + Vector2(6, -6), "Scafo / Limiti: %s" % str(blueprint.ship_bounds.size), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, b_col)
 
 	if show_rooms:
 		_draw_rooms()
 		
 	if show_ducts:
 		_draw_ducts()
+
+	if show_conduits:
+		_draw_conduits()
 		
-	if show_power_grid:
+	if show_devices or show_junctions:
 		_draw_power_grid()
 		
 	if show_damages:
@@ -687,73 +805,97 @@ func _draw_ducts() -> void:
 			var duct_name: String = str(d.get("name", d.get("id", "")))
 			draw_string(font, mid_point + Vector2(4, -4), duct_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.6, 0.8, 1.0, 0.85))
 
+func _draw_conduits() -> void:
+	var font: Font = ThemeDB.fallback_font
+	for c in blueprint.conduits:
+		var p1: Vector2 = c.get("from_pos", Vector2.ZERO)
+		var p2: Vector2 = c.get("to_pos", Vector2.ZERO)
+		var is_selected: bool = (selected_type == "conduit" and selected_id == c.get("id", ""))
+		var sp1 := world_to_screen(p1)
+		var sp2 := world_to_screen(p2)
+		
+		var c_col := COLOR_SELECTION if is_selected else Color(0.2, 0.8, 1.0, 0.85)
+		var c_width := 3.0 * zoom_level if is_selected else 2.0 * zoom_level
+		
+		draw_line(sp1, sp2, Color(0.02, 0.1, 0.18, 0.9), c_width + 3.0)
+		draw_dashed_line(sp1, sp2, c_col, c_width, 5.0 * zoom_level)
+		draw_circle(sp1, 3.5 * zoom_level, c_col)
+		draw_circle(sp2, 3.5 * zoom_level, c_col)
+		
+		if show_labels and zoom_level >= 0.8:
+			var mid_point := (sp1 + sp2) * 0.5
+			var c_id: String = str(c.get("id", "CND"))
+			draw_string(font, mid_point + Vector2(4, -4), c_id, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, c_col)
+
 func _draw_power_grid() -> void:
 	var font: Font = ThemeDB.fallback_font
 	
 	# Disegna cablaggi dagli snodi
-	for j in blueprint.junctions:
-		var j_pos: Vector2 = j.get("pos", Vector2.ZERO)
-		var s_j_pos := world_to_screen(j_pos)
-		var active_idx: int = int(j.get("active_branch", 0))
-		var branches: Array = j.get("branches", [])
-		
-		for b_idx in range(branches.size()):
-			var branch: Dictionary = branches[b_idx]
-			var to_pos: Vector2 = branch.get("to_pos", j_pos)
-			var s_to_pos := world_to_screen(to_pos)
-			var is_active: bool = (b_idx == active_idx)
+	if show_junctions:
+		for j in blueprint.junctions:
+			var j_pos: Vector2 = j.get("pos", Vector2.ZERO)
+			var s_j_pos := world_to_screen(j_pos)
+			var active_idx: int = int(j.get("active_branch", 0))
+			var branches: Array = j.get("branches", [])
 			
-			var cable_col := Color(1.0, 0.9, 0.2, 0.95) if is_active else Color(0.35, 0.45, 0.35, 0.45)
-			var cable_width := 2.5 * zoom_level if is_active else 1.2 * zoom_level
-			
-			draw_line(s_j_pos, s_to_pos, cable_col, cable_width)
-			
-			# Se terminazione morta, disegna una 'X'
-			if branch.get("target_type", "") == "dead_end":
-				draw_line(s_to_pos - Vector2(4, 4), s_to_pos + Vector2(4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
-				draw_line(s_to_pos - Vector2(-4, 4), s_to_pos + Vector2(-4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
+			for b_idx in range(branches.size()):
+				var branch: Dictionary = branches[b_idx]
+				var to_pos: Vector2 = branch.get("to_pos", j_pos)
+				var s_to_pos := world_to_screen(to_pos)
+				var is_active: bool = (b_idx == active_idx)
+				
+				var cable_col := Color(1.0, 0.9, 0.2, 0.95) if is_active else Color(0.35, 0.45, 0.35, 0.45)
+				var cable_width := 2.5 * zoom_level if is_active else 1.2 * zoom_level
+				
+				draw_line(s_j_pos, s_to_pos, cable_col, cable_width)
+				
+				# Se terminazione morta, disegna una 'X'
+				if branch.get("target_type", "") == "dead_end":
+					draw_line(s_to_pos - Vector2(4, 4), s_to_pos + Vector2(4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
+					draw_line(s_to_pos - Vector2(-4, 4), s_to_pos + Vector2(-4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
 
-	# Disegna Snodi (Junctions)
-	for j in blueprint.junctions:
-		var pos: Vector2 = j.get("pos", Vector2.ZERO)
-		var spos := world_to_screen(pos)
-		var is_selected: bool = (selected_type == "junction" and selected_id == j.get("id", ""))
-		var radius: float = 7.0 * zoom_level
-		
-		var junc_color := COLOR_SELECTION if is_selected else Color(1.0, 0.75, 0.1, 0.95)
-		draw_circle(spos, radius + 2.0, Color.BLACK)
-		draw_circle(spos, radius, junc_color)
-		
-		if show_labels:
-			var j_id: String = str(j.get("id", "J"))
-			draw_string(font, spos + Vector2(10, 4), j_id, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.9, 0.3, 0.9))
+		# Disegna Snodi (Junctions)
+		for j in blueprint.junctions:
+			var pos: Vector2 = j.get("pos", Vector2.ZERO)
+			var spos := world_to_screen(pos)
+			var is_selected: bool = (selected_type == "junction" and selected_id == j.get("id", ""))
+			var radius: float = 7.0 * zoom_level
+			
+			var junc_color := COLOR_SELECTION if is_selected else Color(1.0, 0.75, 0.1, 0.95)
+			draw_circle(spos, radius + 2.0, Color.BLACK)
+			draw_circle(spos, radius, junc_color)
+			
+			if show_labels:
+				var j_id: String = str(j.get("id", "J"))
+				draw_string(font, spos + Vector2(10, 4), j_id, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.9, 0.3, 0.9))
 
 	# Disegna Dispositivi (Devices)
-	for dev in blueprint.devices:
-		var pos: Vector2 = dev.get("pos", Vector2.ZERO)
-		var spos := world_to_screen(pos)
-		var is_gen: bool = dev.get("is_generator", false)
-		var is_selected: bool = (selected_type == "device" and selected_id == dev.get("id", ""))
-		var box_size := Vector2(24, 24) * zoom_level
-		var box_rect := Rect2(spos - box_size * 0.5, box_size)
-		
-		var dev_color := Color(1.0, 0.35, 0.15, 0.9) if is_gen else Color(0.2, 0.7, 1.0, 0.9)
-		if is_selected:
-			dev_color = COLOR_SELECTION
+	if show_devices:
+		for dev in blueprint.devices:
+			var pos: Vector2 = dev.get("pos", Vector2.ZERO)
+			var spos := world_to_screen(pos)
+			var is_gen: bool = dev.get("is_generator", false)
+			var is_selected: bool = (selected_type == "device" and selected_id == dev.get("id", ""))
+			var box_size := Vector2(24, 24) * zoom_level
+			var box_rect := Rect2(spos - box_size * 0.5, box_size)
 			
-		draw_rect(box_rect, Color(0.1, 0.15, 0.2, 0.9), true)
-		draw_rect(box_rect, dev_color, false, 2.0)
-		
-		# Simbolo icona (G per Generatore, L per Carico/Load)
-		var icon_sym := "⚡" if is_gen else "⚙"
-		var font_sz: int = int(clampf(12.0 * zoom_level, 9.0, 16.0))
-		draw_string(font, box_rect.position + Vector2(4, 16 * zoom_level), icon_sym, HORIZONTAL_ALIGNMENT_CENTER, int(box_rect.size.x), font_sz, dev_color)
+			var dev_color := Color(1.0, 0.35, 0.15, 0.9) if is_gen else Color(0.2, 0.7, 1.0, 0.9)
+			if is_selected:
+				dev_color = COLOR_SELECTION
+				
+			draw_rect(box_rect, Color(0.1, 0.15, 0.2, 0.9), true)
+			draw_rect(box_rect, dev_color, false, 2.0)
+			
+			# Simbolo icona (G per Generatore, L per Carico/Load)
+			var icon_sym := "⚡" if is_gen else "⚙"
+			var font_sz: int = int(clampf(12.0 * zoom_level, 9.0, 16.0))
+			draw_string(font, box_rect.position + Vector2(4, 16 * zoom_level), icon_sym, HORIZONTAL_ALIGNMENT_CENTER, int(box_rect.size.x), font_sz, dev_color)
 
-		if show_labels and zoom_level >= 0.7:
-			var dev_name: String = str(dev.get("name", dev.get("id", "")))
-			var mw_val: float = float(dev.get("power_mw", 0.0))
-			var label_str := "%s (%d MW)" % [dev_name, int(mw_val)]
-			draw_string(font, spos + Vector2(16, 4), label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.95, 1.0, 0.9))
+			if show_labels and zoom_level >= 0.7:
+				var dev_name: String = str(dev.get("name", dev.get("id", "")))
+				var mw_val: float = float(dev.get("power_mw", 0.0))
+				var label_str := "%s (%d MW)" % [dev_name, int(mw_val)]
+				draw_string(font, spos + Vector2(16, 4), label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.95, 1.0, 0.9))
 
 func _draw_damages() -> void:
 	var font: Font = ThemeDB.fallback_font
@@ -769,7 +911,7 @@ func _draw_damages() -> void:
 		if is_selected:
 			dmg_color = COLOR_SELECTION
 			
-		# Area di danno circolare pulsante
+		# Area di danno circolare
 		draw_circle(spos, radius, Color(dmg_color.r, dmg_color.g, dmg_color.b, 0.25))
 		draw_circle(spos, radius, dmg_color, false, 2.0)
 		draw_circle(spos, 3.0 * zoom_level, dmg_color, true)
@@ -806,3 +948,5 @@ func _draw_creation_preview() -> void:
 			draw_rect(Rect2(top_left, sz), Color(0.4, 0.8, 1.0, 0.9), false, 2.0)
 		ToolMode.ADD_DUCT:
 			draw_line(sp1, sp2, Color(0.2, 0.8, 1.0, 0.8), 14.0 * zoom_level)
+		ToolMode.ADD_CONDUIT:
+			draw_dashed_line(sp1, sp2, Color(0.3, 0.9, 1.0, 0.9), 3.0 * zoom_level, 6.0 * zoom_level)

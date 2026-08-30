@@ -57,7 +57,7 @@ window/vsync/vsync_mode=0
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ship_sublayer_editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/ship_sublayer_editor/plugin.cfg", "res://addons/star_system_editor/plugin.cfg")
 
 [file_customization]
 

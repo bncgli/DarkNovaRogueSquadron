@@ -5,7 +5,8 @@
 > Questo documento definisce l'esperienza di gioco complessiva di *Dark Nova: Rogue Squadron*, descrivendo in dettaglio:
 > 1. **Il Flusso Lato Utente (User Journey)**: cosa succede dall'avvio del gioco, quali finestre si aprono, come interagiscono i giocatori e la gestione del desktop multi-finestra.
 > 2. **Le Applicazioni Proprietarie Esistenti e la Matrice dei Ruoli (RBAC)**: funzionamento dettagliato di ogni applicazione sviluppata e responsabilità di ogni ruolo.
-> 3. **Le Nuove Feature da Creare (Roadmap)**: specifiche complete, flusso d'uso, finestre, configurazioni `.dat` e integrazione sublayer per tutte le prossime applicazioni pianificate.
+> 3. **Meccaniche di Settore (Sviluppate)**: descrizione delle meccaniche di navigazione interplanetaria, economia a FLUX e gameplay di settore già implementate.
+> 4. **Le Nuove Feature da Creare (Roadmap)**: specifiche per le prossime espansioni e moduli pianificati.
 
 ---
 
@@ -290,31 +291,8 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
 - **Ruolo**: **Hacker** / **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Diagnostics/`, file `diagnostics_config.dat` e `security_tuning.dat` (Password debug: `DIAG-7815`).
 
----
-
-## 5. Roadmap e Nuove Feature da Creare
-
-Di seguito vengono definite le specifiche dettagliate per le nuove applicazioni proprietarie della nave da sviluppare nelle prossime milestone, coerentemente con i ruoli RBAC, il tema sandbox Freemium-punk / Firefly e la suite di configurazione `.dat`.
-
-### 5.1 Roadmap nuove applicazioni
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                         ROADMAP NUOVE APPLICAZIONI NAVE                          │
-├──────────────────────────────┬───────────────────────────────────────────────────┤
-│ Applicazione Pianificata     │ Ruolo Principale / Scopo Operativo                │
-├──────────────────────────────┼───────────────────────────────────────────────────┤
-│ 2. Long-Range Sensor Array   │ Soldato / Hacker / Radar 50km e Spettrometria     │
-│ 5. Life Support & Atmosphere │ Ingegnere / O2, CO2, Paratie e Antincendio        │
-│ 6. Mission Logbook & Sandbox │ Capitano / Tutti i Ruoli / Contratti & Black Box  │
-│ 7. External Service Drone    │ Ingegnere / Hacker / EVA, Riparazioni & Salvage   │
-└──────────────────────────────┴───────────────────────────────────────────────────┘
-```
-NOTA: Il concetto di freemium-punk verrà impostato in seguito
----
-
-#### 5.1.2 Nuova Feature 2: Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
-- **Descrizione**: Sistema di scansione e telemetria subspaziale a lungo raggio per mappare corpi celesti, campi di asteroidi, stazioni orbitali, navi nemiche e relitti derelitti fino a 50 km di distanza.
+### 4.11 Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
+- **Scopo**: Sistema di scansione e telemetria subspaziale a lungo raggio per mappare corpi celesti, campi di asteroidi, stazioni orbitali, navi nemiche e relitti derelitti fino a 50 km di distanza.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`sensors_app.tscn`, `750x550`)**:
     - Radar tattico 2D/3D circolare con zoom multilivello e filtri selettivi (Massa, Segnature Elettromagnetiche, Segnali IFF Amico/Nemico).
@@ -326,17 +304,10 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
   - Interagisce direttamente con `SpaceWorldManager` per interrogare le entità 3D presenti nello spazio di gioco.
   - **Sublayer 3 (Rete Elettrica)**: Collegato al nodo avionica e radar (`sensors_radar`, assorbimento 120 MW).
   - **Sublayer 4 (Danni)**: Guasti all'array generano "segnali fantasma" (radar ghosts) o zone d'ombra cieche nella mappa.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Sensors/` (Password debug: `SENS-7815`).
-  - **File di Configurazione Attivi**:
-    - `sensors_config.dat`: frequenza e sensibilità (`sweep_frequency_hz=12.0`, `active_ping_radius=50000.0`, `noise_filter=0.92`).
-    - `radar_tuning.dat`: calibrazione filtri e IFF (`spectrum_sensitivity=1.0`, `iff_auto_tag=true`, `stealth_detection_threshold=0.35`).
-  - **Manomissione Firmware Clandestina**: Modificare clandestinamente `radar_tuning.dat` consente di abbattere i filtri di rumore per rilevare vascelli stealth o relitti mimetizzati, ma rende i sensori estremamente vulnerabili al jamming da parte di stazioni pirata.
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Sensors/`, file `sensors_config.dat` e `radar_tuning.dat` (Password debug: `SENS-7815`).
 
----
-
-#### 5.1.5 Nuova Feature 5: Life Support & Atmosphere Control (`Applications/LifeSupport`)
-- **Descrizione**: Monitoraggio telemetrico e controllo attivo dei parametri vitali (percentuale di O2, accumulo di CO2, pressione barometrica, temperatura e presenza di focolai d'incendio) per ciascuna stanza e compartimento della nave.
+### 4.12 Life Support & Atmosphere Control (`Applications/LifeSupport`)
+- **Scopo**: Monitoraggio telemetrico e controllo attivo dei parametri vitali (percentuale di O2, accumulo di CO2, pressione barometrica, temperatura e presenza di focolai d'incendio) per ciascuna stanza e compartimento della nave.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`life_support_app.tscn`, `700x500`)**:
     - Mappa atmosferica e termica 2D in tempo reale derivata dal Sublayer 1 di `ShipBlueprint`, con colorazione semaforica per compartimento (Verde = Pressione e O2 ottimali, Giallo = Calo di pressione o saturazione CO2, Rosso = Vuoto assoluto, Incendio o Atmosfera Tossica).
@@ -348,17 +319,10 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
   - **Sublayer 1 (Stanze)**: Corrispondenza diretta 1:1 con i poligoni delle stanze (`rooms`) per il calcolo volumetrico dell'aria.
   - **Sublayer 2 (Condotti)**: Se un condotto tecnico subisce ostruzioni o fiamme, il fumo si diffonde attraverso la rete di condotti verso le stanze adiacenti.
   - **Sublayer 4 (Danni)**: Quando un meteorite o un missile causa una falla nello scafo (`dmg_breach`), la stanza perde atmosfera progressivamente. L'Ingegnere deve sigillare la paratia stagna mentre invia il *Duct Drone* a saldare la breccia.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/LifeSupport/` (Password debug: `LIFE-7815`).
-  - **File di Configurazione Attivi**:
-    - `life_support_config.dat`: tassi di ricircolo (`o2_generation_rate=1.2`, `seal_door_speed=0.5`, `auto_fire_suppress=false`).
-    - `atmo_tuning.dat`: soglie e pressioni (`decompression_rate=1.8`, `fire_suppression_co2_level=0.45`, `scrubber_efficiency=0.98`).
-  - **Manomissione Firmware Clandestina**: Manomettere `life_support_config.dat` permette di tagliare l'alimentazione del supporto vitale nei settori non presidiati per deviare energia supplementare ai motori o agli scudi (tattica disperata di sopravvivenza).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/LifeSupport/`, file `life_support_config.dat` e `atmo_tuning.dat` (Password debug: `LIFE-7815`).
 
----
-
-#### 5.1.6 Nuova Feature 6: Mission Logbook & Tactical Objectives (`Applications/Logbook`)
-- **Descrizione**: Registro di bordo ufficiale, diario delle operazioni di volo, monitoraggio dei contratti sandbox per "continuare a volare" (es. trasporto merci di contrabbando, riparazione relitti, estrazione minerali rari) e archivio note personali dell'equipaggio.
+### 4.13 Mission Logbook & Tactical Objectives (`Applications/Logbook`)
+- **Scopo**: Registro di bordo ufficiale, diario delle operazioni di volo, monitoraggio dei contratti sandbox per "continuare a volare" (es. trasporto merci di contrabbando, riparazione relitti, estrazione minerali rari) e archivio note personali dell'equipaggio.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`logbook_app.tscn`, `560x420`)**:
     - **Scheda Contratti & Obiettivi**: lista delle missioni attive con tracker di avanzamento, ricompense in crediti e penalità di ritardo.
@@ -367,16 +331,10 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 - **Ruolo Assegnato**: **Tutti i Ruoli** (Il Capitano ha i permessi di spuntare o riassegnare i contratti; tutti i membri dell'equipaggio possono leggere e inserire annotazioni di registro).
 - **Integrazione con i Sublayer e la Sessione**:
   - Sincronizzato con il loop di gioco persistente: i contratti completati alimentano il fondo cassa comune della nave per acquisto ricambi, munizioni e carburante.
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/Logbook/` (Password debug: `LOGS-7815`).
-  - **File di Configurazione Attivi**:
-    - `logbook_config.dat`: impostazioni registro (`auto_log_events=true`, `max_history_entries=200`, `log_telemetry_errors=true`).
-    - `journal_tuning.dat`: sincronizzazione drive (`sync_to_ship_drive=true`, `timestamp_format=STAR_DATE`, `cloud_backup=false`).
-  - **Manomissione Firmware Clandestina**: L'Hacker può falsificare le registrazioni della scatola nera su `logbook_config.dat` per cancellare le prove di contrabbando o manomissioni illegali prima di attraccare a una stazione governativa.
----
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Logbook/`, file `logbook_config.dat` e `journal_tuning.dat` (Password debug: `LOGS-7815`).
 
-#### 5.1.7 Nuova Feature 7: External Service Drone & EVA Operations (`Applications/ServiceDrone`)
-- **Descrizione**: Drone di servizio teleguidato per operazioni extra-veicolari (EVA), ispezioni e riparazioni strutturali esterne dello scafo, saldatura di falle nello spazio profondo, raccolta cargo/detriti spaziali e manomissione o taglio di componenti da relitti e navi disabilitate.
+### 4.14 External Service Drone & EVA Operations (`Applications/ServiceDrone`)
+- **Scopo**: Drone di servizio teleguidato per operazioni extra-veicolari (EVA), ispezioni e riparazioni strutturali esterne dello scafo, saldatura di falle nello spazio profondo, raccolta cargo/detriti spaziali e manomissione o taglio di componenti da relitti e navi disabilitate.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`service_drone_app.tscn`, `720x520`)**:
     - Feed video frontale diegetico in tempo reale ad alta risoluzione (telecamera montata sul muso del drone via `SubViewport` 3D).
@@ -391,16 +349,27 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
   - **Simulazione 3D (`SpaceWorldManager`)**: Istanzia l'entità fisica 3D del service drone nello spazio attorno alla corvetta, con raggio operativo limitato dal segnale radio della baia (max 1500 m prima del disingaggio telemetrico).
   - **Sublayer 3 (Rete Elettrica)**: La baia droni esterna (`service_bay`) assorbe 80 MW in standby e 140 MW in fase di ricarica rapida della batteria del drone.
   - **Sublayer 4 (Danni)**: Ripara direttamente le coordinate dei danni allo scafo esterno registrati dal sistema di diagnostica (`dmg_breach` e usura scafo).
-- **Configurazione `.DAT` e Meccanica Hackwarfare**:
-  - **Percorso Cartella Protetta**: `Ship Drive/Programs/ServiceDrone/` (Password debug: `SERV-7815`).
-  - **File di Configurazione Attivi**:
-    - `service_drone_config.dat`: parametri di volo e batteria (`max_thrust=35.0`, `battery_capacity_sec=240.0`, `tether_range=1500.0`, `auto_dock_speed=12.0`).
-    - `manipulator_tuning.dat`: parametri attrezzi e stiva (`repair_rate=15.0`, `cutting_laser_power=25.0`, `cargo_capacity_kg=500.0`, `magnet_range=18.0`).
-  - **Manomissione Firmware Clandestina**: Manomettere `service_drone_config.dat` consente di rimuovere il limitatore di raggio operativo (*tether limit*) e raddoppiare la spinta dei micro-propulsori, al costo di un drastico aumento del degrado della batteria e dell'instabilità termica.
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ServiceDrone/`, file `service_drone_config.dat` e `manipulator_tuning.dat` (Password debug: `SERV-7815`).
 
 ---
 
-### 5.2 Mappa del Sistema Stellare e Gameplay di Settore
+## 5. Roadmap e Nuove Feature da Creare
+
+Di seguito vengono definite le specifiche per le future espansioni di *Dark Nova: Rogue Squadron*.
+
+### 5.1 Roadmap nuove applicazioni
+
+Tutte le applicazioni principali della corvetta sono state completate. Ulteriori moduli di espansione verranno pianificati in base ai feedback del gameplay sandbox.
+
+NOTA: Il concetto di freemium-punk verrà impostato in seguito
+
+---
+
+## 6. Meccaniche di Settore e Navigazione Spaziale (Sviluppate)
+
+Le seguenti meccaniche definiscono l'ambiente di gioco e le modalità di interazione con il sistema stellare.
+
+### 6.1 Mappa del Sistema Stellare e Gameplay di Settore
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -419,7 +388,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-#### 5.2.1 Architettura del Sistema Stellare e Griglia Spaziale
+#### 6.1.1 Architettura del Sistema Stellare e Griglia Spaziale
 - **Modello a Griglia e Coordinate di Settore**:
   - L'intero sistema solare è strutturato come una griglia 3D/2D discreta di coordinate di settore (celle spaziali indicizzate, es. `SEC-04-12`).
   - Ciascuna casella della griglia non rappresenta un singolo punto geometrico, ma un'intera macro-area di simulazione (scena 3D attiva generata da `SpaceWorldManager`), popolata da corpi celesti, campi di detriti, fasce di asteroidi, stazioni orbitali, navi mercantili o vascelli pirata.
@@ -438,7 +407,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-#### 5.2.2 Modalità Velocità di Crociera (Cruise Mode / Sub-FTL)
+#### 6.1.2 Modalità Velocità di Crociera (Cruise Mode / Sub-FTL)
 - **Meccanica di Propulsione Accelerata**:
   - Per coprire le immense distanze interplanetarie tra le caselle del sistema senza viaggi istantanei, la corvetta impiega la modalità **Velocità di Crociera (Cruise Drive)**.
   - In assetto ordinario la nave opera a velocità manovriera ($V$) con pieno controllo manuale dei vettori RCS (beccheggio, imbardata, rollio).
@@ -457,7 +426,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-#### 5.2.3 Stazioni Spaziali, Docking e Servizi Portuali
+#### 6.1.3 Stazioni Spaziali, Docking e Servizi Portuali
 - **Protocollo di Attracco Diegetico (Docking Protocol)**:
   - In prossimità di una stazione spaziale orbitale, l'equipaggio non controlla un avatar fisico a piedi, ma interagisce unicamente attraverso i protocolli e le comunicazioni diegetiche del sistema operativo **GodotOS**.
   - La sequenza di attracco si avvia tramite l'applicazione *Comms & EW*: l'Hacker o il Capitano aggancia la frequenza del controllo traffico portuale, invia la firma transponder IFF e riceve l'assegnazione dello slot di docking o del braccio magnetico.
@@ -473,7 +442,7 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-#### 5.2.4 Commercio, Logistica Cargo ed Economia a "FLUX"
+#### 6.1.4 Commercio, Logistica Cargo ed Economia a "FLUX"
 - **Gestione della Stiva (Cargo Bay & Material Flow)**:
   - Interfaccia per il trasferimento merci bidirezionale tra i magazzini di stazione (o le stive di navi abbordate/amiche) e i compartimenti di carico della nave.
   - Catalogazione merci diversificata: celle energetiche, minerali grezzi, leghe raffinate, ricambi per condotti, munizioni per torrette balistiche, pacchetti software e merci di contrabbando sotto sigillo.
@@ -485,13 +454,13 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
   - Nel contesto satirico Freemium-punk non esiste una moneta cartacea fissa: l'unità e indice economico universale è il **FLUX**.
   - Il FLUX è un indice dinamico di rating finanziario e liquidità di flusso (simile a un credit score continuo), calcolato sulla base del volume, della frequenza e della regolarità delle transazioni in entrata e in uscita associate all'identità della nave.
   - Carburante, rifornimenti, riparazioni e persino licenze software dei sistemi operativi di bordo operano tramite canoni di abbonamento, microtransazioni di sistema e royalty settoriali.
-  - **Impatti del Rating FLUX**:
+- **Impatti del Rating FLUX**:
     - *FLUX Elevato (Rating A/S)*: garantisce tariffe agevolate di porto, priorità di fornitura energetica nei settori corporativi e sblocco di contratti commerciali prestigiosi.
     - *FLUX Negativo o Insolvente (Rating D/F)*: comporta disattivazione remota di feature software da parte delle corporazioni fornitrici, sovraccosti sui servizi portuali, emissione di taglie da parte dei creditori fino all'**impound (sequestro della nave)** con conseguente fallimento della sessione (Game Over).
 
 ---
 
-#### 5.2.5 Mining ed Estrazione Risorse (Asteroidi & Scavenging)
+#### 6.1.5 Mining ed Estrazione Risorse (Asteroidi & Scavenging)
 - **Estrazione Mineraria su Asteroidi (Deep Core Mining)**:
   - Scansione preliminare geologica dei campi di asteroidi tramite *Sensors* (analisi spettrometrica per identificare vene di metalli pesanti, leghe rare, cristalli energetici e ghiaccio d'acqua per il supporto vitale).
   - Frantumazione calibrata dei massi rocciosi tramite i laser minerari o torrette controllate dal Soldato (*Weapons*), mentre il Pilota mantiene un hovering ravvicinato stabile per evitare collisioni da rinculo o frammentazione.
@@ -503,12 +472,12 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
 
 ---
 
-#### 5.2.6 Combattimenti Spaziali, Dogfight e Guerra Tattica Asimmetrica
+#### 6.1.6 Combattimenti Spaziali, Dogfight e Guerra Tattica Asimmetrica
 - **Cooperazione Multiruolo in Combattimento**:
   - Gli ingaggi a fuoco contro caccia pirata, droni da ricognizione corporativi o incrociatori di pattuglia richiedono la sinergia assoluta di tutti i membri dell'equipaggio:
     - **Pilota**: esegue manovre evasive, controlla la spinta lineare per mantenere la distanza ottimale di tiro e allinea la corvetta per garantire l'arco di tiro ottimale delle torrette dorsali e ventrali.
     - **Soldato**: gestisce il raffreddamento e la cadenza di fuoco delle torrette laser e balistiche (*Weapons*), calcola il punto di anticipo balistico e attiva le mitragliatrici Point-Defense (PDG) contro sciami di missili in arrivo.
-    - **Ingegnere**: bilancia la distribuzione energetica dei 4 quadranti deflettenti (*Shield Matrix*), gestisce i picchi di assorbimento del generatore (*Power Grid*) e interviene tempestivamente sulle falle strutturali e sugli incendi con *Life Support*, *Duct Drone* e *Service Drone*.
+    - **Ingegnere**: bilancia la distribution energetica dei 4 quadranti deflettenti (*Shield Matrix*), gestisce i picchi di assorbimento del generatore (*Power Grid*) e interviene tempestivamente sulle falle strutturali e sugli incendi con *Life Support*, *Duct Drone* e *Service Drone*.
     - **Hacker**: conduce operazioni di guerra elettronica offensive e difensive (*Comms & EW*, *Diagnostics*), manomette a distanza i motori o il puntamento radar nemico con iniezioni di exploit firmware, e contrasta i virus o attacchi ICE lanciati contro i drive virtuali della corvetta.
 - **Integrazione Danni Sistemici e Stati di Allarme**:
   - I colpi subiti non riducono una semplice barra di vita astratta, ma generano danni fisici localizzati ai componenti della nave: falle strutturali (`dmg_breach`), cortocircuiti nei condotti elettrici, guasti all'array radar, avarie ai giroscopi RCS e perdite progressive di atmosfera.
@@ -516,9 +485,10 @@ NOTA: Il concetto di freemium-punk verrà impostato in seguito
   - Un indicatore diegetico di **Emergenza** viene mostrato su tutti i display di bordo:
     - *Allarme Giallo (Avaria Grave)*: integrità scafo compromessa o disattivazione di un sottosistema primario.
     - *Allarme Rosso (Pericolo Distruzione Imminente / Breccia Critica)*: fallimento catastrofico dei sistemi con conto alla rovescia per l'evacuazione o la perdita totale della corvetta.
+
 ---
 
-## 6. Schema Architetturale di Riferimento per Nuove App
+## 7. Schema Architetturale di Riferimento per Nuove App
 Ogni nuova applicazione pianificata nella Roadmap deve rispettare rigorosamente il modello architetturale definito in [`docs/APP_ARCHITECTURE_STANDARD.md`](APP_ARCHITECTURE_STANDARD.md):
 
 ```text
@@ -556,10 +526,10 @@ Applications/NomeApplicazione/
 
 ---
 
-## 7. Conclusioni e Riepilogo
+## 8. Conclusioni e Riepilogo
 
 Il presente documento fornisce la visione completa, organica e integrata di *Dark Nova: Rogue Squadron*. 
 
 Attraverso la combinazione dell'atmosfera di frontiera in stile *Firefly*, della satira *Freemium-punk*, dell'interfaccia diegetica a finestre su **GodotOS** e della rigida matrice di cooperazione asimmetrica tra i 6 ruoli dell'equipaggio (**Capitano**, **Pilota**, **Soldato**, **Ingegnere**, **Hacker**, **Factotum**), il gioco garantisce un gameplay sandbox dinamico, teso e profondo.
 
-L'ecosistema complessivo delle 12 applicazioni della corvetta (8 esistenti/sviluppate + 4 pianificate nella roadmap), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.
+L'ecosistema complessivo delle 14 applicazioni della corvetta (tutte sviluppate), alimentato dai 6 sottolivelli della `ShipBlueprint` e protetto dall'architettura firmware `.dat` con meccaniche di Hackwarfare, pone le basi per un'esperienza cooperativa solida, scalabile e rigorosamente conforme agli standard tecnici di progetto.
