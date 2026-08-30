@@ -8,9 +8,18 @@ extends Node
 signal software_installed(app_res: ShipAppResource)
 signal software_uninstalled(app_id: String)
 signal registry_changed()
+signal mission_started(role: String, is_solo: bool)
+signal mission_ended()
+signal role_changed(new_role: String)
 
 ## Mappa di tutti i software nave conosciuti/registrati nel sistema { app_id: ShipAppResource }
 var _registered_apps: Dictionary = {}
+
+## Stato runtime missione e ruolo per RBAC
+var current_role: String = ""
+var is_solo_mode: bool = false
+var is_mission_active: bool = false
+var active_blueprint_override: ShipBlueprint = null
 
 ## Percorsi predefiniti delle risorse software della nave
 const DEFAULT_SHIP_APP_PATHS: Array[String] = [
@@ -64,8 +73,52 @@ func get_all_registered_apps() -> Array[ShipAppResource]:
 		list.append(_registered_apps[k])
 	return list
 
+## Avvia la sessione di missione configurando il ruolo corrente e sincronizzando l'astronave
+func start_mission(role: String = "Capitano", p_is_solo: bool = false, bp: ShipBlueprint = null) -> void:
+	current_role = role
+	is_solo_mode = p_is_solo
+	is_mission_active = true
+	if bp != null:
+		active_blueprint_override = bp
+	
+	# Popola anche i file su disco di ShipDrive se opportuno
+	populate_all_installed_ship_drive_apps(bp)
+	
+	# Notifica SpaceWorldManager se disponibile
+	if SpaceWorldManager and SpaceWorldManager.has_method("start_mission"):
+		SpaceWorldManager.start_mission(bp)
+	elif SpaceWorldManager and SpaceWorldManager.has_method("set_ship_connected"):
+		SpaceWorldManager.set_ship_connected(true)
+	
+	mission_started.emit(current_role, is_solo_mode)
+	registry_changed.emit()
+
+## Termina la sessione di missione e reimposta lo stato offline
+func end_mission() -> void:
+	is_mission_active = false
+	current_role = ""
+	is_solo_mode = false
+	active_blueprint_override = null
+	
+	# Notifica SpaceWorldManager se disponibile
+	if SpaceWorldManager and SpaceWorldManager.has_method("end_mission"):
+		SpaceWorldManager.end_mission()
+	elif SpaceWorldManager and SpaceWorldManager.has_method("set_ship_connected"):
+		SpaceWorldManager.set_ship_connected(false)
+	
+	mission_ended.emit()
+	registry_changed.emit()
+
+## Aggiorna a runtime il ruolo del giocatore locale
+func set_current_role(new_role: String) -> void:
+	current_role = new_role
+	role_changed.emit(new_role)
+	registry_changed.emit()
+
 ## Recupera la Blueprint attiva corrente
 func get_active_blueprint() -> ShipBlueprint:
+	if active_blueprint_override != null:
+		return active_blueprint_override
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
 		var bp = SpaceWorldManager.get_ship_blueprint()
 		if bp:

@@ -5,6 +5,7 @@ extends Node
 ## Progettato per essere agnostico rispetto al trasporto (ENet, Steamworks, Nakama).
 
 signal lobby_updated(players_dict: Dictionary)
+signal session_resources_updated(ship_blueprint_info: Dictionary, star_system_info: Dictionary)
 signal player_joined(peer_id: int, player_data: Dictionary)
 signal player_left(peer_id: int)
 signal player_role_changed(peer_id: int, role: String)
@@ -46,6 +47,14 @@ var is_mission_started: bool = false
 
 ## Registro della ciurma: peer_id (int) -> { "name": String, "role": String, "is_host": bool, "ready": bool }
 var players: Dictionary = {}
+
+## Risorse Custom Selezionate per la Missione (Nave e Sistema Stellare)
+var selected_ship_blueprint_path: String = "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+var selected_star_system_path: String = "res://Outside/StarSystemGrid/default_star_system.tres"
+var selected_ship_blueprint_dict: Dictionary = {}
+var selected_star_system_dict: Dictionary = {}
+var _cached_selected_blueprint: ShipBlueprint = null
+var _cached_selected_star_system: StarSystemData = null
 
 var default_port: int = 7777
 var server_room_name: String = "Astronave Dark Nova"
@@ -215,6 +224,14 @@ func disconnect_game() -> void:
 	is_mission_started = false
 	local_peer_id = 1
 	
+	# Reset risorse sessione
+	selected_ship_blueprint_path = "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+	selected_star_system_path = "res://Outside/StarSystemGrid/default_star_system.tres"
+	selected_ship_blueprint_dict.clear()
+	selected_star_system_dict.clear()
+	_cached_selected_blueprint = null
+	_cached_selected_star_system = null
+	
 	if was_mission:
 		mission_ended.emit()
 	
@@ -275,6 +292,16 @@ func start_mission() -> void:
 	if is_mission_started:
 		return
 	
+	# Assicura che SpaceWorldManager e StarSystemGridManager abbiano le risorse selezionate
+	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	if space_world_mgr:
+		var bp := get_selected_ship_blueprint()
+		if bp and space_world_mgr.has_method("set_ship_blueprint"):
+			space_world_mgr.set_ship_blueprint(bp)
+		var sys := get_selected_star_system()
+		if sys and space_world_mgr.has_method("set_star_system_data"):
+			space_world_mgr.set_star_system_data(sys)
+	
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_launch_game.rpc()
 	_rpc_launch_game()
@@ -318,6 +345,192 @@ func is_role_available(role_name: String) -> bool:
 		if players[id].get("role") == role_name:
 			return false
 	return true
+
+# --- SELEZIONE E SINCRONIZZAZIONE RISORSE CUSTOM (SHIP BLUEPRINT & STAR SYSTEM) ---
+
+## Imposta la risorsa ShipBlueprint attiva per la sessione (solo Host o Solo Mode)
+func set_session_ship_blueprint(resource_or_path_or_dict) -> bool:
+	if not (is_host or is_solo_mode) and is_connected_to_network:
+		push_warning("[NetworkManager] Solo l'Host può modificare la ShipBlueprint di sessione.")
+		return false
+	
+	var bp: ShipBlueprint = null
+	if resource_or_path_or_dict is ShipBlueprint:
+		bp = resource_or_path_or_dict
+		selected_ship_blueprint_dict = bp.to_dict()
+		selected_ship_blueprint_path = bp.resource_path if not bp.resource_path.is_empty() else ""
+	elif resource_or_path_or_dict is String:
+		selected_ship_blueprint_path = resource_or_path_or_dict
+		if ResourceLoader.exists(selected_ship_blueprint_path):
+			var res = ResourceLoader.load(selected_ship_blueprint_path)
+			if res is ShipBlueprint:
+				bp = res
+				selected_ship_blueprint_dict = bp.to_dict()
+		if bp == null:
+			bp = ShipBlueprint.new()
+			if selected_ship_blueprint_path.ends_with(".json"):
+				bp.import_from_json(selected_ship_blueprint_path)
+			selected_ship_blueprint_dict = bp.to_dict()
+	elif resource_or_path_or_dict is Dictionary:
+		selected_ship_blueprint_dict = resource_or_path_or_dict.duplicate(true)
+		bp = ShipBlueprint.new()
+		bp.from_dict(selected_ship_blueprint_dict)
+		selected_ship_blueprint_path = ""
+	
+	if bp == null:
+		bp = ShipBlueprint.get_default_blueprint()
+		selected_ship_blueprint_dict = bp.to_dict()
+	
+	_cached_selected_blueprint = bp
+	
+	# Aggiorna SpaceWorldManager se presente
+	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	if space_world_mgr and space_world_mgr.has_method("set_ship_blueprint"):
+		space_world_mgr.set_ship_blueprint(bp)
+	
+	# Se siamo in multiplayer broadcasta a tutti i peer
+	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+		_rpc_sync_session_resources.rpc(_get_serialized_blueprint_dict(), _get_serialized_star_system_dict(), selected_ship_blueprint_path, selected_star_system_path)
+	
+	session_resources_updated.emit(get_session_blueprint_info(), get_session_star_system_info())
+	return true
+
+## Imposta la risorsa StarSystemData attiva per la sessione (solo Host o Solo Mode)
+func set_session_star_system(resource_or_path_or_dict) -> bool:
+	if not (is_host or is_solo_mode) and is_connected_to_network:
+		push_warning("[NetworkManager] Solo l'Host può modificare il StarSystemData di sessione.")
+		return false
+	
+	var sys: StarSystemData = null
+	if resource_or_path_or_dict is StarSystemData:
+		sys = resource_or_path_or_dict
+		selected_star_system_dict = sys.to_dict()
+		selected_star_system_path = sys.resource_path if not sys.resource_path.is_empty() else ""
+	elif resource_or_path_or_dict is String:
+		selected_star_system_path = resource_or_path_or_dict
+		if ResourceLoader.exists(selected_star_system_path):
+			var res = ResourceLoader.load(selected_star_system_path)
+			if res is StarSystemData:
+				sys = res
+				selected_star_system_dict = sys.to_dict()
+		if sys == null:
+			sys = StarSystemData.new()
+			if selected_star_system_path.ends_with(".json"):
+				var f := FileAccess.open(selected_star_system_path, FileAccess.READ)
+				if f:
+					var json := JSON.new()
+					if json.parse(f.get_as_text()) == OK and json.data is Dictionary:
+						sys.from_dict(json.data)
+					f.close()
+			selected_star_system_dict = sys.to_dict()
+	elif resource_or_path_or_dict is Dictionary:
+		selected_star_system_dict = resource_or_path_or_dict.duplicate(true)
+		sys = StarSystemData.new()
+		sys.from_dict(selected_star_system_dict)
+		selected_star_system_path = ""
+	
+	if sys == null:
+		sys = StarSystemData.get_default_star_system()
+		selected_star_system_dict = sys.to_dict()
+	
+	_cached_selected_star_system = sys
+	
+	# Aggiorna SpaceWorldManager se presente
+	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	if space_world_mgr and space_world_mgr.has_method("set_star_system_data"):
+		space_world_mgr.set_star_system_data(sys)
+	
+	# Se siamo in multiplayer broadcasta a tutti i peer
+	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+		_rpc_sync_session_resources.rpc(_get_serialized_blueprint_dict(), _get_serialized_star_system_dict(), selected_ship_blueprint_path, selected_star_system_path)
+	
+	session_resources_updated.emit(get_session_blueprint_info(), get_session_star_system_info())
+	return true
+
+## Restituisce l'istanza ShipBlueprint selezionata
+func get_selected_ship_blueprint() -> ShipBlueprint:
+	if _cached_selected_blueprint != null:
+		return _cached_selected_blueprint
+	if not selected_ship_blueprint_dict.is_empty():
+		var bp := ShipBlueprint.new()
+		bp.from_dict(selected_ship_blueprint_dict)
+		_cached_selected_blueprint = bp
+		return bp
+	if not selected_ship_blueprint_path.is_empty() and ResourceLoader.exists(selected_ship_blueprint_path):
+		var res = ResourceLoader.load(selected_ship_blueprint_path)
+		if res is ShipBlueprint:
+			_cached_selected_blueprint = res
+			selected_ship_blueprint_dict = res.to_dict()
+			return res
+	var def_bp := ShipBlueprint.get_default_blueprint()
+	_cached_selected_blueprint = def_bp
+	selected_ship_blueprint_dict = def_bp.to_dict()
+	return def_bp
+
+## Restituisce l'istanza StarSystemData selezionata
+func get_selected_star_system() -> StarSystemData:
+	if _cached_selected_star_system != null:
+		return _cached_selected_star_system
+	if not selected_star_system_dict.is_empty():
+		var sys := StarSystemData.new()
+		sys.from_dict(selected_star_system_dict)
+		_cached_selected_star_system = sys
+		return sys
+	if not selected_star_system_path.is_empty() and ResourceLoader.exists(selected_star_system_path):
+		var res = ResourceLoader.load(selected_star_system_path)
+		if res is StarSystemData:
+			_cached_selected_star_system = res
+			selected_star_system_dict = res.to_dict()
+			return res
+	var def_sys := StarSystemData.get_default_star_system()
+	_cached_selected_star_system = def_sys
+	selected_star_system_dict = def_sys.to_dict()
+	return def_sys
+
+## Informazioni anteprima sulla Blueprint nave
+func get_session_blueprint_info() -> Dictionary:
+	var bp := get_selected_ship_blueprint()
+	if bp:
+		return {
+			"id": bp.ship_id,
+			"name": bp.ship_name,
+			"class": bp.ship_class,
+			"rooms_count": bp.rooms.size(),
+			"ducts_count": bp.ducts.size(),
+			"devices_count": bp.devices.size(),
+			"apps_count": bp.installed_apps.size(),
+			"path": selected_ship_blueprint_path
+		}
+	return {}
+
+## Informazioni anteprima sul Sistema Stellare
+func get_session_star_system_info() -> Dictionary:
+	var sys := get_selected_star_system()
+	if sys:
+		var stations_count := 0
+		for b in sys.celestial_bodies:
+			if b.get("type", "").to_upper() == "STATION":
+				stations_count += 1
+		return {
+			"id": sys.system_id,
+			"name": sys.system_name,
+			"primary_star_name": sys.primary_star_name,
+			"primary_star_coords": sys.primary_star_coords,
+			"primary_star_energy": sys.primary_star_energy,
+			"bodies_count": sys.celestial_bodies.size(),
+			"stations_count": stations_count,
+			"custom_sectors_count": sys.custom_sectors.size(),
+			"path": selected_star_system_path
+		}
+	return {}
+
+func _get_serialized_blueprint_dict() -> Dictionary:
+	var bp := get_selected_ship_blueprint()
+	return bp.to_dict() if bp else {}
+
+func _get_serialized_star_system_dict() -> Dictionary:
+	var sys := get_selected_star_system()
+	return sys.to_dict() if sys else {}
 
 # --- GESTIONE TRASPORTO SEGNALI ---
 
@@ -400,6 +613,7 @@ func _rpc_register_player(player_name: String) -> void:
 	_server_broadcast_chat("[SISTEMA]", "%s è salito a bordo." % clean_name, true)
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_sync_lobby.rpc(players)
+		_rpc_sync_session_resources.rpc_id(sender_id, _get_serialized_blueprint_dict(), _get_serialized_star_system_dict(), selected_ship_blueprint_path, selected_star_system_path)
 		if is_mission_started:
 			_rpc_launch_game.rpc_id(sender_id)
 	
@@ -606,6 +820,45 @@ func _restart_headless_server() -> void:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_receive_chat(sender: String, message: String, is_system: bool) -> void:
 	chat_received.emit(sender, message, is_system)
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: Dictionary, blueprint_path: String, star_system_path: String) -> void:
+	selected_ship_blueprint_path = blueprint_path
+	selected_star_system_path = star_system_path
+	selected_ship_blueprint_dict = blueprint_dict.duplicate(true)
+	selected_star_system_dict = star_system_dict.duplicate(true)
+	
+	var bp := ShipBlueprint.new()
+	if not blueprint_dict.is_empty():
+		bp.from_dict(blueprint_dict)
+	elif not blueprint_path.is_empty() and ResourceLoader.exists(blueprint_path):
+		var res = ResourceLoader.load(blueprint_path)
+		if res is ShipBlueprint:
+			bp = res
+	else:
+		bp = ShipBlueprint.get_default_blueprint()
+	_cached_selected_blueprint = bp
+	
+	var sys := StarSystemData.new()
+	if not star_system_dict.is_empty():
+		sys.from_dict(star_system_dict)
+	elif not star_system_path.is_empty() and ResourceLoader.exists(star_system_path):
+		var res = ResourceLoader.load(star_system_path)
+		if res is StarSystemData:
+			sys = res
+	else:
+		sys = StarSystemData.get_default_star_system()
+	_cached_selected_star_system = sys
+	
+	# Aggiorna i manager locali
+	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	if space_world_mgr:
+		if space_world_mgr.has_method("set_ship_blueprint"):
+			space_world_mgr.set_ship_blueprint(bp)
+		if space_world_mgr.has_method("set_star_system_data"):
+			space_world_mgr.set_star_system_data(sys)
+	
+	session_resources_updated.emit(get_session_blueprint_info(), get_session_star_system_info())
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_launch_game() -> void:

@@ -54,6 +54,39 @@ func get_body(body_id: String) -> Dictionary:
 			return b
 	return {}
 
+## Trova e ritorna la stazione spaziale primaria/di partenza del sistema stellare
+func find_primary_station() -> Dictionary:
+	for b in celestial_bodies:
+		if b.get("type", "").to_upper() == "STATION":
+			return b
+	return {}
+
+## Calcola le coordinate di un settore adiacente libero (a distanza 1 casella di griglia) rispetto alla stazione
+func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
+	# Settori adiacenti candidati su assi X e Y (+X, -X, +Y, -Y)
+	var candidate_offsets: Array[Vector3i] = [
+		Vector3i(0, -1, 0),
+		Vector3i(1, 0, 0),
+		Vector3i(0, 1, 0),
+		Vector3i(-1, 0, 0),
+		Vector3i(1, 1, 0),
+		Vector3i(-1, -1, 0)
+	]
+	
+	# Mappa coordinate già occupate da macro-corpi celesti
+	var occupied_coords: Dictionary = {}
+	for b in celestial_bodies:
+		if b.has("coords") and b["coords"] is Vector3i:
+			occupied_coords[b["coords"]] = true
+	
+	for offset in candidate_offsets:
+		var cand := station_coords + offset
+		if not occupied_coords.has(cand):
+			return cand
+			
+	# Se tutti i candidati sono occupati, ritorna il primo offset standard
+	return station_coords + Vector3i(0, -1, 0)
+
 ## Aggiunge o aggiorna un settore custom
 func add_or_update_custom_sector(sector_dict: Dictionary) -> void:
 	var sec_id: String = sector_dict.get("sector_id", "")
@@ -138,3 +171,136 @@ func from_dict(data: Dictionary) -> void:
 		for s in data["custom_sectors"]:
 			if s is Dictionary:
 				custom_sectors.append(s.duplicate(true))
+
+## Clona l'istanza corrente
+func clone() -> StarSystemData:
+	var copy := StarSystemData.new()
+	copy.from_dict(to_dict())
+	return copy
+
+## Crea e popola il sistema solare standard di default (Helios Nova System)
+func create_default_system() -> void:
+	system_id = "SYS-HELIOS-01"
+	system_name = "Helios Nova System"
+	description = "Sistema stellare principale Dark Nova Helios."
+	primary_star_name = "Helios Nova"
+	primary_star_coords = Vector3i.ZERO
+	primary_star_color = Color(1.0, 0.96, 0.9, 1.0)
+	primary_star_energy = 1.3
+	primary_star_radius_km = 696340.0
+	primary_star_mass_tons = 1.989e27
+	celestial_bodies = [
+		{
+			"id": "STAR_SOL_PRIME",
+			"name": "Helios Nova (Stella Primaria)",
+			"type": "STAR",
+			"coords": Vector3i(0, 0, 0),
+			"radius_km": 696340.0,
+			"mass_tons": 1.989e27,
+			"luminosity": 1.0,
+			"color": Color(1.0, 0.96, 0.9, 1.0),
+			"occluding": false,
+			"description": "Stella di sequenza principale al centro del sistema."
+		},
+		{
+			"id": "PLANET_VULCAN",
+			"name": "Vulcanus (Pianeta Roccioso)",
+			"type": "PLANET",
+			"coords": Vector3i(1, 3, 0),
+			"radius_km": 4800.0,
+			"mass_tons": 3.3e20,
+			"occluding": true,
+			"description": "Mondo lavico interno ad alta densità metallica."
+		},
+		{
+			"id": "PLANET_TERRA_NOVA",
+			"name": "Terra Nova Prime",
+			"type": "PLANET",
+			"coords": Vector3i(4, 8, 0),
+			"radius_km": 6371.0,
+			"mass_tons": 5.97e21,
+			"occluding": true,
+			"description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata."
+		},
+		{
+			"id": "MOON_LUNA_SEC",
+			"name": "Selene Secundus",
+			"type": "MOON",
+			"coords": Vector3i(4, 8, 0),
+			"radius_km": 1737.0,
+			"mass_tons": 7.35e19,
+			"occluding": true,
+			"description": "Luna mineraria di Terra Nova."
+		},
+		{
+			"id": "BELT_CERES_EX",
+			"name": "Fascia d'Asteroidi Interna",
+			"type": "ASTEROID_FIELD",
+			"coords": Vector3i(3, 10, 0),
+			"radius_km": 25000.0,
+			"mass_tons": 1.5e18,
+			"occluding": false,
+			"description": "Denso campo di detriti e minerali preziosi."
+		},
+		{
+			"id": "STATION_VALKYRIE",
+			"name": "Stazione Spaziale Valkyrie",
+			"type": "STATION",
+			"coords": Vector3i(4, 12, 0),
+			"radius_km": 15.0,
+			"mass_tons": 8.5e10,
+			"occluding": false,
+			"description": "Hub orbitale militare e commerciale dell'avamposto."
+		},
+		{
+			"id": "PATROL_VANGUARD",
+			"name": "Pattuglia Vanguard-7",
+			"type": "PATROL",
+			"coords": Vector3i(4, 11, 0),
+			"radius_km": 0.5,
+			"mass_tons": 45000.0,
+			"occluding": false,
+			"description": "Squadriglia di caccia di sicurezza perimetrale."
+		},
+		{
+			"id": "WRECK_TITAN_GRAVE",
+			"name": "Relitto Incrociatore Titan-04",
+			"type": "WRECK",
+			"coords": Vector3i(5, 14, 0),
+			"radius_km": 2.5,
+			"mass_tons": 1.2e8,
+			"occluding": false,
+			"description": "Relitto bellico abbandonato ricco di materiali rari."
+		},
+		{
+			"id": "GAS_GIANT_KRONOS",
+			"name": "Kronos Titan (Gigante Gassoso)",
+			"type": "GAS_GIANT",
+			"coords": Vector3i(8, 20, 0),
+			"radius_km": 69911.0,
+			"mass_tons": 1.89e24,
+			"occluding": true,
+			"description": "Imponente gigante gassoso con complessi anelli d'idrogeno."
+		},
+		{
+			"id": "GAS_GIANT_AETHER",
+			"name": "Aetheris (Gigante di Ghiaccio)",
+			"type": "GAS_GIANT",
+			"coords": Vector3i(-12, 16, 0),
+			"radius_km": 25362.0,
+			"mass_tons": 8.68e22,
+			"occluding": true,
+			"description": "Gigante ghiacciato all'estrema periferia del sistema."
+		}
+	]
+	custom_sectors = []
+
+static func get_default_star_system() -> StarSystemData:
+	const PATH := "res://Outside/StarSystemGrid/default_star_system.tres"
+	if ResourceLoader.exists(PATH):
+		var res = ResourceLoader.load(PATH)
+		if res is StarSystemData:
+			return res as StarSystemData
+	var sys := StarSystemData.new()
+	sys.create_default_system()
+	return sys

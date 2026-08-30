@@ -30,7 +30,7 @@ const PRIMARY_STAR_RADIUS_KM: float = 696340.0
 const PRIMARY_STAR_BASE_ENERGY: float = 1.3
 
 # Stato del Manager
-var current_sector_coords: Vector3i = Vector3i(4, 12, 0)
+var current_sector_coords: Vector3i = Vector3i(4, 11, 0) # Spawning iniziale adiacente alla stazione orbitale (4, 12, 0)
 var current_sector_data: SectorData = null
 
 # Database settori generati/memorizzati
@@ -144,8 +144,38 @@ var system_celestial_bodies: Array[Dictionary] = [
 ]
 
 func _ready() -> void:
-	# Inizializza il settore di partenza predefinito
-	load_sector(current_sector_coords)
+	if current_system_data == null:
+		load_star_system(StarSystemData.get_default_star_system())
+	else:
+		current_sector_coords = calculate_initial_spawn_coords()
+		load_sector(current_sector_coords)
+
+## Ritorna la stazione di partenza primaria/principale presente nel sistema stellare attivo
+func get_starting_station() -> Dictionary:
+	if current_system_data != null and current_system_data.has_method("find_primary_station"):
+		var st := current_system_data.find_primary_station()
+		if not st.is_empty():
+			return st
+	for b in system_celestial_bodies:
+		if b.get("type", "").to_upper() == "STATION":
+			return b
+	return {}
+
+## Calcola le coordinate del settore iniziale di spawn adiacente alla stazione di partenza
+func calculate_initial_spawn_coords() -> Vector3i:
+	var station := get_starting_station()
+	if not station.is_empty():
+		var st_coords: Vector3i = station.get("coords", Vector3i(4, 12, 0))
+		if current_system_data != null and current_system_data.has_method("find_adjacent_spawn_sector"):
+			return current_system_data.find_adjacent_spawn_sector(st_coords)
+		return st_coords + Vector3i(0, -1, 0)
+	return Vector3i(4, 11, 0)
+
+## Posiziona la nave nel settore adiacente alla stazione primaria
+func spawn_adjacent_to_station() -> Vector3i:
+	var spawn_coords := calculate_initial_spawn_coords()
+	set_current_sector_coords(spawn_coords)
+	return spawn_coords
 
 # =============================================================================
 # GESTIONE COORDINATE E TRANSIZIONI SETTORE
@@ -343,6 +373,7 @@ func load_star_system(sys_data: StarSystemData) -> void:
 		var sec := SectorData.new()
 		sec.from_dict(sec_dict)
 		_sector_cache[sec.sector_id] = sec
+	current_sector_coords = calculate_initial_spawn_coords()
 	load_sector(current_sector_coords)
 
 ## Esporta lo stato corrente in un oggetto StarSystemData

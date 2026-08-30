@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://blobbycustomres01"]
+
+[ext_resource type="Script" path="res://tests/test_lobby_custom_resources_node.gd" id="1_test_script"]
+
+[node name="TestLobbyCustomResources" type="Node"]
+script = ExtResource("1_test_script")

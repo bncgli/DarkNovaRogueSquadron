@@ -400,6 +400,117 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Disconnetti"
 
+[node name="ResourcesPanel" type="PanelContainer" parent="Margin/LobbyRoomView"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/ResourcesPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ResHeaderHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="ResHeaderLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "🛠️ CONFIGURAZIONE RISORSE MISSIONE (NAVE & SISTEMA STELLARE)"
+
+[node name="ResPermissionBadge" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "[HOST: Modificabile]"
+
+[node name="ResColumnsHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ShipResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ShipResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+layout_mode = 2
+
+[node name="ShipResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipResTitleHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "🚀 Risorsa Nave (ShipBlueprint):"
+
+[node name="ShipSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ShipBlueprintOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SelectShipFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sfoglia..."
+
+[node name="ShipPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Nave: Dark Nova Corvette | Stanze: 10 | Condotti: 14 | App: 12"
+
+[node name="SystemResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="SystemResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+layout_mode = 2
+
+[node name="SystemResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemResTitleHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "🌌 Sistema Stellare (StarSystemData):"
+
+[node name="SystemSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StarSystemOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SelectSystemFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sfoglia..."
+
+[node name="SystemPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Sistema: Helios Nova System | Stella: (0, 0, 0) | Corpi: 10 | Stazioni: 1"
+
+[node name="ResourceFileDialog" type="FileDialog" parent="Margin/LobbyRoomView"]
+unique_name_in_owner = true
+title = "Seleziona Risorsa Custom"
+size = Vector2i(600, 400)
+ok_button_text = "Apri"
+file_mode = 0
+filters = PackedStringArray("*.tres ; Godot Resource", "*.json ; JSON Resource")
+
 [node name="MainContent" type="HBoxContainer" parent="Margin/LobbyRoomView"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -541,6 +652,11 @@ text = "🚀 AVVIA MISSIONE / DECOLLO"
 [connection signal="pressed" from="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/JoinButton" to="." method="_on_join_button_pressed"]
 [connection signal="pressed" from="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox/RescanLanButton" to="." method="_on_rescan_lan_button_pressed"]
 [connection signal="pressed" from="Margin/LobbyRoomView/HeaderPanel/Margin/HBox/DisconnectButton" to="." method="_on_disconnect_button_pressed"]
+[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox/SelectShipFileButton" to="." method="_on_select_ship_file_button_pressed"]
+[connection signal="item_selected" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox/ShipBlueprintOption" to="." method="_on_ship_blueprint_option_item_selected"]
+[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox/SelectSystemFileButton" to="." method="_on_select_system_file_button_pressed"]
+[connection signal="item_selected" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox/StarSystemOption" to="." method="_on_star_system_option_item_selected"]
+[connection signal="file_selected" from="Margin/LobbyRoomView/ResourceFileDialog" to="." method="_on_resource_file_dialog_file_selected"]
 [connection signal="text_submitted" from="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox/ChatInput" to="." method="_on_chat_input_text_submitted"]
 [connection signal="pressed" from="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox/SendChatButton" to="." method="_on_send_chat_button_pressed"]
 [connection signal="pressed" from="Margin/LobbyRoomView/FooterBar/ReadyButton" to="." method="_on_ready_button_pressed"]

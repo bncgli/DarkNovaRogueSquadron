@@ -1,6 +1,12 @@
 res://Scenes/Main/MainScene.tscn
-res://Scenes/Taskbar/start_menu_option.gd
-res://Scenes/Taskbar/start_menu_option.tscn
-res://Scenes/Autoloads/Context Menu/context_menu_manager.gd
+res://Outside/StarSystemGrid/star_system_data.gd
+res://Outside/StarSystemGrid/star_system_grid_manager.gd
+res://Outside/space_world_manager.gd
+res://Scenes/Networking/network_manager.gd
+res://tests/test_ship_blueprint_node.gd
+res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Outside/ShipSublayer/ship_blueprint.gd
+res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
 res://Scenes/Taskbar/start_button.gd
-res://tests/test_start_menu_windows_style.gd
+res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd
+res://tests/test_initial_spawn_adjacent_station.gd

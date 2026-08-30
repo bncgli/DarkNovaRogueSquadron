@@ -43,7 +43,9 @@ func to_dict() -> Dictionary:
 	return d
 
 ## Verifica se un determinato ruolo (o stato di gioco) ha i permessi per visualizzare/avviare l'app
-func is_role_allowed(role_name: String, _is_solo: bool = false) -> bool:
+func is_role_allowed(role_name: String, is_solo: bool = false) -> bool:
+	if is_solo:
+		return true
 	var clean_role := role_name.strip_edges()
 	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Factotum" or clean_role == "Captain" or clean_role == "HOST"
 	if is_super:
@@ -53,12 +55,13 @@ func is_role_allowed(role_name: String, _is_solo: bool = false) -> bool:
 		return true
 		
 	for r in roles:
-		var r_str: String = str(r).strip_edges()
-		if r_str == "*" or r_str.to_lower() == "all":
+		var r_str: String = str(r).strip_edges().to_lower()
+		var c_str: String = clean_role.to_lower()
+		if r_str == "*" or r_str == "all":
 			return true
-		if r_str.to_lower() == clean_role.to_lower():
+		if r_str == c_str:
 			return true
-		if clean_role != "" and (r_str.to_lower() in clean_role.to_lower() or clean_role.to_lower() in r_str.to_lower()):
+		if (c_str in ["pilota", "pilot"] and r_str in ["pilota", "pilot"]) or (c_str in ["ingegnere", "engineer"] and r_str in ["ingegnere", "engineer"]) or (c_str in ["soldato", "soldier", "tattico"] and r_str in ["soldato", "soldier", "tattico", "tattico / armi", "armi"]) or (c_str in ["hacker", "cyber"] and r_str in ["hacker", "cyber"]):
 			return true
 			
 	return false

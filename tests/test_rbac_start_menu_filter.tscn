@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cmele8cjyot3q"]
+
+[ext_resource type="Script" path="res://tests/test_rbac_start_menu_filter_node.gd" id="1_test_script"]
+
+[node name="TestRBACStartMenuFilter" type="Node"]
+script = ExtResource("1_test_script")

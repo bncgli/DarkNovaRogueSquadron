@@ -1,0 +1,109 @@
+[gd_resource type="Resource" script_class="StarSystemData" format=3]
+
+[ext_resource type="Script" path="res://Outside/StarSystemGrid/star_system_data.gd" id="1_sys_script"]
+
+[resource]
+script = ExtResource("1_sys_script")
+system_id = "SYS-HELIOS-01"
+system_name = "Helios Nova System"
+description = "Sistema stellare principale Dark Nova Helios."
+primary_star_name = "Helios Nova"
+primary_star_coords = Vector3i(0, 0, 0)
+primary_star_color = Color(1, 0.96, 0.9, 1)
+primary_star_energy = 1.3
+primary_star_radius_km = 696340.0
+primary_star_mass_tons = 1.989e27
+celestial_bodies = Array[Dictionary]([{
+"color": Color(1, 0.96, 0.9, 1),
+"coords": Vector3i(0, 0, 0),
+"description": "Stella di sequenza principale al centro del sistema.",
+"id": "STAR_SOL_PRIME",
+"luminosity": 1.0,
+"mass_tons": 1.989e+27,
+"name": "Helios Nova (Stella Primaria)",
+"occluding": false,
+"radius_km": 696340.0,
+"type": "STAR"
+}, {
+"coords": Vector3i(1, 3, 0),
+"description": "Mondo lavico interno ad alta densità metallica.",
+"id": "PLANET_VULCAN",
+"mass_tons": 3.3e+20,
+"name": "Vulcanus (Pianeta Roccioso)",
+"occluding": true,
+"radius_km": 4800.0,
+"type": "PLANET"
+}, {
+"coords": Vector3i(4, 8, 0),
+"description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata.",
+"id": "PLANET_TERRA_NOVA",
+"mass_tons": 5.97e+21,
+"name": "Terra Nova Prime",
+"occluding": true,
+"radius_km": 6371.0,
+"type": "PLANET"
+}, {
+"coords": Vector3i(4, 8, 0),
+"description": "Luna mineraria di Terra Nova.",
+"id": "MOON_LUNA_SEC",
+"mass_tons": 7.35e+19,
+"name": "Selene Secundus",
+"occluding": true,
+"radius_km": 1737.0,
+"type": "MOON"
+}, {
+"coords": Vector3i(3, 10, 0),
+"description": "Denso campo di detriti e minerali preziosi.",
+"id": "BELT_CERES_EX",
+"mass_tons": 1.5e+18,
+"name": "Fascia d'Asteroidi Interna",
+"occluding": false,
+"radius_km": 25000.0,
+"type": "ASTEROID_FIELD"
+}, {
+"coords": Vector3i(4, 12, 0),
+"description": "Hub orbitale militare e commerciale dell'avamposto.",
+"id": "STATION_VALKYRIE",
+"mass_tons": 8.5e+10,
+"name": "Stazione Spaziale Valkyrie",
+"occluding": false,
+"radius_km": 15.0,
+"type": "STATION"
+}, {
+"coords": Vector3i(4, 11, 0),
+"description": "Squadriglia di caccia di sicurezza perimetrale.",
+"id": "PATROL_VANGUARD",
+"mass_tons": 45000.0,
+"name": "Pattuglia Vanguard-7",
+"occluding": false,
+"radius_km": 0.5,
+"type": "PATROL"
+}, {
+"coords": Vector3i(5, 14, 0),
+"description": "Relitto bellico abbandonato ricco di materiali rari.",
+"id": "WRECK_TITAN_GRAVE",
+"mass_tons": 1.2e+08,
+"name": "Relitto Incrociatore Titan-04",
+"occluding": false,
+"radius_km": 2.5,
+"type": "WRECK"
+}, {
+"coords": Vector3i(8, 20, 0),
+"description": "Imponente gigante gassoso con complessi anelli d'idrogeno.",
+"id": "GAS_GIANT_KRONOS",
+"mass_tons": 1.89e+24,
+"name": "Kronos Titan (Gigante Gassoso)",
+"occluding": true,
+"radius_km": 69911.0,
+"type": "GAS_GIANT"
+}, {
+"coords": Vector3i(-12, 16, 0),
+"description": "Gigante ghiacciato all'estrema periferia del sistema.",
+"id": "GAS_GIANT_AETHER",
+"mass_tons": 8.68e+22,
+"name": "Aetheris (Gigante di Ghiaccio)",
+"occluding": true,
+"radius_km": 25362.0,
+"type": "GAS_GIANT"
+}])
+custom_sectors = Array[Dictionary]([])

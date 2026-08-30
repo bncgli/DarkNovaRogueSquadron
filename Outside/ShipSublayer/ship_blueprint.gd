@@ -730,23 +730,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Controlli di manovra e navigazione nave",
 			"scene_path": "res://Applications/FlightControl/flight_control_app.tscn",
 			"icon_color": Color(1.0, 0.6, 0.2, 1.0),
-			"roles": ["Capitano", "Pilota", "Factotum"]
-		},
-		{
-			"id": "duct_drone",
-			"title": "Duct Drone",
-			"description": "Robottino manutenzione e schema condotti 2D",
-			"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
-			"icon_color": Color(1.0, 0.85, 0.2, 1.0),
-			"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum"]
-		},
-		{
-			"id": "power_grid",
-			"title": "Power Grid",
-			"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
-			"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
-			"icon_color": Color(0.95, 0.85, 0.2, 1.0),
-			"roles": ["Capitano", "Ingegnere", "Factotum"]
+			"roles": ["Capitano", "Pilota", "Factotum", "Captain", "Pilot"]
 		},
 		{
 			"id": "cams",
@@ -754,15 +738,23 @@ func _init_default_installed_apps() -> void:
 			"description": "Telecamere esterne dell'astronave",
 			"scene_path": "res://Applications/Cams/cams_app.tscn",
 			"icon_color": Color(0.3, 0.9, 0.6, 1.0),
-			"roles": ["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Factotum"]
+			"roles": ["Capitano", "Pilota", "Soldato", "Tattico", "Tattico / Armi", "Sensori / Radar", "Factotum", "Captain", "Pilot", "Soldier"]
 		},
 		{
-			"id": "weapons",
-			"title": "Tactical Weapons",
-			"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
-			"scene_path": "res://Applications/Weapons/weapons_app.tscn",
-			"icon_color": Color(0.95, 0.25, 0.25, 1.0),
-			"roles": ["Capitano", "Soldato", "Tattico / Armi", "Factotum"]
+			"id": "power_grid",
+			"title": "Power Grid",
+			"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+			"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
+			"icon_color": Color(0.95, 0.85, 0.2, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"]
+		},
+		{
+			"id": "duct_drone",
+			"title": "Duct Drone",
+			"description": "Robottino manutenzione e schema condotti 2D",
+			"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
+			"icon_color": Color(1.0, 0.85, 0.2, 1.0),
+			"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"]
 		},
 		{
 			"id": "shield_matrix",
@@ -770,31 +762,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Matrice deflettori a 4 quadranti e scudi energetici",
 			"scene_path": "res://Applications/ShieldMatrix/shield_matrix_app.tscn",
 			"icon_color": Color(0.2, 0.6, 1.0, 1.0),
-			"roles": ["Capitano", "Ingegnere", "Factotum"]
-		},
-		{
-			"id": "comms",
-			"title": "Comms & Electronic War",
-			"description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
-			"scene_path": "res://Applications/Comms/comms_app.tscn",
-			"icon_color": Color(0.4, 0.8, 1.0, 1.0),
-			"roles": ["Capitano", "Hacker", "Factotum"]
-		},
-		{
-			"id": "diagnostics",
-			"title": "System Diagnostics",
-			"description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
-			"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
-			"icon_color": Color(0.2, 0.9, 0.7, 1.0),
-			"roles": ["Capitano", "Hacker", "Ingegnere", "Factotum"]
-		},
-		{
-			"id": "sensors",
-			"title": "Array Sensori & Mappa Tattica",
-			"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
-			"scene_path": "res://Applications/Sensors/sensors_app.tscn",
-			"icon_color": Color(0.2, 0.8, 0.4, 1.0),
-			"roles": ["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"]
+			"roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"]
 		},
 		{
 			"id": "life_support",
@@ -802,7 +770,39 @@ func _init_default_installed_apps() -> void:
 			"description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
 			"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
 			"icon_color": Color(0.2, 0.7, 0.9, 1.0),
-			"roles": ["Ingegnere", "Capitano", "Factotum", "Engineer", "Captain"]
+			"roles": ["Capitano", "Ingegnere", "Factotum", "Engineer", "Captain"]
+		},
+		{
+			"id": "weapons",
+			"title": "Tactical Weapons",
+			"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+			"scene_path": "res://Applications/Weapons/weapons_app.tscn",
+			"icon_color": Color(0.95, 0.25, 0.25, 1.0),
+			"roles": ["Capitano", "Soldato", "Tattico", "Tattico / Armi", "Factotum", "Captain", "Soldier"]
+		},
+		{
+			"id": "sensors",
+			"title": "Array Sensori & Mappa Tattica",
+			"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
+			"scene_path": "res://Applications/Sensors/sensors_app.tscn",
+			"icon_color": Color(0.2, 0.8, 0.4, 1.0),
+			"roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Factotum", "Soldier", "Captain"]
+		},
+		{
+			"id": "comms",
+			"title": "Comms & Electronic War",
+			"description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
+			"scene_path": "res://Applications/Comms/comms_app.tscn",
+			"icon_color": Color(0.4, 0.8, 1.0, 1.0),
+			"roles": ["Capitano", "Hacker", "Factotum", "Captain"]
+		},
+		{
+			"id": "diagnostics",
+			"title": "System Diagnostics",
+			"description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
+			"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
+			"icon_color": Color(0.2, 0.9, 0.7, 1.0),
+			"roles": ["Capitano", "Hacker", "Factotum", "Captain"]
 		},
 		{
 			"id": "logbook",
@@ -810,7 +810,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
 			"scene_path": "res://Applications/Logbook/logbook_app.tscn",
 			"icon_color": Color(0.8, 0.7, 0.2, 1.0),
-			"roles": ["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"]
+			"roles": ["Captain", "Factotum", "Capitano"]
 		},
 		{
 			"id": "service_drone",
@@ -818,7 +818,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
 			"scene_path": "res://Applications/ServiceDrone/service_drone_app.tscn",
 			"icon_color": Color(0.9, 0.5, 0.2, 1.0),
-			"roles": ["Ingegnere", "Hacker", "Capitano", "Factotum", "Engineer", "Captain"]
+			"roles": ["Capitano", "Factotum", "Captain"]
 		},
 		{
 			"id": "cargo_bay",
@@ -826,7 +826,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
 			"scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
 			"icon_color": Color(0.95, 0.65, 0.15, 1.0),
-			"roles": ["Capitano", "Ingegnere", "Hacker", "Pilota", "Factotum", "Captain", "Engineer", "Pilot"]
+			"roles": ["Capitano", "Factotum", "Captain"]
 		}
 	]
 
@@ -940,10 +940,10 @@ func remove_installed_app(app_id: String) -> bool:
 			return true
 	return false
 
-func get_apps_for_role(role_name: String, _is_solo: bool = false) -> Array[Dictionary]:
+func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var clean_role := role_name.strip_edges()
-	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Factotum" or clean_role == "HOST"
+	var is_super := is_solo or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Factotum" or clean_role == "HOST"
 	
 	for app in installed_apps:
 		if is_super:
@@ -957,14 +957,19 @@ func get_apps_for_role(role_name: String, _is_solo: bool = false) -> Array[Dicti
 			
 		var role_matched := false
 		for r in allowed:
-			var r_str: String = str(r).strip_edges()
-			if r_str == "*" or r_str.to_lower() == "all":
+			var r_str: String = str(r).strip_edges().to_lower()
+			var c_str: String = clean_role.to_lower()
+			if r_str == "*" or r_str == "all":
 				role_matched = true
 				break
-			if r_str.to_lower() == clean_role.to_lower():
+			if r_str == c_str:
 				role_matched = true
 				break
-			if clean_role != "" and (r_str.to_lower() in clean_role.to_lower() or clean_role.to_lower() in r_str.to_lower()):
+			# Verifica sinonimi comuni (es. Pilota / Pilot, Soldato / Soldier, Ingegnere / Engineer)
+			if (c_str in ["pilota", "pilot"] and r_str in ["pilota", "pilot"]) or \
+			   (c_str in ["ingegnere", "engineer"] and r_str in ["ingegnere", "engineer"]) or \
+			   (c_str in ["soldato", "soldier", "tattico"] and r_str in ["soldato", "soldier", "tattico", "tattico / armi", "armi"]) or \
+			   (c_str in ["hacker", "cyber"] and r_str in ["hacker", "cyber"]):
 				role_matched = true
 				break
 		

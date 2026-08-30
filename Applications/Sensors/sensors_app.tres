@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_eoua1")
-roles = Array[String](["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"])
+roles = Array[String](["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Factotum", "Soldier", "Captain"])
 power_draw_mw = 18.0
 required_subsystems = Array[String](["sensors_array", "tactical_radar"])
 app_id = "sensors"

@@ -22,6 +22,17 @@ func _connect_system_signals() -> void:
 		if not SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 	
+	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	if ssm:
+		if ssm.has_signal("mission_started") and not ssm.mission_started.is_connected(_on_software_mission_started):
+			ssm.mission_started.connect(_on_software_mission_started)
+		if ssm.has_signal("mission_ended") and not ssm.mission_ended.is_connected(_on_software_mission_ended):
+			ssm.mission_ended.connect(_on_software_mission_ended)
+		if ssm.has_signal("role_changed") and not ssm.role_changed.is_connected(_on_software_role_changed):
+			ssm.role_changed.connect(_on_software_role_changed)
+		if ssm.has_signal("registry_changed") and not ssm.registry_changed.is_connected(_on_software_registry_changed):
+			ssm.registry_changed.connect(_on_software_registry_changed)
+	
 	var nm := _get_net_mgr()
 	if nm:
 		if nm.has_signal("mission_started") and not nm.mission_started.is_connected(_on_mission_started):
@@ -42,6 +53,17 @@ func _disconnect_system_signals() -> void:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 	
+	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	if ssm:
+		if ssm.has_signal("mission_started") and ssm.mission_started.is_connected(_on_software_mission_started):
+			ssm.mission_started.disconnect(_on_software_mission_started)
+		if ssm.has_signal("mission_ended") and ssm.mission_ended.is_connected(_on_software_mission_ended):
+			ssm.mission_ended.disconnect(_on_software_mission_ended)
+		if ssm.has_signal("role_changed") and ssm.role_changed.is_connected(_on_software_role_changed):
+			ssm.role_changed.disconnect(_on_software_role_changed)
+		if ssm.has_signal("registry_changed") and ssm.registry_changed.is_connected(_on_software_registry_changed):
+			ssm.registry_changed.disconnect(_on_software_registry_changed)
+	
 	var nm := _get_net_mgr()
 	if nm:
 		if nm.has_signal("mission_started") and nm.mission_started.is_connected(_on_mission_started):
@@ -61,6 +83,18 @@ func _get_net_mgr() -> Node:
 	return get_node_or_null("/root/NetworkManager")
 
 func _on_ship_connection_changed(_is_connected: bool) -> void:
+	_refresh_ship_apps()
+
+func _on_software_mission_started(_role: String, _is_solo: bool) -> void:
+	_refresh_ship_apps()
+
+func _on_software_mission_ended() -> void:
+	_refresh_ship_apps()
+
+func _on_software_role_changed(_new_role: String) -> void:
+	_refresh_ship_apps()
+
+func _on_software_registry_changed() -> void:
 	_refresh_ship_apps()
 
 func _on_mission_started() -> void:
@@ -98,13 +132,23 @@ func _refresh_ship_apps() -> void:
 	elif _get_net_mgr() and _get_net_mgr().has_method("is_ship_connected"):
 		is_active = _get_net_mgr().is_ship_connected()
 	
+	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	if not is_active and ssm and ssm.get("is_mission_active"):
+		is_active = true
+	
 	if is_active:
 		var nm := _get_net_mgr()
-		var my_role: String = nm.get_local_player_role() if nm else ""
-		var is_solo: bool = nm.is_solo_mode if nm else false
+		var my_role: String = ""
+		var is_solo: bool = false
+		
+		if ssm and not ssm.current_role.is_empty():
+			my_role = ssm.current_role
+			is_solo = ssm.is_solo_mode
+		elif nm:
+			my_role = nm.get_local_player_role()
+			is_solo = nm.is_solo_mode
 		
 		var apps: Array = []
-		var ssm = get_node_or_null("/root/ShipSoftwareManager")
 		if ssm and ssm.has_method("get_apps_for_role"):
 			var app_resources: Array = ssm.get_apps_for_role(my_role, is_solo)
 			for r in app_resources:

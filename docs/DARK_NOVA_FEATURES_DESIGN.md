@@ -28,108 +28,109 @@ Di seguito viene illustrato il percorso completo dell'utente dall'avvio dell'app
 
 ```text
  ┌────────────────────────────────────────────────────────────────────────┐
- │ 1. BOOT & AVVIO GODOTOS                                                │
+ │ 1. BOOT & ACCESSO ALL'OS (GODOTOS)                                     │
  │    - Schermata di Boot Splash Dark Nova                                │
  │    - Caricamento Desktop GodotOS con Taskbar e Start Menu              │
  └───────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼
  ┌────────────────────────────────────────────────────────────────────────┐
- │ 2. FASE LOBBY & PREPARAZIONE                                           │
- │    - Il giocatore apre la finestra "Lobby & Matchmaking"               │
- │    - Modalità Solo Mode vs Host Multiplayer LAN/P2P vs Join Client     │
+ │ 2. FASE LOBBY, MATCHMAKING & CONFIGURAZIONE RISORSE CUSTOM             │
+ │    - Il giocatore accede alla Lobby (Solo Mode vs Host vs Join Nave)   │
+ │    - L'Host può caricare una risorsa Nave e una risorsa Sistema        │
+ │      Stellare per avviare una nave custom in un setting custom         │
  │    - Selezione e sincronizzazione del Ruolo (Capitano, Pilota, ecc.)   │
- │    - Configurazione file locali su Terminal Drive (se necessario)      │
  └───────────────────────────────────┬────────────────────────────────────┘
                                      │
-                                     ▼ (Host/Solo preme "Avvia Missione")
+                                     ▼ (Host/Solo avvia la partita)
  ┌────────────────────────────────────────────────────────────────────────┐
- │ 3. DECOLLO & SBLOCCO SISTEMI NAVE                                      │
- │    - NetworkManager & SpaceWorldManager attivano la simulazione 3D     │
- │    - Notifica desktop: "Decollo completato - Sistemi Nave Operativi"   │
- │    - Le app della nave rimuovono l'overlay "Sistemi Offline"           │
- │    - I giocatori aprono le proprie applicazioni di specializzazione    │
- └───────────────────────────────────┬────────────────────────────────────┘
-                                     │
-                                     ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ 4. GAMEPLAY LOOP OPERATIVO (CO-OP ASIMMETRICO)                         │
- │    - Pilota: Controlla la nave per evitare pericoli e collisioni       │
- │    - Soldato: Usa le armi per abbattere i nemici                       │
- │    - Ingegnere: Gestisce l'energia e le riparazioni                    │
- │    - Hacker: Gestisce il terminale e electronic warfare                │
- └───────────────────────────────────┬────────────────────────────────────┘
-                                     │
-                                     ▼ (Eventi Imprevisti / Emergenze)
- ┌────────────────────────────────────────────────────────────────────────┐
- │ 5. GESTIONE EMERGENZE & GUASTI A BORDO                                 │
- │    - Rilevamento guasto / allarme sonoro / notifica OS                 │
- │    - Apertura finestre di diagnostica e cooperazione incrociata        │
- │    - Drone naviga nei condotti -> Ingegnere isola il settore elettrico │
+ │ 3. AVVIO PARTITA & CARICAMENTO PROGRAMMI SULLA NAVE                    │
+ │    - NetworkManager & SpaceWorldManager inizializzano la simulazione   │
+ │    - I programmi/applicazioni vengono caricati sulla nave in base ai   │
+ │      ruoli assegnati a ciascun giocatore (Filtro Ruoli RBAC)           │
+ │    - Rimozione overlay "Sistemi Offline" e notifica di decollo         │
  └───────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼
  ┌────────────────────────────────────────────────────────────────────────┐
- │ 6. CONCLUSIONE MISSIONE / FINE SESSIONE                                │
- │    - Il gioco è un sandbox: salvataggio persistente e debriefing      │
+ │ 4. POSIZIONAMENTO INIZIALE & SCELTA ROTTA                              │
+ │    - La nave parte in una sezione/settore adiacente a una stazione     │
+ │    - Scelta: raggiungere la Stazione Spaziale o viaggiare nel sistema  │
+ └─────────────────┬───────────────────────────────────┬──────────────────┘
+                   │                                   │
+                   ▼ (Attracco a Stazione)             ▼ (Navigazione & Iperspazio)
+ ┌───────────────────────────────────┐   ┌────────────────────────────────┐
+ │ 5b. SERVIZI STAZIONE SPAZIALE     │   │ 5a. SYSTEM MAP & HYPERDRIVE    │
+ │  - Commercio merci e logistica    │   │  - Uso di "System Map" per     │
+ │  - Stipula di nuove missioni      │   │    pianificare la traiettoria  │
+ │  - Acquisto nuovi programmi/app   │   │  - Flight Control attiva       │
+ │  - Riparazioni e rifornimenti     │   │    l'Hyperdrive lungo la rotta │
+ └─────────────────┬─────────────────┘   └────────────────┬───────────────┘
+                   │                                      │
+                   └───────────────────┬──────────────────┘
+                                       │
+                                       ▼
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ 6. GAMEPLAY LOOP OPERATIVO & GESTIONE EMERGENZE                        │
+ │    - Cooperazione asimmetrica multiruolo in volo e combattimento       │
+ │    - Gestione avarie, intrusioni informatiche e guasti a bordo         │
+ └───────────────────────────────────┬────────────────────────────────────┘
+                                     │
+                                     ▼
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ 7. CONCLUSIONE MISSIONE / FINE SESSIONE                                │
+ │    - Il gioco è un sandbox: salvataggio persistente e debriefing       │
  │    - Chiusura/Blocco automatico finestre nave con overlay Disconnesso  │
  │    - Schermata di debriefing e statistiche sessione in Lobby           │
  └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.1 Fase 1: Boot e Desktop
-1. **Avvio**: L'utente avvia l'eseguibile di gioco.
-2. Viene visualizzata una schermata di caricamento/boot splash a tema aerospaziale.
+### 2.1 Fase 1: Boot e Accesso all'OS
+1. **Avvio**: I giocatori avviano il gioco ed eseguono l'accesso al sistema operativo diegetico **GodotOS**.
+2. Viene visualizzata la sequenza di caricamento/boot splash a tema aerospaziale.
 3. Si carica l'ambiente desktop **GodotOS** con sfondo spaziale, barra delle applicazioni (Taskbar) in basso, orologio di sistema, tray notifiche e icone sul desktop.
 
-### 2.2 Fase 2: Apertura Lobby e Scelta del Ruolo
-1. All'avvio del desktop, la finestra **Lobby & Matchmaking** si apre al centro dello schermo (oppure può essere richiamata dal menu Start o dall'icona sul desktop).
-2. **Scelte possibili per l'utente**:
+### 2.2 Fase 2: Accesso alla Lobby e Configurazione Nave/Sistema
+1. All'avvio del desktop, il giocatore accede alla finestra **Lobby & Matchmaking** (aperta in automatico o richiamata dal menu Start / desktop).
+2. **Modalità di avvio partita**:
    - **Gioca da Solo (Solo Mode)**: Il giocatore avvia la sessione offline e ottiene i permessi di tutti i ruoli simultaneamente.
-   - **Crea Stanza (Host Server)**: Il giocatore funge da host server-authoritative, imposta il nome della stanza e la porta di rete.
-   - **Unisciti (Join Client)**: Il giocatore inserisce l'indirizzo IP dell'host e si connette alla stanza.
-3. **Selezione del Ruolo**:
-   - Nella lista equipaggio, ogni giocatore sceglie il proprio ruolo tra quelli disponibili: *Capitano*, *Pilota*, *Soldato*, *Ingegnere*, *Hacker*, *Factotum*, ecc.
-   - La chat integrata nella finestra di Lobby permette di coordinare i ruoli prima del lancio.
-4. **Comportamento delle applicazioni prima del decollo e gestione dinamica del menu Start**:
-   - Le applicazioni operative della nave (*Flight Control*, *Cams*, *Power Grid*, *Duct Drone*, ecc.) sono definite direttamente all'interno della risorsa `ShipBlueprint` della nave (Sublayer 6: *Mainframe Installed Apps*).
-   - Prima dell'avvio della missione (in stato Offline o Lobby), le applicazioni della nave **non compaiono nel menu Start**, eliminando aperture accidentali e il problema dei blocchi con overlay *"connettiti ad una nave"*.
-   - Le sole app sempre presenti sono le utility locali del terminale (es. *Lobby*, *Terminale*, *File Manager*, *Text Editor*, *Giochi*).
-5. **Comportamento delle applicazioni in base al ruolo al decollo (Filtro Ruoli RBAC)**:
-   - Al decollo (`start_mission()`), il menu Start di GodotOS legge dinamicamente dalla `ShipBlueprint` attiva e popola le sole applicazioni autorizzate per il ruolo ricoperto dal giocatore locale:
-     - **Pilota**: visualizza *Flight Control* e *Cams*.
-     - **Ingegnere**: visualizza *Power Grid* e *Duct Drone*.
-     - **Tattico / Soldato**: visualizza *Cams* e *Weapons*.
-     - **Hacker**: visualizza *Duct Drone* e strumenti di cyber warfare.
-     - **Capitano / Factotum / Solo Mode**: visualizza l'intera suite delle applicazioni installate a bordo senza restrizioni.
-   - In caso di cambio ruolo a runtime o fine missione, il menu Start si aggiorna o ripulisce istantaneamente.
+   - **Modalità Host**: Il giocatore crea la stanza server-authoritative e ospita la partita.
+   - **Unisciti a una Nave (Join Client)**: Il giocatore si unisce alla nave inserendo l'IP dell'host o selezionando la sessione.
+3. **Caricamento Risorse Custom (Host)**:
+   - L'host ha la facoltà di caricare una specifica **risorsa nave** (`ShipBlueprint`) e una **risorsa sistema stellare** (`StarSystemData`) per avviare una nave custom all'interno di un setting/sistema stellare custom.
+4. **Selezione del Ruolo**:
+   - Nella lista equipaggio, ciascun giocatore seleziona il proprio ruolo operativo (*Capitano*, *Pilota*, *Soldato*, *Ingegnere*, *Hacker*, *Factotum*).
+   - La chat integrata di lobby consente la coordinazione dell'equipaggio prima della partenza.
+5. **Comportamento delle applicazioni prima dell'avvio**:
+   - Le applicazioni operative della nave non compaiono nel menu Start durante la fase di lobby, prevenendo aperture premature o errori; restano disponibili solo le utility di sistema locali.
 
-### 2.3 Fase 3: Transizione e Decollo ("Start Mission")
-1. Quando tutti i membri sono pronti, l'Host o il giocatore Solo preme **"Avvia Missione"**.
-2. **Cosa succede a livello di sistema**:
-   - L'evento globale `mission_started` viene propagato a tutte le macchine connesse.
-   - L'autoload `SpaceWorldManager` inizializza l'universo 3D, posiziona la corvetta stellare (`Spaceship`), genera il campo di asteroidi e attiva le 6 telecamere perimetrali CCTV.
-   - Viene emessa una notifica sonora e visiva sul desktop di tutti i client.
-   - Tutte le finestre delle applicazioni della nave aperte rimuovono istantaneamente l'overlay di blocco e diventano interattive.
+### 2.3 Fase 3: Avvio Partita e Caricamento Programmi
+1. L'Host (o il giocatore in Solo Mode) preme **"Avvia Missione"** per far partire la partita.
+2. **Inizializzazione e Caricamento Programmi per Ruolo**:
+   - L'evento globale di avvio viene propagato a tutti i client connessi.
+   - `SpaceWorldManager` e il sottosistema di rete generano e attivano l'ambiente 3D del settore spaziale.
+   - Ciascun giocatore carica i propri programmi/applicazioni sulla nave in base al proprio ruolo assegnato (Filtro Ruoli RBAC derivato dalla `ShipBlueprint`):
+     - **Pilota**: *Flight Control*, *Cams*, *System Map* (visualizzazione rotta).
+     - **Ingegnere**: *Power Grid*, *Duct Drone*, *Life Support*, *Shield Matrix*.
+     - **Soldato / Tattico**: *Cams*, *Weapons*, *Sensors*.
+     - **Hacker**: *Duct Drone*, *Comms & EW*, *Diagnostics*, strumenti di cyber warfare.
+     - **Capitano / Factotum / Solo Mode**: suite completa di tutti i programmi installati a bordo.
+   - Le finestre dei programmi rimuovono l'overlay *"Sistemi Offline"* e diventano pienamente operative con notifica di decollo completato.
 
-### 2.4 Fase 4: Loop di Gioco Operativo e Organizzazione Desktop
-Ogni membro dell'equipaggio organizza il proprio desktop in base alle proprie mansioni:
-
-- **Postazione Pilota**:
-  - Apre **Flight Control**: controlla il throttle di spinta lineare, orienta i vettori di beccheggio/imbardata/rollio (RCS) per navigare nel campo asteroidi ed evitare collisioni.
-  - Apre **Cams CCTV Array**: disporre sullo schermo fino a 6 feed delle telecamere (Frontale, Posteriore, Sinistra, Destra, Superiore, Inferiore).
-- **Postazione Soldato**:
-  - Apre **Cams CCTV Array**: disporre sullo schermo fino a 6 feed delle telecamere (Frontale, Posteriore, Sinistra, Destra, Superiore, Inferiore).
-  - Apre **Weapons**: Prepara gli armamenti di attacco e difesa. 
-- **Postazione Ingegnere**:
-  - Apre **Power Grid**: monitora il grafico di assorbimento MW e i generatori. Se il Pilota richiede massima spinta, l'Ingegnere convoglia potenza ai motori spegnendo utenze non essenziali; se c'è un'avaria, commuta gli snodi elettrici per isolare i cortocircuiti.
-  - Apre **Duct Drone**: decolla dalla baia droni e pilota il micro-drone all'interno dei condotti di ventilazione e manutenzione della nave, guidato dalla mappa 2D generata dalla `ShipBlueprint`. Raggiunge i punti di danno per eseguire le riparazioni.
-- **Postazione Hacker**:
-  - Apre **Terminale / Prompt dei comandi**: esegue script clandestini per manipolare i file `.dat`, bypassare crittografie e connettersi a stazioni o navi nemiche per estrarre crediti e dati sensibili.
-  - Apre **Duct Drone**: esplora furtivamente i condotti di navi nemiche o settori isolati per effettuare scansioni clandestine e ricognizioni.
-  - Apre **ICE & Firewall / Diagnostics**: gestisce barriere crittografiche difensive per neutralizzare virus, malware e intrusioni nemiche.
-- **Postazione Capitano o Factotum**:
-  - Apre una vista d'insieme: telemetria motori, telecamere principali, stato rete elettrica, chat ordini e logbook. Sovraintende alle decisioni strategiche e può intervenire con comandi di override d'emergenza su qualsiasi sottosistema.
+### 2.4 Fase 4: Posizionamento Iniziale, Navigazione e Stazione Spaziale
+1. **Posizionamento Iniziale**:
+   - La nave parte e viene posizionata in una sezione/settore spaziale immediatamente **adiacente ad una stazione spaziale**.
+2. **Bivio Operativo dell'Equipaggio**:
+   - I giocatori possono decidere di dirigersi verso la stazione spaziale oppure partire verso altre sezioni del sistema stellare.
+3. **Pianificazione Rotta e Hyperdrive (Fase 5a)**:
+   - I giocatori possono utilizzare l'applicazione **"System Map"** per consultare la griglia del sistema e progettare la traiettoria di viaggio dell'**Hyperdrive** tra le sezioni/settori.
+   - Una volta calcolata e impostata la rotta sulla System Map, l'applicazione **Flight Control** del Pilota aggancia il vettore e avvia l'**Hyperdrive** per eseguire il transito verso la destinazione.
+4. **Accesso alla Stazione Spaziale (Fase 5b)**:
+   - Se l'equipaggio decide di attraccare alla stazione spaziale adiacente (tramite procedura guidata su *Comms* o avvicinamento), i giocatori accedono ai servizi della stazione via GodotOS per:
+     - **Commerciare merci e materiali** (compravendita, gestione stiva cargo e transazioni FLUX).
+     - **Trovare e accettare nuove missioni/contratti** (sincronizzati con l'app *Logbook*).
+     - **Acquistare nuovi programmi**, driver firmware e upgrade software per la nave.
+     - **Eseguire riparazioni dello scafo**, manutenzione e rifornimento risorse.
 
 ### 2.5 Fase 5: Gestione dei File di Configurazione (.DAT), Sicurezza e Manomissione "Illegale" (Hackwarfare)
 1. **Natura dei file `.dat` e Blocco Legale**:

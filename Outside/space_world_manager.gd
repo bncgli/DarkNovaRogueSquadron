@@ -201,6 +201,13 @@ var _next_damage_idx: int = 1
 # Sublayer Blueprint unificato della nave
 var active_ship_blueprint: ShipBlueprint = null
 
+# Risorsa attiva del Sistema Stellare
+var active_star_system: StarSystemData = null
+
+# Istanza 3D della stazione orbitale primaria nello spazio
+var primary_station_instance: SpaceStationEntity = null
+var default_station_approach_distance: float = 1800.0 # Metri dallo scalo portuale (1000-2500m)
+
 var _last_sent_drone_linear_in: float = 0.0
 var _last_sent_drone_angular_in: float = 0.0
 var _last_sent_drone_speed_mult: float = 1.0
@@ -278,6 +285,18 @@ func _on_network_mission_started() -> void:
 	var nm := _get_net_mgr()
 	var is_host: bool = nm.get("is_host") if nm else true
 	
+	if nm:
+		if nm.has_method("get_selected_ship_blueprint"):
+			var bp: ShipBlueprint = nm.get_selected_ship_blueprint()
+			if bp != null:
+				set_ship_blueprint(bp)
+		if nm.has_method("get_selected_star_system"):
+			var sys: StarSystemData = nm.get_selected_star_system()
+			if sys != null:
+				set_star_system_data(sys)
+				
+	configure_initial_station_spawn()
+
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		ship.set_ship_connected(true)
@@ -306,10 +325,36 @@ func is_ship_connected() -> bool:
 	var nm := _get_net_mgr()
 	if nm and nm.has_method("is_ship_connected"):
 		return nm.is_ship_connected()
+	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	if ssm and ssm.get("is_mission_active"):
+		return true
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		return ship.is_ship_connected
 	return false
+
+## Avvia la sessione di missione nello spazio e attiva la connessione nave
+func start_mission(bp: ShipBlueprint = null) -> void:
+	if bp != null:
+		set_ship_blueprint(bp)
+	configure_initial_station_spawn()
+	set_ship_connected(true)
+
+## Termina la sessione di missione, disconnette la nave e resetta lo stato
+func end_mission() -> void:
+	set_ship_connected(false)
+
+func set_ship_connected(p_connected: bool) -> void:
+	is_ship_connected_state = p_connected
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.set_ship_connected(p_connected)
+	
+	if not p_connected:
+		close_all_camera_windows()
+		stop_spaceship_engines()
+	
+	ship_connection_changed.emit(p_connected)
 
 func _on_network_player_joined(peer_id: int, _player_data: Dictionary) -> void:
 	var nm := _get_net_mgr()
@@ -793,6 +838,102 @@ func get_ship_blueprint() -> ShipBlueprint:
 ## Imposta l'istanza attiva della ShipBlueprint
 func set_ship_blueprint(bp: ShipBlueprint) -> void:
 	active_ship_blueprint = bp
+
+## Ritorna l'istanza attiva del StarSystemData
+func get_star_system_data() -> StarSystemData:
+	if active_star_system == null:
+		active_star_system = StarSystemData.get_default_star_system()
+	return active_star_system
+
+## Imposta l'istanza attiva del StarSystemData e aggiorna StarSystemGridManager
+func set_star_system_data(sys: StarSystemData) -> void:
+	active_star_system = sys
+	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("load_star_system"):
+			grid_mgr.load_star_system(sys)
+	configure_initial_station_spawn()
+
+## Configura e posiziona la stazione orbitale primaria nello spazio 3D e orienta la nave per lo spawn iniziale
+func configure_initial_station_spawn() -> void:
+	var sys := get_star_system_data()
+	var station_data := {}
+	if sys != null and sys.has_method("find_primary_station"):
+		station_data = sys.find_primary_station()
+	if station_data.is_empty():
+		var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("get_starting_station"):
+			station_data = grid_mgr.get_starting_station()
+	
+	if station_data.is_empty():
+		return
+		
+	var st_id: String = station_data.get("id", "STATION_VALKYRIE")
+	var st_name: String = station_data.get("name", "Stazione Spaziale Valkyrie")
+	var st_type: String = station_data.get("type", "STATION")
+	
+	# Calcola la posizione 3D della stazione nel mondo di gioco (area perimetrale a 1800m dalla prua nave)
+	var station_3d_pos := Vector3(0.0, 0.0, -default_station_approach_distance)
+	
+	# Assicura il master viewport e space scene
+	if _master_viewport == null or not is_instance_valid(_master_viewport):
+		_init_space_world()
+		
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		if primary_station_instance == null or not is_instance_valid(primary_station_instance):
+			# Controlla se esiste già un nodo stazione
+			primary_station_instance = _space_scene_instance.get_node_or_null("SpaceStationEntity") as SpaceStationEntity
+			if primary_station_instance == null:
+				var station_scene = load("res://Outside/Stations/space_station_entity.tscn")
+				if station_scene:
+					primary_station_instance = station_scene.instantiate() as SpaceStationEntity
+				else:
+					primary_station_instance = SpaceStationEntity.new()
+				primary_station_instance.name = "SpaceStationEntity"
+				_space_scene_instance.add_child(primary_station_instance)
+		
+		if primary_station_instance and is_instance_valid(primary_station_instance):
+			primary_station_instance.station_id = st_id
+			primary_station_instance.station_name = st_name
+			primary_station_instance.station_type = st_type
+			primary_station_instance.global_position = station_3d_pos
+			
+	# Orienta la nave verso la stazione spaziale
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.global_position = Vector3.ZERO
+		ship.look_at(station_3d_pos, Vector3.UP)
+		
+	# Genera automaticamente un waypoint diegetico e segnale IFF identificativo
+	set_active_waypoint({
+		"id": st_id,
+		"name": st_name,
+		"pos": station_3d_pos,
+		"type": "STATION",
+		"iff_tag": "FRIENDLY",
+		"distance_km": default_station_approach_distance / 1000.0,
+		"is_station": true
+	})
+	
+	# Notifica diegetica di sistema
+	_send_spawn_notification("Posizionamento completato: Stazione Spaziale rilevata nel settore adiacente")
+
+## Invia una notifica di sistema diegetica a schermo
+func _send_spawn_notification(msg: String) -> void:
+	if is_inside_tree() and get_tree().root.has_node("NotificationManager"):
+		var notif = get_node_or_null("/root/NotificationManager")
+		if notif and notif.has_method("spawn_notification"):
+			notif.spawn_notification(msg)
+
+## Ritorna l'istanza SpaceStationEntity della stazione primaria
+func get_primary_station_entity() -> SpaceStationEntity:
+	if primary_station_instance == null or not is_instance_valid(primary_station_instance):
+		configure_initial_station_spawn()
+	return primary_station_instance
+
+## Alias per compatibilità con DockingManager
+func get_docking_station() -> SpaceStationEntity:
+	return get_primary_station_entity()
 
 ## Ritorna le stanze della nave da ShipBlueprint o fallback a costanti
 func get_duct_rooms() -> Array[Dictionary]:
@@ -1547,6 +1688,39 @@ func get_sensor_entities() -> Array[Dictionary]:
 						"signal_signature": 0.85,
 						"estimated_value_cr": 4500
 					})
+					
+	# Aggiungi l'entità della stazione orbitale primaria nello spazio se attiva
+	if primary_station_instance and is_instance_valid(primary_station_instance):
+		var st_pos: Vector3 = primary_station_instance.global_position
+		var diff: Vector3 = st_pos - ship_pos
+		var dist: float = diff.length()
+		var local_diff: Vector3 = ship_basis.inverse() * diff
+		var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+		
+		entities.append({
+			"id": primary_station_instance.station_id,
+			"name": primary_station_instance.station_name,
+			"pos": st_pos,
+			"rel_pos": diff,
+			"distance": dist,
+			"velocity": Vector3.ZERO,
+			"bearing_deg": bearing_deg,
+			"elevation_deg": elevation_deg,
+			"type": "STATION",
+			"iff_tag": "FRIENDLY",
+			"stealth_level": 0.0,
+			"composition": {
+				"Struttura Modulare": 70.0,
+				"Reattore Fusione": 20.0,
+				"Serbatoi Idrogeno": 10.0
+			},
+			"integrity": 100.0,
+			"mass_tons": 185000.0,
+			"radiation_level": 0.15,
+			"signal_signature": 1.0,
+			"estimated_value_cr": 250000
+		})
 	
 	# Contatti diegetici aggiuntivi a lungo raggio / stazioni / relitti / sonde
 	var long_range_defaults: Array[Dictionary] = [

@@ -38,8 +38,26 @@ const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(860, 580)
 @onready var launch_mission_button: Button = %LaunchMissionButton
 @onready var client_waiting_label: Label = %ClientWaitingLabel
 
+# Resource Selection Elements
+@onready var resources_panel: Control = %ResourcesPanel
+@onready var res_permission_badge: Label = %ResPermissionBadge
+@onready var ship_blueprint_option: OptionButton = %ShipBlueprintOption
+@onready var select_ship_file_button: Button = %SelectShipFileButton
+@onready var ship_preview_label: Label = %ShipPreviewLabel
+@onready var star_system_option: OptionButton = %StarSystemOption
+@onready var select_system_file_button: Button = %SelectSystemFileButton
+@onready var system_preview_label: Label = %SystemPreviewLabel
+@onready var resource_file_dialog: FileDialog = %ResourceFileDialog
+
 var parent_window: FakeWindow = null
 var role_buttons: Dictionary = {}
+var _active_file_picker_target: String = "" # "ship" o "system"
+var _available_ship_blueprints: Array[Dictionary] = [
+	{ "name": "Dark Nova Corvette (Default)", "path": "res://Outside/ShipSublayer/default_ship_blueprint.tres" }
+]
+var _available_star_systems: Array[Dictionary] = [
+	{ "name": "Helios Nova System (Default)", "path": "res://Outside/StarSystemGrid/default_star_system.tres" }
+]
 
 func _ready() -> void:
 	_configure_window()
@@ -49,6 +67,7 @@ func _ready() -> void:
 	if NetworkManager:
 		callsign_edit.text = NetworkManager.local_player_name
 	_build_role_buttons()
+	_init_resource_selectors()
 	_update_view_state()
 	
 	# Avvia ascolto LAN discovery per trovare subito server locali
@@ -63,6 +82,7 @@ func _connect_system_signals() -> void:
 	if NetworkManager:
 		NetworkManager.connection_state_changed.connect(_on_connection_state_changed)
 		NetworkManager.lobby_updated.connect(_on_lobby_updated)
+		NetworkManager.session_resources_updated.connect(_on_session_resources_updated)
 		NetworkManager.chat_received.connect(_on_chat_received)
 		NetworkManager.game_launched.connect(_on_game_launched)
 		NetworkManager.connection_failed.connect(_on_connection_failed)
@@ -75,6 +95,8 @@ func _exit_tree() -> void:
 			NetworkManager.connection_state_changed.disconnect(_on_connection_state_changed)
 		if NetworkManager.lobby_updated.is_connected(_on_lobby_updated):
 			NetworkManager.lobby_updated.disconnect(_on_lobby_updated)
+		if NetworkManager.session_resources_updated.is_connected(_on_session_resources_updated):
+			NetworkManager.session_resources_updated.disconnect(_on_session_resources_updated)
 		if NetworkManager.chat_received.is_connected(_on_chat_received):
 			NetworkManager.chat_received.disconnect(_on_chat_received)
 		if NetworkManager.game_launched.is_connected(_on_game_launched):
@@ -286,6 +308,115 @@ func _refresh_lobby_ui() -> void:
 		launch_mission_button.text = "🚀 AVVIA MISSIONE / DECOLLO"
 		client_waiting_label.visible = not is_host
 		client_waiting_label.text = "⏳ In attesa che il Capitano/Host dia l'ordine di decollo..."
+	
+	_refresh_resource_selection_ui()
+
+func _init_resource_selectors() -> void:
+	if not ship_blueprint_option or not star_system_option:
+		return
+	
+	ship_blueprint_option.clear()
+	for i in range(_available_ship_blueprints.size()):
+		var bp_entry: Dictionary = _available_ship_blueprints[i]
+		ship_blueprint_option.add_item(bp_entry.get("name", "Ship Blueprint"), i)
+		ship_blueprint_option.set_item_metadata(i, bp_entry.get("path", ""))
+	
+	star_system_option.clear()
+	for i in range(_available_star_systems.size()):
+		var sys_entry: Dictionary = _available_star_systems[i]
+		star_system_option.add_item(sys_entry.get("name", "Star System"), i)
+		star_system_option.set_item_metadata(i, sys_entry.get("path", ""))
+
+func _refresh_resource_selection_ui() -> void:
+	if not NetworkManager or not resources_panel:
+		return
+	
+	var can_edit: bool = (NetworkManager.is_host or NetworkManager.is_solo_mode)
+	
+	ship_blueprint_option.disabled = not can_edit
+	select_ship_file_button.disabled = not can_edit
+	select_ship_file_button.visible = can_edit
+	
+	star_system_option.disabled = not can_edit
+	select_system_file_button.disabled = not can_edit
+	select_system_file_button.visible = can_edit
+	
+	if NetworkManager.is_solo_mode:
+		res_permission_badge.text = "[SOLO: Modificabile]"
+		res_permission_badge.modulate = Color(0.3, 1.0, 0.6)
+	elif NetworkManager.is_host:
+		res_permission_badge.text = "[HOST: Modificabile]"
+		res_permission_badge.modulate = Color(1.0, 0.85, 0.2)
+	else:
+		res_permission_badge.text = "[CLIENT: Sola Lettura]"
+		res_permission_badge.modulate = Color(0.2, 0.9, 1.0)
+	
+	var bp_info: Dictionary = NetworkManager.get_session_blueprint_info()
+	var sys_info: Dictionary = NetworkManager.get_session_star_system_info()
+	
+	_update_blueprint_preview(bp_info)
+	_update_star_system_preview(sys_info)
+
+func _update_blueprint_preview(bp_info: Dictionary) -> void:
+	if bp_info.is_empty():
+		return
+	var ship_name: String = bp_info.get("name", "Corvetta")
+	var ship_class: String = bp_info.get("class", "Standard")
+	var rooms_cnt: int = bp_info.get("rooms_count", 0)
+	var ducts_cnt: int = bp_info.get("ducts_count", 0)
+	var apps_cnt: int = bp_info.get("apps_count", 0)
+	var path: String = bp_info.get("path", "")
+	
+	ship_preview_label.text = "Nave: %s (%s) | Stanze: %d | Condotti: %d | App: %d" % [
+		ship_name, ship_class, rooms_cnt, ducts_cnt, apps_cnt
+	]
+	
+	# Sincronizza selezione OptionButton se presente
+	var found_idx := -1
+	for i in range(ship_blueprint_option.item_count):
+		if ship_blueprint_option.get_item_metadata(i) == path or (path.is_empty() and i == 0):
+			found_idx = i
+			break
+	
+	if found_idx != -1:
+		ship_blueprint_option.select(found_idx)
+	else:
+		# Aggiunge opzione custom
+		var custom_name: String = "%s (Custom)" % ship_name
+		var custom_idx: int = ship_blueprint_option.item_count
+		ship_blueprint_option.add_item(custom_name, custom_idx)
+		ship_blueprint_option.set_item_metadata(custom_idx, path)
+		ship_blueprint_option.select(custom_idx)
+
+func _update_star_system_preview(sys_info: Dictionary) -> void:
+	if sys_info.is_empty():
+		return
+	var sys_name: String = sys_info.get("name", "Sistema Stellare")
+	var star_coords: Vector3i = sys_info.get("primary_star_coords", Vector3i.ZERO)
+	var bodies_cnt: int = sys_info.get("bodies_count", 0)
+	var stations_cnt: int = sys_info.get("stations_count", 0)
+	var path: String = sys_info.get("path", "")
+	
+	system_preview_label.text = "Sistema: %s | Stella: (%d, %d, %d) | Corpi: %d | Stazioni: %d" % [
+		sys_name, star_coords.x, star_coords.y, star_coords.z, bodies_cnt, stations_cnt
+	]
+	
+	# Sincronizza selezione OptionButton se presente
+	var found_idx := -1
+	for i in range(star_system_option.item_count):
+		if star_system_option.get_item_metadata(i) == path or (path.is_empty() and i == 0):
+			found_idx = i
+			break
+	
+	if found_idx != -1:
+		star_system_option.select(found_idx)
+	else:
+		# Aggiunge opzione custom
+		var custom_name: String = "%s (Custom)" % sys_name
+		var custom_idx: int = star_system_option.item_count
+		star_system_option.add_item(custom_name, custom_idx)
+		star_system_option.set_item_metadata(custom_idx, path)
+		star_system_option.select(custom_idx)
 
 func _start_lan_scan() -> void:
 	if NetworkManager.lan_discovery:
@@ -390,6 +521,41 @@ func _on_ready_button_pressed() -> void:
 func _on_rescan_lan_button_pressed() -> void:
 	_start_lan_scan()
 
+# --- SELEZIONE RISORSE CUSTOM ---
+
+func _on_ship_blueprint_option_item_selected(index: int) -> void:
+	if not (NetworkManager.is_host or NetworkManager.is_solo_mode):
+		return
+	var path: String = ship_blueprint_option.get_item_metadata(index)
+	NetworkManager.set_session_ship_blueprint(path)
+
+func _on_star_system_option_item_selected(index: int) -> void:
+	if not (NetworkManager.is_host or NetworkManager.is_solo_mode):
+		return
+	var path: String = star_system_option.get_item_metadata(index)
+	NetworkManager.set_session_star_system(path)
+
+func _on_select_ship_file_button_pressed() -> void:
+	if not (NetworkManager.is_host or NetworkManager.is_solo_mode):
+		return
+	_active_file_picker_target = "ship"
+	resource_file_dialog.title = "Seleziona Risorsa Nave (ShipBlueprint .tres / .json)"
+	resource_file_dialog.popup_centered()
+
+func _on_select_system_file_button_pressed() -> void:
+	if not (NetworkManager.is_host or NetworkManager.is_solo_mode):
+		return
+	_active_file_picker_target = "system"
+	resource_file_dialog.title = "Seleziona Risorsa Sistema Stellare (StarSystemData .tres / .json)"
+	resource_file_dialog.popup_centered()
+
+func _on_resource_file_dialog_file_selected(path: String) -> void:
+	if _active_file_picker_target == "ship":
+		NetworkManager.set_session_ship_blueprint(path)
+	elif _active_file_picker_target == "system":
+		NetworkManager.set_session_star_system(path)
+	_active_file_picker_target = ""
+
 # --- CALLBACKS DI RETE ---
 
 func _on_connection_state_changed(_connected: bool, _is_host: bool) -> void:
@@ -398,6 +564,11 @@ func _on_connection_state_changed(_connected: bool, _is_host: bool) -> void:
 func _on_lobby_updated(_players: Dictionary) -> void:
 	if NetworkManager.is_connected_to_network:
 		_refresh_lobby_ui()
+
+func _on_session_resources_updated(bp_info: Dictionary, sys_info: Dictionary) -> void:
+	if NetworkManager.is_connected_to_network:
+		_update_blueprint_preview(bp_info)
+		_update_star_system_preview(sys_info)
 
 func _on_chat_received(sender: String, message: String, is_system: bool) -> void:
 	var time_str := Time.get_time_string_from_system().substr(0, 5)

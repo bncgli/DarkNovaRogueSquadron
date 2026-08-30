@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1788027748
+::res://::1788079133
 export_presets.cfg::TextFile::-1::1787558064::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::3903925085147432634::1787558064::1787558117::1::::<><><>0<>0<>3564bade1294ac7bcfc306a1cd26649a<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1787558064::0::1::::<><><>0<>0<><>::
@@ -144,19 +144,28 @@ GodotOS Handbook.txt::TextFile::-1::1787558064::0::1::::<><><>0<>0<><>::
 wallpaper_chill.webp::::-1::1787558064::1787558064::1::::<><><>0<>0<>eee310571a4cbc4a9673c1f44f9e584b<>::
 wallpaper_minimalism.webp::::-1::1787558064::1787558064::1::::<><><>0<>0<>eee310571a4cbc4a9673c1f44f9e584b<>::
 Welcome.txt::TextFile::-1::1787558064::0::1::::<><><>0<>0<><>::
-::res://docs/::1787920364
+::res://docs/::1788041172
 APP_ARCHITECTURE_STANDARD.md::TextFile::-1::1787920364::0::1::::<><><>0<>0<><>::
-DARK_NOVA_FEATURES_DESIGN.md::TextFile::-1::1787920364::0::1::::<><><>0<>0<><>::
+DARK_NOVA_FEATURES_DESIGN.md::TextFile::-1::1788035384::0::1::::<><><>0<>0<><>::
+::res://docs/architecture/::1788035935
+01_file_and_module_map.md::TextFile::-1::1788035882::0::1::::<><><>0<>0<><>::
+02_autoloads_and_system_bus.md::TextFile::-1::1788035893::0::1::::<><><>0<>0<><>::
+03_game_process_flows.md::TextFile::-1::1788035915::0::1::::<><><>0<>0<><>::
+04_applications_and_sublayer.md::TextFile::-1::1788035935::0::1::::<><><>0<>0<><>::
+README.md::TextFile::-1::1788035861::0::1::::<><><>0<>0<><>::
+::res://docs/next tasks/::1788041222
+01_lobby_custom_resources_selection.md::TextFile::-1::1788041172::0::1::::<><><>0<>0<><>::
+02_dynamic_rbac_app_filter_and_start_menu.md::TextFile::-1::1788041183::0::1::::<><><>0<>0<><>::
+03_initial_spawn_adjacent_to_station.md::TextFile::-1::1788041193::0::1::::<><><>0<>0<><>::
+04_system_map_and_hyperdrive_navigation.md::TextFile::-1::1788041206::0::1::::<><><>0<>0<><>::
+05_space_station_services_hub_integration.md::TextFile::-1::1788041222::0::1::::<><><>0<>0<><>::
 ::res://Economy/::1787941156
 cargo_manager.gd::GDScript::7147816620468502222::1787941156::0::1::::CargoManagerSingleton<>Node<><>0<>0<><>::
 flux_economy_manager.gd::GDScript::1437684586966125276::1787941156::0::1::::FluxEconomyManagerSingleton<>Node<><>0<>0<><>::
 ::res://Gameplay/::1787942545
 ::res://Gameplay/Mining/::1787942545
 mining_manager.gd::GDScript::7566242943540764884::1787942545::0::1::::MiningManager<>Node<><>0<>0<><>::
-::res://Games/::1787562386
-::res://Games/Cube Scene/::1787558064
-cube.gd::GDScript::1054067866458974199::1787558064::0::1::::<>MeshInstance3D<><>0<>0<><>::
-cube_scene.tscn::PackedScene::1482049607094779227::1787558064::0::1::::<><><>0<>0<><>::uid://paulxnd8hmgt::::res://Games/Cube Scene/cube.gd
+::res://Games/::1788030325
 ::res://Games/Godotris/::1787558064
 ::res://Games/Godotris/Block/::1787558064
 Block.tscn::PackedScene::7401442299700053153::1787558064::0::1::::<><><>0<>0<><>::uid://dxmw86xjvx7pq::::res://Games/Godotris/Block/godotris_block.gd
@@ -263,9 +272,9 @@ space_station_entity.gd::GDScript::1447110676543791339::1787941156::0::1::::Spac
 space_station_entity.tscn::PackedScene::779328289865342594::1787997651::0::1::::<><><>0<>0<><>::uid://uu8x33rac4f4::::res://Outside/Stations/space_station_entity.gd
 ::res://Scenes/::1787565405
 ::res://Scenes/Autoloads/::1787914666
-::res://Scenes/Autoloads/Context Menu/::1787558064
+::res://Scenes/Autoloads/Context Menu/::1788030421
 context_menu.tscn::PackedScene::4296919068241973419::1787558064::0::1::::<><><>0<>0<><>::uid://bqorxst7bapxa::::res://Scenes/Autoloads/Context Menu/context_menu_manager.gd<>uid://ctmotds7d1sr1::::res://Scenes/Autoloads/Context Menu/context_menu_option.tscn<>uid://dc6higwdbswel::::res://Scenes/Autoloads/Context Menu/context_menu_seperator.tscn
-context_menu_manager.gd::GDScript::3539417708822173082::1787596517::0::1::::<>Panel<><>0<>0<><>::
+context_menu_manager.gd::GDScript::3539417708822173082::1788030421::0::1::::<>Panel<><>0<>0<><>::
 context_menu_option.gd::GDScript::1490589675375997124::1787558064::0::1::::ContextMenuOption<>Panel<><>0<>0<><>::
 context_menu_option.tscn::PackedScene::6132086084375974052::1787558064::0::1::::<><><>0<>0<><>::uid://vib2acjns3ka::::res://Scenes/Autoloads/Context Menu/context_menu_option.gd
 context_menu_seperator.tscn::PackedScene::7364075103295999083::1787558064::0::1::::<><><>0<>0<><>::
@@ -306,10 +315,10 @@ smooth_container.gd::GDScript::4564865031899754600::1787558064::0::1::::SmoothCo
 desktop_folder.gd::GDScript::695732196350001518::1787596534::0::1::::FakeFolder<>Control<><>0<>0<><>::
 folder.tscn::PackedScene::7318072238504336119::1787594305::0::1::::<><><>0<>0<><>::uid://j6auwoexib63::::res://Scenes/Desktop/desktop_folder.gd<>uid://cjve37ywrq6qo::::res://Art/Folder Icons/folder.png<>uid://csxjm2dry3dji::::res://Scenes/Desktop/folder_title_edit.gd<>uid://cqajaj7jxwxg3::::res://Art/Folder Icons/lock.svg
 folder_title_edit.gd::GDScript::6084290547246362502::1787594399::0::1::::<>TextEdit<><>0<>0<><>::
-::res://Scenes/Main/::1787997535
+::res://Scenes/Main/::1788027828
 BaseFileManager.gd::GDScript::9105004046995298876::1787661593::0::1::::BaseFileManager<>SmoothContainer<><>0<>0<><>::
 desktop_file_manager.gd::GDScript::5970309637142727628::1787661636::0::1::::DesktopFileManager<>BaseFileManager<><>0<>0<><>::
-MainScene.tscn::PackedScene::3248734734569914946::1787997535::0::1::::<><><>0<>0<><>::uid://crccellk2oo41::::res://Scenes/Main/desktop_file_manager.gd<>uid://fgth35grbgyv::::res://Scenes/Main/wallpaper.gd<>uid://cfj5p5pgfnywp::::res://Scenes/Taskbar/taskbar.tscn<>uid://bwyybu5i3kid::::res://Scenes/Main/Boot Splash/boot_splash.tscn
+MainScene.tscn::PackedScene::3248734734569914946::1788027828::0::1::::<><><>0<>0<><>::uid://crccellk2oo41::::res://Scenes/Main/desktop_file_manager.gd<>uid://fgth35grbgyv::::res://Scenes/Main/wallpaper.gd<>uid://cfj5p5pgfnywp::::res://Scenes/Taskbar/taskbar.tscn<>uid://bwyybu5i3kid::::res://Scenes/Main/Boot Splash/boot_splash.tscn
 wallpaper.gd::GDScript::364498125427731509::1787563473::0::1::::Wallpaper<>TextureRect<><>0<>0<><>::
 ::res://Scenes/Main/Boot Splash/::1787558064
 boot_splash.gd::GDScript::6304105640616055992::1787558064::0::1::::BootSplash<>CanvasLayer<><>0<>0<><>::
@@ -324,13 +333,13 @@ lan_discovery.gd::GDScript::8490615310626601098::1787565425::0::1::::LANDiscover
 network_manager.gd::GDScript::8894768509088993395::1787838312::0::1::::GameNetworkManager<>Node<><>0<>0<><>::
 network_manager.tscn::PackedScene::4341304024280514398::1787565459::0::1::::<><><>0<>0<><>::res://Scenes/Networking/network_manager.gd
 network_transport.gd::GDScript::1842614342418802713::1787565405::0::1::::NetworkTransport<>RefCounted<><>0<>0<><>::
-::res://Scenes/Taskbar/::1787914666
+::res://Scenes/Taskbar/::1788030398
 power_button.gd::GDScript::1027203223903774109::1787558064::0::1::::<>Button<><>0<>0<><>::
 settings_button.gd::GDScript::2570818970571813330::1787558064::0::1::::<>Button<><>0<>0<><>::
-start_button.gd::GDScript::5565839130244561504::1787914666::0::1::::<>MarginContainer<><>0<>0<><>::
-start_menu_option.gd::GDScript::4453410341775200771::1787838312::0::1::::<>Panel<><>0<>0<><>::
-start_menu_option.tscn::PackedScene::7219999994425394842::1787558064::0::1::::<><><>0<>0<><>::uid://b4pjauo2jicy2::::res://Scenes/Taskbar/start_menu_option.gd<>uid://2sqrvihn1cjq::::res://Art/Folder Icons/game.png
-taskbar.tscn::PackedScene::5144214881206873619::1787838312::0::1::::<><><>0<>0<><>::uid://clkes7h7romou::::res://Scenes/Taskbar/start_button.gd<>uid://da4oly47yx3ja::::res://Scenes/Taskbar/start_menu_option.tscn<>uid://dyucn32xje8bj::::res://Art/Icons/Start Menu Button.png<>uid://dnvmy7l1wrerh::::res://Art/Icons/power-button.png<>uid://ovt5fnqwt48p::::res://Scenes/Taskbar/power_button.gd<>uid://cwnaaut64gd15::::res://Art/Icons/cog.png<>uid://bcvlao324av3w::::res://Scenes/Taskbar/settings_button.gd<>uid://33k2ree3e2yt::::res://Scenes/Taskbar/taskbar_time.gd
+start_button.gd::GDScript::5565839130244561504::1788030398::0::1::::<>MarginContainer<><>0<>0<><>::
+start_menu_option.gd::GDScript::4453410341775200771::1788029845::0::1::::<>Panel<><>0<>0<><>::
+start_menu_option.tscn::PackedScene::7219999994425394842::1788030338::0::1::::<><><>0<>0<><>::uid://b4pjauo2jicy2::::res://Scenes/Taskbar/start_menu_option.gd<>uid://2sqrvihn1cjq::::res://Art/Folder Icons/game.png
+taskbar.tscn::PackedScene::5144214881206873619::1788030380::0::1::::<><><>0<>0<><>::uid://clkes7h7romou::::res://Scenes/Taskbar/start_button.gd<>uid://da4oly47yx3ja::::res://Scenes/Taskbar/start_menu_option.tscn<>uid://dyucn32xje8bj::::res://Art/Icons/Start Menu Button.png<>uid://dnvmy7l1wrerh::::res://Art/Icons/power-button.png<>uid://ovt5fnqwt48p::::res://Scenes/Taskbar/power_button.gd<>uid://cwnaaut64gd15::::res://Art/Icons/cog.png<>uid://bcvlao324av3w::::res://Scenes/Taskbar/settings_button.gd<>uid://33k2ree3e2yt::::res://Scenes/Taskbar/taskbar_time.gd
 taskbar_button.gd::GDScript::1908523223929048487::1787558064::0::1::::<>Control<><>0<>0<><>::
 taskbar_button.tscn::PackedScene::4657496101155013358::1787558064::0::1::::<><><>0<>0<><>::uid://2grdmbycx712::::res://Scenes/Taskbar/taskbar_button.gd
 taskbar_time.gd::GDScript::2023746484637195791::1787558064::0::1::::<>Control<><>0<>0<><>::
@@ -379,7 +388,7 @@ text_editor.tscn::PackedScene::1401882043659041448::1787558064::0::1::::<><><>0<
 08_flux_economy_cargo.md::TextFile::-1::1787910968::0::1::::<><><>0<>0<><>::
 09_mining_scavenging.md::TextFile::-1::1787910968::0::1::::<><><>0<>0<><>::
 10_space_combat_dogfight.md::TextFile::-1::1787910968::0::1::::<><><>0<>0<><>::
-::res://tests/::1787943201
+::res://tests/::1788030468
 test_cams_system.gd::GDScript::5252940465167028739::1787752856::0::1::::<>SceneTree<><>0<>0<><>::
 test_cams_system.tscn::PackedScene::527877261629620768::1787752856::0::1::::<><><>0<>0<><>::res://tests/test_cams_system_node.gd
 test_cams_system_node.gd::GDScript::1451787899336891871::1787752856::0::1::::<>Node<><>0<>0<><>::
@@ -416,13 +425,15 @@ test_service_drone_app_node.gd::GDScript::5502862120023091410::1787926200::0::1:
 test_shield_matrix.tscn::PackedScene::4911221962885324015::1787843236::0::1::::<><><>0<>0<><>::res://tests/test_shield_matrix_node.gd
 test_shield_matrix_node.gd::GDScript::666258081634259046::1787843235::0::1::::<>Node<><>0<>0<><>::
 test_ship_blueprint.tscn::PackedScene::8437624480257774760::1787752856::0::1::::<><><>0<>0<><>::res://tests/test_ship_blueprint_node.gd
-test_ship_blueprint_node.gd::GDScript::1829892630601271702::1787926200::0::1::::<>Node<><>0<>0<><>::
+test_ship_blueprint_node.gd::GDScript::1829892630601271702::1788030438::0::1::::<>Node<><>0<>0<><>::
 test_ship_connection_solo.tscn::PackedScene::207624568960336432::1787752856::0::1::::<><><>0<>0<><>::res://tests/test_ship_connection_solo_node.gd
 test_ship_connection_solo_node.gd::GDScript::3906753109719083927::1787752856::0::1::::<>Node<><>0<>0<><>::
 test_ship_drive.tscn::PackedScene::7116904523830253702::1787752856::0::1::::<><><>0<>0<><>::res://tests/test_ship_drive_node.gd
 test_ship_drive_node.gd::GDScript::1398307383428074290::1787752856::0::1::::<>Node<><>0<>0<><>::
 test_software_managers.tscn::PackedScene::6993711524029395686::1787914666::0::1::::<><><>0<>0<><>::res://tests/test_software_managers_node.gd
 test_software_managers_node.gd::GDScript::7616778410717730891::1787914666::0::1::::<>Node<><>0<>0<><>::
+test_start_menu_scrollbar.gd::GDScript::8842613943543581311::1788030452::0::1::::<>Node<><>0<>0<><>::
+test_start_menu_scrollbar.tscn::PackedScene::-1::1788030468::0::1::::<><><>0<>0<><>::res://tests/test_start_menu_scrollbar.gd
 test_star_system_editor.gd::GDScript::8940203106749816072::1787936344::0::1::::<>Node<><>0<>0<><>::
 test_star_system_editor.tscn::PackedScene::-1::1787936344::0::1::::<><><>0<>0<><>::res://tests/test_star_system_editor.gd
 test_star_system_grid.gd::GDScript::4872447057271841752::1787933625::0::1::::<>Node<><>0<>0<><>::

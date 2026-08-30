@@ -1040,90 +1040,98 @@ drive_passwords = {
 "Ship Drive/Programs/ServiceDrone": "SERV-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815",
+"Ship Drive/Programs/CargoBay": "CARG-7815",
 "Ship Drive/systems": "ROOT-7815"
 }
 installed_apps = Array[Dictionary]([{
 "description": "Controlli di manovra e navigazione nave",
 "icon_color": Color(1, 0.6, 0.2, 1),
 "id": "flight_control",
-"roles": ["Capitano", "Pilota", "Factotum"],
+"roles": ["Capitano", "Pilota", "Factotum", "Captain", "Pilot"],
 "scene_path": "res://Applications/FlightControl/flight_control_app.tscn",
 "title": "Flight Control"
-}, {
-"description": "Robottino manutenzione e schema condotti 2D",
-"icon_color": Color(1, 0.85, 0.2, 1),
-"id": "duct_drone",
-"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum"],
-"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
-"title": "Duct Drone"
-}, {
-"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
-"icon_color": Color(0.95, 0.85, 0.2, 1),
-"id": "power_grid",
-"roles": ["Capitano", "Ingegnere", "Factotum"],
-"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
-"title": "Power Grid"
 }, {
 "description": "Telecamere esterne dell'astronave",
 "icon_color": Color(0.3, 0.9, 0.6, 1),
 "id": "cams",
-"roles": ["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Factotum"],
+"roles": ["Capitano", "Pilota", "Soldato", "Tattico", "Tattico / Armi", "Sensori / Radar", "Factotum", "Captain", "Pilot", "Soldier"],
 "scene_path": "res://Applications/Cams/cams_app.tscn",
 "title": "Cams"
 }, {
-"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
-"icon_color": Color(0.95, 0.25, 0.25, 1),
-"id": "weapons",
-"roles": ["Capitano", "Soldato", "Tattico / Armi", "Factotum"],
-"scene_path": "res://Applications/Weapons/weapons_app.tscn",
-"title": "Tactical Weapons"
+"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+"icon_color": Color(0.95, 0.85, 0.2, 1),
+"id": "power_grid",
+"roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
+"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
+"title": "Power Grid"
+}, {
+"description": "Robottino manutenzione e schema condotti 2D",
+"icon_color": Color(1, 0.85, 0.2, 1),
+"id": "duct_drone",
+"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"],
+"scene_path": "res://Applications/DuctDrone/duct_drone_app.tscn",
+"title": "Duct Drone"
 }, {
 "description": "Matrice deflettori a 4 quadranti e scudi energetici",
 "icon_color": Color(0.2, 0.6, 1, 1),
 "id": "shield_matrix",
-"roles": ["Capitano", "Ingegnere", "Factotum"],
+"roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
 "scene_path": "res://Applications/ShieldMatrix/shield_matrix_app.tscn",
 "title": "Shield Matrix"
+}, {
+"description": "Supporto Vitale & Atmosfera",
+"icon_color": Color(0.2, 0.7, 0.9, 1),
+"id": "life_support",
+"roles": ["Capitano", "Ingegnere", "Factotum", "Engineer", "Captain"],
+"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
+"title": "Supporto Vitale & Atmosfera"
+}, {
+"description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+"icon_color": Color(0.95, 0.25, 0.25, 1),
+"id": "weapons",
+"roles": ["Capitano", "Soldato", "Tattico", "Tattico / Armi", "Factotum", "Captain", "Soldier"],
+"scene_path": "res://Applications/Weapons/weapons_app.tscn",
+"title": "Tactical Weapons"
+}, {
+"description": "Array Sensori & Mappa Tattica",
+"icon_color": Color(0.2, 0.8, 0.4, 1),
+"id": "sensors",
+"roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Factotum", "Soldier", "Captain"],
+"scene_path": "res://Applications/Sensors/sensors_app.tscn",
+"title": "Array Sensori & Mappa Tattica"
 }, {
 "description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
 "icon_color": Color(0.4, 0.8, 1, 1),
 "id": "comms",
-"roles": ["Capitano", "Hacker", "Factotum"],
+"roles": ["Capitano", "Hacker", "Factotum", "Captain"],
 "scene_path": "res://Applications/Comms/comms_app.tscn",
 "title": "Comms & Electronic War"
 }, {
 "description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
 "icon_color": Color(0.2, 0.9, 0.7, 1),
 "id": "diagnostics",
-"roles": ["Capitano", "Hacker", "Ingegnere", "Factotum"],
+"roles": ["Capitano", "Hacker", "Factotum", "Captain"],
 "scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
 "title": "System Diagnostics"
-}, {
-"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
-"icon_color": Color(0.2, 0.8, 0.4, 1),
-"id": "sensors",
-"roles": ["Soldier", "Hacker", "Captain", "Factotum", "Soldato", "Capitano", "Sensori / Radar"],
-"scene_path": "res://Applications/Sensors/sensors_app.tscn",
-"title": "Array Sensori & Mappa Tattica"
-}, {
-"description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
-"icon_color": Color(0.2, 0.7, 0.9, 1),
-"id": "life_support",
-"roles": ["Ingegnere", "Capitano", "Factotum", "Engineer", "Captain"],
-"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
-"title": "Supporto Vitale & Atmosfera"
 }, {
 "description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
 "icon_color": Color(0.8, 0.7, 0.2, 1),
 "id": "logbook",
-"roles": ["Captain", "Factotum", "Pilot", "Soldier", "Engineer", "Hacker", "Capitano", "Pilota", "Soldato", "Ingegnere"],
+"roles": ["Captain", "Factotum", "Capitano"],
 "scene_path": "res://Applications/Logbook/logbook_app.tscn",
 "title": "Registro di Bordo & Obiettivi"
 }, {
 "description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
 "icon_color": Color(0.9, 0.5, 0.2, 1),
 "id": "service_drone",
-"roles": ["Ingegnere", "Hacker", "Capitano", "Factotum", "Engineer", "Captain"],
+"roles": ["Capitano", "Factotum", "Captain"],
 "scene_path": "res://Applications/ServiceDrone/service_drone_app.tscn",
 "title": "Drone di Servizio EVA"
+}, {
+"description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
+"icon_color": Color(0.95, 0.65, 0.15, 1),
+"id": "cargo_bay",
+"roles": ["Capitano", "Factotum", "Captain"],
+"scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
+"title": "Stiva Cargo & FLUX"
 }])
