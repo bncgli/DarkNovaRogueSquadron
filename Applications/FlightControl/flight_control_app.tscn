@@ -488,6 +488,71 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="HyperdriveCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+layout_mode = 2
+
+[node name="HyperdriveTitle" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "🌌 ROTTA HYPERDRIVE (SYSTEM MAP)"
+
+[node name="HyperdriveTargetLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 10
+text = "DESTINAZIONE: SEC-04-12"
+
+[node name="HyperdriveAlignLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "ALLINEAMENTO: 🟢 AGGANCIATO (Dev: 0.0°)"
+
+[node name="HyperdriveButtons" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnAlignHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "🎯 Allinea a Vettore Hyperdrive"
+
+[node name="BtnEngageHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "⚡ Attiva Hyperdrive"
+
 [node name="DisconnectedOverlay" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1

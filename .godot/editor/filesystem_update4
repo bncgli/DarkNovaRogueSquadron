@@ -10,3 +10,9 @@ res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
 res://Scenes/Taskbar/start_button.gd
 res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd
 res://tests/test_initial_spawn_adjacent_station.gd
+res://tests/test_lobby_custom_resources_node.gd
+res://tests/test_rbac_start_menu_filter.gd
+res://tests/test_rbac_start_menu_filter_node.gd
+res://Applications/SystemMap/system_map_app.gd
+res://Applications/FlightControl/flight_control_app.gd
+res://tests/test_system_map_hyperdrive.gd

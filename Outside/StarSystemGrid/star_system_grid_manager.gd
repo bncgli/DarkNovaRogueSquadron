@@ -9,6 +9,9 @@ signal celestial_occlusion_changed(is_occluded: bool, occlusion_factor: float)
 signal solar_blackout_changed(in_blackout: bool)
 signal lighting_updated(sun_direction: Vector3, light_energy: float, ambient_energy: float)
 signal system_entities_updated(visible_entities: Array[Dictionary])
+signal route_plotted(target_sector_coords: Vector3i, course_vector: Vector3)
+signal hyperdrive_transit_started(target_sector_coords: Vector3i)
+signal hyperdrive_transit_completed(target_sector_coords: Vector3i)
 
 # Costanti di scala e visibilità della griglia
 const SECTOR_SIZE_KM: float = 100000.0 # 100.000 km per lato settore
@@ -35,6 +38,9 @@ var current_sector_data: SectorData = null
 
 # Database settori generati/memorizzati
 var _sector_cache: Dictionary = {}
+
+# Rotta di navigazione pianificata attiva
+var active_plotted_route: Dictionary = {}
 
 # Catalogo macro-corpi del sistema stellare ("Dark Nova Helios System")
 var current_system_data: StarSystemData = null
@@ -240,7 +246,7 @@ func transition_to_adjacent_sector(direction: Vector3i) -> bool:
 	return true
 
 # =============================================================================
-# CINEMATICA, ROTTE E DISTANZE SENZA FTL (NO-FTL)
+# CINEMATICA, ROTTE E DISTANZE (HYPERDRIVE & CRUISE)
 # =============================================================================
 
 ## Calcola la distanza euclidea tra due settori (in numero di celle)
@@ -266,6 +272,73 @@ func calculate_sublight_travel_time(from_coords: Vector3i, to_coords: Vector3i, 
 		return INF
 	var distance_km := calculate_kinematic_distance_km(from_coords, to_coords)
 	return distance_km / cruise_speed_km_s
+
+## Pianifica e calcola una rotta di navigazione Hyperdrive verso il settore specificato
+func plot_route(target_coords: Vector3i, from_coords: Vector3i = current_sector_coords) -> Dictionary:
+	var dist_sectors := get_sector_distance(from_coords, target_coords)
+	var dist_km := calculate_kinematic_distance_km(from_coords, target_coords)
+	var course_vec := get_route_vector(from_coords, target_coords)
+	
+	# Calcolo stime di transito Hyperdrive
+	# Hyperdrive velocità equivalente ~ 25000 km/s per calcolo ETA rapido
+	var eta_seconds := 0.0
+	if dist_sectors > 0.0:
+		eta_seconds = maxf(3.0, dist_sectors * 4.5) # ~4.5 secondi per settore di transito
+	
+	var energy_cost_mw := dist_sectors * 15.0 # 15 MW per settore
+	var fuel_cost := dist_sectors * 2.5       # 2.5 unità per settore
+	
+	var route_info := {
+		"from_coords": from_coords,
+		"from_sector_id": format_sector_id(from_coords),
+		"target_coords": target_coords,
+		"target_sector_id": format_sector_id(target_coords),
+		"distance_sectors": dist_sectors,
+		"distance_km": dist_km,
+		"course_vector": course_vec,
+		"eta_seconds": eta_seconds,
+		"energy_cost_mw": energy_cost_mw,
+		"fuel_cost": fuel_cost,
+		"timestamp": Time.get_ticks_msec()
+	}
+	
+	active_plotted_route = route_info
+	route_plotted.emit(target_coords, course_vec)
+	return route_info
+
+## Ritorna la rotta pianificata attiva (o vuota se non presente)
+func get_active_route() -> Dictionary:
+	return active_plotted_route
+
+## Annulla/cancella la rotta pianificata
+func clear_plotted_route() -> void:
+	active_plotted_route.clear()
+
+## Esegue l'attivazione Hyperdrive verso il settore pianificato o quello passato come argomento
+func engage_hyperdrive_transit(target_coords: Vector3i = Vector3i.ZERO) -> Dictionary:
+	var dest := target_coords
+	if dest == Vector3i.ZERO:
+		if active_plotted_route.has("target_coords"):
+			dest = active_plotted_route["target_coords"]
+		else:
+			return {"success": false, "reason": "Nessuna rotta pianificata attiva."}
+	
+	if dest == current_sector_coords:
+		return {"success": false, "reason": "La nave si trova già nel settore target."}
+	
+	hyperdrive_transit_started.emit(dest)
+	set_current_sector_coords(dest)
+	hyperdrive_transit_completed.emit(dest)
+	
+	# Pulisce la rotta una volta completato il transito
+	if active_plotted_route.get("target_coords", Vector3i.ZERO) == dest:
+		active_plotted_route.clear()
+		
+	return {
+		"success": true,
+		"new_sector_coords": dest,
+		"new_sector_id": format_sector_id(dest)
+	}
 
 # =============================================================================
 # ILLUMINAZIONE DINAMICA E CONI D'OMBRA PLANETARI (OCCLUSIONE & ECLISSI)

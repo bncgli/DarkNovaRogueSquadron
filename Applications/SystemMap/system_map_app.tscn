@@ -1,0 +1,229 @@
+[gd_scene load_steps=5 format=3 uid="uid://sysmap_app_01"]
+
+[ext_resource type="Script" path="res://Applications/SystemMap/system_map_app.gd" id="1_sysmap_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.04, 0.06, 0.09, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.3, 0.45, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_action"]
+bg_color = Color(0.1, 0.35, 0.55, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.75, 1, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grid_bg"]
+bg_color = Color(0.02, 0.03, 0.05, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.3, 0.5, 0.5)
+
+[node name="SystemMapApp" type="Control"]
+custom_minimum_size = Vector2(720, 520)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sysmap_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBoxMain" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TopHeader" type="PanelContainer" parent="Margin/VBoxMain"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBoxMain/TopHeader"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="HBox" type="HBoxContainer" parent="Margin/VBoxMain/TopHeader/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "🌌 SYSTEM MAP & HYPERDRIVE"
+
+[node name="SystemNameLabel" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "Helios Nova System"
+
+[node name="CurrentSectorLabel" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "SETTORE NAVE: SEC-04-11"
+
+[node name="ShipHeadingLabel" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "PRUA: 000°"
+
+[node name="HBoxContent" type="HBoxContainer" parent="Margin/VBoxMain"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="GridContainerPanel" type="PanelContainer" parent="Margin/VBoxMain/HBoxContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.2
+theme_override_styles/panel = SubResource("StyleBoxFlat_grid_bg")
+
+[node name="GridDisplay" type="Control" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GridToolbar" type="HBoxContainer" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="BtnZoomIn" type="Button" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel/GridToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+text = "+"
+
+[node name="BtnZoomOut" type="Button" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel/GridToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+text = "-"
+
+[node name="BtnZoomReset" type="Button" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel/GridToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+text = "1:1"
+
+[node name="BtnCenterShip" type="Button" parent="Margin/VBoxMain/HBoxContent/GridContainerPanel/GridToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+text = "🎯"
+
+[node name="SidePanel" type="PanelContainer" parent="Margin/VBoxMain/HBoxContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBoxMain/HBoxContent/SidePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SearchBox" type="LineEdit" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Cerca settore o corpo (es. SEC-04-12)..."
+
+[node name="SelectedSectorLabel" type="Label" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "SETTORE TARGET: SEC-04-12"
+
+[node name="SectorInfoText" type="RichTextLabel" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[b]Stazione Spaziale Valkyrie[/b] (STATION)
+Hub orbitale militare e commerciale dell'avamposto."
+
+[node name="RouteSectionTitle" type="Label" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "── CALCOLO ROTTA HYPERDRIVE ──"
+
+[node name="RouteDistanceLabel" type="Label" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "DISTANZA: 1.0 settori (100.000 km)"
+
+[node name="RouteEtaLabel" type="Label" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "ETA TRANSITO: 4.5 s"
+
+[node name="RouteCostLabel" type="Label" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "STIMA ENERGIA: 15.0 MW | CARB: 2.5 U"
+
+[node name="BtnPlotRoute" type="Button" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "📐 Calcola Rotta"
+
+[node name="BtnSendRoute" type="Button" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "📡 Invia Rotta a Flight Control"
+
+[node name="BtnClearRoute" type="Button" parent="Margin/VBoxMain/HBoxContent/SidePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "✖ Cancella Rotta"

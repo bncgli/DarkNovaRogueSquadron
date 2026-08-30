@@ -52,8 +52,16 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 @onready var cruise_control_panel: CruiseControlPanel = get_node_or_null("%CruiseControlPanel")
 
+# Elementi UI Rotta Hyperdrive (da System Map)
+@onready var hyperdrive_card: PanelContainer = get_node_or_null("%HyperdriveCard")
+@onready var hyperdrive_target_label: Label = get_node_or_null("%HyperdriveTargetLabel")
+@onready var hyperdrive_align_label: Label = get_node_or_null("%HyperdriveAlignLabel")
+@onready var btn_align_hyperdrive: Button = get_node_or_null("%BtnAlignHyperdrive")
+@onready var btn_engage_hyperdrive: Button = get_node_or_null("%BtnEngageHyperdrive")
+
 var parent_window: FakeWindow = null
 var can_control_flight: bool = true
+var active_hyperdrive_route: Dictionary = {}
 
 # Input da click su UI (permettono di controllare anche con il mouse/touch)
 var _ui_linear_input := Vector3.ZERO
@@ -122,6 +130,9 @@ func _connect_system_signals() -> void:
 		SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 	if NetworkManager:
 		NetworkManager.player_role_changed.connect(_on_player_role_changed)
+	if StarSystemGridManager:
+		if not StarSystemGridManager.route_plotted.is_connected(_on_route_plotted):
+			StarSystemGridManager.route_plotted.connect(_on_route_plotted)
 	
 	var sdm := _get_ship_drive_manager()
 	if sdm:
@@ -139,6 +150,9 @@ func _exit_tree() -> void:
 	if NetworkManager:
 		if NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
+	if StarSystemGridManager:
+		if StarSystemGridManager.route_plotted.is_connected(_on_route_plotted):
+			StarSystemGridManager.route_plotted.disconnect(_on_route_plotted)
 	
 	var sdm := _get_ship_drive_manager()
 	if sdm:
@@ -241,6 +255,10 @@ func _setup_ui_events() -> void:
 			if notif and notif.has_method("spawn_notification"):
 				notif.spawn_notification("Configurazione .DAT ricaricata.")
 		)
+	if btn_align_hyperdrive:
+		btn_align_hyperdrive.pressed.connect(align_to_hyperdrive_vector)
+	if btn_engage_hyperdrive:
+		btn_engage_hyperdrive.pressed.connect(engage_hyperdrive)
 	
 	# Mapping pulsanti UI con pressione mouse (button_down / button_up)
 	_bind_hold_button(btn_w, Vector3(0, 0, -1), Vector3.ZERO)
@@ -472,6 +490,7 @@ func _process(_delta: float) -> void:
 	
 	# Aggiorna evidenziazione pulsanti UI
 	_update_buttons_highlight(move_vec, rot_vec)
+	_update_hyperdrive_ui()
 
 func _physics_process(_delta: float) -> void:
 	if not is_operational():
@@ -563,3 +582,137 @@ func _update_speed_mode_button() -> void:
 		var mode: Dictionary = speed_modes[_speed_mode_index]
 		speed_mode_button.text = "⚡ VELOCITÀ: %s" % mode["name"]
 		speed_mode_button.modulate = mode["color"]
+
+# ==============================================================================
+# INTEGRAZIONE ROTTA SYSTEM MAP & INGAGGI HYPERDRIVE
+# ==============================================================================
+
+func _on_route_plotted(target_coords: Vector3i, course_vec: Vector3) -> void:
+	active_hyperdrive_route = {
+		"target_coords": target_coords,
+		"target_sector_id": SectorData.format_coords_to_id(target_coords),
+		"course_vector": course_vec
+	}
+	_update_hyperdrive_ui()
+
+func _update_hyperdrive_ui() -> void:
+	if StarSystemGridManager and active_hyperdrive_route.is_empty():
+		var sys_route := StarSystemGridManager.get_active_route()
+		if not sys_route.is_empty():
+			active_hyperdrive_route = sys_route
+
+	if active_hyperdrive_route.is_empty():
+		if hyperdrive_card:
+			hyperdrive_card.visible = false
+		if btn_align_hyperdrive:
+			btn_align_hyperdrive.disabled = true
+		if btn_engage_hyperdrive:
+			btn_engage_hyperdrive.disabled = true
+		return
+
+	if hyperdrive_card:
+		hyperdrive_card.visible = true
+
+	var target_id: String = active_hyperdrive_route.get("target_sector_id", "")
+	var cur_coords := StarSystemGridManager.get_current_sector_coords() if StarSystemGridManager else Vector3i.ZERO
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
+	var dist_sectors := (Vector3(target_coords) - Vector3(cur_coords)).length()
+
+	if hyperdrive_target_label:
+		hyperdrive_target_label.text = "DESTINAZIONE: %s (Dist: %.1f sec)" % [target_id, dist_sectors]
+
+	var aligned := is_hyperdrive_aligned()
+	var angle_diff := get_hyperdrive_alignment_angle_deg()
+
+	if hyperdrive_align_label:
+		if aligned:
+			hyperdrive_align_label.text = "ALLINEAMENTO: 🟢 AGGANCIATO (Dev: %.1f°)" % angle_diff
+			hyperdrive_align_label.modulate = Color(0.2, 1.0, 0.5)
+		else:
+			hyperdrive_align_label.text = "ALLINEAMENTO: 🟡 DEVIAZIONE %.1f°" % angle_diff
+			hyperdrive_align_label.modulate = Color(1.0, 0.8, 0.3)
+
+	if btn_align_hyperdrive:
+		btn_align_hyperdrive.disabled = not can_control_flight or aligned
+	if btn_engage_hyperdrive:
+		# Abilitato se can_control_flight, aligned, e distanza > 0
+		btn_engage_hyperdrive.disabled = not can_control_flight or not aligned or dist_sectors < 0.01
+
+## Calcola l'angolo in gradi tra la prua attuale della nave e il vettore rotta Hyperdrive
+func get_hyperdrive_alignment_angle_deg() -> float:
+	if active_hyperdrive_route.is_empty():
+		return 0.0
+	
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.FORWARD)
+	if course_vec.length_squared() < 0.0001:
+		return 0.0
+
+	var ship_forward := Vector3.FORWARD
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
+		var ship = SpaceWorldManager.get_spaceship()
+		if ship and is_instance_valid(ship):
+			# Direzione di prua (-Z nello spazio locale della nave trasformato in globale)
+			ship_forward = -ship.global_transform.basis.z.normalized()
+
+	# Proiezione sul piano XZ (griglia settori X-Y)
+	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
+	var ship_dir_2d := Vector2(ship_forward.x, -ship_forward.z).normalized()
+	
+	if route_dir_2d.length_squared() < 0.001 or ship_dir_2d.length_squared() < 0.001:
+		return 0.0
+
+	var dot_val := clampf(ship_dir_2d.dot(route_dir_2d), -1.0, 1.0)
+	return rad_to_deg(acos(dot_val))
+
+## Verifica se la nave è allineata al vettore Hyperdrive entro una tolleranza diegetica (es. 5 gradi)
+func is_hyperdrive_aligned(tolerance_deg: float = 5.0) -> bool:
+	if active_hyperdrive_route.is_empty():
+		return false
+	return get_hyperdrive_alignment_angle_deg() <= tolerance_deg
+
+## Allinea automaticamente la prua dell'astronave verso il vettore rotta Hyperdrive
+func align_to_hyperdrive_vector() -> void:
+	if not can_control_flight or active_hyperdrive_route.is_empty():
+		return
+	
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.FORWARD)
+	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
+	
+	# Calcola angolo yaw desiderato
+	# (0, 1) = sud (+90 deg), (0, -1) = nord (-90 deg), (1, 0) = est (0 deg)
+	var target_angle_rad := atan2(route_dir_2d.y, route_dir_2d.x)
+	var target_yaw_deg := -rad_to_deg(target_angle_rad) + 90.0
+
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
+		var ship = SpaceWorldManager.get_spaceship()
+		if ship and is_instance_valid(ship):
+			ship.rotation_degrees.y = fposmod(target_yaw_deg, 360.0)
+			ship.rotation_degrees.x = 0.0
+			ship.rotation_degrees.z = 0.0
+			if "angular_velocity" in ship:
+				ship.angular_velocity = Vector3.ZERO
+	
+	_update_hyperdrive_ui()
+
+## Attiva l'Hyperdrive transit verso il settore target della rotta
+func engage_hyperdrive() -> Dictionary:
+	if not can_control_flight:
+		return {"success": false, "reason": "Permesso di volo negato"}
+	
+	if active_hyperdrive_route.is_empty():
+		if StarSystemGridManager:
+			active_hyperdrive_route = StarSystemGridManager.get_active_route()
+	
+	if active_hyperdrive_route.is_empty():
+		return {"success": false, "reason": "Nessuna rotta pianificata"}
+
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
+	
+	if StarSystemGridManager:
+		var res := StarSystemGridManager.engage_hyperdrive_transit(target_coords)
+		if res.get("success", false):
+			active_hyperdrive_route.clear()
+			_update_hyperdrive_ui()
+		return res
+
+	return {"success": false, "reason": "StarSystemGridManager non disponibile"}
