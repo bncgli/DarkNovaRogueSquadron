@@ -236,6 +236,13 @@ func has_item(item_id: String, quantity: int = 1) -> bool:
 			return int(item.get("quantity", 0)) >= quantity
 	return false
 
+## Restituisce la quantità presente di un dato item
+func get_item_quantity(item_id: String) -> int:
+	for item in cargo_items:
+		if item.get("id", "") == item_id:
+			return int(item.get("quantity", 0))
+	return 0
+
 ## Recupera item per id
 func get_item(item_id: String) -> Dictionary:
 	for item in cargo_items:

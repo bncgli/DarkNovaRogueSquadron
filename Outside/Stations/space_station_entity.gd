@@ -74,13 +74,19 @@ func _init_station_defaults() -> void:
 				"name": "Algoritmo Decrittazione Nova-Pulse v2.4",
 				"category": "Software",
 				"price": 450,
-				"description": "Ottimizzazione cifrari subspaziali per Comms & EW. Velocità decodifica +25%."
+				"app_target_folder": "Comms",
+				"filename": "crypto_tuning.dat",
+				"content": "# EW & CRYPTO TUNING OVERCLOCK MATRIX\n[ELECTRONIC_WARFARE]\njamming_power_mw=150.0\nsignal_noise_ratio=0.92\nspoofing_signature=MILITARY_ESCORT\njamming_radius=18000.0\noverclock_ew_boost=1.25\ncrypto_crack_speed=1.5\n",
+				"description": "Ottimizzazione cifrari subspaziali per Comms & EW. Velocità decodifica +50%."
 			},
 			{
 				"id": "driver_overclock_rcs",
 				"name": "Driver Propulsori RCS Overclock 'Viper-9'",
 				"category": "Firmware",
 				"price": 600,
+				"app_target_folder": "FlightControls",
+				"filename": "thrusters_tuning.dat",
+				"content": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.35\npitch_thrust_mult=1.3\nyaw_thrust_mult=1.3\nroll_thrust_mult=1.3\nvertical_thrust_mult=1.3\noverclock_limit=1.8\n",
 				"description": "Firmware a bassa latenza per propulsori di manovra Flight Control."
 			},
 			{
@@ -88,14 +94,20 @@ func _init_station_defaults() -> void:
 				"name": "Script Terminale 'DeepScan.sh'",
 				"category": "Script",
 				"price": 250,
+				"app_target_folder": "Sensors",
+				"filename": "deepscan.sh",
+				"content": "#!/bin/bash\n# DeepScan automated sweep\necho 'Scanning active sector for gravitational anomalies...'\n",
 				"description": "Script bash diegetico per scansione periodica automatica del quadrante sensori."
 			},
 			{
-				"id": "nanite_repair_pack",
-				"name": "Contenitore Naniti di Riparazione Hull (x50)",
-				"category": "Materiale",
-				"price": 300,
-				"description": "Materiale sintetico utilizzato dal Service Drone e dal Cantiere per rigenerare brecce."
+				"id": "sw_firewall_adv",
+				"name": "Firewall Subspaziale 'Aegis-IV'",
+				"category": "Software",
+				"price": 400,
+				"app_target_folder": "Diagnostics",
+				"filename": "security_tuning.dat",
+				"content": "# ICE DEFENSE & SECURITY TUNING\n[ICE_DEFENSE]\nice_firewall_strength=150.0\ntamper_detection_level=MAXIMUM\nice_recharge_rate=8.0\nmalware_purge_efficiency=1.5\n",
+				"description": "Schermatura contro tentativi di hackwarfare e malware."
 			}
 		]
 	
@@ -148,6 +160,50 @@ func _init_station_defaults() -> void:
 				"text": "Se sintonizzate le comunicazioni su 184.50 MHz vicino alla fascia di asteroidi, potreste intercettare i codici cifrati del sindacato pirata.",
 				"coordinates": Vector3(-500.0, 10.0, 1200.0),
 				"discovered_poi": "Avamposto Clandestino Pirata"
+			}
+		]
+	
+	if warehouse_cargo.is_empty():
+		warehouse_cargo = [
+			{
+				"id": "minerals_titanium",
+				"name": "Titanio Grezzo",
+				"category": "MINERAL",
+				"unit_mass_kg": 25.0,
+				"unit_volume_m3": 0.8,
+				"unit_base_value": 120.0,
+				"quantity": 50,
+				"description": "Minerali di titanio grezzo estratti da asteroidi."
+			},
+			{
+				"id": "alloys_durasteel",
+				"name": "Leghe Raffinate Durasteel",
+				"category": "ALLOY",
+				"unit_mass_kg": 40.0,
+				"unit_volume_m3": 0.5,
+				"unit_base_value": 350.0,
+				"quantity": 25,
+				"description": "Lingotti compositi per corazzature e cantieri navali."
+			},
+			{
+				"id": "ammo_railgun",
+				"name": "Munizioni Sabot Railgun",
+				"category": "AMMO",
+				"unit_mass_kg": 15.0,
+				"unit_volume_m3": 0.2,
+				"unit_base_value": 220.0,
+				"quantity": 40,
+				"description": "Proiettili cinetici al tungsteno-uranio per torrette pesanti."
+			},
+			{
+				"id": "energy_cell",
+				"name": "Celle Energetiche al Plasma",
+				"category": "ENERGY_CELL",
+				"unit_mass_kg": 10.0,
+				"unit_volume_m3": 0.3,
+				"unit_base_value": 180.0,
+				"quantity": 30,
+				"description": "Condensatori al plasma ad alta densità per ricarica sublayer e scudi."
 			}
 		]
 

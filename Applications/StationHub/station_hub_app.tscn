@@ -30,6 +30,7 @@ theme_override_constants/margin_right = 12
 
 [node name="HBox" type="HBoxContainer" parent="MainLayout/HeaderPanel/Margin"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="Titles" type="VBoxContainer" parent="MainLayout/HeaderPanel/Margin/HBox"]
 layout_mode = 2
@@ -47,6 +48,13 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
 theme_override_font_sizes/font_size = 11
 text = "Nessun aggancio magnetico attivo."
+
+[node name="FluxRatingLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "FLUX: 720 (B)"
 
 [node name="CreditsLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox"]
 unique_name_in_owner = true
@@ -73,97 +81,133 @@ unique_name_in_owner = true
 layout_mode = 2
 current_tab = 0
 
-[node name="🔧 Cantiere Navale" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+[node name="📦 Logistica & Cargo Market" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_bottom = 10
 
-[node name="ShipyardVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale"]
+[node name="CargoMarketVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
-[node name="HullStatusLbl" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox"]
-unique_name_in_owner = true
+[node name="StowageStatusHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox"]
 layout_mode = 2
-text = "Integrità Scafo: 100% | Naniti Disponibili: 15"
+theme_override_constants/separation = 16
 
-[node name="HullBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
-value = 100.0
-
-[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox"]
-layout_mode = 2
-
-[node name="ServicesGrid" type="GridContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox"]
-layout_mode = 2
-columns = 2
-
-[node name="BtnRepairHull" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox/ServicesGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Riparazione Scafo Primario (150 CR)"
-
-[node name="BtnServiceDucts" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox/ServicesGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Spurgo & Manutenzione Condotti (100 CR)"
-
-[node name="BtnRechargeBattery" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox/ServicesGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Ricarica Rapida Accumulatori (50 CR)"
-
-[node name="BtnBuyNanites" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere Navale/ShipyardVBox/ServicesGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Acquisto 25x Naniti di Saldatura (200 CR)"
-
-[node name="💾 Mercato Software" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
-
-[node name="HBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Mercato Software"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="MarketItemList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/💾 Mercato Software/HBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
-layout_mode = 2
-
-[node name="DetailsVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Mercato Software/HBox"]
+[node name="MassVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MarketDescLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💾 Mercato Software/HBox/DetailsVBox"]
+[node name="MassStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox/MassVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Massa Stiva: 0 / 2000 kg"
+
+[node name="MassProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox/MassVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+
+[node name="VolVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VolStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox/VolVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Volume Stiva: 0 / 100 m³"
+
+[node name="VolProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/StowageStatusHBox/VolVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox"]
+layout_mode = 2
+
+[node name="MarketSplitHBox" type="HSplitContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StationMarketPanel" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="MarketHeader" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "🏬 Catalogo Merci Stazione (Acquisto)"
+
+[node name="StationMarketList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-bbcode_enabled = true
-text = "Seleziona un elemento dal catalogo per visualizzare i dettagli tecnici e il prezzo."
 
-[node name="BtnBuyMarketItem" type="Button" parent="MainLayout/ContentMargin/TabContainer/💾 Mercato Software/HBox/DetailsVBox"]
+[node name="StationMarketDescLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-disabled = true
-text = "Acquista Software / Driver Selezionato"
+bbcode_enabled = true
+text = "Seleziona una merce della stazione per visualizzare prezzo e specifiche."
+
+[node name="BuyActionsHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel"]
+layout_mode = 2
+
+[node name="BuyQuantitySpinBox" type="SpinBox" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel/BuyActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 100.0
+value = 1.0
+
+[node name="BtnBuyCargo" type="Button" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/StationMarketPanel/BuyActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Carica in Stiva (Acquista)"
+
+[node name="ShipCargoPanel" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ShipCargoHeader" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "🚀 Stiva Corvetta (Vendita)"
+
+[node name="ShipCargoList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShipCargoDescLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+bbcode_enabled = true
+text = "Seleziona un elemento nella stiva della nave per venderlo al porto."
+
+[node name="SellActionsHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel"]
+layout_mode = 2
+
+[node name="SellQuantitySpinBox" type="SpinBox" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel/SellActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 100.0
+value = 1.0
+
+[node name="BtnSellCargo" type="Button" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel/SellActionsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Vendi al Porto (Scarica)"
 
 [node name="📜 Bacheca Contratti" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 visible = false
@@ -200,6 +244,105 @@ layout_mode = 2
 disabled = true
 text = "Accetta Contratto e Sincronizza con Logbook"
 
+[node name="💾 Software & Firmware Repository" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="HBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Software & Firmware Repository"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MarketItemList" type="ItemList" parent="MainLayout/ContentMargin/TabContainer/💾 Software & Firmware Repository/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+
+[node name="DetailsVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/💾 Software & Firmware Repository/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarketDescLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/TabContainer/💾 Software & Firmware Repository/HBox/DetailsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Seleziona un modulo o driver per visualizzare requisiti di sistema e installazione su Ship Drive."
+
+[node name="BtnBuyMarketItem" type="Button" parent="MainLayout/ContentMargin/TabContainer/💾 Software & Firmware Repository/HBox/DetailsVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+disabled = true
+text = "Acquista Software & Scarica in Ship Drive"
+
+[node name="🔧 Cantiere e Riparazioni" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ShipyardVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HullStatusLbl" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Integrità Scafo: 100% | Naniti Disponibili: 15"
+
+[node name="BreachesStatusLbl" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
+text = "Stato Brecce Scafo: Nessuna anomalia strutturale rilevata."
+
+[node name="HullBar" type="ProgressBar" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+value = 100.0
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+layout_mode = 2
+
+[node name="ServicesGrid" type="GridContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="BtnRepairHull" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/ServicesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Riparazione Scafo & Brecce (150 CR)"
+
+[node name="BtnServiceDucts" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/ServicesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Spurgo & Manutenzione Condotti (100 CR)"
+
+[node name="BtnRechargeBattery" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/ServicesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ricarica Rapida Accumulatori (50 CR)"
+
+[node name="BtnBuyNanites" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/ServicesGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Acquisto 25x Naniti di Saldatura (200 CR)"
+
 [node name="🍸 Taverna Spaziale" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 visible = false
 layout_mode = 2
@@ -226,52 +369,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
-text = "Ascolta le conversazioni al banco e le frequenze intercettate dai piloti locali."
+text = "Avvicinati ai tavoli e intercetta le comunicazioni tra piloti e minatori."
 
 [node name="BtnRecordCoordinates" type="Button" parent="MainLayout/ContentMargin/TabContainer/🍸 Taverna Spaziale/HBox/DetailsVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 disabled = true
-text = "Registra Coordinate nei Sistemi di Bordo"
-
-[node name="UndockedOverlay" type="PanelContainer" parent="."]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Center" type="CenterContainer" parent="UndockedOverlay"]
-layout_mode = 2
-
-[node name="VBox" type="VBoxContainer" parent="UndockedOverlay/Center"]
-layout_mode = 2
-alignment = 1
-
-[node name="IconLabel" type="Label" parent="UndockedOverlay/Center/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "⚠️"
-horizontal_alignment = 1
-
-[node name="StatusTitle" type="Label" parent="UndockedOverlay/Center/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
-theme_override_font_sizes/font_size = 18
-text = "NESSUN AGGANCIO PORTUALE ATTIVO"
-horizontal_alignment = 1
-
-[node name="StatusDesc" type="Label" parent="UndockedOverlay/Center/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "La nave deve completare la procedura di docking magnetico con una Stazione Spaziale
-per poter accedere ai servizi di Cantiere, Mercato, Contratti e Taverna."
-horizontal_alignment = 1
+text = "Trascrivi Coordinate nei Sensori & Mappa"
 
 [node name="DisconnectedOverlay" type="PanelContainer" parent="."]
 unique_name_in_owner = true
@@ -286,26 +391,39 @@ grow_vertical = 2
 [node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
 layout_mode = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="Label" type="Label" parent="DisconnectedOverlay/Center"]
 layout_mode = 2
-alignment = 1
-
-[node name="IconLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "📡"
+theme_override_colors/font_color = Color(0.8, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "DISCONNESSO DAI SISTEMI NAVE\nAvviare la missione per attivare il transponder."
 horizontal_alignment = 1
 
-[node name="StatusTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="UndockedOverlay" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="UndockedOverlay"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
-theme_override_font_sizes/font_size = 18
-text = "SISTEMI DELLA NAVE NON COLLEGATI"
+
+[node name="VBox" type="VBoxContainer" parent="UndockedOverlay/Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="UndockedOverlay/Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "NESSUN AGGANCIO MAGNETICO ATTIVO"
 horizontal_alignment = 1
 
-[node name="StatusDesc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="Desc" type="Label" parent="UndockedOverlay/Center/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 12
-text = "Avviare la missione o collegarsi alla nave per attivare il transponder e il modulo StationHub."
+text = "Avvicinarsi a una stazione spaziale e richiedere l'autorizzazione di docking via Comms."
 horizontal_alignment = 1

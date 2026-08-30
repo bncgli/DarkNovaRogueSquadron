@@ -8,6 +8,11 @@ extends Control
 const APP_TITLE: String = "Communications, Electronic Warfare & Hackwarfare"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(680, 480)
 
+signal docking_clearance_requested(station_id: String)
+signal docking_clearance_granted(station_id: String, bay_id: int)
+signal docking_clearance_denied(station_id: String, reason: String)
+signal docking_completed(station_id: String, bay_id: int)
+
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/Comms/comms_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/Comms/comms_config.dat"
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/Comms/crypto_tuning.dat"
@@ -346,12 +351,15 @@ func _on_player_role_changed(_peer_id: int, _new_role: String) -> void:
 
 func _update_permissions() -> void:
 	var my_role := ""
-	var is_solo := false
+	var is_solo := true
 	if NetworkManager:
 		my_role = NetworkManager.get_local_player_role()
-		is_solo = NetworkManager.is_solo_mode
+		if NetworkManager.has_method("has_active_session"):
+			is_solo = NetworkManager.is_solo_mode or not NetworkManager.has_active_session()
+		else:
+			is_solo = NetworkManager.is_solo_mode or my_role.is_empty()
 	
-	can_control_comms = (my_role == "Hacker" or my_role == "Capitano" or my_role == "Factotum" or is_solo)
+	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Factotum" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
 	
 	# Disabilita/abilita comandi attivi
 	if freq_slider:
@@ -706,3 +714,87 @@ func _refresh_ui_display() -> void:
 			dat_status_badge.modulate = Color(0.9, 0.7, 0.2)
 	
 	_refresh_tuner_state()
+
+# --- INTEGRAZIONE DOCKING E CONTROLLO PORTUALE STAZIONE ---
+var docking_manager: DockingManager = null
+var is_docked: bool = false
+
+func bind_docking_manager(dm: DockingManager) -> void:
+	docking_manager = dm
+	if not dm:
+		return
+	if not dm.docking_clearance_granted.is_connected(_on_docking_clearance_granted):
+		dm.docking_clearance_granted.connect(_on_docking_clearance_granted)
+	if not dm.docking_clearance_denied.is_connected(_on_docking_clearance_denied):
+		dm.docking_clearance_denied.connect(_on_docking_clearance_denied)
+	if not dm.docking_completed.is_connected(_on_docking_completed_event):
+		dm.docking_completed.connect(_on_docking_completed_event)
+	if not dm.undocking_completed.is_connected(_on_undocking_completed_event):
+		dm.undocking_completed.connect(_on_undocking_completed_event)
+
+func request_station_docking(station: SpaceStationEntity = null, dm: DockingManager = null) -> bool:
+	if not can_control_comms:
+		return false
+	var target_dm := dm if dm != null else docking_manager
+	if not target_dm:
+		var st_mgr = get_node_or_null("/root/StationManager")
+		if st_mgr is DockingManager:
+			target_dm = st_mgr
+		elif SpaceWorldManager and SpaceWorldManager.has_method("get_docking_manager"):
+			target_dm = SpaceWorldManager.get_docking_manager()
+	
+	if not target_dm:
+		target_dm = DockingManager.new()
+		add_child(target_dm)
+		bind_docking_manager(target_dm)
+	
+	var target_station := station
+	if not target_station and target_dm.target_station:
+		target_station = target_dm.target_station
+	if not target_station:
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_station_entity"):
+			target_station = SpaceWorldManager.get_station_entity()
+		elif is_inside_tree():
+			var found_st = get_tree().root.find_child("SpaceStationEntity", true, false)
+			if found_st is SpaceStationEntity:
+				target_station = found_st
+	
+	if not target_station:
+		_log_comms_message("[color=#ff5555][DOCKING][/color] Nessuna stazione rilevata sulla frequenza attuale o nei paraggi.")
+		docking_clearance_denied.emit("", "Nessuna stazione rilevata")
+		return false
+	
+	docking_clearance_requested.emit(target_station.station_id)
+	_log_comms_message("[color=#64c8ff][DOCKING][/color] Richiesta autorizzazione attracco inviata a %s su %.1f MHz..." % [target_station.station_name, current_frequency])
+	return target_dm.request_docking_clearance(target_station, "NOVA-ROGUE-01", current_spoof_sig)
+
+func _on_docking_clearance_granted(station_id: String, bay_id: int, message: String) -> void:
+	docking_clearance_granted.emit(station_id, bay_id)
+	_log_comms_message("[color=#00ff88][DOCKING AUTORIZZATO][/color] Stazione %s: %s" % [station_id, message])
+	_update_action_log("Autorizzazione attracco concessa: Bay 0%d." % (bay_id + 1))
+	var nm = get_node_or_null("/root/NotificationManager")
+	if nm and nm.has_method("send_notification"):
+		nm.send_notification("Controllo Portuale", "Autorizzazione attracco concessa (Bay 0%d)." % (bay_id + 1))
+	elif nm and nm.has_method("spawn_notification"):
+		nm.spawn_notification("Autorizzazione attracco concessa (Bay 0%d)." % (bay_id + 1))
+
+func _on_docking_clearance_denied(station_id: String, reason: String) -> void:
+	docking_clearance_denied.emit(station_id, reason)
+	_log_comms_message("[color=#ff5555][DOCKING NEGATO][/color] %s: %s" % [station_id, reason])
+	_update_action_log("Richiesta attracco respinta: %s" % reason)
+
+func _on_docking_completed_event(station_id: String, bay_id: int, _st_data: Dictionary) -> void:
+	is_docked = true
+	docking_completed.emit(station_id, bay_id)
+	_log_comms_message("[color=#00ff88][AGGANCIO COMPLETATO][/color] Nave ancorata con successo a Stazione %s (Bay 0%d). Servizi Station Hub sbloccati su GodotOS." % [station_id, bay_id + 1])
+	_update_action_log("Aggancio stazione completato.")
+	var nm = get_node_or_null("/root/NotificationManager")
+	if nm and nm.has_method("send_notification"):
+		nm.send_notification("Controllo Portuale", "Attracco completato. Servizi Station Hub operativi.")
+	elif nm and nm.has_method("spawn_notification"):
+		nm.spawn_notification("Attracco completato. Servizi Station Hub operativi.")
+
+func _on_undocking_completed_event() -> void:
+	is_docked = false
+	_log_comms_message("[color=#64c8ff][UNDOCKING][/color] Disinnesto magnetico eseguito. Nave in assetto libero di navigazione.")
+	_update_action_log("Disinnesto stazione completato.")

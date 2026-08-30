@@ -427,6 +427,30 @@ func _on_new_contract_pressed() -> void:
 	log_event("NUOVO CONTRATTO ASSEGNATO: %s" % new_id)
 	_refresh_contracts_ui()
 
+## Iniezione diretta di un contratto accettato (da StationHub o eventi diegetici)
+func add_contract(contract_data: Dictionary) -> bool:
+	var cid: String = str(contract_data.get("id", "CTR-%02d" % (active_contracts.size() + 1)))
+	for c in active_contracts:
+		if c.get("id") == cid:
+			# Aggiorna lo stato se già presente
+			c["status"] = contract_data.get("status", "IN_PROGRESS")
+			_refresh_contracts_ui()
+			return true
+	
+	var new_entry := {
+		"id": cid,
+		"title": contract_data.get("title", "Contratto " + cid),
+		"description": contract_data.get("description", "Obiettivo di missione"),
+		"reward_flux": contract_data.get("reward_flux", contract_data.get("reward_credits", 500)),
+		"reward_credits": contract_data.get("reward_credits", 500),
+		"status": contract_data.get("status", "IN_PROGRESS"),
+		"issuer": contract_data.get("issuer", "Autorità Portuale")
+	}
+	active_contracts.append(new_entry)
+	log_event("NUOVO CONTRATTO ACQUISITO: %s" % new_entry["title"])
+	_refresh_contracts_ui()
+	return true
+
 # -----------------------------------------------------------------------------
 # Scatola Nera (Event Log)
 # -----------------------------------------------------------------------------
