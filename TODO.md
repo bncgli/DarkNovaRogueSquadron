@@ -24,8 +24,8 @@
   - **File Task**: `task_queue/002_app_flux_wallet.md`
   - **Stato**: Completato (2026-08-31).
 
-- [ ] **TASK-005**: Ship Sublayer Editor Improvements
+- [x] **TASK-005**: Ship Sublayer Editor Improvements
   - **Descrizione**: Migliorare l'editor delle blueprint (resize, fix drag, spawn pos, flux editing).
   - **Criteri di accettazione**: Tutte le migliorie e fix implementati in `@addons/ship_sublayer_editor`.
   - **File Task**: `task_queue/003_ship_editor_improvements.md`
-  - **Stato**: In coda.
+  - **Stato**: Completato (2026-08-31).

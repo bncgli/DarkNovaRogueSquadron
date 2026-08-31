@@ -314,7 +314,7 @@ func _handle_left_click_released(world_pos: Vector2, snapped_world: Vector2) -> 
 	elif is_dragging_element:
 		is_dragging_element = false
 		if _has_dragged_significantly and not selected_type.is_empty() and not selected_id.is_empty():
-			var elem_current_data := _get_selected_element_data()
+			var elem_current_data := _get_selected_element_data().duplicate(true)
 			_apply_element_state(selected_type, selected_id, drag_element_start_state)
 			emit_signal("action_committed", "Sposta Elemento")
 			_apply_element_state(selected_type, selected_id, elem_current_data)

@@ -738,6 +738,15 @@ func _show_blueprint_metadata_props() -> void:
 		if canvas:
 			canvas.queue_redraw()
 	)
+	
+	prop_editor_vbox.add_child(HSeparator.new())
+	_add_int_field("Valore FLUX Nave:", current_blueprint.flux, func(v):
+		save_undo_state("Modifica Flux")
+		current_blueprint.flux = v
+	)
+	_add_flux_modifiers_editor()
+	prop_editor_vbox.add_child(HSeparator.new())
+	
 	_add_passwords_editor()
 
 func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Dictionary) -> void:
@@ -1334,6 +1343,81 @@ func _add_multiline_text_field(lbl: String, current_val: String, callback: Calla
 	text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_edit.text_changed.connect(func(): callback.call(text_edit.text))
 	v_box.add_child(text_edit)
+	prop_editor_vbox.add_child(v_box)
+
+func _add_flux_modifiers_editor() -> void:
+	if not current_blueprint:
+		return
+		
+	var v_box := VBoxContainer.new()
+	var l_main := Label.new()
+	l_main.text = "Modificatori FLUX:"
+	l_main.theme_override_colors/font_color = Color.GOLD
+	v_box.add_child(l_main)
+	
+	var list_vbox := VBoxContainer.new()
+	v_box.add_child(list_vbox)
+	
+	for i in range(current_blueprint.flux_modifiers.size()):
+		var mod = current_blueprint.flux_modifiers[i]
+		var h := HBoxContainer.new()
+		
+		var spin := SpinBox.new()
+		spin.min_value = -1000
+		spin.max_value = 1000
+		spin.step = 1
+		spin.value = mod.get("value", 0)
+		spin.custom_minimum_size.x = 80
+		spin.value_changed.connect(func(v):
+			mod["value"] = int(v)
+			current_blueprint.emit_changed()
+		)
+		h.add_child(spin)
+		
+		var owner_edit := LineEdit.new()
+		owner_edit.text = mod.get("owner", "")
+		owner_edit.placeholder_text = "Proprietario"
+		owner_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		owner_edit.text_changed.connect(func(v):
+			mod["owner"] = v
+			current_blueprint.emit_changed()
+		)
+		h.add_child(owner_edit)
+		
+		var del_btn := Button.new()
+		del_btn.text = "X"
+		del_btn.modulate = Color.CRIMSON
+		del_btn.pressed.connect(func():
+			save_undo_state("Rimuovi Modificatore")
+			current_blueprint.flux_modifiers.remove_at(i)
+			current_blueprint.emit_changed()
+			_show_blueprint_metadata_props()
+		)
+		h.add_child(del_btn)
+		list_vbox.add_child(h)
+		
+		var reason_edit := LineEdit.new()
+		reason_edit.text = mod.get("reason", "")
+		reason_edit.placeholder_text = "Causale/Motivazione"
+		reason_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		reason_edit.text_changed.connect(func(v):
+			mod["reason"] = v
+			current_blueprint.emit_changed()
+		)
+		list_vbox.add_child(reason_edit)
+		list_vbox.add_child(HSeparator.new())
+	
+	var add_btn := Button.new()
+	add_btn.text = "+ Aggiungi Modificatore"
+	add_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	add_btn.pressed.connect(func():
+		save_undo_state("Aggiungi Modificatore")
+		current_blueprint.flux_modifiers.append({"value": 0, "owner": "", "reason": ""})
+		current_blueprint.emit_changed()
+		_show_blueprint_metadata_props()
+	)
+	v_box.add_child(add_btn)
+	
 	prop_editor_vbox.add_child(v_box)
 
 func _add_passwords_editor() -> void:
