@@ -13,3 +13,8 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 - **Descrizione**: Aggiungere una sezione "Test Pipeline" nel file README.md.
 - **Stato**: Completato.
 - **Dettagli**: README.md aggiornato con le informazioni sulla pipeline di test.
+
+### TASK-003: ShipBlueprint Flux & Modifiers
+- **Descrizione**: Estendere la risorsa ShipBlueprint con dati economici.
+- **Stato**: Completato.
+- **Dettagli**: Aggiunti campi `flux` e `flux_modifiers` in `ship_blueprint.gd` con supporto alla serializzazione JSON (to_dict/from_dict) e integrazione con l'Inspector di Godot tramite `@export`.

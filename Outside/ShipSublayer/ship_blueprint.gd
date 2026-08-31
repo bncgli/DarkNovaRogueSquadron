@@ -39,7 +39,15 @@ signal blueprint_changed()
 		drone_spawn_heading = val
 		emit_changed()
 
-@export var flux: int = 100 
+@export var flux: int = 100:
+	set(val):
+		flux = val
+		emit_changed()
+
+@export var flux_modifiers: Array[Dictionary] = []:
+	set(val):
+		flux_modifiers = val
+		emit_changed()
 
 # --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
 # Ogni elemento: { "id": str, "name": str, "rect": Rect2, "color": Color, "border_color": Color, "category": str }
@@ -1230,6 +1238,8 @@ func to_dict() -> Dictionary:
 		"ship_bounds": [ship_bounds.position.x, ship_bounds.position.y, ship_bounds.size.x, ship_bounds.size.y],
 		"drone_spawn_pos": [drone_spawn_pos.x, drone_spawn_pos.y],
 		"drone_spawn_heading": drone_spawn_heading,
+		"flux": flux,
+		"flux_modifiers": flux_modifiers.duplicate(true),
 		"rooms": rooms_copy,
 		"ducts": ducts_copy,
 		"devices": devices_copy,
@@ -1257,6 +1267,11 @@ func from_dict(data: Dictionary) -> void:
 		drone_spawn_pos = Vector2(float(p[0]), float(p[1]))
 	if data.has("drone_spawn_heading"):
 		drone_spawn_heading = float(data["drone_spawn_heading"])
+	
+	if data.has("flux"):
+		flux = int(data["flux"])
+	if data.has("flux_modifiers") and data["flux_modifiers"] is Array:
+		flux_modifiers = (data["flux_modifiers"] as Array).duplicate(true)
 		
 	if data.has("rooms") and data["rooms"] is Array:
 		var new_rooms: Array[Dictionary] = []
