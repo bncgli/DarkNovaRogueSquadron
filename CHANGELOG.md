@@ -9,4 +9,9 @@ Tutti i cambiamenti significativi a questo progetto saranno documentati in quest
 - File `docs/task_log.md` per il tracciamento storico dei task completati.
 - Estensione risorsa `ShipBlueprint` con campi `flux` e `flux_modifiers` per la gestione economica delle navi.
 - Nuova applicazione `FluxWallet` per il monitoraggio in tempo reale del Flux e dei modificatori economici.
-- Miglioramenti al `ship_sublayer_editor`: risolto bug del trascinamento stanze, aggiunto editing del Flux e posizionamento grafico dello spawn del drone.
+- Miglioramenti al `ship_sublayer_editor`: risolto bug del trascinamento stanze, aggiunto editing del Flux, posizionamento grafico dello spawn del drone e nuovo pannello "Software Manager" per la gestione di app e password.
+- Allineamento globale delle password di sistema: sincronizzate tutte le applicazioni e la blueprint di default con lo standard `-7815` definito nel GDD.
+- Aggiornamento `docs/DARK_NOVA_FEATURES_DESIGN.md` con le nuove applicazioni e la matrice delle password completa.
+- Implementata la funzionalità di copia-incolla (Ctrl+C/Ctrl+V) nel `ship_sublayer_editor` per tutti i tipi di componenti.
+- Centralizzazione della gestione password nel pannello Software Manager e aggiunta funzionalità per installare nuove app (.tres).
+- Ottimizzazione UI del Software Manager: unificate le liste di app e password in un layout a righe singole compatto con icone identificative.

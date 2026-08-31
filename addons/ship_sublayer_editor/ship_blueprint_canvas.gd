@@ -34,6 +34,9 @@ var current_tool: ToolMode = ToolMode.SELECT:
 	set(val):
 		current_tool = val
 		_creation_step = 0
+		is_dragging_element = false
+		is_resizing_room = false
+		is_panning = false
 		queue_redraw()
 
 # Visibilità dei layer
@@ -106,6 +109,9 @@ var zoom_level: float = 1.0
 # Stato selezione e manipolazione
 var selected_type: String = "" # "room", "duct", "device", "junction", "conduit", "damage", "spawn", "bounds"
 var selected_id: String = ""
+var selected_room_template: String = "ponte_comando"
+var _clipboard_type: String = ""
+var _clipboard_data: Dictionary = {}
 var is_dragging_element: bool = false
 var drag_start_world_pos: Vector2 = Vector2.ZERO
 var drag_element_start_state: Dictionary = {}
@@ -172,10 +178,12 @@ func _gui_input(event: InputEvent) -> void:
 		if is_panning:
 			view_offset = pan_start_view_offset + (mouse_event.position - pan_start_mouse_pos)
 			queue_redraw()
-		elif is_dragging_element:
+		elif is_dragging_element or is_resizing_room:
 			_handle_element_drag(world_pos)
 		elif _creation_step > 0:
 			queue_redraw()
+		else:
+			_update_mouse_cursor(world_pos)
 			
 	elif event is InputEventMouseButton:
 		var btn_event: InputEventMouseButton = event as InputEventMouseButton
@@ -519,6 +527,29 @@ func _distance_to_segment(p: Vector2, a: Vector2, b: Vector2) -> float:
 	var projection := a + ab * t
 	return p.distance_to(projection)
 
+func _update_mouse_cursor(world_pos: Vector2) -> void:
+	if current_tool != ToolMode.SELECT:
+		mouse_default_cursor_shape = Control.CURSOR_CROSS
+		return
+		
+	if selected_type == "room":
+		var room := blueprint.get_room_by_id(selected_id)
+		if not room.is_empty():
+			var handle_idx := _get_resize_handle_at(world_pos, room.get("rect", Rect2()))
+			match handle_idx:
+				0, 2: 
+					mouse_default_cursor_shape = Control.CURSOR_FDIAGSIZE
+					return
+				1, 3:
+					mouse_default_cursor_shape = Control.CURSOR_BDIAGSIZE
+					return
+					
+	var hit := _pick_element_at(world_pos)
+	if not hit.is_empty():
+		mouse_default_cursor_shape = Control.CURSOR_MOVE
+	else:
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
+
 func _get_resize_handle_at(world_pos: Vector2, rect: Rect2) -> int:
 	var handles: Array[Vector2] = [
 		rect.position,
@@ -526,7 +557,7 @@ func _get_resize_handle_at(world_pos: Vector2, rect: Rect2) -> int:
 		rect.end,
 		Vector2(rect.position.x, rect.end.y)
 	]
-	var hit_dist := maxf(8.0, 8.0 / zoom_level)
+	var hit_dist := maxf(10.0, 10.0 / zoom_level)
 	for i in range(handles.size()):
 		if world_pos.distance_to(handles[i]) <= hit_dist:
 			return i
@@ -554,28 +585,129 @@ func _get_selected_element_data() -> Dictionary:
 			return {"bounds": blueprint.ship_bounds}
 	return {}
 
+# --- CLIPBOARD (COPY-PASTE) ---
+
+func copy_selection() -> void:
+	if selected_type.is_empty() or selected_id.is_empty():
+		return
+	
+	var data := _get_selected_element_data()
+	if not data.is_empty():
+		_clipboard_type = selected_type
+		_clipboard_data = data.duplicate(true)
+		# Se è uno spawn o i bordi, non ha senso copiarli di solito, ma seguiamo la logica
+		# Per le stanze/nodi, rimuoviamo l'ID in modo che il paste ne generi uno nuovo
+		if _clipboard_data.has("id"):
+			_clipboard_data.erase("id")
+
+func paste_selection(offset: Vector2 = Vector2(20, 20)) -> void:
+	if _clipboard_type.is_empty() or _clipboard_data.is_empty():
+		return
+		
+	var data_to_paste := _clipboard_data.duplicate(true)
+	
+	match _clipboard_type:
+		"room":
+			var rect: Rect2 = data_to_paste.get("rect", Rect2())
+			var new_p1 := rect.position + offset
+			var new_p2 := new_p1 + rect.size
+			_finish_add_room(new_p1, new_p2)
+			# Applica i dati extra (colore, nome, ecc.)
+			var new_room := blueprint.get_room_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "rect":
+					new_room[key] = data_to_paste[key]
+		"duct":
+			var p1: Vector2 = data_to_paste.get("from", Vector2.ZERO) + offset
+			var p2: Vector2 = data_to_paste.get("to", Vector2.ZERO) + offset
+			_finish_add_duct(p1, p2)
+			var new_duct := blueprint.get_duct_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "from" and key != "to":
+					new_duct[key] = data_to_paste[key]
+		"device":
+			var pos: Vector2 = data_to_paste.get("pos", Vector2.ZERO) + offset
+			_finish_add_device(pos)
+			var new_dev := blueprint.get_device_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "pos":
+					new_dev[key] = data_to_paste[key]
+		"junction":
+			var pos: Vector2 = data_to_paste.get("pos", Vector2.ZERO) + offset
+			_finish_add_junction(pos)
+			var new_junc := blueprint.get_junction_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "pos":
+					new_junc[key] = data_to_paste[key]
+		"conduit":
+			var p1: Vector2 = data_to_paste.get("from_pos", Vector2.ZERO) + offset
+			var p2: Vector2 = data_to_paste.get("to_pos", Vector2.ZERO) + offset
+			_finish_add_conduit(p1, p2)
+			var new_cnd := blueprint.get_conduit_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "from_pos" and key != "to_pos":
+					new_cnd[key] = data_to_paste[key]
+		"damage":
+			var pos: Vector2 = data_to_paste.get("pos", Vector2.ZERO) + offset
+			_finish_add_damage(pos)
+			var new_dmg := blueprint.get_damage_by_id(selected_id)
+			for key in data_to_paste:
+				if key != "id" and key != "pos":
+					new_dmg[key] = data_to_paste[key]
+	
+	blueprint.emit_changed()
+	queue_redraw()
+
 # --- CREAZIONE NUOVI ELEMENTI ---
 
 func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
+	var template_data := RoomDatabase.get_room_data(selected_room_template)
+	var min_size: Vector2 = template_data.get("min_size", Vector2(20, 20))
+	
 	var top_left := Vector2(minf(p1.x, p2.x), minf(p1.y, p2.y))
 	var size_rect := (p2 - p1).abs()
-	if size_rect.x < 20.0 or size_rect.y < 20.0:
-		size_rect = Vector2(80, 60)
+	
+	# Applica dimensioni minime
+	if size_rect.x < min_size.x: size_rect.x = min_size.x
+	if size_rect.y < min_size.y: size_rect.y = min_size.y
+	
 	var next_idx := blueprint.rooms.size() + 1
 	var new_id := "room_%d" % next_idx
 	while not blueprint.get_room_by_id(new_id).is_empty():
 		next_idx += 1
 		new_id = "room_%d" % next_idx
+		
+	var room_name: String = template_data.get("name", "Nuovo Settore %d" % next_idx)
+	
 	var new_room: Dictionary = {
 		"id": new_id,
-		"name": "Nuovo Settore %d" % next_idx,
+		"name": room_name,
 		"rect": Rect2(top_left, size_rect),
-		"color": Color(0.2, 0.3, 0.45, 0.5),
+		"color": template_data.get("color", Color(0.2, 0.3, 0.45, 0.5)),
 		"border_color": Color(0.4, 0.7, 0.9, 0.8),
-		"category": "utility"
+		"category": template_data.get("category", "utility")
 	}
-	emit_signal("action_committed", "Aggiungi Stanza")
+	
+	emit_signal("action_committed", "Aggiungi Stanza: " + room_name)
 	blueprint.rooms.append(new_room)
+	
+	# Aggiungi dispositivi di default
+	var default_devices: Array = template_data.get("default_devices", [])
+	var center := top_left + size_rect / 2.0
+	
+	for i in range(default_devices.size()):
+		var dev_template_name: String = default_devices[i]
+		var dev_pos := center
+		# Se ci sono più dispositivi, distribuiscili un po'
+		if default_devices.size() > 1:
+			var angle := (PI * 2.0 / default_devices.size()) * i
+			dev_pos += Vector2(cos(angle), sin(angle)) * (minf(size_rect.x, size_rect.y) * 0.25)
+			
+		var dev_name := dev_template_name.capitalize().replace("_", " ")
+		var is_gen := dev_template_name.contains("reattore") or dev_template_name.contains("reactor")
+		
+		_add_device_internal(dev_pos, dev_name, room_name, is_gen)
+	
 	blueprint.emit_changed()
 	selected_type = "room"
 	selected_id = new_id
@@ -609,31 +741,38 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 	emit_signal("tool_changed", ToolMode.SELECT)
 
 func _finish_add_device(pos: Vector2) -> void:
+	var room_here := blueprint.get_room_at(pos)
+	var sector_name := str(room_here.get("name", "Generale")) if not room_here.is_empty() else "Nave"
+	
+	var new_dev := _add_device_internal(pos, "Nuovo Dispositivo", sector_name, false)
+	
+	emit_signal("action_committed", "Aggiungi Dispositivo")
+	blueprint.emit_changed()
+	selected_type = "device"
+	selected_id = new_dev["id"]
+	emit_signal("element_selected", selected_type, selected_id, new_dev)
+	current_tool = ToolMode.SELECT
+	emit_signal("tool_changed", ToolMode.SELECT)
+
+func _add_device_internal(pos: Vector2, dev_name: String, sector_name: String, is_gen: bool) -> Dictionary:
 	var next_idx := blueprint.devices.size() + 1
 	var new_id := "device_%d" % next_idx
 	while not blueprint.get_device_by_id(new_id).is_empty():
 		next_idx += 1
 		new_id = "device_%d" % next_idx
-	var room_here := blueprint.get_room_at(pos)
-	var sector_name := str(room_here.get("name", "Generale")) if not room_here.is_empty() else "Nave"
+		
 	var new_dev: Dictionary = {
 		"id": new_id,
-		"name": "Dispositivo %d" % next_idx,
+		"name": dev_name,
 		"sector": sector_name,
 		"pos": pos,
-		"is_generator": false,
-		"power_mw": 100.0,
+		"is_generator": is_gen,
+		"power_mw": 500.0 if is_gen else 100.0,
 		"inputs_count": 1,
-		"desc": "Nuovo dispositivo della rete elettrica."
+		"desc": "Dispositivo della rete elettrica in %s." % sector_name
 	}
-	emit_signal("action_committed", "Aggiungi Dispositivo")
 	blueprint.devices.append(new_dev)
-	blueprint.emit_changed()
-	selected_type = "device"
-	selected_id = new_id
-	emit_signal("element_selected", selected_type, selected_id, new_dev)
-	current_tool = ToolMode.SELECT
-	emit_signal("tool_changed", ToolMode.SELECT)
+	return new_dev
 
 func _finish_add_junction(pos: Vector2) -> void:
 	var next_idx := blueprint.junctions.size() + 1
@@ -836,8 +975,8 @@ func _draw_resize_handles(screen_rect: Rect2) -> void:
 		Vector2(screen_rect.position.x, screen_rect.end.y)
 	]
 	for h in handles:
-		draw_rect(Rect2(h - Vector2(4, 4), Vector2(8, 8)), COLOR_SELECTION, true)
-		draw_rect(Rect2(h - Vector2(4, 4), Vector2(8, 8)), Color.BLACK, false, 1.0)
+		draw_rect(Rect2(h - Vector2(5, 5), Vector2(10, 10)), COLOR_SELECTION, true)
+		draw_rect(Rect2(h - Vector2(5, 5), Vector2(10, 10)), Color.BLACK, false, 1.0)
 
 func _draw_ducts() -> void:
 	var font: Font = ThemeDB.fallback_font

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_ykulu"]
+[ext_resource type="PackedScene" path="res://Applications/PodInfo/src/pod_info_app.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_ykulu")
+app_id = "pod_info"
+title = "PodInfo"
+description = "Monitoraggio parametri vitali e gestione audio ambientale."
+category = "Utility"
+is_system_app = true
+terminal_command = "pod"
+scene = ExtResource("2_scene")
+default_window_size = Vector2(450, 350)
+drive_folder = "Programs/PodInfo"
+default_password = "POD-7815"

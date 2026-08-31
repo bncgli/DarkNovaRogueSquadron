@@ -45,6 +45,7 @@ ShipSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/ship_software_manag
 TerminalSoftwareManager="*res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd"
 CargoManager="*res://Economy/cargo_manager.gd"
 FluxEconomyManager="*res://Economy/flux_economy_manager.gd"
+RoomDatabase="*res://Scenes/Autoloads/RoomDatabase.gd"
 
 [debug]
 

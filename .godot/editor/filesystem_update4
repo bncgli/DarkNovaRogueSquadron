@@ -1,9 +1,7 @@
 res://Scenes/Main/MainScene.tscn
-res://Outside/ShipSublayer/ship_blueprint.gd
-res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
-res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd
-res://Scenes/Autoloads/SoftwareManager/app_resource.gd
-res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Outside/Combat/combat_director.gd
 res://addons/ship_sublayer_editor/ship_blueprint_canvas.gd
-res://Applications/FluxWallet/flux_wallet.gd
 res://addons/ship_sublayer_editor/ship_sublayer_editor.gd
+res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd
+res://Applications/PodInfo/src/pod_info_app.gd

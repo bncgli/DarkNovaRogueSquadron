@@ -2,4 +2,7 @@
 .godot/
 
 # Ignore all directories starting with '.'
-.*/
+.export_config/
+.git/
+.github/
+.idea/

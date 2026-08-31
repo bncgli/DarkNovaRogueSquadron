@@ -763,6 +763,7 @@ drive_passwords = {
 }
 installed_apps = Array[Dictionary]([{
 "description": "Controlli di manovra e navigazione nave",
+"drive_folder": "Programs/FlightControls",
 "icon_color": Color(1, 0.6, 0.2, 1),
 "id": "flight_control",
 "roles": ["Capitano", "Pilota", "Factotum", "Captain", "Pilot"],
@@ -770,6 +771,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Flight Control"
 }, {
 "description": "Telecamere esterne dell'astronave",
+"drive_folder": "Programs/Cams",
 "icon_color": Color(0.3, 0.9, 0.6, 1),
 "id": "cams",
 "roles": ["Capitano", "Pilota", "Soldato", "Tattico", "Tattico / Armi", "Sensori / Radar", "Factotum", "Captain", "Pilot", "Soldier"],
@@ -777,6 +779,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Cams"
 }, {
 "description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+"drive_folder": "Programs/PowerGrid",
 "icon_color": Color(0.95, 0.85, 0.2, 1),
 "id": "power_grid",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
@@ -784,6 +787,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Power Grid"
 }, {
 "description": "Robottino manutenzione e schema condotti 2D",
+"drive_folder": "Programs/DuctDrone",
 "icon_color": Color(1, 0.85, 0.2, 1),
 "id": "duct_drone",
 "roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"],
@@ -791,6 +795,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Duct Drone"
 }, {
 "description": "Matrice deflettori a 4 quadranti e scudi energetici",
+"drive_folder": "Programs/ShieldMatrix",
 "icon_color": Color(0.2, 0.6, 1, 1),
 "id": "shield_matrix",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
@@ -798,6 +803,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Shield Matrix"
 }, {
 "description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
+"drive_folder": "Programs/LifeSupport",
 "icon_color": Color(0.2, 0.7, 0.9, 1),
 "id": "life_support",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Engineer", "Captain"],
@@ -805,6 +811,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Supporto Vitale & Atmosfera"
 }, {
 "description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+"drive_folder": "Programs/Weapons",
 "icon_color": Color(0.95, 0.25, 0.25, 1),
 "id": "weapons",
 "roles": ["Capitano", "Soldato", "Tattico", "Tattico / Armi", "Factotum", "Captain", "Soldier"],
@@ -812,6 +819,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Tactical Weapons"
 }, {
 "description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
+"drive_folder": "Programs/Sensors",
 "icon_color": Color(0.2, 0.8, 0.4, 1),
 "id": "sensors",
 "roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Factotum", "Soldier", "Captain"],
@@ -819,6 +827,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Array Sensori & Mappa Tattica"
 }, {
 "description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
+"drive_folder": "Programs/Comms",
 "icon_color": Color(0.4, 0.8, 1, 1),
 "id": "comms",
 "roles": ["Capitano", "Hacker", "Factotum", "Captain"],
@@ -826,6 +835,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Comms & Electronic War"
 }, {
 "description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
+"drive_folder": "Programs/Diagnostics",
 "icon_color": Color(0.2, 0.9, 0.7, 1),
 "id": "diagnostics",
 "roles": ["Capitano", "Hacker", "Factotum", "Captain"],
@@ -833,6 +843,7 @@ installed_apps = Array[Dictionary]([{
 "title": "System Diagnostics"
 }, {
 "description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
+"drive_folder": "Programs/Logbook",
 "icon_color": Color(0.8, 0.7, 0.2, 1),
 "id": "logbook",
 "roles": ["Captain", "Factotum", "Capitano"],
@@ -840,6 +851,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Registro di Bordo & Obiettivi"
 }, {
 "description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
+"drive_folder": "Programs/ServiceDrone",
 "icon_color": Color(0.9, 0.5, 0.2, 1),
 "id": "service_drone",
 "roles": ["Capitano", "Factotum", "Captain"],
@@ -847,6 +859,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Drone di Servizio EVA"
 }, {
 "description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
+"drive_folder": "Programs/CargoBay",
 "icon_color": Color(0.95, 0.65, 0.15, 1),
 "id": "cargo_bay",
 "roles": ["Capitano", "Factotum", "Captain"],

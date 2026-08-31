@@ -162,6 +162,10 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 | **Life Support (Roadmap)** | `Ship Drive/Programs/LifeSupport/` | `LIFE-7815` | `life_support_config.dat`, `atmo_tuning.dat` |
 | **Logbook (Roadmap)** | `Ship Drive/Programs/Logbook/` | `LOGS-7815` | `logbook_config.dat`, `journal_tuning.dat` |
 | **Service Drone (Roadmap)** | `Ship Drive/Programs/ServiceDrone/` | `SERV-7815` | `service_drone_config.dat`, `manipulator_tuning.dat` |
+| **Cargo Bay & FLUX** | `Ship Drive/Programs/CargoBay/` | `CARG-7815` | `cargo_bay_config.dat` |
+| **Flux Wallet** | `Ship Drive/Programs/FluxWallet/` | `FLUX-7815` | `flux_wallet_config.dat` |
+| **Hub Servizi Portuali** | `Ship Drive/Programs/StationHub/` | `STTN-7815` | `station_hub_config.dat` |
+| **System Map** | `Ship Drive/Programs/SystemMap/` | `MAPS-7815` | `system_map_config.dat` |
 | **Master Superuser** | *Root Drive & System Folders* | `ROOT-7815` | *Bypass universale per test suites e console* |
 
 ---
@@ -350,6 +354,26 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
   - **Sublayer 3 (Rete Elettrica)**: La baia droni esterna (`service_bay`) assorbe 80 MW in standby e 140 MW in fase di ricarica rapida della batteria del drone.
   - **Sublayer 4 (Danni)**: Ripara direttamente le coordinate dei danni allo scafo esterno registrati dal sistema di diagnostica (`dmg_breach` e usura scafo).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ServiceDrone/`, file `service_drone_config.dat` e `manipulator_tuning.dat` (Password debug: `SERV-7815`).
+
+### 4.15 Stiva Cargo & FLUX (`Applications/CargoBay`)
+- **Scopo**: Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net.
+- **Finestra**: `cargo_bay_app.tscn` (Dimensioni: `760x560`).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/CargoBay/`, file `cargo_bay_config.dat` (Password debug: `CARG-7815`).
+
+### 4.16 Flux Wallet (`Applications/FluxWallet`)
+- **Scopo**: Visualizzazione stato economico della nave e storico modificatori FLUX in tempo reale.
+- **Finestra**: `flux_wallet.tscn` (Dimensioni: `550x450`).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/FluxWallet/`, file `wallet_config.dat` (Password debug: `FLUX-7815`).
+
+### 4.17 Hub Servizi Portuali (`Applications/StationHub`)
+- **Scopo**: Interfaccia diegetica servizi di stazione: Cantiere, Mercato Firmware, Bacheca Contratti e Taverna.
+- **Finestra**: `station_hub_app.tscn` (Dimensioni: `780x560`).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/StationHub/`, file `station_hub_config.dat` (Password debug: `STTN-7815`).
+
+### 4.18 System Map & Hyperdrive (`Applications/SystemMap`)
+- **Scopo**: Mappa olografica del sistema stellare e pianificazione rotte di transito Hyperdrive.
+- **Finestra**: `system_map_app.tscn` (Dimensioni: `720x520`).
+- **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/SystemMap/`, file `system_map_config.dat` (Password debug: `MAPS-7815`).
 
 ---
 

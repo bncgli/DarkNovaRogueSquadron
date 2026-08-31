@@ -4,76 +4,84 @@
 
 [resource]
 script = ExtResource("1_8ivkh")
+ship_bounds = Rect2(61, 21, 480, 420)
 rooms = Array[Dictionary]([{
 "border_color": Color(0.35, 0.75, 1, 0.8),
 "category": "command",
 "color": Color(0.12, 0.28, 0.45, 0.55),
 "id": "bridge",
 "name": "Ponte di Comando",
-"rect": Rect2(230, 45, 140, 70)
+"rect": Rect2(230, 65, 150, 50)
 }, {
 "border_color": Color(0.2, 0.85, 0.65, 0.8),
 "category": "sensors",
 "color": Color(0.12, 0.35, 0.3, 0.5),
 "id": "sensors",
 "name": "Sensori & Avionica",
-"rect": Rect2(110, 115, 100, 65)
+"rect": Rect2(141, 196, 61, 61)
 }, {
 "border_color": Color(0.2, 0.85, 0.65, 0.8),
 "category": "comms",
 "color": Color(0.12, 0.35, 0.3, 0.5),
 "id": "comms",
 "name": "Comunicazioni & EW",
-"rect": Rect2(390, 115, 100, 65)
+"rect": Rect2(410, 195, 61, 61)
 }, {
 "border_color": Color(0.9, 0.35, 0.4, 0.8),
 "category": "tactical",
 "color": Color(0.35, 0.15, 0.2, 0.5),
 "id": "armory",
-"name": "Armeria & Sicurezza",
-"rect": Rect2(245, 135, 110, 60)
+"name": "Sistemi di combattimento",
+"rect": Rect2(411, 306, 60, 60)
 }, {
 "border_color": Color(0.65, 0.45, 0.95, 0.8),
 "category": "defense",
 "color": Color(0.2, 0.15, 0.4, 0.5),
 "id": "shields",
-"name": "Scudi Deflettori",
-"rect": Rect2(175, 145, 120, 60)
+"name": "Armatura adattiva",
+"rect": Rect2(65, 25, 470, 30)
 }, {
 "border_color": Color(0.35, 0.85, 0.45, 0.8),
 "category": "life_support",
 "color": Color(0.15, 0.35, 0.2, 0.5),
 "id": "life_support",
 "name": "Supporto Vitale",
-"rect": Rect2(100, 205, 120, 60)
+"rect": Rect2(140, 90, 61, 61)
 }, {
 "border_color": Color(0.85, 0.7, 0.3, 0.8),
 "category": "cargo",
 "color": Color(0.35, 0.28, 0.1, 0.5),
 "id": "cargo",
 "name": "Baia di Carico Principale",
-"rect": Rect2(380, 175, 120, 90)
+"rect": Rect2(231, 233, 153, 84)
 }, {
 "border_color": Color(1, 0.4, 0.2, 0.85),
 "category": "engineering",
 "color": Color(0.4, 0.15, 0.1, 0.55),
 "id": "reactor",
 "name": "Nucleo Reattore & Fusione",
-"rect": Rect2(235, 225, 130, 60)
+"rect": Rect2(231, 136, 150, 85)
 }, {
 "border_color": Color(0.4, 0.65, 0.85, 0.8),
 "category": "propulsion",
 "color": Color(0.15, 0.25, 0.35, 0.5),
 "id": "rcs",
 "name": "Pod Manovra RCS",
-"rect": Rect2(240, 270, 120, 60)
+"rect": Rect2(143, 305, 61, 61)
 }, {
 "border_color": Color(0.95, 0.55, 0.2, 0.85),
 "category": "propulsion",
 "color": Color(0.38, 0.22, 0.1, 0.55),
 "id": "engines",
 "name": "Sala Motori Principale",
-"rect": Rect2(230, 330, 140, 65)
+"rect": Rect2(233, 334, 151, 51)
+}, {
+"border_color": Color(0.54509807, 0.9019608, 0.40000004, 0.8),
+"category": "mainframe",
+"color": Color(0.24901964, 0.4509804, 0.20000002, 0.5019608),
+"id": "mainframe",
+"name": "MainFrame",
+"rect": Rect2(411, 96, 61, 61)
 }])
 ducts = Array[Dictionary]([{
 "from": Vector2(300, 115),
@@ -276,7 +284,7 @@ devices = Array[Dictionary]([{
 }])
 junctions = Array[Dictionary]([{
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J1_B0",
 "name": "Linea Dorsale Prua (J2)",
 "target_id": "J2",
@@ -294,14 +302,14 @@ junctions = Array[Dictionary]([{
 "target_id": "DEAD_1",
 "target_type": "dead_end",
 "to_pos": Vector2(360, 215)
-}],
+}]),
 "id": "J1",
 "input_source": "reactor_main",
 "name": "Snodo Reattore Dorsale",
 "pos": Vector2(300, 215)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J2_B0",
 "name": "Ponte Nav (In1) & Armeria (In1)",
 "target_ids": ["bridge_nav:0", "armory_defense:0"],
@@ -319,14 +327,14 @@ junctions = Array[Dictionary]([{
 "target_id": "comms_ew:0",
 "target_type": "device",
 "to_pos": Vector2(440, 145)
-}],
+}]),
 "id": "J2",
 "input_source": "J1_B0",
 "name": "Snodo Prua & Avionica",
 "pos": Vector2(300, 125)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J3_B0",
 "name": "Supporto Vitale (In1)",
 "target_id": "life_support:0",
@@ -344,14 +352,14 @@ junctions = Array[Dictionary]([{
 "target_id": "J8",
 "target_type": "junction",
 "to_pos": Vector2(160, 320)
-}],
+}]),
 "id": "J3",
 "input_source": "J1_B1",
 "name": "Snodo Babordo & Difesa",
 "pos": Vector2(160, 185)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J4_B0",
 "name": "Linea Poppa Motori (J5)",
 "target_id": "J5",
@@ -369,14 +377,14 @@ junctions = Array[Dictionary]([{
 "target_id": "DEAD_2",
 "target_type": "dead_end",
 "to_pos": Vector2(240, 295)
-}],
+}]),
 "id": "J4",
 "input_source": "reactor_main",
 "name": "Snodo Reattore Ventrale",
 "pos": Vector2(300, 295)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J5_B0",
 "name": "Motore SX (In1) & Termico (In3)",
 "target_ids": ["engines_sublight:0", "engines_sublight:2"],
@@ -394,14 +402,14 @@ junctions = Array[Dictionary]([{
 "target_id": "shields_deflector:1",
 "target_type": "device",
 "to_pos": Vector2(235, 175)
-}],
+}]),
 "id": "J5",
 "input_source": "J4_B0",
 "name": "Snodo Propulsione Poppa",
 "pos": Vector2(300, 325)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J6_B0",
 "name": "Baia Drone (In1) & Comms (In1)",
 "target_ids": ["cargo_drone_bay:0", "comms_ew:0"],
@@ -419,14 +427,14 @@ junctions = Array[Dictionary]([{
 "target_id": "armory_defense:1",
 "target_type": "device",
 "to_pos": Vector2(300, 165)
-}],
+}]),
 "id": "J6",
 "input_source": "J7_B0",
 "name": "Snodo Ausiliario Tribordo",
 "pos": Vector2(440, 185)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J7_B0",
 "name": "Canale Tribordo (J6)",
 "target_id": "J6",
@@ -444,14 +452,14 @@ junctions = Array[Dictionary]([{
 "target_id": "bridge_nav:1",
 "target_type": "device",
 "to_pos": Vector2(300, 75)
-}],
+}]),
 "id": "J7",
 "input_source": "aux_generator",
 "name": "Snodo Generatore Riserva",
 "pos": Vector2(440, 260)
 }, {
 "active_branch": 0,
-"branches": [{
+"branches": Array[Dictionary]([{
 "line_id": "L_J8_B0",
 "name": "Motore SX Ausiliario (In1)",
 "target_id": "engines_sublight:0",
@@ -469,7 +477,7 @@ junctions = Array[Dictionary]([{
 "target_id": "DEAD_3",
 "target_type": "dead_end",
 "to_pos": Vector2(100, 340)
-}],
+}]),
 "id": "J8",
 "input_source": "J3_B2",
 "name": "Snodo Bypass Manutenzione SX",
@@ -1034,7 +1042,6 @@ drive_passwords = {
 "Ship Drive/Programs/Diagnostics": "DIAG-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
-"Ship Drive/Programs/FluxWallet": "FLUX-7815",
 "Ship Drive/Programs/LifeSupport": "LIFE-7815",
 "Ship Drive/Programs/Logbook": "LOGS-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
@@ -1046,6 +1053,7 @@ drive_passwords = {
 }
 installed_apps = Array[Dictionary]([{
 "description": "Controlli di manovra e navigazione nave",
+"drive_folder": "Programs/FlightControls",
 "icon_color": Color(1, 0.6, 0.2, 1),
 "id": "flight_control",
 "roles": ["Capitano", "Pilota", "Factotum", "Captain", "Pilot"],
@@ -1053,6 +1061,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Flight Control"
 }, {
 "description": "Telecamere esterne dell'astronave",
+"drive_folder": "Programs/Cams",
 "icon_color": Color(0.3, 0.9, 0.6, 1),
 "id": "cams",
 "roles": ["Capitano", "Pilota", "Soldato", "Tattico", "Tattico / Armi", "Sensori / Radar", "Factotum", "Captain", "Pilot", "Soldier"],
@@ -1060,6 +1069,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Cams"
 }, {
 "description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+"drive_folder": "Programs/PowerGrid",
 "icon_color": Color(0.95, 0.85, 0.2, 1),
 "id": "power_grid",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
@@ -1067,6 +1077,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Power Grid"
 }, {
 "description": "Robottino manutenzione e schema condotti 2D",
+"drive_folder": "Programs/DuctDrone",
 "icon_color": Color(1, 0.85, 0.2, 1),
 "id": "duct_drone",
 "roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"],
@@ -1074,6 +1085,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Duct Drone"
 }, {
 "description": "Matrice deflettori a 4 quadranti e scudi energetici",
+"drive_folder": "Programs/ShieldMatrix",
 "icon_color": Color(0.2, 0.6, 1, 1),
 "id": "shield_matrix",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Captain", "Engineer"],
@@ -1081,6 +1093,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Shield Matrix"
 }, {
 "description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
+"drive_folder": "Programs/LifeSupport",
 "icon_color": Color(0.2, 0.7, 0.9, 1),
 "id": "life_support",
 "roles": ["Capitano", "Ingegnere", "Factotum", "Engineer", "Captain"],
@@ -1088,6 +1101,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Supporto Vitale & Atmosfera"
 }, {
 "description": "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG",
+"drive_folder": "Programs/Weapons",
 "icon_color": Color(0.95, 0.25, 0.25, 1),
 "id": "weapons",
 "roles": ["Capitano", "Soldato", "Tattico", "Tattico / Armi", "Factotum", "Captain", "Soldier"],
@@ -1095,6 +1109,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Tactical Weapons"
 }, {
 "description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
+"drive_folder": "Programs/Sensors",
 "icon_color": Color(0.2, 0.8, 0.4, 1),
 "id": "sensors",
 "roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Factotum", "Soldier", "Captain"],
@@ -1102,6 +1117,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Array Sensori & Mappa Tattica"
 }, {
 "description": "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari",
+"drive_folder": "Programs/Comms",
 "icon_color": Color(0.4, 0.8, 1, 1),
 "id": "comms",
 "roles": ["Capitano", "Hacker", "Factotum", "Captain"],
@@ -1109,6 +1125,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Comms & Electronic War"
 }, {
 "description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
+"drive_folder": "Programs/Diagnostics",
 "icon_color": Color(0.2, 0.9, 0.7, 1),
 "id": "diagnostics",
 "roles": ["Capitano", "Hacker", "Ingegnere", "Factotum", "Captain", "Engineer"],
@@ -1116,6 +1133,7 @@ installed_apps = Array[Dictionary]([{
 "title": "System Diagnostics"
 }, {
 "description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
+"drive_folder": "Programs/Logbook",
 "icon_color": Color(0.8, 0.7, 0.2, 1),
 "id": "logbook",
 "roles": ["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Factotum", "Captain", "Pilot", "Engineer", "Soldier"],
@@ -1123,6 +1141,7 @@ installed_apps = Array[Dictionary]([{
 "title": "Registro di Bordo & Obiettivi"
 }, {
 "description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
+"drive_folder": "Programs/ServiceDrone",
 "icon_color": Color(0.9, 0.5, 0.2, 1),
 "id": "service_drone",
 "roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"],
@@ -1130,16 +1149,10 @@ installed_apps = Array[Dictionary]([{
 "title": "Drone di Servizio EVA"
 }, {
 "description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
+"drive_folder": "Programs/CargoBay",
 "icon_color": Color(0.95, 0.65, 0.15, 1),
 "id": "cargo_bay",
 "roles": ["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"],
 "scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
 "title": "Stiva Cargo & FLUX"
-}, {
-"description": "Visualizzazione stato economico della nave e storico modificatori FLUX.",
-"icon_color": Color(0.95, 0.65, 0.15, 1),
-"id": "flux_wallet",
-"roles": ["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"],
-"scene_path": "res://Applications/FluxWallet/flux_wallet.tscn",
-"title": "Flux Wallet"
 }])

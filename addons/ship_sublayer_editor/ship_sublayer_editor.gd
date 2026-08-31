@@ -23,6 +23,8 @@ var tool_btn_group: ButtonGroup = ButtonGroup.new()
 var lbl_current_file: Label = null
 var btn_undo: Button = null
 var btn_redo: Button = null
+var btn_copy: Button = null
+var btn_paste: Button = null
 
 var btn_select: Button = null
 var btn_add_room: Button = null
@@ -32,6 +34,7 @@ var btn_add_junction: Button = null
 var btn_add_conduit: Button = null
 var btn_add_damage: Button = null
 var btn_delete: Button = null
+var opt_room_template: OptionButton = null
 
 var chk_layer_rooms: CheckBox = null
 var chk_layer_ducts: CheckBox = null
@@ -50,6 +53,7 @@ var lbl_zoom: Label = null
 
 # Inspector & Outliner
 var outliner_tree: Tree = null
+var software_list_vbox: VBoxContainer = null
 var prop_container: VBoxContainer = null
 var lbl_selected_title: Label = null
 var prop_editor_vbox: VBoxContainer = null
@@ -106,6 +110,7 @@ func load_blueprint(bp: ShipBlueprint, path: String = "") -> void:
 		lbl_current_file.tooltip_text = path
 		
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 	_show_blueprint_metadata_props()
 	_set_status_msg("Blueprint caricata con successo.")
@@ -114,6 +119,7 @@ func _on_blueprint_changed() -> void:
 	if canvas:
 		canvas.queue_redraw()
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 
 # --- GESTIONE UNDO / REDO ---
@@ -157,6 +163,7 @@ func undo() -> void:
 		canvas.queue_redraw()
 	
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 	if canvas:
 		_populate_property_editor(sel_type, sel_id, canvas._get_selected_element_data())
@@ -188,6 +195,7 @@ func redo() -> void:
 		canvas.queue_redraw()
 		
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 	if canvas:
 		_populate_property_editor(sel_type, sel_id, canvas._get_selected_element_data())
@@ -227,6 +235,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				redo()
 				get_viewport().set_input_as_handled()
 				return
+			elif key_event.keycode == KEY_C:
+				if canvas:
+					canvas.copy_selection()
+				get_viewport().set_input_as_handled()
+				return
+			elif key_event.keycode == KEY_V:
+				if canvas:
+					canvas.paste_selection()
+				get_viewport().set_input_as_handled()
+				return
 		
 		# Tasto Cancella / Backspace per eliminare l'elemento selezionato
 		if (key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE) and not is_ctrl:
@@ -237,6 +255,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				save_undo_state("Elimina " + canvas.selected_type)
 				canvas.delete_element(canvas.selected_type, canvas.selected_id)
 				_refresh_outliner()
+				_refresh_software_panel()
 				_update_stats_label()
 				_show_blueprint_metadata_props()
 				get_viewport().set_input_as_handled()
@@ -258,16 +277,27 @@ func _build_ui() -> void:
 	var toolbar := _create_toolbar()
 	main_vbox.add_child(toolbar)
 	
-	# 2. MAIN SPLIT (Pannello Tutti i Layer a sinistra, Canvas al centro, Inspector a destra)
+	# 2. MAIN SPLIT (Pannello Tabs a sinistra, Canvas al centro, Inspector a destra)
 	var main_hsplit := HSplitContainer.new()
 	main_hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_hsplit.split_offset = 280
 	main_vbox.add_child(main_hsplit)
 	
-	# Left Panel: Tutti i Layer (Outliner gerarchico e Creazione Rapida)
+	# Left Side: TabContainer per Outliner e Software Manager
+	var left_tabs := TabContainer.new()
+	left_tabs.custom_minimum_size = Vector2(280, 0)
+	main_hsplit.add_child(left_tabs)
+	
+	# Tab 1: Outliner (esistente)
 	var left_panel := _create_left_panel()
-	main_hsplit.add_child(left_panel)
+	left_panel.name = "Outliner"
+	left_tabs.add_child(left_panel)
+	
+	# Tab 2: Software Manager (nuovo)
+	var software_panel := _create_software_panel()
+	software_panel.name = "Software"
+	left_tabs.add_child(software_panel)
 	
 	# Sub Split: Canvas al centro e Inspector a destra
 	var right_hsplit := HSplitContainer.new()
@@ -286,11 +316,19 @@ func _build_ui() -> void:
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	canvas.element_selected.connect(_on_canvas_element_selected)
-	canvas.element_modified.connect(_on_canvas_element_modified)
+	canvas.element_modified.connect(func(elem_type, elem_id, elem_data):
+		_populate_property_editor(elem_type, elem_id, elem_data)
+		_refresh_outliner()
+		_refresh_software_panel()
+		_update_stats_label()
+	)
 	canvas.cursor_coords_changed.connect(_on_canvas_cursor_coords_changed)
 	canvas.action_committed.connect(_on_canvas_action_committed)
 	canvas.tool_changed.connect(_on_canvas_tool_changed)
 	canvas_panel.add_child(canvas)
+	
+	if opt_room_template and opt_room_template.get_item_count() > 0:
+		canvas.selected_room_template = opt_room_template.get_item_metadata(opt_room_template.selected if opt_room_template.selected >= 0 else 0)
 	
 	# Right Panel: Inspector Proprietà (Destra)
 	var right_panel := _create_right_panel()
@@ -369,12 +407,38 @@ func _create_toolbar() -> Control:
 	
 	row1.add_child(VSeparator.new())
 	
+	btn_copy = Button.new()
+	btn_copy.text = "📋 Copia"
+	btn_copy.tooltip_text = "Copia Elemento (Ctrl+C)"
+	btn_copy.pressed.connect(func(): if canvas: canvas.copy_selection())
+	row1.add_child(btn_copy)
+	
+	btn_paste = Button.new()
+	btn_paste.text = "📥 Incolla"
+	btn_paste.tooltip_text = "Incolla Elemento (Ctrl+V)"
+	btn_paste.pressed.connect(func(): if canvas: canvas.paste_selection())
+	row1.add_child(btn_paste)
+	
+	row1.add_child(VSeparator.new())
+	
 	# Strumenti di modifica (ToolButtons)
-	btn_select = _create_tool_button("🖐️ Sposta", ShipBlueprintCanvas.ToolMode.SELECT, true)
+	btn_select = _create_tool_button("🔍 Seleziona/Sposta", ShipBlueprintCanvas.ToolMode.SELECT, true)
 	row1.add_child(btn_select)
 	
 	btn_add_room = _create_tool_button("🔲 Stanza", ShipBlueprintCanvas.ToolMode.ADD_ROOM, false)
 	row1.add_child(btn_add_room)
+	
+	opt_room_template = OptionButton.new()
+	opt_room_template.tooltip_text = "Tipo di stanza da aggiungere"
+	opt_room_template.visible = false
+	for room_id in RoomDatabase.get_room_ids():
+		opt_room_template.add_item(RoomDatabase.get_room_name(room_id))
+		opt_room_template.set_item_metadata(opt_room_template.get_item_count() - 1, room_id)
+	opt_room_template.item_selected.connect(func(idx):
+		if canvas:
+			canvas.selected_room_template = opt_room_template.get_item_metadata(idx)
+	)
+	row1.add_child(opt_room_template)
 	
 	btn_add_duct = _create_tool_button("🔧 Condotto", ShipBlueprintCanvas.ToolMode.ADD_DUCT, false)
 	row1.add_child(btn_add_duct)
@@ -564,6 +628,181 @@ func _create_left_panel() -> Control:
 	
 	return panel
 
+func _create_software_panel() -> Control:
+	var panel := PanelContainer.new()
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+	
+	var header_hbox := HBoxContainer.new()
+	vbox.add_child(header_hbox)
+	
+	var lbl_header := Label.new()
+	lbl_header.text = "💾 Software Manager"
+	lbl_header.add_theme_font_size_override("font_size", 13)
+	lbl_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_hbox.add_child(lbl_header)
+	
+	var btn_add_sw := Button.new()
+	btn_add_sw.text = "➕ App"
+	btn_add_sw.tooltip_text = "Installa una nuova applicazione (.tres)"
+	btn_add_sw.pressed.connect(_on_btn_install_software_pressed)
+	header_hbox.add_child(btn_add_sw)
+	
+	var btn_add_pwd := Button.new()
+	btn_add_pwd.text = "➕ Pass"
+	btn_add_pwd.tooltip_text = "Aggiungi una nuova password di sistema"
+	btn_add_pwd.pressed.connect(_on_btn_add_drive_password_pressed)
+	header_hbox.add_child(btn_add_pwd)
+	
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(scroll)
+	
+	software_list_vbox = VBoxContainer.new()
+	software_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	software_list_vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(software_list_vbox)
+	
+	return panel
+
+func _refresh_software_panel() -> void:
+	if not software_list_vbox or not current_blueprint:
+		return
+		
+	for c in software_list_vbox.get_children():
+		c.queue_free()
+		
+	if current_blueprint.installed_apps.is_empty() and current_blueprint.drive_passwords.is_empty():
+		var lbl := Label.new()
+		lbl.text = "Nessuna app installata."
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_color_override("font_color", Color.GRAY)
+		software_list_vbox.add_child(lbl)
+		return
+		
+	var displayed_passwords := []
+
+	for app in current_blueprint.installed_apps:
+		var app_id: String = str(app.get("id", ""))
+		var title: String = str(app.get("title", app_id))
+		var scene_path: String = str(app.get("scene_path", ""))
+		
+		var item_bg := PanelContainer.new()
+		item_bg.add_theme_stylebox_override("panel", get_theme_stylebox("panel", "Tree"))
+		software_list_vbox.add_child(item_bg)
+		
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		item_bg.add_child(row)
+		
+		var lbl_title := Label.new()
+		lbl_title.text = "📦 " + title
+		lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl_title.add_theme_font_size_override("font_size", 11)
+		lbl_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		lbl_title.tooltip_text = "App ID: " + app_id
+		row.add_child(lbl_title)
+		
+		# Recupera la risorsa dell'applicazione per estrarre la password e i dati corretti
+		var app_res: AppResource = null
+		var res_path := scene_path.replace(".tscn", ".tres")
+		if ResourceLoader.exists(res_path):
+			app_res = load(res_path) as AppResource
+			
+		# Determina la chiave per identificare se questa password è già visualizzata
+		var pwd_key := ""
+		if app_res and not app_res.drive_folder.is_empty():
+			var folder_rel = app_res.drive_folder.trim_prefix("/").trim_suffix("/")
+			pwd_key = "Ship Drive/" + folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
+		else:
+			pwd_key = scene_path
+			
+		displayed_passwords.append(pwd_key)
+		
+		var edit_pwd := LineEdit.new()
+		# La password viene presa prioritariamente dal file risorsa come richiesto
+		if app_res:
+			edit_pwd.text = app_res.default_password
+		else:
+			edit_pwd.text = current_blueprint.drive_passwords.get(pwd_key, "")
+			
+		edit_pwd.custom_minimum_size = Vector2(80, 0)
+		edit_pwd.placeholder_text = "Pass"
+		edit_pwd.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		edit_pwd.add_theme_font_size_override("font_size", 10)
+		
+		edit_pwd.text_submitted.connect((func(new_pwd: String, key: String, t: String):
+			save_undo_state("Cambia Password " + t)
+			if new_pwd.is_empty():
+				current_blueprint.remove_drive_password(key)
+			else:
+				current_blueprint.set_drive_password(key, new_pwd)
+			_refresh_software_panel()
+		).bind(pwd_key, title))
+		row.add_child(edit_pwd)
+		
+		var btn_uninstall := Button.new()
+		btn_uninstall.text = "🗑️"
+		btn_uninstall.tooltip_text = "Disinstalla software"
+		btn_uninstall.pressed.connect((func(id: String, t: String):
+			save_undo_state("Disinstalla " + t)
+			current_blueprint.uninstall_app_by_id(id)
+			_refresh_software_panel()
+			_refresh_outliner()
+		).bind(app_id, title))
+		row.add_child(btn_uninstall)
+
+	# Password di Sistema (quelle non associate ad app specifiche)
+	var system_passwords := []
+	for k in current_blueprint.drive_passwords.keys():
+		if not k in displayed_passwords:
+			system_passwords.append(k)
+			
+	if not system_passwords.is_empty():
+		for skey in system_passwords:
+			var item_bg := PanelContainer.new()
+			item_bg.add_theme_stylebox_override("panel", get_theme_stylebox("panel", "Tree"))
+			software_list_vbox.add_child(item_bg)
+			
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 6)
+			item_bg.add_child(row)
+			
+			var slbl := Label.new()
+			slbl.text = "🔑 " + skey.get_file()
+			slbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			slbl.add_theme_font_size_override("font_size", 11)
+			slbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			slbl.tooltip_text = skey
+			row.add_child(slbl)
+			
+			var sedit := LineEdit.new()
+			sedit.text = current_blueprint.drive_passwords[skey]
+			sedit.custom_minimum_size = Vector2(80, 0)
+			sedit.placeholder_text = "Pass"
+			sedit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+			sedit.add_theme_font_size_override("font_size", 10)
+			
+			sedit.text_submitted.connect((func(v, k):
+				save_undo_state("Cambia Password Sistema")
+				current_blueprint.set_drive_password(k, v)
+				_refresh_software_panel()
+			).bind(skey))
+			row.add_child(sedit)
+			
+			var sdel := Button.new()
+			sdel.text = "🗑️"
+			sdel.tooltip_text = "Rimuovi password di sistema"
+			sdel.pressed.connect((func(k):
+				save_undo_state("Rimuovi Password Sistema")
+				current_blueprint.remove_drive_password(k)
+				_refresh_software_panel()
+			).bind(skey))
+			row.add_child(sdel)
+
 func _create_right_panel() -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(280, 0)
@@ -673,9 +912,13 @@ func _on_canvas_element_modified(elem_type: String, elem_id: String, elem_data: 
 func _on_canvas_action_committed(action_name: String) -> void:
 	save_undo_state(action_name)
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 
 func _on_canvas_tool_changed(new_tool: int) -> void:
+	if opt_room_template:
+		opt_room_template.visible = (new_tool == ShipBlueprintCanvas.ToolMode.ADD_ROOM)
+		
 	if new_tool == ShipBlueprintCanvas.ToolMode.SELECT and btn_select:
 		btn_select.button_pressed = true
 
@@ -747,8 +990,6 @@ func _show_blueprint_metadata_props() -> void:
 	_add_flux_modifiers_editor()
 	prop_editor_vbox.add_child(HSeparator.new())
 	
-	_add_passwords_editor()
-
 func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Dictionary) -> void:
 	_clear_prop_editor()
 	if elem_type.is_empty():
@@ -1073,12 +1314,14 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 				app["id"] = v
 				current_blueprint.emit_changed()
 				_refresh_outliner()
+				_refresh_software_panel()
 			)
 			_add_string_field("Titolo Menu:", str(app.get("title", "")), func(v):
 				save_undo_state("Titolo App Mainframe")
 				app["title"] = v
 				current_blueprint.emit_changed()
 				_refresh_outliner()
+				_refresh_software_panel()
 			)
 			_add_string_field("Descrizione:", str(app.get("description", "")), func(v):
 				save_undo_state("Descrizione App Mainframe")
@@ -1111,6 +1354,7 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 		elif elem_type == "installed_app":
 			current_blueprint.remove_installed_app(elem_id)
 			_refresh_outliner()
+			_refresh_software_panel()
 			_update_stats_label()
 			_show_blueprint_metadata_props()
 		else:
@@ -1352,7 +1596,7 @@ func _add_flux_modifiers_editor() -> void:
 	var v_box := VBoxContainer.new()
 	var l_main := Label.new()
 	l_main.text = "Modificatori FLUX:"
-	l_main.theme_override_colors/font_color = Color.GOLD
+	l_main.add_theme_color_override("font_color", Color.GOLD)
 	v_box.add_child(l_main)
 	
 	var list_vbox := VBoxContainer.new()
@@ -1368,31 +1612,31 @@ func _add_flux_modifiers_editor() -> void:
 		spin.step = 1
 		spin.value = mod.get("value", 0)
 		spin.custom_minimum_size.x = 80
-		spin.value_changed.connect(func(v):
-			mod["value"] = int(v)
+		spin.value_changed.connect((func(v, m):
+			m["value"] = int(v)
 			current_blueprint.emit_changed()
-		)
+		).bind(mod))
 		h.add_child(spin)
 		
 		var owner_edit := LineEdit.new()
 		owner_edit.text = mod.get("owner", "")
 		owner_edit.placeholder_text = "Proprietario"
 		owner_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		owner_edit.text_changed.connect(func(v):
-			mod["owner"] = v
+		owner_edit.text_changed.connect((func(v, m):
+			m["owner"] = v
 			current_blueprint.emit_changed()
-		)
+		).bind(mod))
 		h.add_child(owner_edit)
 		
 		var del_btn := Button.new()
 		del_btn.text = "X"
 		del_btn.modulate = Color.CRIMSON
-		del_btn.pressed.connect(func():
+		del_btn.pressed.connect((func(index):
 			save_undo_state("Rimuovi Modificatore")
-			current_blueprint.flux_modifiers.remove_at(i)
+			current_blueprint.flux_modifiers.remove_at(index)
 			current_blueprint.emit_changed()
 			_show_blueprint_metadata_props()
-		)
+		).bind(i))
 		h.add_child(del_btn)
 		list_vbox.add_child(h)
 		
@@ -1400,10 +1644,10 @@ func _add_flux_modifiers_editor() -> void:
 		reason_edit.text = mod.get("reason", "")
 		reason_edit.placeholder_text = "Causale/Motivazione"
 		reason_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		reason_edit.text_changed.connect(func(v):
-			mod["reason"] = v
+		reason_edit.text_changed.connect((func(v, m):
+			m["reason"] = v
 			current_blueprint.emit_changed()
-		)
+		).bind(mod))
 		list_vbox.add_child(reason_edit)
 		list_vbox.add_child(HSeparator.new())
 	
@@ -1437,19 +1681,19 @@ func _add_passwords_editor() -> void:
 		ed_pwd.text = str(current_blueprint.drive_passwords[path])
 		ed_pwd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var cur_path: String = str(path)
-		ed_pwd.text_changed.connect(func(v: String):
-			save_undo_state("Modifica Password " + cur_path)
-			current_blueprint.drive_passwords[cur_path] = v
+		ed_pwd.text_changed.connect((func(v: String, cp):
+			save_undo_state("Modifica Password " + cp)
+			current_blueprint.drive_passwords[cp] = v
 			current_blueprint.emit_changed()
-		)
+		).bind(cur_path))
 		var btn_del_pwd := Button.new()
 		btn_del_pwd.text = "🗑️"
 		btn_del_pwd.tooltip_text = "Rimuovi Password"
-		btn_del_pwd.pressed.connect(func():
+		btn_del_pwd.pressed.connect((func(cp):
 			save_undo_state("Rimuovi Password")
-			current_blueprint.remove_drive_password(cur_path)
+			current_blueprint.remove_drive_password(cp)
 			_show_blueprint_metadata_props()
-		)
+		).bind(cur_path))
 		h.add_child(lbl_p)
 		h.add_child(ed_pwd)
 		h.add_child(btn_del_pwd)
@@ -1773,7 +2017,7 @@ func _on_btn_add_drive_password_pressed() -> void:
 	save_undo_state("Aggiungi Password")
 	var path_key := "Ship Drive/Programs/SecureFolder_%d" % (current_blueprint.drive_passwords.size() + 1)
 	current_blueprint.set_drive_password(path_key, "SEC-%04d" % randi_range(1000, 9999))
-	_show_blueprint_metadata_props()
+	_refresh_software_panel()
 	_set_status_msg("Nuova password cartella creata.")
 
 func _on_btn_add_app_pressed() -> void:
@@ -1790,9 +2034,17 @@ func _on_btn_add_app_pressed() -> void:
 	}
 	current_blueprint.set_installed_app(app_id, new_app)
 	_refresh_outliner()
+	_refresh_software_panel()
 	_update_stats_label()
 	_populate_property_editor("installed_app", app_id, new_app)
 	_set_status_msg("App creata: %s" % app_id)
+
+func _on_btn_install_software_pressed() -> void:
+	_pending_file_action = "install_software"
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	file_dialog.filters = ["*.tres ; App Resources"]
+	file_dialog.current_dir = "res://Applications/"
+	file_dialog.popup_centered(Vector2i(700, 500))
 
 # --- AZIONI TOOLBAR & SALVATAGGIO ---
 
@@ -1846,6 +2098,7 @@ func _on_confirm_reset_default() -> void:
 		current_blueprint.create_default_ship()
 		_save_to_path(DEFAULT_BLUEPRINT_PATH)
 		_refresh_outliner()
+		_refresh_software_panel()
 		_update_stats_label()
 		canvas.reset_view()
 		_set_status_msg("Blueprint ripristinata ai valori standard Dark Nova.")
@@ -1860,6 +2113,18 @@ func _on_file_dialog_file_selected(path: String) -> void:
 					_set_status_msg("Caricata: %s" % path)
 		"save_tres":
 			_save_to_path(path)
+		"install_software":
+			if ResourceLoader.exists(path):
+				var res = ResourceLoader.load(path)
+				if res is AppResource:
+					save_undo_state("Installa Software " + res.title)
+					current_blueprint.install_app_resource(res)
+					_refresh_software_panel()
+					_refresh_outliner()
+					_update_stats_label()
+					_set_status_msg("Installata: %s" % res.title)
+				else:
+					_set_status_msg("Il file selezionato non è una risorsa AppResource valida.")
 		"export_json":
 			if current_blueprint:
 				var err := current_blueprint.export_to_json(path)
@@ -1873,6 +2138,7 @@ func _on_file_dialog_file_selected(path: String) -> void:
 				var err := current_blueprint.import_from_json(path)
 				if err == OK:
 					_refresh_outliner()
+					_refresh_software_panel()
 					_update_stats_label()
 					canvas.reset_view()
 					_set_status_msg("Importato JSON: %s" % path)
