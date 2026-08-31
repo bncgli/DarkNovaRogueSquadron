@@ -7,7 +7,7 @@
   - **Criteri di accettazione**: README.md aggiornato.
   - **Stato**: Completato (2026-08-31).
 
-- [ ] **TASK-002**: Creazione File di Log Task
+- [x] **TASK-002**: Creazione File di Log Task
   - **Descrizione**: Creare un file `docs/task_log.md` per tracciare i task.
   - **Criteri di accettazione**: File creato con intestazione data.
-  - **Stato**: In attesa.
+  - **Stato**: Completato (2026-08-31).

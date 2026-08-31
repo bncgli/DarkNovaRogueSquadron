@@ -4,3 +4,4 @@ res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
 res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd
 res://Scenes/Autoloads/SoftwareManager/app_resource.gd
 res://Outside/ShipSublayer/default_ship_blueprint.tres
+res://addons/ship_sublayer_editor/ship_blueprint_canvas.gd
