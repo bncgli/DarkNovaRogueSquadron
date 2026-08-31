@@ -39,6 +39,8 @@ signal blueprint_changed()
 		drone_spawn_heading = val
 		emit_changed()
 
+@export var flux: int = 100 
+
 # --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
 # Ogni elemento: { "id": str, "name": str, "rect": Rect2, "color": Color, "border_color": Color, "category": str }
 @export var rooms: Array[Dictionary] = []:
@@ -786,7 +788,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Mappa telemetrica spaziale a lungo raggio e spettrometria",
 			"scene_path": "res://Applications/Sensors/sensors_app.tscn",
 			"icon_color": Color(0.2, 0.8, 0.4, 1.0),
-			"roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Factotum", "Soldier", "Captain"]
+			"roles": ["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Factotum", "Soldier", "Captain"]
 		},
 		{
 			"id": "comms",
@@ -802,7 +804,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
 			"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
 			"icon_color": Color(0.2, 0.9, 0.7, 1.0),
-			"roles": ["Capitano", "Hacker", "Factotum", "Captain"]
+			"roles": ["Capitano", "Hacker", "Ingegnere", "Factotum", "Captain", "Engineer"]
 		},
 		{
 			"id": "logbook",
@@ -810,7 +812,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
 			"scene_path": "res://Applications/Logbook/logbook_app.tscn",
 			"icon_color": Color(0.8, 0.7, 0.2, 1.0),
-			"roles": ["Captain", "Factotum", "Capitano"]
+			"roles": ["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Factotum", "Captain", "Pilot", "Engineer", "Soldier"]
 		},
 		{
 			"id": "service_drone",
@@ -818,7 +820,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser",
 			"scene_path": "res://Applications/ServiceDrone/service_drone_app.tscn",
 			"icon_color": Color(0.9, 0.5, 0.2, 1.0),
-			"roles": ["Capitano", "Factotum", "Captain"]
+			"roles": ["Capitano", "Ingegnere", "Hacker", "Factotum", "Captain", "Engineer"]
 		},
 		{
 			"id": "cargo_bay",
@@ -826,7 +828,7 @@ func _init_default_installed_apps() -> void:
 			"description": "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net",
 			"scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
 			"icon_color": Color(0.95, 0.65, 0.15, 1.0),
-			"roles": ["Capitano", "Factotum", "Captain"]
+			"roles": ["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"]
 		}
 	]
 
@@ -997,7 +999,7 @@ func remove_installed_app(app_id: String) -> bool:
 func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var clean_role := role_name.strip_edges()
-	var is_super := is_solo or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Factotum" or clean_role == "HOST"
+	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Factotum" or clean_role == "HOST"
 	
 	for app in installed_apps:
 		if is_super:
@@ -1033,8 +1035,8 @@ func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictio
 	
 	return result
 
-## Installa una ShipAppResource nel blueprint registrando app, file di drive e password
-func install_app_resource(res: ShipAppResource) -> void:
+## Installa una AppResource nel blueprint registrando app, file di drive e password
+func install_app_resource(res: AppResource) -> void:
 	if not res:
 		return
 	set_installed_app(res.app_id, res.to_dict())
@@ -1046,21 +1048,84 @@ func install_app_resource(res: ShipAppResource) -> void:
 		var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
 		set_drive_password(full_folder, res.default_password)
 
-## Restituisce le ShipAppResource installate (usando ShipSoftwareManager o ricostruendole dai dati)
-func get_installed_app_resources() -> Array[ShipAppResource]:
-	var result: Array[ShipAppResource] = []
+## Disinstalla una AppResource dal blueprint rimuovendo app, i suoi file di drive e la password
+func uninstall_app_resource(res: AppResource) -> bool:
+	if not res:
+		return false
+	var removed := remove_installed_app(res.app_id)
+	
+	# Rimuovi file associati alla risorsa
+	var df_list := res.get_formatted_drive_files("Ship Drive")
+	for df in df_list:
+		remove_drive_file(df["path"])
+		
+	# Rimuovi anche eventuali file nella cartella dell'applicazione
+	if not res.drive_folder.is_empty():
+		var folder_rel: String = res.drive_folder.trim_prefix("/").trim_suffix("/")
+		var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
+		remove_drive_password(full_folder)
+		
+		# Rimuovi tutti i drive_files che iniziano con la cartella dell'app
+		var prefix := full_folder + "/"
+		var i := drive_files.size() - 1
+		while i >= 0:
+			var f_path: String = drive_files[i].get("path", "")
+			if f_path.begins_with(prefix) or f_path == full_folder:
+				drive_files.remove_at(i)
+				emit_changed()
+			i -= 1
+			
+	return removed
+
+## Disinstalla un'app tramite ID rimuovendo l'app, i relativi file di drive e password
+func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
+	var res := app_res
+	if not res:
+		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
+		if ssm and ssm.has_method("get_registered_app"):
+			res = ssm.get_registered_app(app_id)
+	if not res:
+		var res_path := "res://Applications/%s/%s_app.tres" % [app_id.to_pascal_case(), app_id]
+		if ResourceLoader.exists(res_path):
+			res = load(res_path) as AppResource
+			
+	if res:
+		return uninstall_app_resource(res)
+		
+	# Fallback basato sui metadati presenti in installed_apps
+	var app_dict := get_installed_app_by_id(app_id)
+	var removed := remove_installed_app(app_id)
+	if not app_dict.is_empty():
+		var folder: String = str(app_dict.get("drive_folder", ""))
+		if not folder.is_empty():
+			var folder_rel := folder.trim_prefix("/").trim_suffix("/")
+			var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
+			remove_drive_password(full_folder)
+			var prefix := full_folder + "/"
+			var i := drive_files.size() - 1
+			while i >= 0:
+				var f_path: String = drive_files[i].get("path", "")
+				if f_path.begins_with(prefix) or f_path == full_folder:
+					drive_files.remove_at(i)
+					emit_changed()
+				i -= 1
+	return removed
+
+## Restituisce le AppResource installate (usando ShipSoftwareManager o ricostruendole dai dati)
+func get_installed_app_resources() -> Array[AppResource]:
+	var result: Array[AppResource] = []
 	for app_dict in installed_apps:
 		var app_id: String = str(app_dict.get("id", ""))
 		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
-		var res: ShipAppResource = null
+		var res: AppResource = null
 		if ssm and ssm.has_method("get_registered_app"):
 			res = ssm.get_registered_app(app_id)
 		if not res:
 			var res_path := "res://Applications/%s/%s_app.tres" % [app_id.to_pascal_case(), app_id]
 			if ResourceLoader.exists(res_path):
-				res = load(res_path) as ShipAppResource
+				res = load(res_path) as AppResource
 		if not res:
-			res = ShipAppResource.new()
+			res = AppResource.new()
 			res.app_id = app_id
 			res.title = str(app_dict.get("title", app_id))
 			res.description = str(app_dict.get("description", ""))
@@ -1073,10 +1138,10 @@ func get_installed_app_resources() -> Array[ShipAppResource]:
 		result.append(res)
 	return result
 
-## Restituisce le ShipAppResource autorizzate per il ruolo specificato
-func get_app_resources_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppResource]:
+## Restituisce le AppResource autorizzate per il ruolo specificato
+func get_app_resources_for_role(role_name: String, is_solo: bool = false) -> Array[AppResource]:
 	var all_res := get_installed_app_resources()
-	var filtered: Array[ShipAppResource] = []
+	var filtered: Array[AppResource] = []
 	for r in all_res:
 		if r.is_role_allowed(role_name, is_solo):
 			filtered.append(r)

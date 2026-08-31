@@ -495,14 +495,14 @@ Ogni nuova applicazione pianificata nella Roadmap deve rispettare rigorosamente 
 Applications/NomeApplicazione/
 ├── nome_app.tscn           # Scena UI (Control) con %DisconnectedOverlay
 ├── nome_app.gd             # Controller con parsing .DAT, hot-reloading e RBAC
-├── nome_app.tres           # Risorsa ShipAppResource o TerminalAppResource
+├── nome_app.tres           # Risorsa unificata AppResource
 ├── Componenti/             # Sotto-scene, widget modulari o finestre figlie
 └── tests/test_nome_app.gd  # Test headless per verificare overlay offline/online, risorsa .tres, RBAC e .DAT
 ```
 
 ### Regole Vincolanti per lo Sviluppo:
 1. **Branch Dedicato**: Creare e utilizzare sempre il branch `applications/[NomeApp]` prima di apportare modifiche (es. `applications/Weapons`).
-2. **Definizione Risorsa `.tres`**: Creare la risorsa esportabile (`ShipAppResource` per app di bordo o `TerminalAppResource` per app locali) impostando ID, metadati, percorsi scene, dimensioni finestra, assorbimento energetico e array dei ruoli RBAC.
+2. **Definizione Risorsa `.tres`**: Creare la risorsa unificata esportabile (`AppResource`) impostando ID, metadati, percorsi scene, dimensioni finestra, assorbimento energetico e array dei ruoli RBAC (o flag locali).
 3. **Ciclo di Vita e Overlay Offline**: Tutte le applicazioni della nave devono includere il nodo `%DisconnectedOverlay` ed essere disabilitate prima del decollo (`not SpaceWorldManager.is_ship_connected()`).
 4. **Cartella Protetta e File `.dat`**:
    - Salvataggio in `Ship Drive/Programs/[NomeApp]/` con password predefinita dal Cheat-Sheet Master (Sezione 2.6).

@@ -2,19 +2,23 @@ class_name TerminalSoftwareManagerSingleton
 extends Node
 
 ## Singleton / Manager per la gestione dei software e utility locali del Terminale/GodotOS.
-## Registra le risorse `TerminalAppResource`, popola file di configurazione locali
+## Registra le risorse `AppResource`, popola file di configurazione locali
 ## su `TerminalDriveManager` e gestisce l'avvio delle utility di sistema.
 
-signal terminal_app_installed(app_res: TerminalAppResource)
+signal terminal_app_installed(app_res: AppResource)
 signal terminal_app_uninstalled(app_id: String)
 signal registry_changed()
 
-## Mappa di tutti i software locali del terminale { app_id: TerminalAppResource }
+## Mappa di tutti i software locali del terminale { app_id: AppResource }
 var _registered_apps: Dictionary = {}
 
 ## Percorsi predefiniti delle risorse software del terminale
 const DEFAULT_TERMINAL_APP_PATHS: Array[String] = [
-	"res://Applications/Terminal/terminal_app.tres"
+	"res://Applications/Terminal/terminal_app.tres",
+	"res://Games/Godotris/godotris_app.tres",
+	"res://Games/Pong/pong_app.tres",
+	"res://Games/Snake/snake_app.tres",
+	"res://Games/Super Bit Boy/super_bit_boy_app.tres"
 ]
 
 func _ready() -> void:
@@ -25,15 +29,52 @@ func _load_default_catalog() -> void:
 	for path in DEFAULT_TERMINAL_APP_PATHS:
 		if ResourceLoader.exists(path):
 			var res := load(path)
-			if res is TerminalAppResource:
+			if res is AppResource:
 				register_app(res)
 
-## Registra un'applicazione locale del terminale
-func register_app(app_res: TerminalAppResource) -> void:
+## Registra un'applicazione locale del terminale ed eventualmente ne popola i file
+func register_app(app_res: AppResource) -> void:
 	if not app_res or app_res.app_id.is_empty():
 		return
 	_registered_apps[app_res.app_id] = app_res
 	registry_changed.emit()
+
+## Installa una nuova app terminale popolandone file e password sul Terminal Drive
+func install_terminal_app(app_res: AppResource) -> void:
+	if not app_res:
+		return
+	register_app(app_res)
+	var tdm := get_node_or_null("/root/TerminalDriveManager")
+	if tdm:
+		tdm.ensure_drive_exists()
+	populate_terminal_drive_for_app(app_res)
+	terminal_app_installed.emit(app_res)
+
+## Disinstalla un'applicazione locale rimuovendone i file di configurazione e la password
+func uninstall_terminal_app(app_id: String) -> bool:
+	var app_res := get_registered_app(app_id)
+	if not app_res:
+		return false
+	
+	# Rimuovi file da disco
+	var files := app_res.get_formatted_drive_files("Terminal Drive")
+	for file_data in files:
+		var path: String = file_data["path"]
+		var abs_path := "user://files/%s" % path
+		if FileAccess.file_exists(abs_path):
+			DirAccess.remove_absolute(abs_path)
+			
+	# Rimuovi password se presente
+	if not app_res.drive_folder.is_empty():
+		var fpm := get_node_or_null("/root/FolderPasswordManager")
+		if fpm and fpm.has_method("remove_password"):
+			var folder_rel: String = app_res.drive_folder.trim_prefix("/").trim_suffix("/")
+			var full_folder := "Terminal Drive/%s" % folder_rel if not folder_rel.begins_with("Terminal Drive/") else folder_rel
+			fpm.remove_password(full_folder)
+			
+	unregister_app(app_id)
+	terminal_app_uninstalled.emit(app_id)
+	return true
 
 ## Rimuove un'applicazione dal registro
 func unregister_app(app_id: String) -> void:
@@ -42,18 +83,18 @@ func unregister_app(app_id: String) -> void:
 		registry_changed.emit()
 
 ## Recupera una risorsa app del terminale per ID
-func get_registered_app(app_id: String) -> TerminalAppResource:
+func get_registered_app(app_id: String) -> AppResource:
 	return _registered_apps.get(app_id, null)
 
 ## Restituisce tutte le risorse del terminale registrate
-func get_all_registered_apps() -> Array[TerminalAppResource]:
-	var list: Array[TerminalAppResource] = []
+func get_all_registered_apps() -> Array[AppResource]:
+	var list: Array[AppResource] = []
 	for k in _registered_apps:
 		list.append(_registered_apps[k])
 	return list
 
 ## Popola i file di configurazione predefiniti nel Terminal Drive
-func populate_terminal_drive_for_app(app_res: TerminalAppResource) -> void:
+func populate_terminal_drive_for_app(app_res: AppResource) -> void:
 	if not app_res:
 		return
 		

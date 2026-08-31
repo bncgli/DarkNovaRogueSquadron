@@ -13,6 +13,10 @@ Aside from that, GodotOS is also meant to be a hub for small games and experienc
 * Try the web version on [Itch.io page](https://popcar2.itch.io/godotos)
 * Download all versions from the [releases page](https://github.com/popcar2/GodotOS/releases)
 
+# Test Pipeline
+
+Il sistema di task automatici è attivo per monitorare e gestire il flusso di sviluppo del progetto.
+
 # Credits
 
 * GodotOS was made by me, popcar2.

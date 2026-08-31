@@ -166,19 +166,19 @@ func _run_all_tests() -> void:
 	print("✔ Scrittura e salvataggio note su drive validati")
 	
 	# =========================================================================
-	# TEST 5: RISORSA SHIPAPPRESOURCE E REGISTRAZIONE SHIPSOFTWAREMANAGER
+	# TEST 5: RISORSA APPRESOURCE E REGISTRAZIONE SHIPSOFTWAREMANAGER
 	# =========================================================================
-	print("\n--- TEST 5: ShipAppResource e ShipSoftwareManager ---")
+	print("\n--- TEST 5: AppResource e ShipSoftwareManager ---")
 	var ssm := get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
 	assert(ssm != null, "ShipSoftwareManager singleton deve essere attivo")
 	
-	var res: ShipAppResource = ssm.get_registered_app("logbook")
+	var res: AppResource = ssm.get_registered_app("logbook")
 	assert(res != null, "logbook_app.tres deve essere registrata nel catalogo ShipSoftwareManager")
 	assert(res.app_id == "logbook", "app_id deve corrispondere a 'logbook'")
 	assert(res.default_password == "LOGS-7815", "Password di default deve essere 'LOGS-7815'")
 	assert(res.power_draw_mw == 5.0, "power_draw_mw deve corrispondere a 5.0 MW")
 	assert(res.default_files.size() >= 2, "La risorsa deve contenere logbook_config.dat e journal_tuning.dat")
-	print("✔ Registrazione e metadati ShipAppResource validati con successo")
+	print("✔ Registrazione e metadati AppResource validati con successo")
 	
 	# =========================================================================
 	# TEST 6: PULIZIA SEGNALI SU _EXIT_TREE()

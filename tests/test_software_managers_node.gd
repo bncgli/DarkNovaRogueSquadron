@@ -18,7 +18,7 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 func _test_app_resource_hierarchy() -> void:
-	print("\n--- TEST 1: Gerarchia e Metodi delle Classi Risorsa ---")
+	print("\n--- TEST 1: Metodi e Proprietà di AppResource ---")
 	var base_res: AppResource = AppResource.new()
 	base_res.app_id = "test_base"
 	base_res.title = "Test App"
@@ -33,19 +33,19 @@ func _test_app_resource_hierarchy() -> void:
 	assert(files.size() == 1, "Deve generare 1 file formattato")
 	assert(files[0]["path"] == "Ship Drive/Programs/Test/config.dat", "Il percorso del file formattato non corrisponde: %s" % files[0]["path"])
 	
-	var ship_res: ShipAppResource = ShipAppResource.new()
+	var ship_res: AppResource = AppResource.new()
 	ship_res.app_id = "test_ship"
 	ship_res.roles = ["Pilota", "Ingegnere"]
 	assert(ship_res.is_role_allowed("Pilota"), "Pilota deve essere autorizzato")
 	assert(ship_res.is_role_allowed("Capitano"), "Capitano (super-ruolo) deve essere sempre autorizzato")
 	assert(not ship_res.is_role_allowed("Soldato"), "Soldato non deve essere autorizzato")
 	
-	var term_res: TerminalAppResource = TerminalAppResource.new()
+	var term_res: AppResource = AppResource.new()
 	term_res.app_id = "test_term"
 	term_res.is_system_app = true
 	var term_dict: Dictionary = term_res.to_dict()
 	assert(term_dict.get("is_system_app", false) == true, "Serializzazione to_dict deve includere is_system_app")
-	print("✔ Gerarchia AppResource, ShipAppResource e TerminalAppResource verificata")
+	print("✔ Funzionalità unificate di AppResource verificate")
 
 func _test_ship_software_manager_registry() -> void:
 	print("\n--- TEST 2: Catalogo Registrato ShipSoftwareManager ---")
@@ -60,7 +60,7 @@ func _test_ship_software_manager_registry() -> void:
 		"weapons", "shield_matrix", "diagnostics", "sensors"
 	]
 	for id: String in expected_ids:
-		var app: ShipAppResource = ssm.get_registered_app(id)
+		var app: AppResource = ssm.get_registered_app(id)
 		assert(app != null, "App '%s' deve essere presente nel catalogo registrato" % id)
 		assert(not app.title.is_empty(), "App '%s' deve avere un titolo valido" % id)
 		assert(not app.scene_path.is_empty(), "App '%s' deve avere un scene_path valido" % id)
@@ -71,7 +71,7 @@ func _test_terminal_software_manager_registry() -> void:
 	var tsm: Node = get_node_or_null("/root/TerminalSoftwareManager")
 	assert(tsm != null, "TerminalSoftwareManager autoload deve essere presente")
 	
-	var term_app: TerminalAppResource = tsm.get_registered_app("terminal")
+	var term_app: AppResource = tsm.get_registered_app("terminal")
 	assert(term_app != null, "App terminale locale 'terminal' deve essere presente")
 	assert(term_app.is_system_app == true, "Terminale locale deve avere is_system_app=true")
 	assert(term_app.default_files.size() >= 3, "Terminale deve definire almeno 3 file di configurazione predefiniti")
@@ -82,7 +82,7 @@ func _test_ship_software_manager_blueprint_integration() -> void:
 	var bp: ShipBlueprint = ShipBlueprint.new()
 	var ssm: Node = get_node_or_null("/root/ShipSoftwareManager")
 	
-	var custom_app: ShipAppResource = ShipAppResource.new()
+	var custom_app: AppResource = AppResource.new()
 	custom_app.app_id = "custom_ew_suite"
 	custom_app.title = "EW Combat Suite"
 	custom_app.description = "Suite avanzata di guerra elettronica"
@@ -104,11 +104,13 @@ func _test_ship_software_manager_blueprint_integration() -> void:
 	assert(bp.get_drive_password("Ship Drive/Programs/CustomEW") == "EW-9999", "Password drive deve essere salvata nella blueprint")
 	assert(not bp.get_drive_file_by_path("Ship Drive/Programs/CustomEW/ew_tuning.dat").is_empty(), "File drive deve essere registrato nella blueprint")
 	
-	# Test disinstallazione
+	# Test disinstallazione (verifica rimozione app, file e password dal blueprint)
 	var removed: bool = ssm.uninstall_app_from_blueprint("custom_ew_suite", bp)
 	assert(removed == true, "Disinstallazione deve avere esito positivo")
-	assert(bp.get_installed_app_by_id("custom_ew_suite").is_empty(), "App custom_ew_suite deve essere stata rimossa")
-	print("✔ Installazione e disinstallazione app tramite ShipSoftwareManager su ShipBlueprint verificate")
+	assert(bp.get_installed_app_by_id("custom_ew_suite").is_empty(), "App custom_ew_suite deve essere stata rimossa da installed_apps")
+	assert(bp.get_drive_password("Ship Drive/Programs/CustomEW").is_empty(), "Password drive deve essere stata rimossa dalla blueprint")
+	assert(bp.get_drive_file_by_path("Ship Drive/Programs/CustomEW/ew_tuning.dat").is_empty(), "File drive deve essere stato rimosso dalla blueprint")
+	print("✔ Installazione e disinstallazione app con copia/rimozione file e password su ShipBlueprint verificate")
 
 func _test_ship_software_manager_drive_population() -> void:
 	print("\n--- TEST 5: Popolamento File e Password su Ship Drive ---")
@@ -152,7 +154,7 @@ func _test_role_filtering_rbac() -> void:
 	var pilot_apps: Array = ssm.get_apps_for_role("Pilota")
 	var pilot_ids: Array[String] = []
 	for a in pilot_apps:
-		if a is ShipAppResource:
+		if a is AppResource:
 			pilot_ids.append(a.app_id)
 		elif a is Dictionary:
 			pilot_ids.append(str(a.get("id", "")))
@@ -163,7 +165,7 @@ func _test_role_filtering_rbac() -> void:
 	var eng_apps: Array = ssm.get_apps_for_role("Ingegnere")
 	var eng_ids: Array[String] = []
 	for a in eng_apps:
-		if a is ShipAppResource:
+		if a is AppResource:
 			eng_ids.append(a.app_id)
 		elif a is Dictionary:
 			eng_ids.append(str(a.get("id", "")))

@@ -107,17 +107,17 @@ func _run_all_tests() -> void:
 	# =========================================================================
 	# TEST 3: RISORSA E SOFTWARE MANAGER
 	# =========================================================================
-	print("\n--- TEST 3: Risorsa ShipAppResource e ShipSoftwareManager ---")
+	print("\n--- TEST 3: Risorsa AppResource e ShipSoftwareManager ---")
 	assert(ssm != null, "ShipSoftwareManager singleton deve essere attivo")
 	
-	var res: ShipAppResource = ssm.get_registered_app("service_drone")
+	var res: AppResource = ssm.get_registered_app("service_drone")
 	assert(res != null, "service_drone_app.tres deve essere registrata nel catalogo ShipSoftwareManager")
 	assert(res.app_id == "service_drone", "L'ID della risorsa deve essere 'service_drone'")
 	assert(res.title == "Drone di Servizio EVA", "Il titolo della risorsa deve corrispondere")
 	assert(res.power_draw_mw == 80.0, "L'assorbimento energetico deve essere 80.0 MW")
 	assert(res.default_password == "SERV-7815", "La password di default deve essere 'SERV-7815'")
 	assert(res.required_subsystems.has("service_bay"), "Deve richiedere il sottosistema 'service_bay'")
-	print("✔ Registrazione e metadati ShipAppResource validati con successo")
+	print("✔ Registrazione e metadati AppResource validati con successo")
 	
 	# =========================================================================
 	# TEST 4: FILE .DAT, PARSING E HOT-RELOADING

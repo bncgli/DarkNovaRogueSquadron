@@ -224,9 +224,9 @@ func _run_all_tests() -> void:
 	print("✔ Meccanica Hacker violazione ICE ed estrazione dati finanziari S-Net verificata")
 	
 	# =========================================================================
-	# TEST 7: CARGO BAY APP UI & SHIP APP RESOURCE INTEGRITY
+	# TEST 7: CARGO BAY APP UI & APP RESOURCE INTEGRITY
 	# =========================================================================
-	print("\n--- TEST 7: Integrazione Scena UI CargoBayApp e ShipAppResource ---")
+	print("\n--- TEST 7: Integrazione Scena UI CargoBayApp e AppResource ---")
 	var app_scene_res: PackedScene = load("res://Applications/CargoBay/cargo_bay_app.tscn")
 	assert(app_scene_res != null, "La scena cargo_bay_app.tscn deve essere caricata con successo")
 	
@@ -243,12 +243,12 @@ func _run_all_tests() -> void:
 	assert(cargo_app.snet_disk_list != null, "snet_disk_list presente")
 	assert(cargo_app.btn_hack_ice != null, "btn_hack_ice presente")
 	
-	# Verifica risorsa ShipAppResource
-	var app_tres := load("res://Applications/CargoBay/cargo_bay_app.tres") as ShipAppResource
+	# Verifica risorsa AppResource
+	var app_tres := load("res://Applications/CargoBay/cargo_bay_app.tres") as AppResource
 	assert(app_tres != null, "La risorsa cargo_bay_app.tres deve essere caricata")
 	assert(app_tres.app_id == "cargo_bay", "app_id deve essere 'cargo_bay'")
 	assert(app_tres.default_password == "CARG-7815", "Password di debug deve essere CARG-7815")
-	print("✔ UI CargoBayApp e configurazione ShipAppResource verificate con successo")
+	print("✔ UI CargoBayApp e configurazione AppResource verificate con successo")
 	
 	print("\n=======================================================")
 	print("=== TUTTI I TEST FLUX ECONOMY & CARGO BAY COMPLETATI CON SUCCESSO! ===")

@@ -1,6 +1,6 @@
 res://Scenes/Main/MainScene.tscn
+res://Outside/ShipSublayer/ship_blueprint.gd
+res://Scenes/Autoloads/SoftwareManager/ship_software_manager.gd
+res://Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd
+res://Scenes/Autoloads/SoftwareManager/app_resource.gd
 res://Outside/ShipSublayer/default_ship_blueprint.tres
-res://Applications/Terminal/terminal_theme.tres
-res://addons/ship_sublayer_editor/ship_sublayer_editor.gd
-res://tests/test_ship_sublayer_editor.gd
-res://Outside/ShipSublayer/dark_nova_blueprint.tres

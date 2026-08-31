@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="AppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_godotris"]
+
+[resource]
+script = ExtResource("1_godotris")
+is_system_app = false
+terminal_command = "godotris"
+is_pinned_to_taskbar = false
+app_id = "godotris"
+title = "Godotris"
+description = "Classico gioco di blocchi a incastro stile Tetris per terminali di bordo"
+category = "Giochi & Svago"
+icon_color = Color(0.9, 0.2, 0.4, 1)
+scene_path = "res://Games/Godotris/Game/godotris_game.tscn"
+default_window_size = Vector2(500, 600)
+drive_folder = "Games/Godotris"
+default_password = "TRIS-7815"
+default_files = Array[Dictionary]([{
+"content": "# GODOTRIS ARCADE RUNTIME CONFIGURATION
+[GAME]
+title=Godotris
+version=1.0.0
+starting_level=1
+ghost_piece=true
+sound_fx=true
+
+[SCORES]
+high_score=12500
+top_player=PILOT_ACE
+",
+"desc": "Configurazione e punteggi record di Godotris.",
+"is_protected": false,
+"path": "Terminal Drive/Games/Godotris/godotris_config.dat"
+}])

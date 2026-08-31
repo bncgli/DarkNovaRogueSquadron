@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_8e5iy"]
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_8e5iy"]
 
 [resource]
 script = ExtResource("1_8e5iy")
-roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Factotum"])
+roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Factotum", "Captain", "Engineer"])
 power_draw_mw = 10.0
 required_subsystems = Array[String](["ship_core", "security_ice"])
 app_id = "diagnostics"

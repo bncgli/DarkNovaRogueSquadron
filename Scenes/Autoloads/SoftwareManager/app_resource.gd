@@ -2,9 +2,10 @@
 class_name AppResource
 extends Resource
 
-## Risorsa di base per la definizione dei programmi e software in GodotOS / Dark Nova.
-## Contiene i metadati dell'applicazione, riferimenti alla scena UI,
-## percorsi per le cartelle su disco (Drive), password e file di configurazione predefiniti.
+## Risorsa unificata per la definizione dei programmi e software in GodotOS / Dark Nova.
+## Gestisce sia le applicazioni del Terminale che quelle installate sulla Nave.
+## Contiene i metadati dell'applicazione, permessi RBAC, consumi, requisiti,
+## riferimenti alla scena UI, percorsi per le cartelle su disco (Drive), password e file predefiniti.
 
 @export_group("Identificazione")
 @export var app_id: String = "":
@@ -58,6 +59,50 @@ extends Resource
 		min_window_size = val
 		emit_changed()
 
+@export_group("Controllo Ruoli & Matrice Nave")
+## Ruoli autorizzati ad accedere all'applicazione (es. ["Capitano", "Pilota", "Factotum"])
+@export var roles: Array[String] = []:
+	set(val):
+		roles = val
+		emit_changed()
+
+## Assorbimento di potenza dalla rete elettrica della nave (MW)
+@export var power_draw_mw: float = 0.0:
+	set(val):
+		power_draw_mw = val
+		emit_changed()
+
+## Sottosistemi della nave richiesti per l'operatività (es. ["nav_computer", "reactor"])
+@export var required_subsystems: Array[String] = []:
+	set(val):
+		required_subsystems = val
+		emit_changed()
+
+## Se l'applicazione è critica per la sopravvivenza o le manovre di combattimento
+@export var is_critical: bool = false:
+	set(val):
+		is_critical = val
+		emit_changed()
+
+@export_group("Terminale & Sistema Locale")
+## Se l'applicazione fa parte del core di sistema dell'OS
+@export var is_system_app: bool = false:
+	set(val):
+		is_system_app = val
+		emit_changed()
+
+## Comando CLI associato (se eseguibile direttamente dal terminale shell)
+@export var terminal_command: String = "":
+	set(val):
+		terminal_command = val
+		emit_changed()
+
+## Se l'applicazione deve essere visualizzata sempre nella Taskbar o desktop
+@export var is_pinned_to_taskbar: bool = false:
+	set(val):
+		is_pinned_to_taskbar = val
+		emit_changed()
+
 @export_group("Integrazione Drive & Sicurezza")
 ## Percorso relativo della cartella all'interno del rispettivo Drive (es. "Programs/FlightControls")
 @export var drive_folder: String = "":
@@ -78,7 +123,7 @@ extends Resource
 		default_files = val
 		emit_changed()
 
-## Converte la risorsa in dizionario per retrocompatibilità con ShipBlueprint / StartMenu
+## Converte la risorsa in dizionario per retrocompatibilità con ShipBlueprint / StartMenu / Network
 func to_dict() -> Dictionary:
 	return {
 		"id": app_id,
@@ -90,8 +135,39 @@ func to_dict() -> Dictionary:
 		"drive_folder": drive_folder,
 		"default_password": default_password,
 		"default_window_size": [default_window_size.x, default_window_size.y],
-		"min_window_size": [min_window_size.x, min_window_size.y]
+		"min_window_size": [min_window_size.x, min_window_size.y],
+		"roles": roles.duplicate(),
+		"power_draw_mw": power_draw_mw,
+		"required_subsystems": required_subsystems.duplicate(),
+		"is_critical": is_critical,
+		"is_system_app": is_system_app,
+		"terminal_command": terminal_command,
+		"is_pinned_to_taskbar": is_pinned_to_taskbar
 	}
+
+## Verifica se un determinato ruolo (o stato di gioco) ha i permessi per visualizzare/avviare l'app
+func is_role_allowed(role_name: String, is_solo: bool = false) -> bool:
+	var clean_role := role_name.strip_edges()
+	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Factotum" or clean_role == "Captain" or clean_role == "HOST"
+	if is_super:
+		return true
+	if is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato"):
+		return true
+	
+	if roles.is_empty():
+		return true
+		
+	for r in roles:
+		var r_str: String = str(r).strip_edges().to_lower()
+		var c_str: String = clean_role.to_lower()
+		if r_str == "*" or r_str == "all":
+			return true
+		if r_str == c_str:
+			return true
+		if (c_str in ["pilota", "pilot"] and r_str in ["pilota", "pilot"]) or (c_str in ["ingegnere", "engineer"] and r_str in ["ingegnere", "engineer"]) or (c_str in ["soldato", "soldier", "tattico"] and r_str in ["soldato", "soldier", "tattico", "tattico / armi", "armi"]) or (c_str in ["hacker", "cyber"] and r_str in ["hacker", "cyber"]):
+			return true
+			
+	return false
 
 ## Recupera la PackedScene effettiva (dalla proprietà `scene` o caricandola da `scene_path`)
 func get_effective_scene() -> PackedScene:

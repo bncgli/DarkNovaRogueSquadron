@@ -2,17 +2,17 @@ class_name ShipSoftwareManagerSingleton
 extends Node
 
 ## Singleton / Manager per la gestione dei software e delle applicazioni installate sulla Nave.
-## Si occupa di registrare le risorse `ShipAppResource`, integrarsi con la `ShipBlueprint`
+## Si occupa di registrare le risorse `AppResource`, integrarsi con la `ShipBlueprint`
 ## e sincronizzare i file e le password protette su `ShipDriveManager`.
 
-signal software_installed(app_res: ShipAppResource)
+signal software_installed(app_res: AppResource)
 signal software_uninstalled(app_id: String)
 signal registry_changed()
 signal mission_started(role: String, is_solo: bool)
 signal mission_ended()
 signal role_changed(new_role: String)
 
-## Mappa di tutti i software nave conosciuti/registrati nel sistema { app_id: ShipAppResource }
+## Mappa di tutti i software nave conosciuti/registrati nel sistema { app_id: AppResource }
 var _registered_apps: Dictionary = {}
 
 ## Stato runtime missione e ruolo per RBAC
@@ -35,7 +35,9 @@ const DEFAULT_SHIP_APP_PATHS: Array[String] = [
 	"res://Applications/Logbook/logbook_app.tres",
 	"res://Applications/ServiceDrone/service_drone_app.tres",
 	"res://Applications/StationHub/station_hub_app.tres",
-	"res://Applications/CargoBay/cargo_bay_app.tres"
+	"res://Applications/CargoBay/cargo_bay_app.tres",
+	"res://Applications/Comms/comms_app.tres",
+	"res://Applications/SystemMap/system_map_app.tres"
 ]
 
 func _ready() -> void:
@@ -46,11 +48,11 @@ func _load_default_catalog() -> void:
 	for path in DEFAULT_SHIP_APP_PATHS:
 		if ResourceLoader.exists(path):
 			var res := load(path)
-			if res is ShipAppResource:
+			if res is AppResource:
 				register_app(res)
 
 ## Registra un'applicazione della nave nel catalogo
-func register_app(app_res: ShipAppResource) -> void:
+func register_app(app_res: AppResource) -> void:
 	if not app_res or app_res.app_id.is_empty():
 		return
 	_registered_apps[app_res.app_id] = app_res
@@ -63,12 +65,12 @@ func unregister_app(app_id: String) -> void:
 		registry_changed.emit()
 
 ## Recupera una risorsa app registrata per ID
-func get_registered_app(app_id: String) -> ShipAppResource:
+func get_registered_app(app_id: String) -> AppResource:
 	return _registered_apps.get(app_id, null)
 
 ## Restituisce tutte le risorse app registrate
-func get_all_registered_apps() -> Array[ShipAppResource]:
-	var list: Array[ShipAppResource] = []
+func get_all_registered_apps() -> Array[AppResource]:
+	var list: Array[AppResource] = []
 	for k in _registered_apps:
 		list.append(_registered_apps[k])
 	return list
@@ -126,9 +128,9 @@ func get_active_blueprint() -> ShipBlueprint:
 	return ShipBlueprint.get_default_blueprint()
 
 ## Restituisce l'elenco delle risorse app installate nella Blueprint
-func get_installed_apps(bp: ShipBlueprint = null) -> Array[ShipAppResource]:
+func get_installed_apps(bp: ShipBlueprint = null) -> Array[AppResource]:
 	var blueprint := bp if bp != null else get_active_blueprint()
-	var result: Array[ShipAppResource] = []
+	var result: Array[AppResource] = []
 	if not blueprint:
 		return get_all_registered_apps()
 	
@@ -137,8 +139,8 @@ func get_installed_apps(bp: ShipBlueprint = null) -> Array[ShipAppResource]:
 		if _registered_apps.has(app_id):
 			result.append(_registered_apps[app_id])
 		else:
-			# Crea dinamicamente un ShipAppResource dal dizionario di fallback
-			var dynamic_res := ShipAppResource.new()
+			# Crea dinamicamente un AppResource dal dizionario di fallback
+			var dynamic_res := AppResource.new()
 			dynamic_res.app_id = app_id
 			dynamic_res.title = str(item.get("title", app_id))
 			dynamic_res.description = str(item.get("description", ""))
@@ -154,34 +156,23 @@ func get_installed_apps(bp: ShipBlueprint = null) -> Array[ShipAppResource]:
 	return result
 
 ## Restituisce le risorse app autorizzate per un dato ruolo
-func get_apps_for_role(role_name: String, is_solo: bool = false, bp: ShipBlueprint = null) -> Array[ShipAppResource]:
+func get_apps_for_role(role_name: String, is_solo: bool = false, bp: ShipBlueprint = null) -> Array[AppResource]:
 	var apps := get_installed_apps(bp)
-	var filtered: Array[ShipAppResource] = []
+	var filtered: Array[AppResource] = []
 	for app in apps:
 		if app.is_role_allowed(role_name, is_solo):
 			filtered.append(app)
 	return filtered
 
 ## Installa un'applicazione software nella Blueprint della nave
-func install_app_to_blueprint(app_res: ShipAppResource, bp: ShipBlueprint = null) -> void:
+func install_app_to_blueprint(app_res: AppResource, bp: ShipBlueprint = null) -> void:
 	if not app_res:
 		return
 	var blueprint := bp if bp != null else get_active_blueprint()
 	if not blueprint:
 		return
 	
-	blueprint.set_installed_app(app_res.app_id, app_res.to_dict())
-	
-	# Registra i file di default nel sublayer drive della blueprint
-	var drive_files := app_res.get_formatted_drive_files("Ship Drive")
-	for df in drive_files:
-		blueprint.set_drive_file(df["path"], df["content"], df["is_protected"], df["desc"])
-		
-	# Registra la password della cartella nella blueprint se specificata
-	if not app_res.drive_folder.is_empty() and not app_res.default_password.is_empty():
-		var folder_rel: String = app_res.drive_folder.trim_prefix("/").trim_suffix("/")
-		var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
-		blueprint.set_drive_password(full_folder, app_res.default_password)
+	blueprint.install_app_resource(app_res)
 		
 	# Se lo ShipDriveManager è attualmente montato, scrivi i file sul disco
 	var sdm := get_node_or_null("/root/ShipDriveManager")
@@ -190,19 +181,44 @@ func install_app_to_blueprint(app_res: ShipAppResource, bp: ShipBlueprint = null
 		
 	software_installed.emit(app_res)
 
-## Disinstalla un'applicazione dalla Blueprint
+## Disinstalla un'applicazione dalla Blueprint (rimuovendo app, file e password)
 func uninstall_app_from_blueprint(app_id: String, bp: ShipBlueprint = null) -> bool:
 	var blueprint := bp if bp != null else get_active_blueprint()
 	if not blueprint:
 		return false
 	
-	var removed := blueprint.remove_installed_app(app_id)
+	var app_res := get_registered_app(app_id)
+	var folder_to_clean := ""
+	var files_to_clean: Array[String] = []
+	if app_res:
+		folder_to_clean = app_res.drive_folder
+		for df in app_res.get_formatted_drive_files("Ship Drive"):
+			files_to_clean.append(df["path"])
+	else:
+		var app_dict := blueprint.get_installed_app_by_id(app_id)
+		folder_to_clean = str(app_dict.get("drive_folder", ""))
+	
+	var removed := blueprint.uninstall_app_by_id(app_id, app_res)
 	if removed:
+		# Se lo ShipDriveManager è montato o presente, rimuovi i file fisici e password
+		if not files_to_clean.is_empty():
+			for f_path in files_to_clean:
+				var abs_path := "user://files/%s" % f_path
+				if FileAccess.file_exists(abs_path):
+					DirAccess.remove_absolute(abs_path)
+					
+		if not folder_to_clean.is_empty():
+			var folder_rel: String = folder_to_clean.trim_prefix("/").trim_suffix("/")
+			var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
+			var fpm := get_node_or_null("/root/FolderPasswordManager")
+			if fpm and fpm.has_method("remove_password"):
+				fpm.remove_password(full_folder)
+				
 		software_uninstalled.emit(app_id)
 	return removed
 
 ## Popola i file e imposta la password su ShipDrive per una specifica app
-func populate_ship_drive_for_app(app_res: ShipAppResource) -> void:
+func populate_ship_drive_for_app(app_res: AppResource) -> void:
 	if not app_res:
 		return
 	

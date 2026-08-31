@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ShipAppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/ship_app_resource.gd" id="1_vw54f"]
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_vw54f"]
 
 [resource]
 script = ExtResource("1_vw54f")

@@ -103,17 +103,17 @@ func _run_all_tests() -> void:
 	# =========================================================================
 	# TEST 3: RISORSA E SOFTWARE MANAGER
 	# =========================================================================
-	print("\n--- TEST 3: Risorsa ShipAppResource e ShipSoftwareManager ---")
+	print("\n--- TEST 3: Risorsa AppResource e ShipSoftwareManager ---")
 	var ssm := get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
 	assert(ssm != null, "ShipSoftwareManager singleton deve essere attivo")
 	
-	var res: ShipAppResource = ssm.get_registered_app("life_support")
+	var res: AppResource = ssm.get_registered_app("life_support")
 	assert(res != null, "life_support_app.tres deve essere registrata nel catalogo ShipSoftwareManager")
 	assert(res.app_id == "life_support", "app_id deve corrispondere a 'life_support'")
 	assert(res.default_password == "LIFE-7815", "Password di default deve essere 'LIFE-7815'")
 	assert(res.power_draw_mw == 20.0, "power_draw_mw deve corrispondere a 20.0 MW")
 	assert(res.default_files.size() >= 2, "La risorsa deve contenere life_support_config.dat e atmo_tuning.dat")
-	print("✔ Registrazione e metadati ShipAppResource validati con successo")
+	print("✔ Registrazione e metadati AppResource validati con successo")
 	
 	# =========================================================================
 	# TEST 4: FILE .DAT E HOT-RELOADING

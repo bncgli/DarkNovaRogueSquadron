@@ -10,6 +10,7 @@ func _ready() -> void:
 	_test_undo_redo_system()
 	_test_all_layers_support()
 	_test_modify_devices_junctions_damages()
+	_test_room_resize()
 	print("✔ TUTTI I TEST SHIP SUBLAYER EDITOR COMPLETATI CON SUCCESSO!")
 
 func _test_editor_ui_layout() -> void:
@@ -237,6 +238,75 @@ func _test_modify_devices_junctions_damages() -> void:
 	
 	canvas.delete_element("conduit", cnd_id)
 	assert(bp.get_conduit_by_id(cnd_id).is_empty() == true, "Cablaggio deve essere eliminato")
+	
+	editor.queue_free()
+	print("  -> OK!")
+
+func _test_room_resize() -> void:
+	print("Test 6: Verifica funzionalità di resize delle stanze (interattivo e inspector)...")
+	var editor := ShipSublayerEditor.new()
+	editor._ready()
+	var bp: ShipBlueprint = editor.current_blueprint
+	var canvas: ShipBlueprintCanvas = editor.canvas
+	
+	# Crea una nuova stanza per il test
+	canvas._finish_add_room(Vector2(200, 200), Vector2(300, 300))
+	var room_id := canvas.selected_id
+	var room := bp.get_room_by_id(room_id)
+	assert(room.is_empty() == false, "La stanza deve esistere")
+	var initial_rect: Rect2 = room.get("rect", Rect2())
+	assert(initial_rect.size == Vector2(100, 100), "Dimensione iniziale della stanza corretta")
+	
+	# 1. Modifica diretta del rettangolo (es. Inspector)
+	var new_rect := Rect2(Vector2(200, 200), Vector2(150, 120))
+	room["rect"] = new_rect
+	bp.emit_changed()
+	assert(bp.get_room_by_id(room_id)["rect"] == new_rect, "Il resize da Inspector aggiorna il blueprint")
+	
+	# 2. Verifica rilevamento maniglie (handle) sui 4 vertici
+	# 0: Top-Left, 1: Top-Right, 2: Bottom-Right, 3: Bottom-Left
+	var tl_pos := new_rect.position
+	var tr_pos := Vector2(new_rect.end.x, new_rect.position.y)
+	var br_pos := new_rect.end
+	var bl_pos := Vector2(new_rect.position.x, new_rect.end.y)
+	
+	assert(canvas._get_resize_handle_at(tl_pos, new_rect) == 0, "Maniglia Top-Left rilevata (0)")
+	assert(canvas._get_resize_handle_at(tr_pos, new_rect) == 1, "Maniglia Top-Right rilevata (1)")
+	assert(canvas._get_resize_handle_at(br_pos, new_rect) == 2, "Maniglia Bottom-Right rilevata (2)")
+	assert(canvas._get_resize_handle_at(bl_pos, new_rect) == 3, "Maniglia Bottom-Left rilevata (3)")
+	assert(canvas._get_resize_handle_at(Vector2(50, 50), new_rect) == -1, "Nessuna maniglia trovata fuori stanza (-1)")
+	
+	# 3. Test drag e resize interattivo tramite simulazione mouse su maniglia Bottom-Right (2)
+	canvas.selected_type = "room"
+	canvas.selected_id = room_id
+	canvas._handle_left_click_pressed(br_pos, br_pos)
+	assert(canvas.is_resizing_room == true, "Stato is_resizing_room attivo")
+	assert(canvas.resize_handle_index == 2, "Maniglia 2 (Bottom-Right) agganciata")
+	
+	# Trascina il mouse di +50 in X e +30 in Y
+	var mouse_drag_pos := br_pos + Vector2(50, 30)
+	canvas._handle_element_drag(mouse_drag_pos)
+	assert(bp.get_room_by_id(room_id)["rect"].size == Vector2(200, 150), "Stanza ridimensionata durante il drag a (200, 150)")
+	
+	# Rilascio del click mouse (applica la modifica e committa l'azione di Undo)
+	canvas._handle_left_click_released(mouse_drag_pos, mouse_drag_pos)
+	assert(canvas.is_resizing_room == false, "Stato is_resizing_room disattivato al rilascio")
+	assert(bp.get_room_by_id(room_id)["rect"].size == Vector2(200, 150), "Dimensione confermata a (200, 150)")
+	
+	# 4. Verifica Undo / Redo sul resize
+	assert(editor.btn_undo.disabled == false, "Undo abilitato dopo il resize")
+	editor.undo()
+	assert(bp.get_room_by_id(room_id)["rect"].size == Vector2(150, 120), "Undo ripristina dimensione precedente (150, 120)")
+	editor.redo()
+	assert(bp.get_room_by_id(room_id)["rect"].size == Vector2(200, 150), "Redo ripristina dimensione modificata (200, 150)")
+	
+	# 5. Verifica limite dimensione minima (20x20)
+	canvas._handle_left_click_pressed(br_pos + Vector2(50, 30), br_pos + Vector2(50, 30))
+	var extreme_shrink_pos := new_rect.position - Vector2(100, 100)
+	canvas._handle_element_drag(extreme_shrink_pos)
+	var final_rect: Rect2 = bp.get_room_by_id(room_id)["rect"]
+	assert(final_rect.size.x >= 20.0 and final_rect.size.y >= 20.0, "Dimensione minima stanza 20x20 rispettata")
+	canvas._handle_left_click_released(extreme_shrink_pos, extreme_shrink_pos)
 	
 	editor.queue_free()
 	print("  -> OK!")

@@ -15,7 +15,7 @@ Prima di eseguire qualsiasi modifica o sviluppo su un'applicazione, l'agente AI 
 
 In *Dark Nova: Rogue Squadron*, l'interfaccia di gioco è il desktop virtuale di GodotOS. Ogni stazione dell'equipaggio (Pilota, Ingegnere, Tattico, Sensori, Comunicazioni, ecc.) e ogni utility opera attraverso applicazioni a finestre dedicate.
 
-A partire dalla nuova architettura modulare, **tutte le applicazioni sono modellate come Risorse di Godot (`AppResource`, `ShipAppResource`, `TerminalAppResource`)** e gestite in modo centralizzato da due singleton dedicati:
+A partire dalla nuova architettura modulare, **tutte le applicazioni sono modellate come Risorse di Godot (`AppResource`)** e gestite in modo centralizzato da due singleton dedicati:
 * **`ShipSoftwareManager`**: gestisce i programmi di bordo, l'integrazione con `ShipBlueprint` (Sublayer 6: *Mainframe Installed Apps*), il popolamento automatico dei file `.dat` e cartelle protette in `Ship Drive`, il calcolo energetico e le autorizzazioni di ruolo (**RBAC**).
 * **`TerminalSoftwareManager`**: gestisce i software e le utility locali del terminale/postazione (es. Terminale shell, File Manager, Editor di testo, diagnostica locale) e l'integrazione con `Terminal Drive`.
 
@@ -23,12 +23,12 @@ A partire dalla nuova architettura modulare, **tutte le applicazioni sono modell
 Quando i requisiti non sono esplicitamente chiari, l'agente AI **deve chiedere all'utente** se l'applicazione da creare/modificare è un'**Applicazione del Server (Nave)** o un'**Applicazione del Terminale (Locale)**:
 
 1. **Applicazione del Server (Nave)**:
-   * Definita tramite una risorsa `.tres` di tipo `ShipAppResource`.
+   * Definita tramite una risorsa `.tres` di tipo unificato `AppResource` (con parametri RBAC e consumi configurati).
    * Collegata ai sistemi di bordo e alla simulazione della nave.
    * **Ciclo di vita**: Deve essere disponibile e operativa **esclusivamente dopo che la missione è partita** (`is_mission_started == true` / `is_ship_connected() == true`). In lobby o offline deve mostrare l'overlay di blocco/disconnessione.
    * Registrata in `ShipSoftwareManager` e associata alla `ShipBlueprint` di bordo.
 2. **Applicazione del Terminale (Locale)**:
-   * Definita tramite una risorsa `.tres` di tipo `TerminalAppResource`.
+   * Definita tramite una risorsa `.tres` di tipo unificato `AppResource` (con flag `is_system_app` o comando CLI opzionale).
    * Applicazione di utilità o terminale locale indipendente dalla simulazione nave.
    * **Ciclo di vita**: **Non è limitata dallo stato della missione** ed è sempre accessibile e utilizzabile.
    * Registrata in `TerminalSoftwareManager`.
@@ -36,7 +36,7 @@ Quando i requisiti non sono esplicitamente chiari, l'agente AI **deve chiedere a
 ### Principi Fondamentali
 1. **Architettura Data-Driven basata su Risorse**: L'aggiunta di un programma richiede la definizione della sua scena UI (`.tscn`) e della corrispondente risorsa esportabile (`.tres`), demandando ai Software Manager la gestione del Drive, delle password e dello Start Menu.
 2. **Server-Authoritative (Host-Centrico)**: Per le applicazioni della nave, la simulazione fisica e lo stato risiedono sul Server/Host. I client inviano richieste di comando (`request_*`) e ricevono aggiornamenti di stato.
-3. **Controllo Ruoli (RBAC - Role-Based Access Control)**: Ogni applicazione della nave definisce nella propria `ShipAppResource` i ruoli autorizzati (`roles`), consentendo agli altri la sola visualizzazione (telemetria) o nascondendo il programma all'avvio della missione.
+3. **Controllo Ruoli (RBAC - Role-Based Access Control)**: Ogni applicazione della nave definisce nella propria `AppResource` i ruoli autorizzati (`roles`), consentendo agli altri la sola visualizzazione (telemetria) o nascondendo il programma all'avvio della missione.
 
 ---
 
@@ -162,16 +162,14 @@ Applications/
 └── NomeApp/
     ├── nome_app.tscn          # Scena principale dell'applicazione (Control UI)
     ├── nome_app.gd            # Script controller dell'interfaccia
-    ├── nome_app.tres          # Risorsa ShipAppResource o TerminalAppResource
+    ├── nome_app.tres          # Risorsa unificata AppResource
     ├── SubComponent/          # Eventuali componenti interni, widget, finestre figlie
     │   ├── sub_comp.tscn
     │   └── sub_comp.gd
     └── Assets/                # Risorse grafiche, icone o temi dedicati (opzionali)
 
 Scenes/Autoloads/SoftwareManager/
-├── app_resource.gd            # Classe base AppResource
-├── ship_app_resource.gd       # Classe ShipAppResource (RBAC, energia, sottosistemi)
-├── terminal_app_resource.gd   # Classe TerminalAppResource (CLI, utility locali)
+├── app_resource.gd            # Classe unificata AppResource
 ├── ship_software_manager.gd   # Singleton ShipSoftwareManager
 └── terminal_software_manager.gd # Singleton TerminalSoftwareManager
 
@@ -183,9 +181,8 @@ tests/                         # Suite di test automatizzati headless
 
 ---
 
-## 4. Definizione delle Risorse Software (`AppResource`, `ShipAppResource`, `TerminalAppResource`)
+## 4. Definizione della Risorsa Software (`AppResource`)
 
-### A. Classe Base: `AppResource`
 Definita in `Scenes/Autoloads/SoftwareManager/app_resource.gd`:
 * `app_id: String`: identificativo univoco (es. `"sensors"`, `"flight_control"`, `"terminal"`).
 * `title: String`: titolo visualizzato nella barra del titolo della finestra e nello Start Menu.
@@ -195,23 +192,17 @@ Definita in `Scenes/Autoloads/SoftwareManager/app_resource.gd`:
 * `icon_color: Color`: colore di accento per la taskbar e i pulsanti.
 * `scene_path: String` / `scene: PackedScene`: riferimento alla scena `.tscn` dell'interfaccia.
 * `default_window_size: Vector2` & `min_window_size: Vector2`: dimensioni finestra predefinite e minime.
-* `drive_folder: String`: percorso relativo della cartella sul Drive (es. `"Programs/Sensors"`).
-* `default_password: String`: password per sbloccare la cartella protetta sul Drive.
-* `default_files: Array[Dictionary]`: lista dei file `.dat` di default da generare automaticamente all'installazione o al montaggio del Drive (`{ "path": "Ship Drive/...", "content": "...", "is_protected": true, "desc": "..." }`).
-
-### B. Risorsa per Sistemi Nave: `ShipAppResource`
-Definita in `Scenes/Autoloads/SoftwareManager/ship_app_resource.gd`:
 * `roles: Array[String]`: elenco dei ruoli autorizzati ad accedere o visualizzare il programma (es. `["Soldier", "Hacker", "Captain", "Factotum"]`).
 * `power_draw_mw: float`: consumo energetico in megawatt dalla rete elettrica della nave.
-* `required_subsystems: Array[String]`: sottosistemi hardware richiesti (es. `["sensors_array"]`, `["nav_computer"]`).
+* `required_subsystems: Array[String]`: sottosistemi hardware richiesti (es. `["sensors_optics"]`, `["nav_computer"]`).
 * `is_critical: bool`: contrassegna se l'app è critica per la navigazione o il combattimento.
-* Metodo `is_role_allowed(role_name: String, is_solo: bool) -> bool`: verifica se il ruolo del giocatore ha i permessi di accesso.
-
-### C. Risorsa per Terminale Locale: `TerminalAppResource`
-Definita in `Scenes/Autoloads/SoftwareManager/terminal_app_resource.gd`:
 * `is_system_app: bool`: flag per applicazioni core dell'OS.
 * `terminal_command: String`: comando CLI opzionale associato all'utility nella shell.
 * `is_pinned_to_taskbar: bool`: se l'applicazione deve essere visualizzata permanentemente sulla barra delle applicazioni.
+* `drive_folder: String`: percorso relativo della cartella sul Drive (es. `"Programs/Sensors"` o `"systems"`).
+* `default_password: String`: password per sbloccare la cartella protetta sul Drive.
+* `default_files: Array[Dictionary]`: lista dei file `.dat` di default da generare automaticamente all'installazione o al montaggio del Drive (`{ "path": "Ship Drive/...", "content": "...", "is_protected": true, "desc": "..." }`).
+* Metodo `is_role_allowed(role_name: String, is_solo: bool) -> bool`: verifica se il ruolo del giocatore ha i permessi di accesso.
 
 ---
 
@@ -380,14 +371,14 @@ func _update_permissions() -> void:
 ### Autoload Principali del Progetto
 
 1. **`ShipSoftwareManager` (`Scenes/Autoloads/SoftwareManager/ship_software_manager.gd`)**:
-   * Gestisce il catalogo centralizzato dei programmi di bordo basati su `ShipAppResource`.
+   * Gestisce il catalogo centralizzato dei programmi di bordo basati su `AppResource`.
    * Registra ed esporta le app, installa i software sulle istanze di `ShipBlueprint`.
    * Popola automaticamente le cartelle protette e i file `.dat` di default su `Ship Drive`.
    * Gestisce l'apertura e il layout delle finestre software nel desktop di GodotOS.
    * Filtra le applicazioni operative in base al ruolo del giocatore locale (`get_installed_apps_for_role`).
 
 2. **`TerminalSoftwareManager` (`Scenes/Autoloads/SoftwareManager/terminal_software_manager.gd`)**:
-   * Gestisce il catalogo delle utility e programmi locali del terminale basati su `TerminalAppResource`.
+   * Gestisce il catalogo delle utility e programmi locali del terminale basati su `AppResource`.
    * Popola cartelle e file di configurazione predefiniti su `Terminal Drive`.
    * Gestisce l'avvio delle finestre locali e l'integrazione con comandi CLI della shell.
 
@@ -426,7 +417,7 @@ func _update_permissions() -> void:
 
 Grazie all'architettura Resource-driven, la registrazione delle applicazioni non richiede più modifiche manuali hardcoded alla scena della Taskbar:
 
-### A. Registrazione per Applicazioni della Nave (`ShipAppResource`)
+### A. Registrazione per Applicazioni della Nave (`AppResource`)
 1. Creare il file di risorsa `.tres` dedicato nella cartella del programma (es. `res://Applications/Sensors/sensors_app.tres`).
 2. Configurare nell'Inspector di Godot:
    * **Identificazione**: `app_id` (es. `"sensors"`), `title`, `description`, `icon`, `icon_color`.
@@ -438,7 +429,7 @@ Grazie all'architettura Resource-driven, la registrazione delle applicazioni non
    * `installed_apps` di `default_ship_blueprint.tres` (o programmaticamente via `ShipSoftwareManager.install_app_on_blueprint`).
 4. Al decollo della missione, lo Start Menu leggerà automaticamente la `ShipBlueprint` tramite `SpaceWorldManager.get_installed_apps_for_role()` e popolerà i collegamenti con filtro RBAC.
 
-### B. Registrazione per Applicazioni del Terminale (`TerminalAppResource`)
+### B. Registrazione per Applicazioni del Terminale (`AppResource`)
 1. Creare la risorsa `.tres` (es. `res://Applications/Terminal/terminal_app.tres`).
 2. Configurare `app_id`, `title`, `scene_path`, `drive_folder` e proprietà del terminale locale (`is_system_app`, `terminal_command`, `is_pinned_to_taskbar`).
 3. Registrare il percorso della risorsa in `DEFAULT_TERMINAL_APP_PATHS` in `terminal_software_manager.gd`.
@@ -451,7 +442,7 @@ Prima di considerare completata una nuova applicazione, verificare:
 
 - [ ] **Flusso Git / Branch Dedicato**: Le modifiche e lo sviluppo sono stati svolti sul branch dedicato `applications/<nome programma>` (creato prima di iniziare e con checkout effettuato), concludendo con il commit finale.
 - [ ] **Tipo di Applicazione (Server/Nave vs Terminale)**: Se il tipo non era chiaro, è stato confermato con l'utente; il comportamento di accesso segue le regole appropriate (vincolata alla missione per la nave, sempre disponibile per il terminale).
-- [ ] **Risorsa `.tres` Creata e Registrata**: Creata l'apposita risorsa `ShipAppResource` o `TerminalAppResource` con tutti i metadati, dimensioni finestra, percorsi drive, ruoli RBAC e file `.dat` predefiniti; registrata in `ShipSoftwareManager` o `TerminalSoftwareManager`.
+- [ ] **Risorsa `.tres` Creata e Registrata**: Creata l'apposita risorsa `AppResource` con tutti i metadati, dimensioni finestra, percorsi drive, ruoli RBAC e file `.dat` predefiniti; registrata in `ShipSoftwareManager` o `TerminalSoftwareManager`.
 - [ ] **Cartella Protetta e File `.dat`**: L'applicazione dispone di una cartella protetta da password con i file `.dat` di configurazione salvati nel percorso corretto (`Ship Drive/Programs/[NomeApp]/` sincronizzato per app della nave, o `Terminal Drive/Programs/[NomeApp]/` per app del terminale).
 - [ ] **Utilizzo Runtime dei File `.dat`**: I file `.dat` non sono leggibili dal File Reader e i valori contenuti vengono usati dal programma per influenzarne attivamente le prestazioni o il comportamento.
 - [ ] **Stato Offline/Lobby**: Per le app della nave, all'avvio in Lobby o a gioco disconnesso, l'app mostra l'overlay *"Connettersi alla nave"* o *"Sistemi Offline"* e blocca l'input.
@@ -512,7 +503,7 @@ La risorsa centrale **`ShipBlueprint`** (`Outside/ShipSublayer/ship_blueprint.gd
    - File iniziali montati sul desktop (`.txt` di log/direttive e configurazioni binarie protette `.dat` per ogni programma di bordo).
    - Mappa delle password di cartella (`FolderPasswordManager`) per le directory protette di bordo.
 6. **Sublayer 6: Applicazioni Mainframe Installate e Filtro Ruoli (`installed_apps`)**:
-   - Collezione di risorse `ShipAppResource` installate nel mainframe della nave (`id`, `title`, `description`, `scene_path`, `icon_color`, `roles`, `power_draw_mw`, `required_subsystems`, `drive_folder`, `default_files`).
+   - Collezione di risorse `AppResource` installate nel mainframe della nave (`id`, `title`, `description`, `scene_path`, `icon_color`, `roles`, `power_draw_mw`, `required_subsystems`, `drive_folder`, `default_files`).
    - All'avvio della missione (`mission_started`), il menu Start di GodotOS popola dinamicamente solo le applicazioni installate autorizzate per il ruolo del giocatore locale (`SpaceWorldManager.get_installed_apps_for_role(role, is_solo)`). Prima del decollo, le applicazioni della nave non appaiono nel menu, eliminando aperture accidentali e il problema dell'overlay *"connettiti ad una nave"*.
 
 Inoltre, la risorsa contiene i metadati dimensionali dello scafo (`ship_bounds`), le coordinate di spawn del drone (`drone_spawn_pos`) e l'orientamento iniziale (`drone_spawn_heading`).

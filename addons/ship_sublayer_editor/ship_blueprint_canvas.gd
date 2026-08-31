@@ -302,16 +302,62 @@ func _handle_left_click_released(world_pos: Vector2, snapped_world: Vector2) -> 
 		resize_handle_index = -1
 		if selected_type == "room":
 			var room := blueprint.get_room_by_id(selected_id)
-			if _has_dragged_significantly:
+			if _has_dragged_significantly and not room.is_empty():
+				var new_rect: Rect2 = room.get("rect", Rect2())
+				var old_rect: Rect2 = drag_element_start_state.get("rect", new_rect)
+				room["rect"] = old_rect
 				emit_signal("action_committed", "Ridimensiona Stanza")
+				room["rect"] = new_rect
+				blueprint.emit_changed()
+			_has_dragged_significantly = false
 			emit_signal("element_modified", "room", selected_id, room)
 	elif is_dragging_element:
 		is_dragging_element = false
-		if _has_dragged_significantly:
+		if _has_dragged_significantly and not selected_type.is_empty() and not selected_id.is_empty():
+			var elem_current_data := _get_selected_element_data()
+			_apply_element_state(selected_type, selected_id, drag_element_start_state)
 			emit_signal("action_committed", "Sposta Elemento")
+			_apply_element_state(selected_type, selected_id, elem_current_data)
+			blueprint.emit_changed()
+		_has_dragged_significantly = false
 		if not selected_type.is_empty() and not selected_id.is_empty():
 			var elem_data := _get_selected_element_data()
 			emit_signal("element_modified", selected_type, selected_id, elem_data)
+
+func _apply_element_state(elem_type: String, elem_id: String, state: Dictionary) -> void:
+	if not blueprint or state.is_empty():
+		return
+	match elem_type:
+		"room":
+			var r := blueprint.get_room_by_id(elem_id)
+			if not r.is_empty() and state.has("rect"):
+				r["rect"] = state["rect"]
+		"duct":
+			var d := blueprint.get_duct_by_id(elem_id)
+			if not d.is_empty():
+				if state.has("from"): d["from"] = state["from"]
+				if state.has("to"): d["to"] = state["to"]
+		"device":
+			var dev := blueprint.get_device_by_id(elem_id)
+			if not dev.is_empty() and state.has("pos"):
+				dev["pos"] = state["pos"]
+		"junction":
+			var j := blueprint.get_junction_by_id(elem_id)
+			if not j.is_empty() and state.has("pos"):
+				j["pos"] = state["pos"]
+		"conduit":
+			var c := blueprint.get_conduit_by_id(elem_id)
+			if not c.is_empty():
+				if state.has("from_pos"): c["from_pos"] = state["from_pos"]
+				if state.has("to_pos"): c["to_pos"] = state["to_pos"]
+		"damage":
+			var dmg := blueprint.get_damage_by_id(elem_id)
+			if not dmg.is_empty() and state.has("pos"):
+				dmg["pos"] = state["pos"]
+		"spawn":
+			if state.has("pos"): blueprint.drone_spawn_pos = state["pos"]
+		"bounds":
+			if state.has("bounds"): blueprint.ship_bounds = state["bounds"]
 
 func _handle_element_drag(current_world_pos: Vector2) -> void:
 	var snapped_world := snap_pos(current_world_pos)
@@ -517,6 +563,9 @@ func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 		size_rect = Vector2(80, 60)
 	var next_idx := blueprint.rooms.size() + 1
 	var new_id := "room_%d" % next_idx
+	while not blueprint.get_room_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "room_%d" % next_idx
 	var new_room: Dictionary = {
 		"id": new_id,
 		"name": "Nuovo Settore %d" % next_idx,
@@ -539,6 +588,9 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 		p2 = p1 + Vector2(60, 0)
 	var next_idx := blueprint.ducts.size() + 1
 	var new_id := "duct_%d" % next_idx
+	while not blueprint.get_duct_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "duct_%d" % next_idx
 	var new_duct: Dictionary = {
 		"id": new_id,
 		"name": "Condotto %d" % next_idx,
@@ -559,6 +611,9 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 func _finish_add_device(pos: Vector2) -> void:
 	var next_idx := blueprint.devices.size() + 1
 	var new_id := "device_%d" % next_idx
+	while not blueprint.get_device_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "device_%d" % next_idx
 	var room_here := blueprint.get_room_at(pos)
 	var sector_name := str(room_here.get("name", "Generale")) if not room_here.is_empty() else "Nave"
 	var new_dev: Dictionary = {
@@ -583,6 +638,9 @@ func _finish_add_device(pos: Vector2) -> void:
 func _finish_add_junction(pos: Vector2) -> void:
 	var next_idx := blueprint.junctions.size() + 1
 	var new_id := "J%d" % next_idx
+	while not blueprint.get_junction_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "J%d" % next_idx
 	var new_junc: Dictionary = {
 		"id": new_id,
 		"name": "Snodo %s" % new_id,
@@ -607,6 +665,9 @@ func _finish_add_conduit(p1: Vector2, p2: Vector2) -> void:
 		p2 = p1 + Vector2(60, 0)
 	var next_idx := blueprint.conduits.size() + 1
 	var new_id := "CND_%d" % next_idx
+	while not blueprint.get_conduit_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "CND_%d" % next_idx
 	var new_cnd: Dictionary = {
 		"id": new_id,
 		"from_pos": p1,
@@ -626,6 +687,9 @@ func _finish_add_conduit(p1: Vector2, p2: Vector2) -> void:
 func _finish_add_damage(pos: Vector2) -> void:
 	var next_idx := blueprint.damages.size() + 1
 	var new_id := "dmg_%d" % next_idx
+	while not blueprint.get_damage_by_id(new_id).is_empty():
+		next_idx += 1
+		new_id = "dmg_%d" % next_idx
 	var room_here := blueprint.get_room_at(pos)
 	var sector_name := str(room_here.get("name", "Settore Nave")) if not room_here.is_empty() else "Nave"
 	var new_dmg: Dictionary = {
