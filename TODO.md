@@ -18,11 +18,11 @@
   - **File Task**: `task_queue/001_ship_blueprint_flux.md`
   - **Stato**: Completato (2026-08-31).
 
-- [ ] **TASK-004**: App Flux Wallet
+- [x] **TASK-004**: App Flux Wallet
   - **Descrizione**: Creare l'app `FluxWallet` per visualizzare il flux e i modificatori.
   - **Criteri di accettazione**: App funzionale secondo `docs/APP_ARCHITECTURE_STANDARD.md`.
   - **File Task**: `task_queue/002_app_flux_wallet.md`
-  - **Stato**: In coda.
+  - **Stato**: Completato (2026-08-31).
 
 - [ ] **TASK-005**: Ship Sublayer Editor Improvements
   - **Descrizione**: Migliorare l'editor delle blueprint (resize, fix drag, spawn pos, flux editing).

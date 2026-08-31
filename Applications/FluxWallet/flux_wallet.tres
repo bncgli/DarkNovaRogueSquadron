@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="AppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_656yp"]
+
+[resource]
+script = ExtResource("1_656yp")
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"])
+power_draw_mw = 2.0
+required_subsystems = Array[String]([])
+app_id = "flux_wallet"
+title = "Flux Wallet"
+description = "Visualizzazione stato economico della nave e storico modificatori FLUX."
+category = "Sistemi Nave"
+icon_color = Color(0.95, 0.65, 0.15, 1)
+scene_path = "res://Applications/FluxWallet/flux_wallet.tscn"
+default_window_size = Vector2(550, 450)
+drive_folder = "Programs/FluxWallet"
+default_password = "FLUX-7815"
+default_files = Array[Dictionary]([{
+"content": "# DARK NOVA FLUX WALLET CONFIGURATION
+[SYSTEM]
+app_name=FluxWallet
+version=1.0.0
+status=OPERATIONAL
+
+[DISPLAY]
+show_modifiers=true
+refresh_rate=1.0
+",
+"desc": "Configurazione visualizzazione portafoglio Flux.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FluxWallet/wallet_config.dat"
+}])

@@ -1034,6 +1034,7 @@ drive_passwords = {
 "Ship Drive/Programs/Diagnostics": "DIAG-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+"Ship Drive/Programs/FluxWallet": "FLUX-7815",
 "Ship Drive/Programs/LifeSupport": "LIFE-7815",
 "Ship Drive/Programs/Logbook": "LOGS-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",
@@ -1134,4 +1135,11 @@ installed_apps = Array[Dictionary]([{
 "roles": ["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"],
 "scene_path": "res://Applications/CargoBay/cargo_bay_app.tscn",
 "title": "Stiva Cargo & FLUX"
+}, {
+"description": "Visualizzazione stato economico della nave e storico modificatori FLUX.",
+"icon_color": Color(0.95, 0.65, 0.15, 1),
+"id": "flux_wallet",
+"roles": ["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"],
+"scene_path": "res://Applications/FluxWallet/flux_wallet.tscn",
+"title": "Flux Wallet"
 }])

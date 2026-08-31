@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Applications/FluxWallet/flux_wallet.gd" id="1_x8y2z"]
+
+[node name="FluxWallet" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_x8y2z")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MainLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "STATO ECONOMICO FLUX"
+
+[node name="FluxLabel" type="Label" parent="MainLayout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "100 FLUX"
+horizontal_alignment = 2
+
+[node name="Separator" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="MainLayout/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="DisconnectedOverlay" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="DisconnectedOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DisconnectedOverlay/CenterContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Warning" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.388235, 0.278431, 1)
+theme_override_font_sizes/font_size = 20
+text = "⚠️ SISTEMI OFFLINE"
+horizontal_alignment = 1
+
+[node name="Info" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Connettersi alla nave per visualizzare i dati Flux."
+horizontal_alignment = 1

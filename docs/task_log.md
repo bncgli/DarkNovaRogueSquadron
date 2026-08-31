@@ -18,3 +18,8 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 - **Descrizione**: Estendere la risorsa ShipBlueprint con dati economici.
 - **Stato**: Completato.
 - **Dettagli**: Aggiunti campi `flux` e `flux_modifiers` in `ship_blueprint.gd` con supporto alla serializzazione JSON (to_dict/from_dict) e integrazione con l'Inspector di Godot tramite `@export`.
+
+### TASK-004: App Flux Wallet
+- **Descrizione**: Creazione applicazione Flux Wallet.
+- **Stato**: Completato.
+- **Dettagli**: Implementata l'app `FluxWallet` (scena, script e risorsa) seguendo gli standard GodotOS. L'app visualizza il valore Flux della blueprint attiva e una tabella formattata dei modificatori. Registrata nei Software Manager di sistema e inclusa nella blueprint di default.
