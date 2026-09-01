@@ -120,8 +120,6 @@ func _run_tests() -> void:
 		"ship_class": "Incrociatore Pesante",
 		"rooms": [{"id": "r1", "name": "Sala Comando", "rect": [0,0,50,50]}],
 		"ducts": [],
-		"devices": [],
-		"junctions": [],
 		"damages": [],
 		"installed_apps": [{"id": "flight_control", "title": "Flight", "scene_path": "", "roles": []}]
 	}

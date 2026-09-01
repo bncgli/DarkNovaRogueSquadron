@@ -10,6 +10,7 @@ required_subsystems = Array[String](["comms", "navigation"])
 app_id = "station_hub"
 title = "Hub Servizi Portuali"
 description = "Interfaccia diegetica servizi di stazione: Cantiere, Mercato Firmware, Bacheca Contratti e Taverna."
+developer = "Pulse Networks"
 category = "Sistemi Nave"
 icon_color = Color(0.2, 0.8, 0.7, 1)
 scene_path = "res://Applications/StationHub/station_hub_app.tscn"

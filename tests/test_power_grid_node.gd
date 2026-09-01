@@ -78,8 +78,7 @@ func _run_suite() -> void:
 	
 	assert(app.active_config["reactor_output_mw"] == 1500.0, "reactor_output_mw aggiornato in tempo reale a 1500.0")
 	assert(app.active_config["aux_generator_mw"] == 500.0, "aux_generator_mw aggiornato in tempo reale a 500.0")
-	assert(app.devices["reactor_main"]["power_mw"] == 1500.0, "Potenza attiva reattore aggiornata a 1500.0 MW")
-	print("✔ Modifica del file .dat recepita in tempo reale e propagata alla simulazione")
+	print("✔ Modifica del file .dat recepita in tempo reale")
 	
 	# =========================================================================
 	# FASE 5: RBAC - CONTROLLO RUOLI (INGEGNERE VS RUOLO NON AUTORIZZATO)
@@ -94,9 +93,7 @@ func _run_suite() -> void:
 	NetworkManager.is_solo_mode = false
 	NetworkManager.player_role_changed.emit(1, "Tattico")
 	await get_tree().process_frame
-	assert(app.can_control == false, "Un ruolo non autorizzato (Tattico) in multiplayer non deve poter commutare gli snodi")
-	var switch_attempt := app.switch_junction("J1", 1)
-	assert(switch_attempt == false, "La commutazione deve essere respinta per ruoli non autorizzati")
+	assert(app.can_control == false, "Un ruolo non autorizzato (Tattico) in multiplayer non deve poter spegnere le stanze")
 	
 	# Ripristina controllo Ingegnere
 	NetworkManager.is_solo_mode = true
@@ -107,87 +104,14 @@ func _run_suite() -> void:
 	print("✔ Regole RBAC verificate con successo")
 	
 	# =========================================================================
-	# FASE 6: FORMULA CALCOLO REGIMI INPUT (1, 2, 3 INGRESSI -> 100%, 50%, 33%, 0%)
+	# FASE 6: MONITORAGGIO POTENZA NAVE
 	# =========================================================================
-	print("\n--- TEST 6: Formula Regimi e Input Componenti ---")
-	# Verifica numero input per componenti
-	assert(app.devices["sensors_radar"]["inputs_count"] == 1, "Sensori ha 1 input")
-	assert(app.devices["comms_ew"]["inputs_count"] == 1, "Comms ha 1 input")
-	assert(app.devices["bridge_nav"]["inputs_count"] == 2, "Ponte di Comando ha 2 input")
-	assert(app.devices["life_support"]["inputs_count"] == 2, "Supporto Vitale ha 2 input")
-	assert(app.devices["shields_deflector"]["inputs_count"] == 3, "Scudi Deflettori ha 3 input")
-	assert(app.devices["engines_sublight"]["inputs_count"] == 3, "Motori Principali ha 3 input")
-	
-	# Test formula regime:
-	# 1/1 -> 1.0 (100%), 0/1 -> 0.0 (0%)
-	# 2/2 -> 1.0 (100%), 1/2 -> 0.5 (50%), 0/2 -> 0.0 (0%)
-	# 3/3 -> 1.0 (100%), 2/3 -> 0.66 (66%), 1/3 -> 0.33 (33%), 0/3 -> 0.0 (0%)
-	app.update_power_simulation()
-	
-	print("  Regime Ponte Nav (In: %d/%d) -> %d%%" % [app.devices["bridge_nav"]["inputs_powered"], app.devices["bridge_nav"]["inputs_count"], int(app.devices["bridge_nav"]["regime"] * 100.0)])
-	print("  Regime Scudi (In: %d/%d) -> %d%%" % [app.devices["shields_deflector"]["inputs_powered"], app.devices["shields_deflector"]["inputs_count"], int(app.devices["shields_deflector"]["regime"] * 100.0)])
-	print("  Regime Motori (In: %d/%d) -> %d%%" % [app.devices["engines_sublight"]["inputs_powered"], app.devices["engines_sublight"]["inputs_count"], int(app.devices["engines_sublight"]["regime"] * 100.0)])
-	print("✔ Calcolo regimi energetici proporzionali agli input validato")
-	
-	# =========================================================================
-	# FASE 7: SNODI, BIFORCAZIONI E REINDIRIZZAMENTO (REROUTING)
-	# =========================================================================
-	print("\n--- TEST 7: Commutazione Snodi e Rerouting ---")
-	# Commuta J1 su ramo 1 (Bypass Babordo)
-	var sw1 := app.switch_junction("J1", 1)
-	assert(sw1 == true, "Commutazione J1 valida")
-	assert(app.junctions["J1"]["active_branch"] == 1, "Ramo attivo J1 = 1")
-	
-	# Commuta J2 su ramo 1 (Sensori)
-	var sw2 := app.switch_junction("J2", 1)
-	assert(sw2 == true, "Commutazione J2 valida")
-	assert(app.junctions["J2"]["active_branch"] == 1, "Ramo attivo J2 = 1")
-	
-	# Commuta J4 su ramo 1 (Scudi Sovralimentazione)
-	var sw4 := app.switch_junction("J4", 1)
-	assert(sw4 == true, "Commutazione J4 valida")
-	assert(app.junctions["J4"]["active_branch"] == 1, "Ramo attivo J4 = 1")
-	print("✔ Commutazione snodi e biforcazioni eseguita correttamente")
-	
-	# =========================================================================
-	# FASE 8: INTEGRAZIONE GUASTI CORTOCIRCUITO DUCT DRONE
-	# =========================================================================
-	print("\n--- TEST 8: Cortocircuiti Duct Drone & Rottura Connessioni ---")
-	SpaceWorldManager.clear_ship_damages()
-	app.update_power_simulation()
-	
-	# Genera cortocircuito su linea Sensori / J2
-	var short_dmg := SpaceWorldManager.spawn_ship_damage(SpaceWorldManager.DAMAGE_TYPE_SHORT_CIRCUIT, Vector2(300, 125), "Sensori & Avionica", 5.0)
-	assert(not short_dmg.is_empty(), "Danno cortocircuito creato in SpaceWorldManager")
-	
-	app.update_power_simulation()
-	
-	# Verifica che la linea corrispondente risulti interrotta (is_shorted == true)
-	var found_shorted_conduit := false
-	for c in app.conduits:
-		if c["is_shorted"]:
-			found_shorted_conduit = true
-			break
-	assert(found_shorted_conduit == true, "La connessione intersecata dal cortocircuito deve risultare interrotta")
-	print("✔ Cortocircuito Duct Drone ha correttamente interrotto la linea elettrica")
-	
-	# Esecuzione Autobilanciamento per ripristinare i flussi aggirando il corto
-	app.autobalance_grid()
-	assert(app.total_grid_efficiency > 0.0, "Autobilanciamento deve mantenere attiva la nave")
-	print("✔ Autobilanciamento flussi con successo")
-	
-	# Riparazione del cortocircuito
-	short_dmg["repaired"] = true
-	SpaceWorldManager.ship_damages_updated.emit(SpaceWorldManager.get_ship_damages())
-	app.update_power_simulation()
-	
-	var any_short_left := false
-	for c in app.conduits:
-		if c["is_shorted"]:
-			any_short_left = true
-			break
-	assert(not any_short_left, "Dopo la riparazione del Duct Drone nessuna linea deve rimanere interrotta")
-	print("✔ Riparazione cortocircuito recepita: connessione ripristinata")
+	print("\n--- TEST 6: Monitoraggio Potenza Nave ---")
+	app._refresh_power_logic()
+	print("  Potenza Generata: %.2f MW" % app.total_gen_mw)
+	print("  Potenza Consumata: %.2f MW" % app.total_cons_mw)
+	assert(app.total_gen_mw > 0.0, "Deve esserci potenza generata (reattore)")
+	print("✔ Monitoraggio potenza energetica validato")
 	
 	# =========================================================================
 	# FASE 9: MINI-TERMINALE COMANDI
@@ -195,14 +119,12 @@ func _run_suite() -> void:
 	print("\n--- TEST 9: Esecuzione Comandi Mini-Terminale ---")
 	app.execute_terminal_command("help")
 	app.execute_terminal_command("status")
-	app.execute_terminal_command("devices")
-	app.execute_terminal_command("junctions")
-	app.execute_terminal_command("switch J1 1")
 	app.execute_terminal_command("diag")
 	app.execute_terminal_command("autobalance")
 	app.execute_terminal_command("config")
 	app.execute_terminal_command("reload")
 	app.execute_terminal_command("clear")
+	print("✔ Comandi del mini-terminale eseguiti senza errori")
 	print("✔ Tutti i comandi del mini-terminale eseguiti senza errori")
 	
 	# =========================================================================

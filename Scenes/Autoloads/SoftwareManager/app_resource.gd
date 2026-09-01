@@ -23,6 +23,11 @@ extends Resource
 		description = val
 		emit_changed()
 
+@export var developer: String = "":
+	set(val):
+		developer = val
+		emit_changed()
+
 @export var category: String = "Applicazioni":
 	set(val):
 		category = val
@@ -129,6 +134,7 @@ func to_dict() -> Dictionary:
 		"id": app_id,
 		"title": title,
 		"description": description,
+		"developer": developer,
 		"scene_path": scene_path,
 		"icon_color": icon_color,
 		"category": category,

@@ -10,6 +10,7 @@ is_pinned_to_taskbar = false
 app_id = "pong"
 title = "Pong"
 description = "Simulazione arcade retro paddle ball per GodotOS"
+developer = "RetroArcade Corp"
 category = "Giochi & Svago"
 icon_color = Color(0.2, 0.8, 0.9, 1)
 scene_path = "res://Games/Pong/Scenes/pong_main_menu.tscn"

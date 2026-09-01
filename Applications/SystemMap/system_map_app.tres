@@ -10,6 +10,7 @@ required_subsystems = Array[String](["navigation_computer", "astrometrics_array"
 app_id = "system_map"
 title = "System Map & Hyperdrive"
 description = "Mappa olografica del sistema stellare e pianificazione rotte di transito Hyperdrive"
+developer = "AstroForge"
 category = "Navigazione"
 icon_color = Color(0.2, 0.6, 1.0, 1)
 scene_path = "res://Applications/SystemMap/system_map_app.tscn"

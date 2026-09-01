@@ -10,6 +10,7 @@ is_pinned_to_taskbar = false
 app_id = "snake"
 title = "Snake"
 description = "Gioco vintage Snake per pause operative tra i settori spaziali"
+developer = "RetroArcade Corp"
 category = "Giochi & Svago"
 icon_color = Color(0.4, 0.9, 0.2, 1)
 scene_path = "res://Games/Snake/snake_scene.tscn"

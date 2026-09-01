@@ -10,6 +10,7 @@ required_subsystems = Array[String](["sensors_optics"])
 app_id = "cams"
 title = "Cams"
 description = "Telecamere esterne dell'astronave"
+developer = "Zenith Aerospace"
 category = "Sistemi Nave"
 icon_color = Color(0.3, 0.9, 0.6, 1)
 scene_path = "res://Applications/Cams/cams_app.tscn"

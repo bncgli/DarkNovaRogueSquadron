@@ -66,3 +66,45 @@
   - **Criteri di accettazione**: Selezione stanze da lista predefinita, auto-assegnazione dispositivi e dimensioni minime.
   - **File Task**: `task_queue/002_standardizzazione_stanze_editor.md`
   - **Stato**: Completato (2026-08-31).
+
+- [x] **TASK-013**: Sviluppo Applicazione Terminale ShipBuilder
+  - **Descrizione**: Creazione del tool terminale 'ShipBuilder' per la progettazione custom delle navi.
+  - **Criteri di accettazione**: Editor funzionale con gestione sublayer, software, drive files e integrazione RoomDatabase; salvataggio/caricamento blueprint.
+  - **File Task**: `task_queue/003_ship_builder_app.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-014**: Refactor di ShipBlueprint e Struttura Dati
+  - **Descrizione**: Centralizzazione device nelle stanze e rimozione layer junctions/conduits.
+  - **Criteri di accettazione**: Blueprint ristrutturata, supporto mesh 3D, calcolo power per stanza.
+  - **File Task**: `task_queue/004_refactor_ship_blueprint.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-015**: Aggiornamento Editor (ShipBuilder e Addon)
+  - **Descrizione**: Rimozione tool obsoleti, integrazione RoomDatabase e fix bug UI in ShipBuilder.
+  - **Criteri di accettazione**: UI pulita, selezione mesh funzionante, fix finestre e software list.
+  - **File Task**: `task_queue/005_aggiornamento_editor_shipbuilder.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-016**: Overhaul Applicazione PowerGrid
+  - **Descrizione**: Nuova UI basata su lista stanze e implementazione effetti sistemici dell'energia.
+  - **Criteri di accettazione**: Controllo On/Off per stanza, bilanciamento energetico, effetti su life support/armi/motori.
+  - **File Task**: `task_queue/006_overhaul_powergrid.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-017**: Manutenzione Canvas e Pulizia
+  - **Descrizione**: Rimozione rendering layer obsoleti e pulizia codice morto.
+  - **Criteri di accettazione**: Canvas aggiornato, rimozione file e riferimenti a junctions/conduits.
+  - **File Task**: `task_queue/007_manutenzione_canvas_pulizia.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-018**: Miglioramenti Applicazione ShipBuilder
+  - **Descrizione**: Espansione menu File (Nuovo, Salva/Carica con FileDialog) e selettore mesh scafo via UI.
+  - **Criteri di accettazione**: Gestione file migliorata, FileDialog per mesh scafo funzionante.
+  - **File Task**: `task_queue/008_shipbuilder_improvements.md`
+  - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-019**: Nuove Funzionalità e Bug Fix Sublayer Editor
+  - **Descrizione**: Generazione casuale (angoli retti), zona ricarica drone e fix sparizione stanze.
+  - **Criteri di accettazione**: Algoritmo random funzionante, selezione stanza ricarica con bordo speciale, fix bug disegno.
+  - **File Task**: `task_queue/009_sublayer_editor_features.md`
+  - **Stato**: Completato (2026-09-01).

@@ -10,6 +10,7 @@ is_pinned_to_taskbar = true
 app_id = "terminal"
 title = "Terminale Shell UNIX"
 description = "Terminale Shell diegetico UNIX GodotOS"
+developer = "OmniCorp Software"
 category = "Terminale Locale"
 icon_color = Color(0.2, 0.9, 0.4, 1)
 scene_path = "res://Applications/Terminal/src/terminal_scene.tscn"

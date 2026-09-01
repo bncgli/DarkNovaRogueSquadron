@@ -6,7 +6,7 @@ This directory contains the suite of applications for the GodotOS interface, rep
 |----------------|---------|-----------------------|
 | `Lobby/` | Matchmaking, ship/sector setup, and role selection. | `NetworkManager`, `StarSystemGridManager` |
 | `FlightControl/` | Pilot interface for navigation, thrusters, and warp. | `spaceship.gd`, `StarSystemGridManager` |
-| `PowerGrid/` | Engineer interface for reactor power distribution. | `ship_blueprint.gd` |
+| `PowerGrid/` | Engineer interface for room-based power distribution and grid balancing. | `ship_blueprint.gd` (Centralized room-based logic) |
 | `ShieldMatrix/` | Deflector shield modulation and frequency management. | `spaceship.gd` |
 | `Comms/` | Radio communications and frequency tuning. | `NetworkManager` |
 | `DuctDrone/` | Internal repair drone control. | `ship_blueprint.gd` |

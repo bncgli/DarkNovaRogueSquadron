@@ -19,8 +19,11 @@ func _run_suite() -> void:
 	assert(bp.ship_bounds == Rect2(60, 30, 480, 420), "ship_bounds deve corrispondere alle dimensioni previste")
 	assert(bp.rooms.size() == 10, "La Blueprint deve contenere 10 stanze di default")
 	assert(bp.ducts.size() == 14, "La Blueprint deve contenere 14 condotti di default")
-	assert(bp.devices.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
-	assert(bp.junctions.size() == 8, "La Blueprint deve contenere 8 snodi elettrici di default")
+	
+	var all_devs := []
+	for r in bp.rooms: all_devs.append_array(r.get("devices", []))
+	assert(all_devs.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
+	
 	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
 	assert(bp.drive_files.size() == 29, "La Blueprint deve contenere 29 file di default per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics, Sensors, LifeSupport, Logbook, ServiceDrone e systems)")
 	assert(bp.drive_passwords.size() == 14, "La Blueprint deve contenere 14 password cartelle per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics, Sensors, LifeSupport, Logbook, ServiceDrone, CargoBay e systems)")
@@ -28,7 +31,7 @@ func _run_suite() -> void:
 	print("✔ Struttura dati e 6 sublayer (incluso Mainframe Apps & Ship Drive) inizializzati con successo")
 
 	# =========================================================================
-	# FASE 2: METODI DI QUERY RAPIDA (Stanze, Condotti, Dispositivi, Snodi, Danni)
+	# FASE 2: METODI DI QUERY RAPIDA (Stanze, Condotti, Dispositivi, Danni)
 	# =========================================================================
 	print("\n--- TEST 2: Metodi di Query Rapida ---")
 	var bridge_room := bp.get_room_by_id("bridge")
@@ -48,9 +51,6 @@ func _run_suite() -> void:
 	var reactor_dev := bp.get_device_by_id("reactor_main")
 	assert(not reactor_dev.is_empty(), "get_device_by_id(reactor_main) deve trovare il dispositivo")
 	assert(reactor_dev.get("is_generator") == true, "reactor_main deve essere un generatore")
-
-	var junction_j1 := bp.get_junction_by_id("J1")
-	assert(not junction_j1.is_empty(), "get_junction_by_id(J1) deve trovare lo snodo J1")
 
 	var dmg_1 := bp.get_damage_by_id("dmg_1")
 	assert(not dmg_1.is_empty(), "get_damage_by_id(dmg_1) deve trovare il punto di danno")
@@ -162,8 +162,6 @@ func _run_suite() -> void:
 	var serialized_dict := bp.to_dict()
 	assert(serialized_dict.has("ship_id") and serialized_dict["ship_id"] == "dark_nova_corvette", "Dizionario deve contenere ship_id")
 	assert(serialized_dict.has("rooms") and serialized_dict["rooms"].size() == 10, "Dizionario deve contenere 10 stanze")
-	assert(serialized_dict.has("devices") and serialized_dict["devices"].size() == 11, "Dizionario deve contenere 11 dispositivi")
-	assert(serialized_dict.has("junctions") and serialized_dict["junctions"].size() == 8, "Dizionario deve contenere 8 snodi")
 	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 29, "Dizionario deve contenere 29 file drive")
 	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 14, "Dizionario deve contenere 14 password drive")
 	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 13, "Dizionario deve contenere 13 app mainframe")
@@ -174,8 +172,6 @@ func _run_suite() -> void:
 	assert(reconstructed_bp.ship_bounds == bp.ship_bounds, "ship_bounds ricostruito deve coincidere")
 	assert(reconstructed_bp.rooms.size() == bp.rooms.size(), "Numero stanze ricostruito deve coincidere")
 	assert(reconstructed_bp.ducts.size() == bp.ducts.size(), "Numero condotti ricostruito deve coincidere")
-	assert(reconstructed_bp.devices.size() == bp.devices.size(), "Numero dispositivi ricostruito deve coincidere")
-	assert(reconstructed_bp.junctions.size() == bp.junctions.size(), "Numero snodi ricostruito deve coincidere")
 	assert(reconstructed_bp.damages.size() == bp.damages.size(), "Numero danni ricostruito deve coincidere")
 	assert(reconstructed_bp.drive_files.size() == bp.drive_files.size(), "Numero file drive ricostruito deve coincidere")
 	assert(reconstructed_bp.drive_passwords.size() == bp.drive_passwords.size(), "Numero password drive ricostruito deve coincidere")
@@ -196,7 +192,9 @@ func _run_suite() -> void:
 	assert(import_err == OK, "Importazione da file JSON deve restituire OK")
 	assert(imported_bp.ship_name == "Dark Nova Corvette", "Nome nave importato deve coincidere")
 	assert(imported_bp.rooms.size() == 10, "Stanze importate da JSON devono essere 10")
-	assert(imported_bp.devices.size() == 11, "Dispositivi importati da JSON devono essere 11")
+	var total_devs_imp := 0
+	for r in imported_bp.rooms: total_devs_imp += r.get("devices", []).size()
+	assert(total_devs_imp == 11, "Dispositivi importati da JSON devono essere 11")
 	assert(imported_bp.drive_files.size() == 29, "File drive importati da JSON devono essere 29")
 	assert(imported_bp.drive_passwords.size() == 14, "Password drive importate da JSON devono essere 14")
 	assert(imported_bp.installed_apps.size() == 13, "App mainframe importate da JSON devono essere 13")
@@ -239,9 +237,6 @@ func _run_suite() -> void:
 		var mgr_devs := SpaceWorldManager.get_power_devices()
 		assert(mgr_devs.size() == 11, "SpaceWorldManager.get_power_devices() deve restituire 11 dispositivi")
 
-		var mgr_juncs := SpaceWorldManager.get_power_junctions()
-		assert(mgr_juncs.size() == 8, "SpaceWorldManager.get_power_junctions() deve restituire 8 snodi")
-
 		var mgr_damages := SpaceWorldManager.get_damage_zones()
 		assert(mgr_damages.size() == 8, "SpaceWorldManager.get_damage_zones() deve restituire 8 zone di danno")
 
@@ -282,10 +277,7 @@ func _run_suite() -> void:
 	add_child(pwr_app)
 	await get_tree().process_frame
 
-	assert(pwr_app.devices.size() == 11, "PowerGridApp deve aver caricato 11 dispositivi da ShipBlueprint")
-	assert(pwr_app.junctions.size() == 8, "PowerGridApp deve aver caricato 8 snodi da ShipBlueprint")
-	assert(pwr_app.devices.has("reactor_main"), "PowerGridApp deve contenere reactor_main")
-	assert(pwr_app.junctions.has("J1"), "PowerGridApp deve contenere snodo J1")
+	assert(pwr_app.rooms_data.size() == 10, "PowerGridApp deve aver caricato 10 stanze da ShipBlueprint")
 
 	pwr_app.queue_free()
 	await get_tree().process_frame

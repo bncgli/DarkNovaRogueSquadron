@@ -11,6 +11,7 @@ is_critical = true
 app_id = "shield_matrix"
 title = "Shield Matrix"
 description = "Matrice deflettori a 4 quadranti e scudi energetici"
+developer = "CyberDyne Orbital"
 category = "Sistemi Nave"
 icon_color = Color(0.2, 0.6, 1, 1)
 scene_path = "res://Applications/ShieldMatrix/shield_matrix_app.tscn"

@@ -10,6 +10,7 @@ is_pinned_to_taskbar = false
 app_id = "super_bit_boy"
 title = "Super Bit Boy"
 description = "Platformer arcade d'avventura retrò a 8-bit"
+developer = "BitBlit Entertainment"
 category = "Giochi & Svago"
 icon_color = Color(0.9, 0.6, 0.1, 1)
 scene_path = "res://Games/Super Bit Boy/Scenes/Levels/level_1.tscn"

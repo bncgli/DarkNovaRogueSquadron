@@ -10,6 +10,7 @@ required_subsystems = Array[String](["ship_core", "security_ice"])
 app_id = "diagnostics"
 title = "System Diagnostics"
 description = "Centro sicurezza cyber, scansione minacce drive e barriere ICE"
+developer = "OmniCorp Software"
 category = "Sistemi Nave"
 icon_color = Color(0.2, 0.9, 0.7, 1)
 scene_path = "res://Applications/Diagnostics/diagnostics_app.tscn"

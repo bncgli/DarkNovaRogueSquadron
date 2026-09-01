@@ -570,7 +570,8 @@ func _refresh_software_view() -> void:
 				"app_target_folder": "Comms",
 				"filename": "crypto_tuning.dat",
 				"content": "# EW & CRYPTO TUNING OVERCLOCK MATRIX\n[ELECTRONIC_WARFARE]\njamming_power_mw=150.0\nsignal_noise_ratio=0.92\nspoofing_signature=MILITARY_ESCORT\njamming_radius=18000.0\noverclock_ew_boost=1.25\ncrypto_crack_speed=1.5\n",
-				"description": "Ottimizzazione cifrari subspaziali per Comms & EW. Velocità decodifica +50%."
+				"description": "Ottimizzazione cifrari subspaziali per Comms & EW. Velocità decodifica +50%.",
+				"developer": "NovaPulse Electronics"
 			},
 			{
 				"id": "driver_overclock_rcs",
@@ -580,7 +581,8 @@ func _refresh_software_view() -> void:
 				"app_target_folder": "FlightControls",
 				"filename": "thrusters_tuning.dat",
 				"content": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.35\npitch_thrust_mult=1.3\nyaw_thrust_mult=1.3\nroll_thrust_mult=1.3\nvertical_thrust_mult=1.3\noverclock_limit=1.8\n",
-				"description": "Firmware a bassa latenza per propulsori di manovra Flight Control."
+				"description": "Firmware a bassa latenza per propulsori di manovra Flight Control.",
+				"developer": "Zenith Aerospace"
 			},
 			{
 				"id": "script_auto_ping",
@@ -590,7 +592,8 @@ func _refresh_software_view() -> void:
 				"app_target_folder": "Sensors",
 				"filename": "deepscan.sh",
 				"content": "#!/bin/bash\n# DeepScan automated sweep\necho 'Scanning active sector for gravitational anomalies...'\n",
-				"description": "Script diegetico per scansione periodica automatica del quadrante sensori."
+				"description": "Script diegetico per scansione periodica automatica del quadrante sensori.",
+				"developer": "Nebula Logic"
 			},
 			{
 				"id": "sw_firewall_adv",
@@ -600,7 +603,8 @@ func _refresh_software_view() -> void:
 				"app_target_folder": "Diagnostics",
 				"filename": "security_tuning.dat",
 				"content": "# ICE DEFENSE & SECURITY TUNING\n[ICE_DEFENSE]\nice_firewall_strength=150.0\ntamper_detection_level=MAXIMUM\nice_recharge_rate=8.0\nmalware_purge_efficiency=1.5\n",
-				"description": "Schermatura contro tentativi di hackwarfare e malware."
+				"description": "Schermatura contro tentativi di hackwarfare e malware.",
+				"developer": "OmniCorp Software"
 			}
 		]
 	for item in active_software_items:
@@ -611,9 +615,10 @@ func _on_software_item_selected(index: int) -> void:
 	if index >= 0 and index < active_software_items.size():
 		var item = active_software_items[index]
 		if market_desc_label:
-			market_desc_label.text = "[b]%s[/b] (Categoria: %s)\nPrezzo di Scaricamento: %d CR\nDestinazione: Ship Drive/Programs/%s/%s\n\n%s" % [
+			market_desc_label.text = "[b]%s[/b] (Categoria: %s)\nProduttore: %s\nPrezzo di Scaricamento: %d CR\nDestinazione: Ship Drive/Programs/%s/%s\n\n%s" % [
 				item.get("name", ""),
 				item.get("category", ""),
+				item.get("developer", "Unknown"),
 				item.get("price", 0),
 				item.get("app_target_folder", "General"),
 				item.get("filename", "patch.dat"),

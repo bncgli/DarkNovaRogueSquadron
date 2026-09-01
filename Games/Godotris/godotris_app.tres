@@ -10,6 +10,7 @@ is_pinned_to_taskbar = false
 app_id = "godotris"
 title = "Godotris"
 description = "Classico gioco di blocchi a incastro stile Tetris per terminali di bordo"
+developer = "BitBlit Entertainment"
 category = "Giochi & Svago"
 icon_color = Color(0.9, 0.2, 0.4, 1)
 scene_path = "res://Games/Godotris/Game/godotris_game.tscn"

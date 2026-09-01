@@ -10,7 +10,7 @@ Handles the 3D space simulation, entities, and ship physical subsystems.
 | `Combat/` | AI, combat director, and systemic damage handling. | `systemic_damage_handler.gd`, `enemy_ship_ai.gd` |
 | `Mining/` | 3D entities for mineral deposits and derelict ships. | `mineral_deposit_entity.tscn` |
 | `ServiceDrone/` | 3D entity for the external service drone. | N/A |
-| `ShipSublayer/` | Ship architecture blueprints and component nodes. | `ship_blueprint.gd` (Managed via `ShipSublayerEditor` with unified Software Manager) |
+| `ShipSublayer/` | Ship architecture blueprints, room-based energy system, and maintenance ducts. | `ship_blueprint.gd` (Refactored to centralize energy in rooms, removing junctions/conduits) |
 | `ShipSystems/` | 3D flight controllers (CruiseDrive, RCS, Warp). | N/A |
 | `Skybox/` | Dynamic space skybox shaders and rendering. | N/A |
 | `StarSystemGrid/` | Galactic map, sector data, and warping logic. | `star_system_grid_manager.gd` |

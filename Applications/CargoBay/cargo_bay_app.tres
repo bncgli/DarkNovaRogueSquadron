@@ -10,6 +10,7 @@ required_subsystems = Array[String](["cargo", "comms"])
 app_id = "cargo_bay"
 title = "Stiva Cargo & FLUX"
 description = "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net."
+developer = "NovaTech Systems"
 category = "Sistemi Nave"
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/CargoBay/cargo_bay_app.tscn"

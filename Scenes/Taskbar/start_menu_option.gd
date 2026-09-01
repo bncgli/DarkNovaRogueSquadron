@@ -14,6 +14,9 @@ extends Panel
 ## Description shown in start menu option (added at runtime).
 @export var description_text: String
 
+## Developer shown in start menu option (added at runtime).
+@export var developer_text: String
+
 ## Whether or not the scene should be instantiated inside a game window or outside one.
 ## (You probably want this on, but it's great if you want to make your own custom window or behavior)
 @export var spawn_inside_window: bool = true
@@ -29,10 +32,13 @@ func _ready() -> void:
 		%"Menu Title".text = "[center]%s" % title_text
 	if has_node("%Menu Description"):
 		%"Menu Description".text = "[center]%s" % description_text
+	if has_node("%Menu Developer"):
+		%"Menu Developer".text = "[center][color=gray]%s[/color]" % developer_text
 
-func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null) -> void:
+func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "") -> void:
 	title_text = p_title
 	description_text = p_description
+	developer_text = p_developer
 	application_scene = p_app_scene
 	game_scene = ""
 	use_generic_pause_menu = false
@@ -40,6 +46,8 @@ func configure_option(p_title: String, p_description: String, p_app_scene: Strin
 		%"Menu Title".text = "[center]%s" % title_text
 	if has_node("%Menu Description"):
 		%"Menu Description".text = "[center]%s" % description_text
+	if has_node("%Menu Developer"):
+		%"Menu Developer".text = "[center][color=gray]%s[/color]" % developer_text
 	var tex_rect: TextureRect = get_node_or_null("HBoxContainer/MarginContainer/TextureRect")
 	if tex_rect:
 		tex_rect.modulate = p_color

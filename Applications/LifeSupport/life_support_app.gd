@@ -109,6 +109,10 @@ func _connect_system_signals() -> void:
 		if not SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 	
+	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_system_power_changed"):
+		if not SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
+			SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
+	
 	var net_mgr = get_node_or_null("/root/NetworkManager")
 	if net_mgr and net_mgr.has_signal("player_role_changed"):
 		if not net_mgr.player_role_changed.is_connected(_on_player_role_changed):
@@ -125,6 +129,10 @@ func _disconnect_system_signals() -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_connection_changed"):
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
+	
+	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_system_power_changed"):
+		if SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
+			SpaceWorldManager.ship_system_power_changed.disconnect(_on_system_power_changed)
 	
 	var net_mgr = get_node_or_null("/root/NetworkManager")
 	if net_mgr and net_mgr.has_signal("player_role_changed"):
@@ -155,6 +163,16 @@ func _connect_ui_signals() -> void:
 		btn_suppress_all.pressed.connect(_on_suppress_all_pressed)
 	if scrubber_slider:
 		scrubber_slider.value_changed.connect(_on_scrubber_slider_changed)
+
+func _on_system_power_changed(category: String, is_powered: bool) -> void:
+	if category == "life_support":
+		if not is_powered:
+			# Power lost! Start emergency oxygen consumption logic or similar
+			if status_badge:
+				status_badge.text = "● EMERGENZA ENERGETICA"
+				status_badge.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2, 1.0))
+		else:
+			_update_connection_state()
 
 func _on_ship_connection_changed(is_connected: bool) -> void:
 	_update_connection_state()

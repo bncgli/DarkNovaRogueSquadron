@@ -30,8 +30,6 @@ var btn_select: Button = null
 var btn_add_room: Button = null
 var btn_add_duct: Button = null
 var btn_add_device: Button = null
-var btn_add_junction: Button = null
-var btn_add_conduit: Button = null
 var btn_add_damage: Button = null
 var btn_delete: Button = null
 var opt_room_template: OptionButton = null
@@ -39,8 +37,6 @@ var opt_room_template: OptionButton = null
 var chk_layer_rooms: CheckBox = null
 var chk_layer_ducts: CheckBox = null
 var chk_layer_devices: CheckBox = null
-var chk_layer_junctions: CheckBox = null
-var chk_layer_conduits: CheckBox = null
 var chk_layer_damages: CheckBox = null
 var chk_layer_spawn: CheckBox = null
 var chk_layer_bounds: CheckBox = null
@@ -373,6 +369,14 @@ func _create_toolbar() -> Control:
 	btn_save_as.pressed.connect(_on_btn_save_as_tres_pressed)
 	row1.add_child(btn_save_as)
 	
+	row1.add_child(VSeparator.new())
+	
+	var btn_random := Button.new()
+	btn_random.text = "🎲 Genera Random"
+	btn_random.pressed.connect(_on_btn_random_pressed)
+	btn_random.tooltip_text = "Genera un layout procedurale (Sovrascrive l'attuale)"
+	row1.add_child(btn_random)
+	
 	var btn_json_export := Button.new()
 	btn_json_export.text = "Exp JSON"
 	btn_json_export.pressed.connect(_on_btn_export_json_pressed)
@@ -446,11 +450,6 @@ func _create_toolbar() -> Control:
 	btn_add_device = _create_tool_button("⚡ Dispositivo", ShipBlueprintCanvas.ToolMode.ADD_DEVICE, false)
 	row1.add_child(btn_add_device)
 	
-	btn_add_junction = _create_tool_button("🟡 Snodo", ShipBlueprintCanvas.ToolMode.ADD_JUNCTION, false)
-	row1.add_child(btn_add_junction)
-	
-	btn_add_conduit = _create_tool_button("🔌 Cablaggio", ShipBlueprintCanvas.ToolMode.ADD_CONDUIT, false)
-	row1.add_child(btn_add_conduit)
 	
 	btn_add_damage = _create_tool_button("💥 Danno", ShipBlueprintCanvas.ToolMode.ADD_DAMAGE, false)
 	row1.add_child(btn_add_damage)
@@ -483,11 +482,6 @@ func _create_toolbar() -> Control:
 	chk_layer_devices = _create_layer_check("Dispositivi", true, func(v): canvas.show_devices = v)
 	row2.add_child(chk_layer_devices)
 	
-	chk_layer_junctions = _create_layer_check("Snodi", true, func(v): canvas.show_junctions = v)
-	row2.add_child(chk_layer_junctions)
-	
-	chk_layer_conduits = _create_layer_check("Cablaggi", true, func(v): canvas.show_conduits = v)
-	row2.add_child(chk_layer_conduits)
 	
 	chk_layer_damages = _create_layer_check("Danni", true, func(v): canvas.show_damages = v)
 	row2.add_child(chk_layer_damages)
@@ -925,12 +919,15 @@ func _on_canvas_tool_changed(new_tool: int) -> void:
 func _update_stats_label() -> void:
 	if not current_blueprint or not lbl_status_stats:
 		return
-	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Snodi | %d Cablaggi | %d Danni | %d File | %d App" % [
+		
+	var all_devs_count := 0
+	for r in current_blueprint.rooms:
+		all_devs_count += (r.get("devices", []) as Array).size()
+		
+	lbl_status_stats.text = "%d Stanze | %d Condotti | %d Dispositivi | %d Danni | %d File | %d App" % [
 		current_blueprint.rooms.size(),
 		current_blueprint.ducts.size(),
-		current_blueprint.devices.size(),
-		current_blueprint.junctions.size(),
-		current_blueprint.conduits.size(),
+		all_devs_count,
 		current_blueprint.damages.size(),
 		current_blueprint.drive_files.size(),
 		current_blueprint.installed_apps.size()
@@ -1105,6 +1102,11 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 				dev["name"] = v
 				current_blueprint.emit_changed()
 			)
+			_add_option_field("Categoria:", str(dev.get("category", "utility")), ShipBlueprint.DEVICE_CATEGORIES, func(v):
+				save_undo_state("Modifica Categoria Dispositivo")
+				dev["category"] = v
+				current_blueprint.emit_changed()
+			)
 			_add_sector_selector_field("Settore:", str(dev.get("sector", "")), func(v):
 				save_undo_state("Modifica Settore Dispositivo")
 				dev["sector"] = v
@@ -1139,72 +1141,6 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 				current_blueprint.emit_changed()
 			)
 
-		"junction":
-			var junc := current_blueprint.get_junction_by_id(elem_id)
-			if junc.is_empty():
-				return
-			_add_string_field("ID Snodo:", str(junc.get("id", "")), func(v):
-				save_undo_state("Rinomina Snodo")
-				junc["id"] = v
-				canvas.selected_id = v
-				current_blueprint.emit_changed()
-			)
-			_add_string_field("Nome Snodo:", str(junc.get("name", "")), func(v):
-				save_undo_state("Modifica Nome Snodo")
-				junc["name"] = v
-				current_blueprint.emit_changed()
-			)
-			_add_vector2_field("Posizione (X, Y):", junc.get("pos", Vector2.ZERO), func(v):
-				save_undo_state("Sposta Snodo")
-				junc["pos"] = v
-				current_blueprint.emit_changed()
-				canvas.queue_redraw()
-			)
-			_add_string_field("Fonte Input:", str(junc.get("input_source", "")), func(v):
-				save_undo_state("Modifica Fonte Input Snodo")
-				junc["input_source"] = v
-				current_blueprint.emit_changed()
-			)
-			_add_int_field("Ramo Attivo (Indice):", int(junc.get("active_branch", 0)), func(v):
-				save_undo_state("Cambia Ramo Attivo Snodo")
-				junc["active_branch"] = v
-				current_blueprint.emit_changed()
-				canvas.queue_redraw()
-			)
-			_add_branches_editor(junc)
-
-		"conduit":
-			var cnd := current_blueprint.get_conduit_by_id(elem_id)
-			if cnd.is_empty():
-				return
-			_add_string_field("ID Cablaggio:", str(cnd.get("id", "")), func(v):
-				save_undo_state("Rinomina Cablaggio")
-				cnd["id"] = v
-				canvas.selected_id = v
-				current_blueprint.emit_changed()
-			)
-			_add_vector2_field("Da Posizione (X, Y):", cnd.get("from_pos", Vector2.ZERO), func(v):
-				save_undo_state("Sposta Origine Cablaggio")
-				cnd["from_pos"] = v
-				current_blueprint.emit_changed()
-				canvas.queue_redraw()
-			)
-			_add_vector2_field("A Posizione (X, Y):", cnd.get("to_pos", Vector2.ZERO), func(v):
-				save_undo_state("Sposta Destinazione Cablaggio")
-				cnd["to_pos"] = v
-				current_blueprint.emit_changed()
-				canvas.queue_redraw()
-			)
-			_add_string_field("Da Snodo:", str(cnd.get("from_junction", "")), func(v):
-				save_undo_state("Modifica Snodo Origine Cablaggio")
-				cnd["from_junction"] = v
-				current_blueprint.emit_changed()
-			)
-			_add_string_field("Target ID Dispositivo:", str(cnd.get("target_id", "")), func(v):
-				save_undo_state("Modifica Target Cablaggio")
-				cnd["target_id"] = v
-				current_blueprint.emit_changed()
-			)
 
 		"damage":
 			var dmg := current_blueprint.get_damage_by_id(elem_id)
@@ -1276,6 +1212,27 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Di
 				current_blueprint.drone_spawn_heading = deg_to_rad(v)
 				current_blueprint.emit_changed()
 				canvas.queue_redraw()
+			)
+			
+			# TASK-019: Selezione Stanza Ricarica
+			var room_names: Array[String] = ["(Nessuna)"]
+			var room_ids: Array[String] = [""]
+			var current_sel_name := "(Nessuna)"
+			
+			for r in current_blueprint.rooms:
+				var r_id: String = str(r.get("id", ""))
+				var r_name: String = str(r.get("name", r_id))
+				room_names.append(r_name)
+				room_ids.append(r_id)
+				if r_id == current_blueprint.recharge_room_id:
+					current_sel_name = r_name
+			
+			_add_option_field("Stanza Ricarica Drone:", current_sel_name, room_names, func(new_name):
+				save_undo_state("Cambia Stanza Ricarica")
+				var idx := room_names.find(new_name)
+				if idx >= 0:
+					current_blueprint.recharge_room_id = room_ids[idx]
+					canvas.queue_redraw()
 			)
 
 		"drive_file":
@@ -1706,150 +1663,6 @@ func _add_passwords_editor() -> void:
 	
 	prop_editor_vbox.add_child(v_box)
 
-func _add_branches_editor(junc: Dictionary) -> void:
-	var v_box := VBoxContainer.new()
-	var l := Label.new()
-	l.text = "Rami e Circuiti dello Snodo:"
-	v_box.add_child(l)
-	
-	var branches: Array = junc.get("branches", [])
-	for b_idx in range(branches.size()):
-		var b: Dictionary = branches[b_idx]
-		var b_box := PanelContainer.new()
-		var b_vbox := VBoxContainer.new()
-		b_box.add_child(b_vbox)
-		
-		var b_top_row := HBoxContainer.new()
-		var b_lbl := Label.new()
-		b_lbl.text = "Ramo %d" % b_idx
-		b_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		var btn_del_b := Button.new()
-		btn_del_b.text = "🗑️ Rimuovi Ramo"
-		var cur_idx := b_idx
-		btn_del_b.pressed.connect(func():
-			save_undo_state("Rimuovi Ramo Snodo")
-			branches.remove_at(cur_idx)
-			current_blueprint.emit_changed()
-			_populate_property_editor("junction", str(junc.get("id", "")), junc)
-			canvas.queue_redraw()
-		)
-		b_top_row.add_child(b_lbl)
-		b_top_row.add_child(btn_del_b)
-		b_vbox.add_child(b_top_row)
-		
-		# Nome Ramo
-		var ed_name := LineEdit.new()
-		ed_name.placeholder_text = "Nome Ramo"
-		ed_name.text = str(b.get("name", ""))
-		ed_name.text_changed.connect(func(v: String):
-			save_undo_state("Nome Ramo")
-			b["name"] = v
-			current_blueprint.emit_changed()
-		)
-		b_vbox.add_child(ed_name)
-		
-		# Tipo Target & Target ID
-		var h_target := HBoxContainer.new()
-		var opt_ttype := OptionButton.new()
-		opt_ttype.add_item("dead_end", 0)
-		opt_ttype.add_item("device", 1)
-		opt_ttype.add_item("sub_junction", 2)
-		opt_ttype.add_item("system", 3)
-		var ttype_str: String = str(b.get("target_type", "dead_end"))
-		match ttype_str:
-			"dead_end": opt_ttype.select(0)
-			"device": opt_ttype.select(1)
-			"sub_junction": opt_ttype.select(2)
-			"system": opt_ttype.select(3)
-		opt_ttype.item_selected.connect(func(idx: int):
-			save_undo_state("Tipo Target Ramo")
-			b["target_type"] = opt_ttype.get_item_text(idx)
-			current_blueprint.emit_changed()
-			canvas.queue_redraw()
-		)
-		h_target.add_child(opt_ttype)
-		
-		var ed_target := LineEdit.new()
-		ed_target.placeholder_text = "Target ID (es. DEV_1 o DEAD_1)"
-		ed_target.text = str(b.get("target_id", ""))
-		ed_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		ed_target.text_changed.connect(func(v: String):
-			save_undo_state("Target ID Ramo")
-			b["target_id"] = v
-			current_blueprint.emit_changed()
-		)
-		h_target.add_child(ed_target)
-		b_vbox.add_child(h_target)
-		
-		# Line ID
-		var ed_line := LineEdit.new()
-		ed_line.placeholder_text = "Line ID (es. L_J1_B0)"
-		ed_line.text = str(b.get("line_id", ""))
-		ed_line.text_changed.connect(func(v: String):
-			save_undo_state("Line ID Ramo")
-			b["line_id"] = v
-			current_blueprint.emit_changed()
-		)
-		b_vbox.add_child(ed_line)
-		
-		# Destinazione Cavo to_pos
-		var cur_to_pos: Vector2 = b.get("to_pos", junc.get("pos", Vector2.ZERO))
-		var h_pos := HBoxContainer.new()
-		var spin_bx := SpinBox.new()
-		spin_bx.min_value = -9999.0
-		spin_bx.max_value = 9999.0
-		spin_bx.step = 5.0
-		spin_bx.value = cur_to_pos.x
-		spin_bx.prefix = "To X: "
-		spin_bx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		var spin_by := SpinBox.new()
-		spin_by.min_value = -9999.0
-		spin_by.max_value = 9999.0
-		spin_by.step = 5.0
-		spin_by.value = cur_to_pos.y
-		spin_by.prefix = "To Y: "
-		spin_by.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		spin_bx.value_changed.connect(func(v: float):
-			save_undo_state("Destinazione Cavo")
-			b["to_pos"] = Vector2(v, spin_by.value)
-			current_blueprint.emit_changed()
-			canvas.queue_redraw()
-		)
-		spin_by.value_changed.connect(func(v: float):
-			save_undo_state("Destinazione Cavo")
-			b["to_pos"] = Vector2(spin_bx.value, v)
-			current_blueprint.emit_changed()
-			canvas.queue_redraw()
-		)
-		h_pos.add_child(spin_bx)
-		h_pos.add_child(spin_by)
-		b_vbox.add_child(h_pos)
-		
-		v_box.add_child(b_box)
-		
-	var btn_add_branch := Button.new()
-	btn_add_branch.text = "+ Aggiungi Nuovo Ramo"
-	btn_add_branch.pressed.connect(func():
-		save_undo_state("Aggiungi Ramo Snodo")
-		var j_pos: Vector2 = junc.get("pos", Vector2.ZERO)
-		var new_b := {
-			"name": "Ramo %d" % (branches.size() + 1),
-			"target_type": "dead_end",
-			"target_id": "DEAD_%d" % (branches.size() + 1),
-			"line_id": "L_%s_B%d" % [junc.get("id", "J"), branches.size()],
-			"to_pos": j_pos + Vector2(40, 20 * branches.size())
-		}
-		branches.append(new_b)
-		current_blueprint.emit_changed()
-		_populate_property_editor("junction", str(junc.get("id", "")), junc)
-		canvas.queue_redraw()
-	)
-	v_box.add_child(btn_add_branch)
-	prop_editor_vbox.add_child(v_box)
-
 func _add_roles_editor(app: Dictionary) -> void:
 	var v_box := VBoxContainer.new()
 	var l := Label.new()
@@ -1912,32 +1725,20 @@ func _refresh_outliner() -> void:
 		item.set_metadata(0, {"type": "duct", "id": str(d.get("id", ""))})
 
 	# Gruppo 3: Rete Elettrica
+	var all_devices: Array = []
+	for r in current_blueprint.rooms:
+		var devs: Array = r.get("devices", [])
+		all_devices.append_array(devs)
+		
 	var cat_power := outliner_tree.create_item(root)
-	cat_power.set_text(0, "⚡ Rete Elettrica (%d Dev / %d Snodi / %d Cablaggi)" % [
-		current_blueprint.devices.size(),
-		current_blueprint.junctions.size(),
-		current_blueprint.conduits.size()
-	])
+	cat_power.set_text(0, "⚡ Rete Elettrica (%d Dispositivi)" % all_devices.size())
 	
 	# Sottogruppo Dispositivi
-	for dev in current_blueprint.devices:
+	for dev in all_devices:
 		var item := outliner_tree.create_item(cat_power)
 		var gen_tag := " [GEN %d MW]" % int(dev.get("power_mw", 0)) if dev.get("is_generator", false) else ""
 		item.set_text(0, "⚡ [%s] %s%s" % [str(dev.get("id", "")), str(dev.get("name", "")), gen_tag])
 		item.set_metadata(0, {"type": "device", "id": str(dev.get("id", ""))})
-		
-	# Sottogruppo Snodi
-	for j in current_blueprint.junctions:
-		var item := outliner_tree.create_item(cat_power)
-		var b_count: int = (j.get("branches", []) as Array).size()
-		item.set_text(0, "🟡 [%s] %s (%d rami)" % [str(j.get("id", "")), str(j.get("name", "")), b_count])
-		item.set_metadata(0, {"type": "junction", "id": str(j.get("id", ""))})
-		
-	# Sottogruppo Cablaggi
-	for cnd in current_blueprint.conduits:
-		var item := outliner_tree.create_item(cat_power)
-		item.set_text(0, "🔌 [%s] Cablaggio -> %s" % [str(cnd.get("id", "")), str(cnd.get("target_id", "Libero"))])
-		item.set_metadata(0, {"type": "conduit", "id": str(cnd.get("id", ""))})
 
 	# Gruppo 4: Zone di Danno
 	var cat_damages := outliner_tree.create_item(root)

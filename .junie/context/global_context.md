@@ -19,6 +19,7 @@
 | NetworkManager | `res://Scenes/Networking/network_manager.tscn` | Manages networking capabilities. |
 | SpaceWorldManager | `res://Outside/space_world_manager.gd` | Manages the 3D space world environment. |
 | StarSystemGridManager | `res://Outside/StarSystemGrid/star_system_grid_manager.gd` | Manages the star system grid. |
+| RoomDatabase | `res://Scenes/Autoloads/RoomDatabase.gd` | Database of standard rooms for ship building. |
 | ShipDriveManager | `res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd` | Manages ship movement and drive systems. |
 | TerminalDriveManager | `res://Scenes/Autoloads/TerminalDrive/terminal_drive_manager.gd` | Manages terminal-related drive operations. |
 | FolderPasswordManager | `res://Scenes/Autoloads/FolderPasswordManager/folder_password_manager.gd` | Manages passwords for folders. |

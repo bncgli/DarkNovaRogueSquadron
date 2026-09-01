@@ -19,6 +19,7 @@ signal waypoint_updated(waypoint_data: Dictionary)
 signal active_ping_triggered(origin: Vector3, radius: float)
 signal sensors_scan_completed(contacts: Array)
 signal service_drone_state_changed(telemetry: Dictionary)
+signal ship_system_power_changed(category: String, is_powered: bool)
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
@@ -952,15 +953,16 @@ func get_duct_corridors() -> Array[Dictionary]:
 ## Ritorna i dispositivi elettrici della nave da ShipBlueprint
 func get_power_devices() -> Array[Dictionary]:
 	var bp := get_ship_blueprint()
-	if bp and bp.devices.size() > 0:
-		return bp.devices
-	return []
+	if not bp: return []
+	var all_devs: Array[Dictionary] = []
+	for r in bp.rooms:
+		var devs: Array = r.get("devices", [])
+		for d in devs:
+			all_devs.append(d)
+	return all_devs
 
-## Ritorna gli snodi elettrici della nave da ShipBlueprint
+## Ritorna gli snodi elettrici della nave (Rimosso in TASK-017)
 func get_power_junctions() -> Array[Dictionary]:
-	var bp := get_ship_blueprint()
-	if bp and bp.junctions.size() > 0:
-		return bp.junctions
 	return []
 
 ## Ritorna le zone/punti di danno predefiniti della nave da ShipBlueprint

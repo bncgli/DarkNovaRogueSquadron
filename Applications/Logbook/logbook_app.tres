@@ -10,6 +10,7 @@ required_subsystems = Array[String]([])
 app_id = "logbook"
 title = "Registro di Bordo & Obiettivi"
 description = "Diario di volo, contratti sandbox, scatola nera ed eventi"
+developer = "Nebula Logic"
 category = "Sistemi Nave"
 icon_color = Color(0.8, 0.7, 0.2, 1)
 scene_path = "res://Applications/Logbook/logbook_app.tscn"

@@ -10,6 +10,7 @@ required_subsystems = Array[String](["sensors_array", "tactical_radar"])
 app_id = "sensors"
 title = "Array Sensori & Mappa Tattica"
 description = "Mappa telemetrica spaziale a lungo raggio e spettrometria"
+developer = "AstroForge"
 category = "Sistemi Nave"
 icon_color = Color(0.2, 0.8, 0.4, 1)
 scene_path = "res://Applications/Sensors/sensors_app.tscn"

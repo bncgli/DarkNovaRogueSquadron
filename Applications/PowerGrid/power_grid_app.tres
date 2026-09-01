@@ -10,6 +10,7 @@ required_subsystems = Array[String](["reactor", "power_junctions"])
 app_id = "power_grid"
 title = "Power Grid"
 description = "Mappa elettrica 2D, snodi e flussi energetici nave"
+developer = "NovaTech Systems"
 category = "Sistemi Nave"
 icon_color = Color(0.95, 0.85, 0.2, 1)
 scene_path = "res://Applications/PowerGrid/power_grid_app.tscn"

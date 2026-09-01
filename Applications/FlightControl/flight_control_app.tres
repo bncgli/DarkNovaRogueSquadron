@@ -11,6 +11,7 @@ is_critical = true
 app_id = "flight_control"
 title = "Flight Control"
 description = "Controlli di manovra e navigazione nave"
+developer = "Zenith Aerospace"
 category = "Sistemi Nave"
 icon_color = Color(1, 0.6, 0.2, 1)
 scene_path = "res://Applications/FlightControl/flight_control_app.tscn"

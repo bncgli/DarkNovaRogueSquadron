@@ -128,6 +128,8 @@ func _find_parent_window() -> FakeWindow:
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
 		SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
+		if SpaceWorldManager.has_signal("ship_system_power_changed"):
+			SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
 	if NetworkManager:
 		NetworkManager.player_role_changed.connect(_on_player_role_changed)
 	if StarSystemGridManager:
@@ -146,6 +148,8 @@ func _exit_tree() -> void:
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
+		if SpaceWorldManager.has_signal("ship_system_power_changed") and SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
+			SpaceWorldManager.ship_system_power_changed.disconnect(_on_system_power_changed)
 		SpaceWorldManager.stop_spaceship_engines()
 	if NetworkManager:
 		if NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
@@ -170,6 +174,18 @@ func is_operational() -> bool:
 	elif NetworkManager and NetworkManager.has_method("is_ship_connected"):
 		return NetworkManager.is_ship_connected()
 	return false
+
+func _on_system_power_changed(category: String, is_powered: bool) -> void:
+	if category == "propulsion" or category == "command":
+		if not is_powered:
+			# Disabilita controlli di volo
+			can_control_flight = false
+			_update_permissions()
+			if thrusters_badge:
+				thrusters_badge.text = "OFFLINE - NO POWER"
+				thrusters_badge.modulate = Color(1.0, 0.3, 0.2)
+		else:
+			_update_permissions()
 
 func _on_ship_connection_changed(_connected: bool) -> void:
 	_update_connection_state()

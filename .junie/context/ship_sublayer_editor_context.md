@@ -4,9 +4,14 @@ Custom Godot editor plugin and standalone tool for managing ship blueprints (`Sh
 
 | File | Purpose | Key Responsibilities |
 |------|---------|----------------------|
-| `ship_sublayer_editor.gd` | Main editor logic and UI. | UI construction, Software Manager, Undo/Redo, Blueprint I/O. |
-| `ship_blueprint_canvas.gd` | 2D Canvas for visual editing. | Rendering ship rooms, ducts, devices, and handling mouse input. |
+| `ship_sublayer_editor.gd` | Main editor logic and UI. | UI construction, Software Manager, Room selection, Blueprint I/O. |
+| `ship_blueprint_canvas.gd` | 2D Canvas for visual editing. | Rendering ship rooms, maintenance ducts, devices, and handling mouse input. |
 | `ship_sublayer_editor_plugin.gd` | Godot Editor Plugin wrapper. | Integration with the Godot editor interface. |
+
+#### Structural Changes (Refactoring)
+- **Room-Based Energy**: Power is now managed at the room level. Each room tracks its own consumption and state (`is_on`).
+- **Junctions & Conduits Removed**: The complex network of power lines and junctions has been removed in favor of a centralized room-based system.
+- **Maintenance Ducts**: Still present for drone navigation but decoupled from the power grid.
 
 #### Software Manager (Integrated in Editor)
 - **Purpose**: Manages installed applications and drive passwords within a `ShipBlueprint`.

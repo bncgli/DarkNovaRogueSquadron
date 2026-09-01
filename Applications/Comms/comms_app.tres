@@ -11,6 +11,7 @@ is_critical = false
 app_id = "comms"
 title = "Comms & Electronic War"
 description = "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari"
+developer = "Pulse Networks"
 category = "Sistemi Nave"
 icon_color = Color(0.4, 0.8, 1, 1)
 scene_path = "res://Applications/Comms/comms_app.tscn"

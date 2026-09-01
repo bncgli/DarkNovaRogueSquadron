@@ -14,10 +14,6 @@ enum ToolMode {
 	SELECT,
 	ADD_ROOM,
 	ADD_DUCT,
-	ADD_DEVICE,
-	ADD_JUNCTION,
-	ADD_CONDUIT,
-	ADD_DAMAGE,
 	DELETE
 }
 
@@ -38,6 +34,7 @@ var current_tool: ToolMode = ToolMode.SELECT:
 		is_resizing_room = false
 		is_panning = false
 		queue_redraw()
+		emit_signal("tool_changed", val)
 
 # Visibilità dei layer
 var show_rooms: bool = true:
@@ -53,25 +50,6 @@ var show_ducts: bool = true:
 var show_devices: bool = true:
 	set(val):
 		show_devices = val
-		queue_redraw()
-
-var show_junctions: bool = true:
-	set(val):
-		show_junctions = val
-		queue_redraw()
-
-var show_conduits: bool = true:
-	set(val):
-		show_conduits = val
-		queue_redraw()
-
-var show_power_grid: bool:
-	get:
-		return show_devices or show_junctions or show_conduits
-	set(val):
-		show_devices = val
-		show_junctions = val
-		show_conduits = val
 		queue_redraw()
 
 var show_damages: bool = true:
@@ -107,9 +85,12 @@ var view_offset: Vector2 = Vector2(80, 40)
 var zoom_level: float = 1.0
 
 # Stato selezione e manipolazione
-var selected_type: String = "" # "room", "duct", "device", "junction", "conduit", "damage", "spawn", "bounds"
+var selected_type: String = "" # "room", "duct", "device", "damage", "spawn", "bounds"
 var selected_id: String = ""
-var selected_room_template: String = "ponte_comando"
+var selected_room_template: String = "ponte_comando":
+	set(val):
+		selected_room_template = val
+		queue_redraw()
 var _clipboard_type: String = ""
 var _clipboard_data: Dictionary = {}
 var is_dragging_element: bool = false
@@ -277,27 +258,6 @@ func _handle_left_click_pressed(world_pos: Vector2, snapped_world: Vector2) -> v
 				_creation_step = 0
 			queue_redraw()
 
-		ToolMode.ADD_DEVICE:
-			_finish_add_device(snapped_world)
-			queue_redraw()
-
-		ToolMode.ADD_JUNCTION:
-			_finish_add_junction(snapped_world)
-			queue_redraw()
-
-		ToolMode.ADD_CONDUIT:
-			if _creation_step == 0:
-				_creation_start_pos = snapped_world
-				_creation_step = 1
-			else:
-				_finish_add_conduit(_creation_start_pos, snapped_world)
-				_creation_step = 0
-			queue_redraw()
-
-		ToolMode.ADD_DAMAGE:
-			_finish_add_damage(snapped_world)
-			queue_redraw()
-
 		ToolMode.DELETE:
 			var hit_del := _pick_element_at(world_pos)
 			if not hit_del.is_empty():
@@ -349,15 +309,6 @@ func _apply_element_state(elem_type: String, elem_id: String, state: Dictionary)
 			var dev := blueprint.get_device_by_id(elem_id)
 			if not dev.is_empty() and state.has("pos"):
 				dev["pos"] = state["pos"]
-		"junction":
-			var j := blueprint.get_junction_by_id(elem_id)
-			if not j.is_empty() and state.has("pos"):
-				j["pos"] = state["pos"]
-		"conduit":
-			var c := blueprint.get_conduit_by_id(elem_id)
-			if not c.is_empty():
-				if state.has("from_pos"): c["from_pos"] = state["from_pos"]
-				if state.has("to_pos"): c["to_pos"] = state["to_pos"]
 		"damage":
 			var dmg := blueprint.get_damage_by_id(elem_id)
 			if not dmg.is_empty() and state.has("pos"):
@@ -427,22 +378,6 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 				dev["pos"] = orig_pos + delta_pos
 				blueprint.emit_changed()
 				queue_redraw()
-		"junction":
-			var j := blueprint.get_junction_by_id(selected_id)
-			if not j.is_empty():
-				var orig_pos: Vector2 = drag_element_start_state.get("pos", Vector2.ZERO)
-				j["pos"] = orig_pos + delta_pos
-				blueprint.emit_changed()
-				queue_redraw()
-		"conduit":
-			var c := blueprint.get_conduit_by_id(selected_id)
-			if not c.is_empty():
-				var orig_from: Vector2 = drag_element_start_state.get("from_pos", Vector2.ZERO)
-				var orig_to: Vector2 = drag_element_start_state.get("to_pos", Vector2.ZERO)
-				c["from_pos"] = orig_from + delta_pos
-				c["to_pos"] = orig_to + delta_pos
-				blueprint.emit_changed()
-				queue_redraw()
 		"damage":
 			var dmg := blueprint.get_damage_by_id(selected_id)
 			if not dmg.is_empty():
@@ -464,7 +399,7 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 func _pick_element_at(world_pos: Vector2) -> Dictionary:
 	var pick_rad := maxf(16.0, 14.0 / zoom_level)
 	
-	# Priorità di selezione: Spawn -> Danni -> Snodi -> Dispositivi -> Cablaggi -> Condotti -> Stanze -> Scafo
+	# Priorità di selezione: Spawn -> Danni -> Dispositivi -> Condotti -> Stanze -> Scafo
 	if show_spawn:
 		if world_pos.distance_to(blueprint.drone_spawn_pos) <= pick_rad:
 			return {"type": "spawn", "id": "drone_spawn", "data": {"pos": blueprint.drone_spawn_pos, "heading": blueprint.drone_spawn_heading}}
@@ -475,25 +410,14 @@ func _pick_element_at(world_pos: Vector2) -> Dictionary:
 			if world_pos.distance_to(pos) <= pick_rad:
 				return {"type": "damage", "id": dmg.get("id", ""), "data": dmg}
 
-	if show_junctions:
-		for j in blueprint.junctions:
-			var pos: Vector2 = j.get("pos", Vector2.ZERO)
-			if world_pos.distance_to(pos) <= pick_rad:
-				return {"type": "junction", "id": j.get("id", ""), "data": j}
-
 	if show_devices:
-		for dev in blueprint.devices:
-			var pos: Vector2 = dev.get("pos", Vector2.ZERO)
-			var box := Rect2(pos - Vector2(16, 16), Vector2(32, 32))
-			if box.has_point(world_pos) or world_pos.distance_to(pos) <= pick_rad:
-				return {"type": "device", "id": dev.get("id", ""), "data": dev}
-
-	if show_conduits:
-		for c in blueprint.conduits:
-			var p1: Vector2 = c.get("from_pos", Vector2.ZERO)
-			var p2: Vector2 = c.get("to_pos", Vector2.ZERO)
-			if _distance_to_segment(world_pos, p1, p2) <= maxf(8.0, 6.0 / zoom_level):
-				return {"type": "conduit", "id": c.get("id", ""), "data": c}
+		for r in blueprint.rooms:
+			var devs: Array = r.get("devices", [])
+			for dev in devs:
+				var pos: Vector2 = dev.get("pos", Vector2.ZERO)
+				var box := Rect2(pos - Vector2(16, 16), Vector2(32, 32))
+				if box.has_point(world_pos) or world_pos.distance_to(pos) <= pick_rad:
+					return {"type": "device", "id": dev.get("id", ""), "data": dev}
 
 	if show_ducts:
 		for d in blueprint.ducts:
@@ -573,10 +497,6 @@ func _get_selected_element_data() -> Dictionary:
 			return blueprint.get_duct_by_id(selected_id)
 		"device":
 			return blueprint.get_device_by_id(selected_id)
-		"junction":
-			return blueprint.get_junction_by_id(selected_id)
-		"conduit":
-			return blueprint.get_conduit_by_id(selected_id)
 		"damage":
 			return blueprint.get_damage_by_id(selected_id)
 		"spawn":
@@ -632,21 +552,6 @@ func paste_selection(offset: Vector2 = Vector2(20, 20)) -> void:
 			for key in data_to_paste:
 				if key != "id" and key != "pos":
 					new_dev[key] = data_to_paste[key]
-		"junction":
-			var pos: Vector2 = data_to_paste.get("pos", Vector2.ZERO) + offset
-			_finish_add_junction(pos)
-			var new_junc := blueprint.get_junction_by_id(selected_id)
-			for key in data_to_paste:
-				if key != "id" and key != "pos":
-					new_junc[key] = data_to_paste[key]
-		"conduit":
-			var p1: Vector2 = data_to_paste.get("from_pos", Vector2.ZERO) + offset
-			var p2: Vector2 = data_to_paste.get("to_pos", Vector2.ZERO) + offset
-			_finish_add_conduit(p1, p2)
-			var new_cnd := blueprint.get_conduit_by_id(selected_id)
-			for key in data_to_paste:
-				if key != "id" and key != "from_pos" and key != "to_pos":
-					new_cnd[key] = data_to_paste[key]
 		"damage":
 			var pos: Vector2 = data_to_paste.get("pos", Vector2.ZERO) + offset
 			_finish_add_damage(pos)
@@ -691,23 +596,6 @@ func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 	emit_signal("action_committed", "Aggiungi Stanza: " + room_name)
 	blueprint.rooms.append(new_room)
 	
-	# Aggiungi dispositivi di default
-	var default_devices: Array = template_data.get("default_devices", [])
-	var center := top_left + size_rect / 2.0
-	
-	for i in range(default_devices.size()):
-		var dev_template_name: String = default_devices[i]
-		var dev_pos := center
-		# Se ci sono più dispositivi, distribuiscili un po'
-		if default_devices.size() > 1:
-			var angle := (PI * 2.0 / default_devices.size()) * i
-			dev_pos += Vector2(cos(angle), sin(angle)) * (minf(size_rect.x, size_rect.y) * 0.25)
-			
-		var dev_name := dev_template_name.capitalize().replace("_", " ")
-		var is_gen := dev_template_name.contains("reattore") or dev_template_name.contains("reactor")
-		
-		_add_device_internal(dev_pos, dev_name, room_name, is_gen)
-	
 	blueprint.emit_changed()
 	selected_type = "room"
 	selected_id = new_id
@@ -742,9 +630,10 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 
 func _finish_add_device(pos: Vector2) -> void:
 	var room_here := blueprint.get_room_at(pos)
-	var sector_name := str(room_here.get("name", "Generale")) if not room_here.is_empty() else "Nave"
-	
-	var new_dev := _add_device_internal(pos, "Nuovo Dispositivo", sector_name, false)
+	if room_here.is_empty():
+		return
+		
+	var new_dev := _add_device_internal(room_here, pos, "Nuovo Dispositivo", false)
 	
 	emit_signal("action_committed", "Aggiungi Dispositivo")
 	blueprint.emit_changed()
@@ -754,93 +643,22 @@ func _finish_add_device(pos: Vector2) -> void:
 	current_tool = ToolMode.SELECT
 	emit_signal("tool_changed", ToolMode.SELECT)
 
-func _add_device_internal(pos: Vector2, dev_name: String, sector_name: String, is_gen: bool) -> Dictionary:
-	var next_idx := blueprint.devices.size() + 1
-	var new_id := "device_%d" % next_idx
-	while not blueprint.get_device_by_id(new_id).is_empty():
-		next_idx += 1
-		new_id = "device_%d" % next_idx
-		
-	var new_dev: Dictionary = {
-		"id": new_id,
-		"name": dev_name,
-		"sector": sector_name,
-		"pos": pos,
-		"is_generator": is_gen,
-		"power_mw": 500.0 if is_gen else 100.0,
-		"inputs_count": 1,
-		"desc": "Dispositivo della rete elettrica in %s." % sector_name
-	}
-	blueprint.devices.append(new_dev)
-	return new_dev
-
-func _finish_add_junction(pos: Vector2) -> void:
-	var next_idx := blueprint.junctions.size() + 1
-	var new_id := "J%d" % next_idx
-	while not blueprint.get_junction_by_id(new_id).is_empty():
-		next_idx += 1
-		new_id = "J%d" % next_idx
-	var new_junc: Dictionary = {
-		"id": new_id,
-		"name": "Snodo %s" % new_id,
-		"pos": pos,
-		"input_source": "reactor_main",
-		"active_branch": 0,
-		"branches": [
-			{"name": "Ramo Principale", "target_type": "dead_end", "target_id": "DEAD_1", "line_id": "L_%s_B0" % new_id, "to_pos": pos + Vector2(40, 0)}
-		]
-	}
-	emit_signal("action_committed", "Aggiungi Snodo")
-	blueprint.junctions.append(new_junc)
-	blueprint.emit_changed()
-	selected_type = "junction"
-	selected_id = new_id
-	emit_signal("element_selected", selected_type, selected_id, new_junc)
-	current_tool = ToolMode.SELECT
-	emit_signal("tool_changed", ToolMode.SELECT)
-
-func _finish_add_conduit(p1: Vector2, p2: Vector2) -> void:
-	if p1.distance_to(p2) < 10.0:
-		p2 = p1 + Vector2(60, 0)
-	var next_idx := blueprint.conduits.size() + 1
-	var new_id := "CND_%d" % next_idx
-	while not blueprint.get_conduit_by_id(new_id).is_empty():
-		next_idx += 1
-		new_id = "CND_%d" % next_idx
-	var new_cnd: Dictionary = {
-		"id": new_id,
-		"from_pos": p1,
-		"to_pos": p2,
-		"from_junction": "",
-		"target_id": ""
-	}
-	emit_signal("action_committed", "Aggiungi Cablaggio")
-	blueprint.conduits.append(new_cnd)
-	blueprint.emit_changed()
-	selected_type = "conduit"
-	selected_id = new_id
-	emit_signal("element_selected", selected_type, selected_id, new_cnd)
-	current_tool = ToolMode.SELECT
-	emit_signal("tool_changed", ToolMode.SELECT)
-
 func _finish_add_damage(pos: Vector2) -> void:
 	var next_idx := blueprint.damages.size() + 1
 	var new_id := "dmg_%d" % next_idx
 	while not blueprint.get_damage_by_id(new_id).is_empty():
 		next_idx += 1
 		new_id = "dmg_%d" % next_idx
-	var room_here := blueprint.get_room_at(pos)
-	var sector_name := str(room_here.get("name", "Settore Nave")) if not room_here.is_empty() else "Nave"
 	var new_dmg: Dictionary = {
 		"id": new_id,
 		"type": "breach",
-		"name": "Danno Strutturale %d" % next_idx,
+		"name": "Nuovo Punto di Danno %d" % next_idx,
 		"pos": pos,
-		"sector": sector_name,
+		"sector": "Sconosciuto",
 		"severity": 5.0,
 		"repair_cost": 10.0,
-		"desc": "Falla o anomalia rilevata nel compartimento.",
-		"system_impact": "integrity_warning"
+		"desc": "Nuovo danno strutturale.",
+		"system_impact": "none"
 	}
 	emit_signal("action_committed", "Aggiungi Danno")
 	blueprint.damages.append(new_dmg)
@@ -850,6 +668,25 @@ func _finish_add_damage(pos: Vector2) -> void:
 	emit_signal("element_selected", selected_type, selected_id, new_dmg)
 	current_tool = ToolMode.SELECT
 	emit_signal("tool_changed", ToolMode.SELECT)
+
+func _add_device_internal(room: Dictionary, pos: Vector2, dev_name: String, is_gen: bool) -> Dictionary:
+	var devs: Array = room.get("devices", [])
+	var next_idx := devs.size() + 1
+	var new_id := "dev_%s_%d" % [str(room.get("id")), next_idx]
+		
+	var new_dev: Dictionary = {
+		"id": new_id,
+		"name": dev_name,
+		"pos": pos,
+		"is_generator": is_gen,
+		"power_mw": 500.0 if is_gen else -100.0,
+		"category": "utility",
+		"desc": "Dispositivo in %s." % str(room.get("name"))
+	}
+	devs.append(new_dev)
+	room["devices"] = devs
+	blueprint.update_room_power(room.get("id"))
+	return new_dev
 
 func delete_element(elem_type: String, elem_id: String) -> void:
 	if not blueprint:
@@ -862,10 +699,6 @@ func delete_element(elem_type: String, elem_id: String) -> void:
 			blueprint.remove_duct(elem_id)
 		"device":
 			blueprint.remove_device(elem_id)
-		"junction":
-			blueprint.remove_junction(elem_id)
-		"conduit":
-			blueprint.remove_conduit(elem_id)
 		"damage":
 			blueprint.remove_damage(elem_id)
 	if selected_id == elem_id:
@@ -906,11 +739,8 @@ func _draw() -> void:
 		
 	if show_ducts:
 		_draw_ducts()
-
-	if show_conduits:
-		_draw_conduits()
 		
-	if show_devices or show_junctions:
+	if show_devices:
 		_draw_power_grid()
 		
 	if show_damages:
@@ -949,12 +779,28 @@ func _draw_rooms() -> void:
 		
 		var is_selected: bool = (selected_type == "room" and selected_id == r.get("id", ""))
 		
-		# Riempimento
-		draw_rect(screen_rect, col, true)
+		# Riempimento (se spenta, scuriamo)
+		var is_on: bool = r.get("is_on", true)
+		var fill_col := col
+		if not is_on:
+			fill_col = col.lerp(Color.BLACK, 0.4)
+			fill_col.a = col.a * 0.8
+			
+		draw_rect(screen_rect, fill_col, true)
+		
 		# Bordo
 		var b_color := COLOR_SELECTION if is_selected else border_col
+		if not is_on and not is_selected:
+			b_color = border_col.lerp(Color.BLACK, 0.3)
 		var b_width := 3.0 if is_selected else 1.5
 		draw_rect(screen_rect, b_color, false, b_width)
+		
+		# Feedback speciale TASK-019: Stanza Ricarica
+		if blueprint.recharge_room_id == r.get("id", ""):
+			var recharge_col := Color(0.9, 1.0, 0.2, 0.9)
+			var pulse := (sin(Time.get_ticks_msec() * 0.005) * 0.5 + 0.5) * 0.3 + 0.7
+			recharge_col.a *= pulse
+			draw_rect(screen_rect.grow(4 * zoom_level), recharge_col, false, 2.5 * zoom_level)
 		
 		# Etichetta Nome Stanza
 		if show_labels:
@@ -1008,97 +854,41 @@ func _draw_ducts() -> void:
 			var duct_name: String = str(d.get("name", d.get("id", "")))
 			draw_string(font, mid_point + Vector2(4, -4), duct_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.6, 0.8, 1.0, 0.85))
 
-func _draw_conduits() -> void:
-	var font: Font = ThemeDB.fallback_font
-	for c in blueprint.conduits:
-		var p1: Vector2 = c.get("from_pos", Vector2.ZERO)
-		var p2: Vector2 = c.get("to_pos", Vector2.ZERO)
-		var is_selected: bool = (selected_type == "conduit" and selected_id == c.get("id", ""))
-		var sp1 := world_to_screen(p1)
-		var sp2 := world_to_screen(p2)
-		
-		var c_col := COLOR_SELECTION if is_selected else Color(0.2, 0.8, 1.0, 0.85)
-		var c_width := 3.0 * zoom_level if is_selected else 2.0 * zoom_level
-		
-		draw_line(sp1, sp2, Color(0.02, 0.1, 0.18, 0.9), c_width + 3.0)
-		draw_dashed_line(sp1, sp2, c_col, c_width, 5.0 * zoom_level)
-		draw_circle(sp1, 3.5 * zoom_level, c_col)
-		draw_circle(sp2, 3.5 * zoom_level, c_col)
-		
-		if show_labels and zoom_level >= 0.8:
-			var mid_point := (sp1 + sp2) * 0.5
-			var c_id: String = str(c.get("id", "CND"))
-			draw_string(font, mid_point + Vector2(4, -4), c_id, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, c_col)
-
 func _draw_power_grid() -> void:
 	var font: Font = ThemeDB.fallback_font
 	
-	# Disegna cablaggi dagli snodi
-	if show_junctions:
-		for j in blueprint.junctions:
-			var j_pos: Vector2 = j.get("pos", Vector2.ZERO)
-			var s_j_pos := world_to_screen(j_pos)
-			var active_idx: int = int(j.get("active_branch", 0))
-			var branches: Array = j.get("branches", [])
-			
-			for b_idx in range(branches.size()):
-				var branch: Dictionary = branches[b_idx]
-				var to_pos: Vector2 = branch.get("to_pos", j_pos)
-				var s_to_pos := world_to_screen(to_pos)
-				var is_active: bool = (b_idx == active_idx)
-				
-				var cable_col := Color(1.0, 0.9, 0.2, 0.95) if is_active else Color(0.35, 0.45, 0.35, 0.45)
-				var cable_width := 2.5 * zoom_level if is_active else 1.2 * zoom_level
-				
-				draw_line(s_j_pos, s_to_pos, cable_col, cable_width)
-				
-				# Se terminazione morta, disegna una 'X'
-				if branch.get("target_type", "") == "dead_end":
-					draw_line(s_to_pos - Vector2(4, 4), s_to_pos + Vector2(4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
-					draw_line(s_to_pos - Vector2(-4, 4), s_to_pos + Vector2(-4, 4), Color(0.9, 0.3, 0.3, 0.8), 2.0)
-
-		# Disegna Snodi (Junctions)
-		for j in blueprint.junctions:
-			var pos: Vector2 = j.get("pos", Vector2.ZERO)
-			var spos := world_to_screen(pos)
-			var is_selected: bool = (selected_type == "junction" and selected_id == j.get("id", ""))
-			var radius: float = 7.0 * zoom_level
-			
-			var junc_color := COLOR_SELECTION if is_selected else Color(1.0, 0.75, 0.1, 0.95)
-			draw_circle(spos, radius + 2.0, Color.BLACK)
-			draw_circle(spos, radius, junc_color)
-			
-			if show_labels:
-				var j_id: String = str(j.get("id", "J"))
-				draw_string(font, spos + Vector2(10, 4), j_id, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.9, 0.3, 0.9))
-
 	# Disegna Dispositivi (Devices)
 	if show_devices:
-		for dev in blueprint.devices:
-			var pos: Vector2 = dev.get("pos", Vector2.ZERO)
-			var spos := world_to_screen(pos)
-			var is_gen: bool = dev.get("is_generator", false)
-			var is_selected: bool = (selected_type == "device" and selected_id == dev.get("id", ""))
-			var box_size := Vector2(24, 24) * zoom_level
-			var box_rect := Rect2(spos - box_size * 0.5, box_size)
-			
-			var dev_color := Color(1.0, 0.35, 0.15, 0.9) if is_gen else Color(0.2, 0.7, 1.0, 0.9)
-			if is_selected:
-				dev_color = COLOR_SELECTION
+		for r in blueprint.rooms:
+			var devs: Array = r.get("devices", [])
+			for dev in devs:
+				var pos: Vector2 = dev.get("pos", Vector2.ZERO)
+				var spos := world_to_screen(pos)
+				var is_gen: bool = dev.get("is_generator", false)
+				var is_selected: bool = (selected_type == "device" and selected_id == dev.get("id", ""))
+				var box_size := Vector2(20, 20) * zoom_level
+				var box_rect := Rect2(spos - box_size * 0.5, box_size)
 				
-			draw_rect(box_rect, Color(0.1, 0.15, 0.2, 0.9), true)
-			draw_rect(box_rect, dev_color, false, 2.0)
-			
-			# Simbolo icona (G per Generatore, L per Carico/Load)
-			var icon_sym := "⚡" if is_gen else "⚙"
-			var font_sz: int = int(clampf(12.0 * zoom_level, 9.0, 16.0))
-			draw_string(font, box_rect.position + Vector2(4, 16 * zoom_level), icon_sym, HORIZONTAL_ALIGNMENT_CENTER, int(box_rect.size.x), font_sz, dev_color)
+				var dev_color := Color(1.0, 0.45, 0.2, 0.95) if is_gen else Color(0.3, 0.75, 1.0, 0.9)
+				if is_selected:
+					dev_color = COLOR_SELECTION
+					
+				# Background glow / indicatore di stato
+				draw_circle(spos, box_size.x * 0.6, Color(dev_color.r, dev_color.g, dev_color.b, 0.15))
+				
+				draw_rect(box_rect, Color(0.08, 0.1, 0.14, 0.95), true)
+				draw_rect(box_rect, dev_color, false, 1.5 * zoom_level)
+				
+				# Simbolo icona (⚡ per Generatore, ⚙ per Carico)
+				var icon_sym := "⚡" if is_gen else "⚙"
+				var font_sz: int = int(clampf(14.0 * zoom_level, 10.0, 18.0))
+				draw_string(font, box_rect.position + Vector2(0, 16 * zoom_level), icon_sym, HORIZONTAL_ALIGNMENT_CENTER, int(box_rect.size.x), font_sz, dev_color)
 
-			if show_labels and zoom_level >= 0.7:
-				var dev_name: String = str(dev.get("name", dev.get("id", "")))
-				var mw_val: float = float(dev.get("power_mw", 0.0))
-				var label_str := "%s (%d MW)" % [dev_name, int(mw_val)]
-				draw_string(font, spos + Vector2(16, 4), label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.95, 1.0, 0.9))
+				if show_labels and zoom_level >= 0.7:
+					var dev_name: String = str(dev.get("name", dev.get("id", "")))
+					var mw_val: float = float(dev.get("power_mw", 0.0))
+					var label_str := "%s (%d MW)" % [dev_name, int(mw_val)]
+					draw_string(font, spos + Vector2(16, 4), label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.95, 1.0, 0.9))
 
 func _draw_damages() -> void:
 	var font: Font = ThemeDB.fallback_font
@@ -1151,5 +941,3 @@ func _draw_creation_preview() -> void:
 			draw_rect(Rect2(top_left, sz), Color(0.4, 0.8, 1.0, 0.9), false, 2.0)
 		ToolMode.ADD_DUCT:
 			draw_line(sp1, sp2, Color(0.2, 0.8, 1.0, 0.8), 14.0 * zoom_level)
-		ToolMode.ADD_CONDUIT:
-			draw_dashed_line(sp1, sp2, Color(0.3, 0.9, 1.0, 0.9), 3.0 * zoom_level, 6.0 * zoom_level)

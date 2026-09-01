@@ -15,3 +15,7 @@ Tutti i cambiamenti significativi a questo progetto saranno documentati in quest
 - Implementata la funzionalità di copia-incolla (Ctrl+C/Ctrl+V) nel `ship_sublayer_editor` per tutti i tipi di componenti.
 - Centralizzazione della gestione password nel pannello Software Manager e aggiunta funzionalità per installare nuove app (.tres).
 - Ottimizzazione UI del Software Manager: unificate le liste di app e password in un layout a righe singole compatto con icone identificative.
+- Aggiunta pannello "Software Manager" nell'editor delle navi per la gestione diretta di programmi e credenziali (TASK-006).
+- Creazione programma terminale `PodInfo` per il monitoraggio dei parametri vitali e gestione flussi audio (TASK-007).
+- Standardizzazione della creazione stanze tramite `RoomDatabase` nell'editor, con auto-configurazione di dimensioni e dispositivi (TASK-012).
+- Sviluppo dell'applicazione `ShipBuilder`, un editor di navi completo integrato nel sistema operativo GodotOS (TASK-013).

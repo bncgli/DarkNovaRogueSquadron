@@ -10,6 +10,7 @@ required_subsystems = Array[String]([])
 app_id = "flux_wallet"
 title = "Flux Wallet"
 description = "Visualizzazione stato economico della nave e storico modificatori FLUX."
+developer = "VoidCore Solutions"
 category = "Sistemi Nave"
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/FluxWallet/flux_wallet.tscn"

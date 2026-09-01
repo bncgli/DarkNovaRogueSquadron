@@ -33,6 +33,11 @@ func _connect_system_signals() -> void:
 		if ssm.has_signal("registry_changed") and not ssm.registry_changed.is_connected(_on_software_registry_changed):
 			ssm.registry_changed.connect(_on_software_registry_changed)
 	
+	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	if tsm:
+		if tsm.has_signal("registry_changed") and not tsm.registry_changed.is_connected(_on_software_registry_changed):
+			tsm.registry_changed.connect(_on_software_registry_changed)
+	
 	var nm := _get_net_mgr()
 	if nm:
 		if nm.has_signal("mission_started") and not nm.mission_started.is_connected(_on_mission_started):
@@ -63,6 +68,11 @@ func _disconnect_system_signals() -> void:
 			ssm.role_changed.disconnect(_on_software_role_changed)
 		if ssm.has_signal("registry_changed") and ssm.registry_changed.is_connected(_on_software_registry_changed):
 			ssm.registry_changed.disconnect(_on_software_registry_changed)
+	
+	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	if tsm:
+		if tsm.has_signal("registry_changed") and tsm.registry_changed.is_connected(_on_software_registry_changed):
+			tsm.registry_changed.disconnect(_on_software_registry_changed)
 	
 	var nm := _get_net_mgr()
 	if nm:
@@ -125,7 +135,32 @@ func _refresh_ship_apps() -> void:
 			node.queue_free()
 	_dynamic_ship_app_nodes.clear()
 	
-	# Verifica se la connessione alla nave / missione è attiva
+	var apps: Array = []
+	var seen_ids: Dictionary = {}
+	var seen_paths: Dictionary = {}
+	
+	# Mappa i nodi statici già presenti nel VBoxContainer per evitare duplicati
+	for child in vbox_container.get_children():
+		if child is Control and not child.is_in_group("dynamic_ship_apps"):
+			var app_path = str(child.get("application_scene"))
+			var game_path = str(child.get("game_scene"))
+			if not app_path.is_empty(): seen_paths[app_path] = true
+			if not game_path.is_empty(): seen_paths[game_path] = true
+	
+	# 1. Carica Local Terminal Apps (sempre visibili se registrate)
+	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	if tsm:
+		var term_apps = tsm.get_all_registered_apps()
+		for app_res in term_apps:
+			var d = app_res.to_dict()
+			var app_id = d.get("id", "")
+			var s_path = d.get("scene_path", "")
+			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
+				apps.append(d)
+				seen_ids[app_id] = true
+				if not s_path.is_empty(): seen_paths[s_path] = true
+
+	# 2. Verifica se la connessione alla nave / missione è attiva per aggiungere Ship Apps
 	var is_active: bool = false
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
 		is_active = SpaceWorldManager.is_ship_connected()
@@ -148,33 +183,43 @@ func _refresh_ship_apps() -> void:
 			my_role = nm.get_local_player_role()
 			is_solo = nm.is_solo_mode
 		
-		var apps: Array = []
+		var ship_apps: Array = []
 		if ssm and ssm.has_method("get_apps_for_role"):
 			var app_resources: Array = ssm.get_apps_for_role(my_role, is_solo)
 			for r in app_resources:
 				if r is Resource and r.has_method("to_dict"):
-					apps.append(r.to_dict())
+					ship_apps.append(r.to_dict())
 				elif r is Dictionary:
-					apps.append(r)
+					ship_apps.append(r)
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_installed_apps_for_role"):
-			apps = SpaceWorldManager.get_installed_apps_for_role(my_role, is_solo)
+			ship_apps = SpaceWorldManager.get_installed_apps_for_role(my_role, is_solo)
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
 			var bp = SpaceWorldManager.get_ship_blueprint()
 			if bp:
-				apps = bp.get_apps_for_role(my_role, is_solo)
+				ship_apps = bp.get_apps_for_role(my_role, is_solo)
 		
 		# Fallback su default blueprint se lista vuota ma sessione attiva
-		if apps.is_empty():
+		if ship_apps.is_empty():
 			var def_bp := ShipBlueprint.get_default_blueprint()
 			if def_bp:
-				apps = def_bp.get_apps_for_role(my_role, is_solo)
+				ship_apps = def_bp.get_apps_for_role(my_role, is_solo)
 		
+		for app in ship_apps:
+			var app_id = app.get("id", "")
+			var s_path = app.get("scene_path", "")
+			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
+				apps.append(app)
+				seen_ids[app_id] = true
+				if not s_path.is_empty(): seen_paths[s_path] = true
+	
+	if true: # Invece di 'if is_active', ora usiamo sempre la lista apps popolata
 		var option_scene := load("res://Scenes/Taskbar/start_menu_option.tscn")
 		var insert_idx := 0
 		for app in apps:
 			var opt: Control = option_scene.instantiate() as Control
 			var opt_title: String = str(app.get("title", app.get("name", "App Nave")))
 			var opt_desc: String = str(app.get("description", ""))
+			var opt_dev: String = str(app.get("developer", ""))
 			var opt_scene: String = str(app.get("scene_path", ""))
 			var opt_color: Color = app.get("icon_color", Color(0, 0.79, 0.95, 1.0))
 			var opt_id: String = str(app.get("id", ""))
@@ -182,6 +227,7 @@ func _refresh_ship_apps() -> void:
 			opt.name = "ShipApp_%s" % opt_id
 			opt.set("title_text", opt_title)
 			opt.set("description_text", opt_desc)
+			opt.set("developer_text", opt_dev)
 			opt.set("application_scene", opt_scene)
 			opt.set("game_scene", "")
 			opt.set("use_generic_pause_menu", false)
@@ -192,7 +238,7 @@ func _refresh_ship_apps() -> void:
 			insert_idx += 1
 			
 			if opt.has_method("configure_option"):
-				opt.configure_option(opt_title, opt_desc, opt_scene, opt_color)
+				opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, null, opt_dev)
 			
 			_dynamic_ship_app_nodes.append(opt)
 	
@@ -210,7 +256,7 @@ func _update_start_menu_size() -> void:
 		if vp:
 			vp_height = vp.get_visible_rect().size.y
 	var max_allowed_height: float = maxf(vp_height - 60.0, 200.0)
-	var desired_height: float = clampf(float(count) * 51.0 + 55.0, 200.0, max_allowed_height)
+	var desired_height: float = clampf(float(count) * 61.0 + 55.0, 200.0, max_allowed_height)
 	start_menu.size.y = desired_height
 
 func _input(event: InputEvent) -> void:

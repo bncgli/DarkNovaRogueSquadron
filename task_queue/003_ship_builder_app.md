@@ -27,7 +27,7 @@ L'interfaccia deve richiamare quella dell'editor plugin `addons/ship_sublayer_ed
 - **Layer Visibility (Sinistra)**: Lista verticale di checkbox per attivare/disattivare la visualizzazione di: Stanze, condotti, snodi, cablaggi, spawn drone, scafo, griglia, testo.
 - **Inspector (Destra)**: Pannello che mostra i parametri dell'elemento attualmente selezionato nel canvas.
 - **Toolbar Superiore**:
-    - **Software**: Apre una sotto-finestra divisa in Marketplace (sinistra) e Software installati (destra), con pulsanti a freccia per il trasferimento. Le password devono essere oscurate.
+    - **Software**: Apre una sotto-finestra divisa in Marketplace (sinistra) e Software installati (destra), con pulsanti a freccia per il trasferimento.
     - **Drive Files**: Apre una sotto-finestra con un `Tree` per la navigazione dei file, supportando creazione, upload, eliminazione e riorganizzazione.
     - **Modifica Nave**: Bottoni per selezionare lo strumento di editing. Il comando "Aggiungi stanza" deve mostrare una lista di tipologie basata su `RoomDatabase.gd`.
 - **Menu File**: Salva/Carica ShipBlueprint.
