@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AppResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_x8y2v"]
+
+[resource]
+script = ExtResource("1_x8y2v")
+app_id = "ship_builder"
+title = "ShipBuilder"
+description = "Terminal tool for custom ship design and Blueprint management."
+category = "Terminale Locale"
+icon_color = Color(0.8, 0.4, 0.1, 1.0)
+scene_path = "res://Applications/ShipBuilder/ship_builder.tscn"
+default_window_size = Vector2(1000, 700)
+min_window_size = Vector2(800, 600)
+roles = []
+is_system_app = false
+terminal_command = "shipbuild"
+is_pinned_to_taskbar = true
+drive_folder = "Programs/ShipBuilder"
+default_password = "BUILD-7815"
+default_files = []

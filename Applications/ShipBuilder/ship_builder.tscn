@@ -1,0 +1,146 @@
+[gd_scene format=3 uid="uid://b8k2r1n5m3p6q"]
+
+[ext_resource type="Script" path="res://Applications/ShipBuilder/ship_builder.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://dpurq16q71hq1" path="res://Applications/Terminal/terminal_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://addons/ship_sublayer_editor/ship_blueprint_canvas.gd" id="3_canvas"]
+
+[node name="ShipBuilder" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.12, 0.15, 1)
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopToolbar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FileMenuBtn" type="MenuButton" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+text = "File"
+item_count = 2
+popup/item_0/text = "Save Blueprint"
+popup/item_0/id = 0
+popup/item_1/text = "Load Blueprint"
+popup/item_1/id = 1
+
+[node name="VSeparator" type="VSeparator" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+text = "Tool:"
+
+[node name="ToolSelector" type="OptionButton" parent="MainLayout/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VSeparator2" type="VSeparator" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+text = "Room Type:"
+
+[node name="RoomList" type="OptionButton" parent="MainLayout/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VSeparator3" type="VSeparator" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+
+[node name="SoftwareBtn" type="Button" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+text = "Software"
+
+[node name="DriveBtn" type="Button" parent="MainLayout/TopToolbar"]
+layout_mode = 2
+text = "Drive Files"
+
+[node name="Content" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Sidebar" type="VBoxContainer" parent="MainLayout/Content"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/Content/Sidebar"]
+layout_mode = 2
+text = "Layers"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/Content/Sidebar"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/Content/Sidebar"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LayerList" type="VBoxContainer" parent="MainLayout/Content/Sidebar/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EditorContainer" type="PanelContainer" parent="MainLayout/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ShipBlueprintCanvas" type="Control" parent="MainLayout/Content/EditorContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("3_canvas")
+
+[node name="Inspector" type="VBoxContainer" parent="MainLayout/Content"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/Content/Inspector"]
+layout_mode = 2
+text = "Inspector"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/Content/Inspector"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/Content/Inspector"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="InspectorContainer" type="VBoxContainer" parent="MainLayout/Content/Inspector/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="StatusBar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainLayout/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ready"
+
+[connection signal="pressed" from="MainLayout/TopToolbar/SoftwareBtn" to="." method="_on_software_pressed"]
+[connection signal="pressed" from="MainLayout/TopToolbar/DriveBtn" to="." method="_on_drive_files_pressed"]
