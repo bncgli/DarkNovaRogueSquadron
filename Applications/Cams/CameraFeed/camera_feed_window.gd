@@ -83,8 +83,8 @@ func setup_camera(p_cam_id: String, p_info: Dictionary) -> void:
 	camera_id = p_cam_id
 	camera_metadata = p_info
 	
-	title_text = "%s - Feed Esterno" % [p_info.get("code", "CAM FEED")]
-	var title_lbl = get_node_or_null("Top Bar/Title Text")
+	title_text = "%s - Feed Esterno" % [p_info.get("code")]
+	var title_lbl: Node = get_node_or_null("Top Bar/Title Text")
 	if title_lbl:
 		title_lbl.text = "[center]" + title_text
 	
@@ -131,8 +131,8 @@ func _process(delta: float) -> void:
 
 func _update_hud_display() -> void:
 	if cam_code_label:
-		var code_str: String = camera_metadata.get("code", camera_id.to_upper())
-		var dir_str: String = camera_metadata.get("direction", "")
+		var code_str: String = camera_metadata.get("code")
+		var dir_str: String = camera_metadata.get("direction")
 		cam_code_label.text = "● %s  [%s]" % [code_str, dir_str]
 	
 	_apply_filter_mode()

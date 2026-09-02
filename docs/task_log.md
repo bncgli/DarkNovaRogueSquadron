@@ -85,3 +85,7 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 ### TASK-019: Nuove Funzionalità e Bug Fix Sublayer Editor
 - **Stato**: Completato.
 - **Dettagli**: Implementato generatore procedurale a 90 gradi. Aggiunta gestione e feedback visivo (bordo pulsante) per la stanza di ricarica droni. Risolto bug sparizione stanze in fase di creazione.
+
+### TASK-020: Consolidamento Direttive Post-Refactoring
+- **Stato**: Completato.
+- **Dettagli**: Integrazione delle nuove linee guida architetturali in `docs/APP_ARCHITECTURE_STANDARD.md` e allineamento del contesto AI in `.junie/context/`. Le modifiche includono l'obbligatorietà di `BaseApp`, la modularizzazione dei manager, la centralizzazione di enum/metadati e l'uso di risorse tipizzate.

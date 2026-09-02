@@ -12,6 +12,7 @@ title = "Terminale Shell UNIX"
 description = "Terminale Shell diegetico UNIX GodotOS"
 developer = "OmniCorp Software"
 category = "Terminale Locale"
+menu_path = "Strumenti"
 icon_color = Color(0.2, 0.9, 0.4, 1)
 scene_path = "res://Applications/Terminal/src/terminal_scene.tscn"
 default_window_size = Vector2(700, 450)

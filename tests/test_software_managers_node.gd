@@ -44,7 +44,7 @@ func _test_app_resource_hierarchy() -> void:
 	term_res.app_id = "test_term"
 	term_res.is_system_app = true
 	var term_dict: Dictionary = term_res.to_dict()
-	assert(term_dict.get("is_system_app", false) == true, "Serializzazione to_dict deve includere is_system_app")
+	assert(term_dict.get("is_system_app") == true, "Serializzazione to_dict deve includere is_system_app")
 	print("✔ Funzionalità unificate di AppResource verificate")
 
 func _test_ship_software_manager_registry() -> void:
@@ -157,7 +157,7 @@ func _test_role_filtering_rbac() -> void:
 		if a is AppResource:
 			pilot_ids.append(a.app_id)
 		elif a is Dictionary:
-			pilot_ids.append(str(a.get("id", "")))
+			pilot_ids.append(str(a.get("id")))
 	assert(pilot_ids.has("flight_control"), "Pilota deve accedere a flight_control")
 	assert(pilot_ids.has("cams"), "Pilota deve accedere a cams")
 	assert(not pilot_ids.has("power_grid"), "Pilota non deve accedere a power_grid")
@@ -168,7 +168,7 @@ func _test_role_filtering_rbac() -> void:
 		if a is AppResource:
 			eng_ids.append(a.app_id)
 		elif a is Dictionary:
-			eng_ids.append(str(a.get("id", "")))
+			eng_ids.append(str(a.get("id")))
 	assert(eng_ids.has("power_grid"), "Ingegnere deve accedere a power_grid")
 	assert(eng_ids.has("duct_drone"), "Ingegnere deve accedere a duct_drone")
 	assert(eng_ids.has("shield_matrix"), "Ingegnere deve accedere a shield_matrix")

@@ -1,5 +1,5 @@
 class_name CamsApp
-extends Control
+extends BaseApp
 
 ## Applicazione GodotOS per il controllo e visualizzazione delle telecamere esterne (Cams).
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
@@ -41,7 +41,6 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/Cam/optics_tuning.dat"
 @onready var reset_optics_button: Button = get_node_or_null("%ResetOpticsButton")
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 
-var parent_window: FakeWindow = null
 var cam_buttons: Dictionary = {} # cam_id (String) -> Button
 var can_control_cams: bool = true
 
@@ -63,7 +62,7 @@ var active_config: Dictionary = {
 }
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_map_camera_buttons()
 	_setup_ui_events()
 	load_dat_configuration()
@@ -72,11 +71,7 @@ func _ready() -> void:
 	_update_permissions()
 	_refresh_all_buttons_state()
 
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	call_deferred("_setup_parent_window")
-
-func _setup_parent_window() -> void:
+func _setup_parent_window(_title: String, _size: Vector2) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
@@ -207,12 +202,11 @@ func _update_permissions() -> void:
 		my_role = NetworkManager.get_local_player_role()
 		is_solo = NetworkManager.is_solo_mode
 	
-	# Controllo abilitato per Tattico, Capitano, Pilota, Ingegnere, Solo Mode o Ruolo non assegnato
+	# Controllo abilitato per Soldato, Capitano, Mozzo, Solo Mode o Ruolo non assegnato
 	can_control_cams = (
-		my_role == NetworkManager.ROLE_TACTICAL or
+		my_role == NetworkManager.ROLE_SOLDIER or
 		my_role == NetworkManager.ROLE_CAPTAIN or
-		my_role == NetworkManager.ROLE_PILOT or
-		my_role == NetworkManager.ROLE_ENGINEER or
+		my_role == NetworkManager.ROLE_MOZZO or
 		my_role == "" or
 		my_role == NetworkManager.ROLE_UNASSIGNED or
 		is_solo
@@ -300,7 +294,7 @@ func _apply_configuration_to_cams() -> void:
 ## Aggiorna la sezione informativa della configurazione .DAT nella UI
 func _update_config_ui() -> void:
 	if dat_status_badge:
-		if active_config.get("is_dat_loaded", false):
+		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "● .DAT ATTIVO"
 			dat_status_badge.modulate = Color(0.3, 1.0, 0.5)
 		else:
@@ -308,12 +302,12 @@ func _update_config_ui() -> void:
 			dat_status_badge.modulate = Color(0.7, 0.8, 1.0, 0.8)
 	
 	if dat_config_summary_label:
-		var fov_d: float = active_config.get("default_fov", 75.0)
-		var fov_min: float = active_config.get("min_fov", 30.0)
-		var fov_max: float = active_config.get("max_fov", 100.0)
-		var z_step: float = active_config.get("zoom_step", 10.0)
-		var sig_b: float = active_config.get("signal_boost", 1.0)
-		var oc: float = active_config.get("overclock_gain", 1.0)
+		var fov_d: float = active_config.get("default_fov")
+		var fov_min: float = active_config.get("min_fov")
+		var fov_max: float = active_config.get("max_fov")
+		var z_step: float = active_config.get("zoom_step")
+		var sig_b: float = active_config.get("signal_boost")
+		var oc: float = active_config.get("overclock_gain")
 		
 		var oc_str := " | OC: %.1fx" % oc if oc != 1.0 else ""
 		dat_config_summary_label.text = "FOV: %.0f° (Range: %.0f°-%.0f°, Step: %.0f°) | Boost: %.1fx%s" % [
@@ -321,43 +315,6 @@ func _update_config_ui() -> void:
 		]
 
 ## Parsifica un file .dat formato INI/Key-Value
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	var current_section := ""
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			current_section = line.substr(1, line.length() - 2).strip_edges()
-			continue
-		
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.is_valid_float():
-				result[key] = float(val_str)
-			elif val_str.is_valid_int():
-				result[key] = int(val_str)
-			else:
-				result[key] = val_str
-	
-	file.close()
-	return result
-
-# ==============================================================================
-# GESTIONE FEED TELECAMERE E INTERAZIONE UI
-# ==============================================================================
-
 func _on_button_toggled(toggled_on: bool, cam_id: String) -> void:
 	if not SpaceWorldManager or not SpaceWorldManager.is_ship_connected():
 		if cam_buttons.has(cam_id) and cam_buttons[cam_id]:
@@ -407,9 +364,9 @@ func _update_button_visual(cam_id: String, is_active: bool) -> void:
 		return
 	
 	var info: Dictionary = SpaceWorldManager.get_camera_info(cam_id) if SpaceWorldManager else {}
-	var name_str: String = info.get("name", cam_id.capitalize())
-	var dir_str: String = info.get("direction", "")
-	var icon_str: String = info.get("icon", "●")
+	var name_str: String = info.get("name")
+	var dir_str: String = info.get("direction")
+	var icon_str: String = info.get("icon")
 	
 	if is_active:
 		btn.text = "%s %s\n[%s]  ● ATTIVA" % [icon_str, name_str.to_upper(), dir_str]
@@ -439,7 +396,7 @@ func _update_status_summary() -> void:
 	
 	if status_summary_label:
 		if not connected:
-			status_summary_label.text = "Connettersi alla nave tramite Lobby & Comms per attivare le telecamere."
+			status_summary_label.text = "Connettersi alla nave tramite l'applicazione Lobby per attivare le telecamere."
 			status_summary_label.modulate = Color(1.0, 0.75, 0.3)
 		elif active_count == 6:
 			status_summary_label.text = "Copertura visiva 360° completa (Tutti i 6 feed attivi)."

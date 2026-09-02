@@ -21,18 +21,18 @@ const ROLE_HOST: String = "HOST"
 const ROLE_UNASSIGNED: String = "Non Assegnato"
 const ROLE_CAPTAIN: String = "Capitano"
 const ROLE_PILOT: String = "Pilota"
+const ROLE_SOLDIER: String = "Soldato"
 const ROLE_ENGINEER: String = "Ingegnere"
-const ROLE_TACTICAL: String = "Tattico / Armi"
-const ROLE_SENSORS: String = "Sensori / Radar"
-const ROLE_COMMS: String = "Comunicazioni"
+const ROLE_HACKER: String = "Hacker"
+const ROLE_MOZZO: String = "Mozzo"
 
 const ALL_ROLES: Array[String] = [
 	ROLE_CAPTAIN,
 	ROLE_PILOT,
+	ROLE_SOLDIER,
 	ROLE_ENGINEER,
-	ROLE_TACTICAL,
-	ROLE_SENSORS,
-	ROLE_COMMS,
+	ROLE_HACKER,
+	ROLE_MOZZO
 ]
 
 var transport: NetworkTransport = null
@@ -68,7 +68,11 @@ var _headless_countdown_id: int = 0
 func _init() -> void:
 	lan_discovery = LANDiscovery.new()
 
+var crew_manager := CrewManager.new()
+
 func _ready() -> void:
+	add_child(crew_manager)
+	
 	if lan_discovery.get_parent() == null:
 		add_child(lan_discovery)
 	
@@ -233,6 +237,9 @@ func disconnect_game() -> void:
 	_cached_selected_star_system = null
 	
 	if was_mission:
+		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("end_mission"):
+			ssm.end_mission()
 		mission_ended.emit()
 	
 	connection_state_changed.emit(false, false)
@@ -282,7 +289,7 @@ func toggle_ready() -> void:
 
 ## Verifica se il giocatore locale è pronto
 func is_local_player_ready() -> bool:
-	return players.get(local_peer_id, {}).get("ready", false)
+	return players.get(local_peer_id, {}).get("ready")
 
 ## Avvia la missione (solo Host)
 func start_mission() -> void:
@@ -315,15 +322,17 @@ func get_local_player_data() -> Dictionary:
 
 ## Restituisce il ruolo del giocatore locale
 func get_local_player_role() -> String:
-	var info := get_local_player_info()
-	return info.get("role", ROLE_UNASSIGNED if is_connected_to_network else "")
+	return crew_manager.get_player_role(multiplayer.get_unique_id())
+
+func get_local_player_roles() -> Array[String]:
+	return crew_manager.get_local_player_roles()
 
 func is_active() -> bool:
 	return is_connected_to_network
 
-## Restituisce true se la missione è attiva e i sistemi dell'astronave sono operativi
+## Restituisce true se la missione è attiva
 func is_ship_connected() -> bool:
-	return (is_connected_to_network or is_solo_mode) and is_mission_started
+	return is_mission_started
 
 func is_mission_active() -> bool:
 	return is_mission_started
@@ -497,7 +506,6 @@ func get_session_blueprint_info() -> Dictionary:
 			"class": bp.ship_class,
 			"rooms_count": bp.rooms.size(),
 			"ducts_count": bp.ducts.size(),
-			"devices_count": bp.devices.size(),
 			"apps_count": bp.installed_apps.size(),
 			"path": selected_ship_blueprint_path
 		}
@@ -509,7 +517,7 @@ func get_session_star_system_info() -> Dictionary:
 	if sys:
 		var stations_count := 0
 		for b in sys.celestial_bodies:
-			if b.get("type", "").to_upper() == "STATION":
+			if b.get("type").to_upper() == "STATION":
 				stations_count += 1
 		return {
 			"id": sys.system_id,
@@ -563,6 +571,9 @@ func _on_transport_disconnected() -> void:
 	is_mission_started = false
 	players.clear()
 	if was_mission:
+		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("end_mission"):
+			ssm.end_mission()
 		mission_ended.emit()
 	connection_state_changed.emit(false, false)
 	lobby_updated.emit(players)
@@ -575,7 +586,7 @@ func _on_transport_peer_connected(peer_id: int) -> void:
 func _on_transport_peer_disconnected(peer_id: int) -> void:
 	if is_host:
 		if peer_id in players:
-			var player_name: String = players[peer_id].get("name", "Operatore")
+			var player_name: String = players[peer_id].get("name")
 			players.erase(peer_id)
 			player_left.emit(peer_id)
 			lobby_updated.emit(players)
@@ -622,11 +633,14 @@ func _rpc_register_player(player_name: String) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_lobby(synced_players: Dictionary) -> void:
-	var old_role: String = players.get(local_peer_id, {}).get("role", "")
+	var old_role: String = players.get(local_peer_id, {}).get("role")
 	players = synced_players
 	local_peer_id = transport.get_unique_id()
-	var new_role: String = players.get(local_peer_id, {}).get("role", "")
+	var new_role: String = players.get(local_peer_id, {}).get("role")
 	if old_role != new_role and not new_role.is_empty():
+		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("set_current_role"):
+			ssm.set_current_role(new_role)
 		player_role_changed.emit(local_peer_id, new_role)
 	lobby_updated.emit(players)
 
@@ -648,7 +662,7 @@ func _server_set_player_ready(peer_id: int, is_ready: bool) -> void:
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_sync_lobby.rpc(players)
 	
-	var p_name: String = players[peer_id].get("name", "Operatore")
+	var p_name: String = players[peer_id].get("name")
 	var status_text: String = "è PRONTO!" if is_ready else "non è più pronto."
 	_server_broadcast_chat("[SISTEMA]", "%s %s" % [p_name, status_text], true)
 	
@@ -682,10 +696,16 @@ func _server_set_player_role(peer_id: int, role_name: String) -> void:
 				player_role_changed.emit(id, ROLE_UNASSIGNED)
 	
 	players[peer_id]["role"] = role_name
+	
+	if peer_id == local_peer_id:
+		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("set_current_role"):
+			ssm.set_current_role(role_name)
+			
 	player_role_changed.emit(peer_id, role_name)
 	lobby_updated.emit(players)
 	
-	var p_name: String = players[peer_id].get("name", "Operatore")
+	var p_name: String = players[peer_id].get("name")
 	_server_broadcast_chat("[SISTEMA]", "%s ha preso la postazione: %s" % [p_name, role_name], true)
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_sync_lobby.rpc(players)
@@ -697,7 +717,7 @@ func _rpc_send_chat(message: String) -> void:
 	
 	var sender_id := multiplayer.get_remote_sender_id()
 	if sender_id in players:
-		var sender_name: String = players[sender_id].get("name", "Operatore")
+		var sender_name: String = players[sender_id].get("name")
 		_server_broadcast_chat(sender_name, message, false)
 
 func _server_broadcast_chat(sender: String, message: String, is_system: bool) -> void:
@@ -722,10 +742,10 @@ func _check_headless_auto_start() -> void:
 	var client_count := 0
 	var all_ready := true
 	for id in players:
-		if id == 1 and players[id].get("role", "") == ROLE_HOST:
+		if id == 1 and players[id].get("role") == ROLE_HOST:
 			continue
 		client_count += 1
-		if not players[id].get("ready", false):
+		if not players[id].get("ready"):
 			all_ready = false
 			break
 	
@@ -777,7 +797,7 @@ func _check_headless_all_players_disconnected() -> void:
 	
 	var client_count := 0
 	for id in players:
-		if id == 1 and players[id].get("role", "") == ROLE_HOST:
+		if id == 1 and players[id].get("role") == ROLE_HOST:
 			continue
 		client_count += 1
 	
@@ -863,6 +883,11 @@ func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: D
 @rpc("authority", "call_remote", "reliable")
 func _rpc_launch_game() -> void:
 	is_mission_started = true
+	
+	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	if ssm and ssm.has_method("start_mission"):
+		ssm.start_mission(get_local_player_role(), is_solo_mode, get_selected_ship_blueprint())
+	
 	game_launched.emit()
 	mission_started.emit()
 	_notify("🚀 Missione Avviata! Tutti alle postazioni!")
@@ -980,13 +1005,13 @@ func _parse_command_line() -> Dictionary:
 func _check_cli_startup() -> void:
 	var cli := _parse_command_line()
 	var is_dedicated_export: bool = OS.has_feature("dedicated_server")
-	var is_server_flag: bool = bool(cli.get("server", false))
-	var is_client_flag: bool = bool(cli.get("client", false))
+	var is_server_flag: bool = bool(cli.get("server"))
+	var is_client_flag: bool = bool(cli.get("client"))
 	var should_run_server: bool = is_server_flag or is_dedicated_export
 	
 	if should_run_server:
 		is_headless_server = true
-		lan_broadcast_enabled = bool(cli.get("lan", true))
+		lan_broadcast_enabled = bool(cli.get("lan"))
 		print("==================================================")
 		print("🚀 DarkNova RogueSquadron - Server Headless / Host")
 		print("   Porta:           %d" % cli["port"])

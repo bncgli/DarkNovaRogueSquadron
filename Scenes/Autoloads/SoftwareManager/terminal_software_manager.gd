@@ -17,10 +17,11 @@ const DEFAULT_TERMINAL_APP_PATHS: Array[String] = [
 	"res://Applications/Terminal/terminal_app.tres",
 	"res://Applications/PodInfo/pod_info_app.tres",
 	"res://Applications/ShipBuilder/ship_builder.tres",
-	"res://Games/Godotris/godotris_app.tres",
-	"res://Games/Pong/pong_app.tres",
-	"res://Games/Snake/snake_app.tres",
-	"res://Games/Super Bit Boy/super_bit_boy_app.tres"
+	"res://Applications/Games/Godotris/godotris_app.tres",
+	"res://Applications/Games/Pong/pong_app.tres",
+	"res://Applications/Games/Snake/snake_app.tres",
+	"res://Applications/Games/Super Bit Boy/super_bit_boy_app.tres",
+	"res://Applications/Lobby/lobby_app.tres"
 ]
 
 func _ready() -> void:

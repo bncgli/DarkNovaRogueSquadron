@@ -50,7 +50,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	var def_bp := ShipBlueprint.get_default_blueprint()
 	
 	# Ruolo: Pilota -> Flight Control, Cams (e System Map se configurata)
-	var pilot_apps = ssm.get_apps_for_role("Pilota", false, def_bp)
+	var pilot_apps = ssm.get_apps_for_role(net.ROLE_PILOT, false, def_bp)
 	var pilot_ids: Array[String] = []
 	for a in pilot_apps:
 		pilot_ids.append(a.app_id)
@@ -62,7 +62,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not pilot_ids.has("duct_drone"), "Pilota NON deve avere duct_drone")
 	
 	# Ruolo: Ingegnere -> Power Grid, Duct Drone, Life Support, Shield Matrix
-	var eng_apps = ssm.get_apps_for_role("Ingegnere", false, def_bp)
+	var eng_apps = ssm.get_apps_for_role(net.ROLE_ENGINEER, false, def_bp)
 	var eng_ids: Array[String] = []
 	for a in eng_apps:
 		eng_ids.append(a.app_id)
@@ -75,7 +75,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not eng_ids.has("weapons"), "Ingegnere NON deve avere weapons")
 	
 	# Ruolo: Soldato -> Cams, Weapons, Sensors
-	var soldier_apps = ssm.get_apps_for_role("Soldato", false, def_bp)
+	var soldier_apps = ssm.get_apps_for_role(net.ROLE_SOLDIER, false, def_bp)
 	var soldier_ids: Array[String] = []
 	for a in soldier_apps:
 		soldier_ids.append(a.app_id)
@@ -87,7 +87,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not soldier_ids.has("power_grid"), "Soldato NON deve avere power_grid")
 	
 	# Ruolo: Hacker -> Duct Drone, Comms, Diagnostics
-	var hacker_apps = ssm.get_apps_for_role("Hacker", false, def_bp)
+	var hacker_apps = ssm.get_apps_for_role(net.ROLE_HACKER, false, def_bp)
 	var hacker_ids: Array[String] = []
 	for a in hacker_apps:
 		hacker_ids.append(a.app_id)
@@ -98,8 +98,13 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not hacker_ids.has("weapons"), "Hacker NON deve avere weapons")
 	assert(not hacker_ids.has("flight_control"), "Hacker NON deve avere flight_control")
 	
+	# Ruolo: Mozzo -> Tutte le app
+	var mozzo_apps = ssm.get_apps_for_role(net.ROLE_MOZZO, false, def_bp)
+	print("App Mozzo size:", mozzo_apps.size())
+	assert(mozzo_apps.size() == ssm.get_installed_apps(def_bp).size(), "Il Mozzo deve avere accesso a tutte le applicazioni")
+	
 	# Ruolo: Capitano / Solo Mode -> Tutte le app
-	var cap_apps = ssm.get_apps_for_role("Capitano", false, def_bp)
+	var cap_apps = ssm.get_apps_for_role(net.ROLE_CAPTAIN, false, def_bp)
 	var solo_apps = ssm.get_apps_for_role("Pilota", true, def_bp)
 	var all_installed = ssm.get_installed_apps(def_bp)
 	print("App Capitano size:", cap_apps.size(), "App Solo size:", solo_apps.size(), "Totale installate:", all_installed.size())
@@ -112,7 +117,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	# =========================================================================
 	print("\n--- Test 3: Popolamento dinamico Start Menu con start_mission(Ruolo) ---")
 	# Simuliamo avvio missione come Ingegnere
-	ssm.start_mission("Ingegnere", false, def_bp)
+	ssm.start_mission(net.ROLE_ENGINEER, false, def_bp)
 	start_btn._refresh_ship_apps()
 	
 	var eng_menu_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
@@ -131,7 +136,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	# TEST 4: Cambio Ruolo a Runtime
 	# =========================================================================
 	print("\n--- Test 4: Cambio Ruolo a Runtime ---")
-	ssm.set_current_role("Pilota")
+	ssm.set_current_role(net.ROLE_PILOT)
 	start_btn._refresh_ship_apps()
 	
 	var pilot_menu_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")

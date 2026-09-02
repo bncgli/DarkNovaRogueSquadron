@@ -28,56 +28,32 @@ const DAMAGE_TYPE_SHORT_CIRCUIT: String = "short_circuit"
 const SPACE_SCENE_PATH := "res://Outside/space_scene.tscn"
 const CAMERA_FEED_WINDOW_SCENE := "res://Applications/Cams/CameraFeed/camera_feed_window.tscn"
 
-const CAMERAS_METADATA: Array[Dictionary] = [
-	{
-		"id": "front",
-		"name": "Frontale",
-		"code": "CAM 01 [PRUA]",
-		"direction": "Prua (-Z)",
-		"desc": "Visuale di navigazione anteriore",
-		"icon": "▲"
-	},
-	{
-		"id": "rear",
-		"name": "Posteriore",
-		"code": "CAM 02 [POPPA]",
-		"direction": "Poppa (+Z)",
-		"desc": "Visuale posteriore propulsori",
-		"icon": "▼"
-	},
-	{
-		"id": "left",
-		"name": "Laterale Sinistra",
-		"code": "CAM 03 [BABORDO]",
-		"direction": "Babordo (-X)",
-		"desc": "Visuale ala sinistra",
-		"icon": "◀"
-	},
-	{
-		"id": "right",
-		"name": "Laterale Destra",
-		"code": "CAM 04 [TRIBORDO]",
-		"direction": "Tribordo (+X)",
-		"desc": "Visuale ala destra",
-		"icon": "▶"
-	},
-	{
-		"id": "top",
-		"name": "Superiore",
-		"code": "CAM 05 [DORSALE]",
-		"direction": "Dorsale (+Y)",
-		"desc": "Visuale superiore / Zenit",
-		"icon": "▲"
-	},
-	{
-		"id": "bottom",
-		"name": "Inferiore",
-		"code": "CAM 06 [VENTRALE]",
-		"direction": "Ventrale (-Y)",
-		"desc": "Visuale inferiore / Nadir",
-		"icon": "▼"
-	}
-]
+var drone_manager := DuctDroneManager.new()
+var damage_manager := ShipDamageManager.new()
+var camera_manager := CameraFeedManager.new()
+
+func _ready() -> void:
+	add_child(drone_manager)
+	add_child(damage_manager)
+	add_child(camera_manager)
+	
+	_connect_submanagers()
+	_init_space_world()
+	generate_initial_ship_damages()
+	call_deferred("_connect_network_signals")
+
+func _connect_submanagers() -> void:
+	drone_manager.state_changed.connect(func(p, h, s, b, l, sa, sr): duct_drone_state_changed.emit(p, h, s, b, l, sa, sr))
+	drone_manager.reset_performed.connect(func(): duct_drone_reset_performed.emit())
+	drone_manager.repair_state_changed.connect(func(ir, di, pr): duct_drone_repair_state_changed.emit(ir, di, pr))
+	
+	damage_manager.damages_updated.connect(func(d): ship_damages_updated.emit(d))
+	damage_manager.damage_discovered.connect(func(d): ship_damage_discovered.emit(d))
+	damage_manager.damage_repaired.connect(func(d): ship_damage_repaired.emit(d))
+	
+	camera_manager.window_opened.connect(func(ci, w): camera_window_opened.emit(ci, w))
+	camera_manager.window_closed.connect(func(ci): camera_window_closed.emit(ci))
+	camera_manager.status_changed.connect(func(ci, io): camera_status_changed.emit(ci, io))
 
 # --- DUCT DRONE METADATA & CONSTANTS ---
 const INITIAL_DUCT_DRONE_POS := Vector2(300, 80)
@@ -87,78 +63,6 @@ const DUCT_BASE_ROTATE_SPEED: float = 3.0
 const DUCT_ACCELERATION: float = 650.0
 const DUCT_DECELERATION: float = 750.0
 
-const DUCT_ROOMS: Array[Dictionary] = [
-	{
-		"id": "bridge",
-		"name": "Ponte di Comando",
-		"rect": Rect2(230, 45, 140, 70),
-		"color": Color(0.12, 0.28, 0.45, 0.55),
-		"border_color": Color(0.35, 0.75, 1.0, 0.8)
-	},
-	{
-		"id": "sensors",
-		"name": "Sensori & Avionica",
-		"rect": Rect2(110, 115, 100, 65),
-		"color": Color(0.12, 0.35, 0.3, 0.5),
-		"border_color": Color(0.2, 0.85, 0.65, 0.8)
-	},
-	{
-		"id": "comms",
-		"name": "Comunicazioni & EW",
-		"rect": Rect2(390, 115, 100, 65),
-		"color": Color(0.12, 0.35, 0.3, 0.5),
-		"border_color": Color(0.2, 0.85, 0.65, 0.8)
-	},
-	{
-		"id": "armory",
-		"name": "Armeria & Sicurezza",
-		"rect": Rect2(245, 135, 110, 60),
-		"color": Color(0.35, 0.15, 0.2, 0.5),
-		"border_color": Color(0.9, 0.35, 0.4, 0.8)
-	},
-	{
-		"id": "quarters",
-		"name": "Alloggi Equipaggio",
-		"rect": Rect2(100, 200, 120, 75),
-		"color": Color(0.22, 0.22, 0.35, 0.5),
-		"border_color": Color(0.55, 0.55, 0.85, 0.8)
-	},
-	{
-		"id": "cargo",
-		"name": "Baia di Carico Principale",
-		"rect": Rect2(380, 200, 120, 75),
-		"color": Color(0.35, 0.28, 0.12, 0.5),
-		"border_color": Color(0.95, 0.75, 0.25, 0.8)
-	},
-	{
-		"id": "reactor",
-		"name": "Nucleo Reattore & Fusione",
-		"rect": Rect2(235, 215, 130, 80),
-		"color": Color(0.35, 0.12, 0.35, 0.55),
-		"border_color": Color(0.95, 0.35, 0.95, 0.9)
-	},
-	{
-		"id": "engine",
-		"name": "Sala Motori Principale",
-		"rect": Rect2(185, 315, 230, 85),
-		"color": Color(0.4, 0.2, 0.1, 0.55),
-		"border_color": Color(1.0, 0.5, 0.2, 0.85)
-	},
-	{
-		"id": "rcs_left",
-		"name": "Pod RCS Sinistro",
-		"rect": Rect2(30, 230, 50, 60),
-		"color": Color(0.18, 0.25, 0.32, 0.5),
-		"border_color": Color(0.4, 0.65, 0.85, 0.7)
-	},
-	{
-		"id": "rcs_right",
-		"name": "Pod RCS Destro",
-		"rect": Rect2(520, 230, 50, 60),
-		"color": Color(0.18, 0.25, 0.32, 0.5),
-		"border_color": Color(0.4, 0.65, 0.85, 0.7)
-	}
-]
 
 const DUCT_CORRIDORS: Array[Dictionary] = [
 	{"from": Vector2(300, 115), "to": Vector2(300, 135), "width": 16.0, "name": "Condotto Dorsale Alpha"},
@@ -235,11 +139,6 @@ var _duct_drone_active_config: Dictionary = {
 	"is_dat_loaded": false
 }
 var _net_mgr: Node = null
-
-func _ready() -> void:
-	_init_space_world()
-	generate_initial_ship_damages()
-	call_deferred("_connect_network_signals")
 
 func _get_net_mgr() -> Node:
 	if _net_mgr != null and is_instance_valid(_net_mgr):
@@ -679,15 +578,15 @@ func get_duct_drone_config() -> Dictionary:
 	return _duct_drone_active_config
 
 func _update_duct_drone_physics(delta: float) -> void:
-	var base_rot_speed: float = float(_duct_drone_active_config.get("rotate_speed", DUCT_BASE_ROTATE_SPEED))
-	var base_lin_speed: float = float(_duct_drone_active_config.get("linear_speed", DUCT_BASE_LINEAR_SPEED))
-	var drain_move: float = float(_duct_drone_active_config.get("battery_drain_move", 0.35))
-	var drain_lights: float = float(_duct_drone_active_config.get("battery_drain_lights", 0.75))
-	var drain_radar: float = float(_duct_drone_active_config.get("battery_drain_radar", 3.5))
-	var drain_repair: float = float(_duct_drone_active_config.get("battery_drain_repair", 6.0))
-	var scan_max: float = float(_duct_drone_active_config.get("radar_scan_radius_max", 160.0))
-	var repair_rng: float = float(_duct_drone_active_config.get("repair_range", 42.0))
-	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier", 1.0)) * float(_duct_drone_active_config.get("repair_efficiency", 1.0))
+	var base_rot_speed: float = float(_duct_drone_active_config.get("rotate_speed"))
+	var base_lin_speed: float = float(_duct_drone_active_config.get("linear_speed"))
+	var drain_move: float = float(_duct_drone_active_config.get("battery_drain_move"))
+	var drain_lights: float = float(_duct_drone_active_config.get("battery_drain_lights"))
+	var drain_radar: float = float(_duct_drone_active_config.get("battery_drain_radar"))
+	var drain_repair: float = float(_duct_drone_active_config.get("battery_drain_repair"))
+	var scan_max: float = float(_duct_drone_active_config.get("radar_scan_radius_max"))
+	var repair_rng: float = float(_duct_drone_active_config.get("repair_range"))
+	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier") * float(_duct_drone_active_config.get("repair_efficiency")))
 
 	# 1. Rotazione Tank (gira sul posto)
 	if absf(duct_drone_angular_input) > 0.01:
@@ -727,7 +626,7 @@ func _update_duct_drone_physics(delta: float) -> void:
 	else:
 		# Ricarica al dock station se il robottino è fermo alla base
 		if duct_drone_pos.distance_to(INITIAL_DUCT_DRONE_POS) < 30.0:
-			var max_bat: float = float(_duct_drone_active_config.get("battery_max", 100.0))
+			var max_bat: float = float(_duct_drone_active_config.get("battery_max"))
 			duct_drone_battery = minf(max_bat, duct_drone_battery + 15.0 * delta)
 	
 	# 3. Sonar pulse
@@ -740,12 +639,12 @@ func _update_duct_drone_physics(delta: float) -> void:
 	# 4. Rilevamento Danni Invisibili
 	var damages_changed := false
 	for dmg in ship_damages:
-		if dmg.get("repaired", false):
+		if dmg.get("repaired"):
 			continue
 		
-		var dmg_type: String = dmg.get("type", "")
-		var dmg_pos: Vector2 = dmg.get("pos", Vector2.ZERO)
-		var is_revealed: bool = dmg.get("revealed", false)
+		var dmg_type: String = dmg.get("type")
+		var dmg_pos: Vector2 = dmg.get("pos")
+		var is_revealed: bool = dmg.get("revealed")
 		
 		if not is_revealed:
 			if dmg_type == DAMAGE_TYPE_BREACH and duct_drone_lights:
@@ -781,20 +680,20 @@ func _update_duct_drone_physics(delta: float) -> void:
 				target_dmg = ship_damages[i]
 				break
 		
-		if target_dmg.is_empty() or target_dmg.get("repaired", false):
+		if target_dmg.is_empty() or target_dmg.get("repaired"):
 			is_duct_drone_repairing = false
 			repairing_damage_id = ""
 			duct_drone_repair_state_changed.emit(false, "", 0.0)
 		else:
-			var d: float = duct_drone_pos.distance_to(target_dmg.get("pos", Vector2.ZERO))
+			var d: float = duct_drone_pos.distance_to(target_dmg.get("pos"))
 			if d > repair_rng or duct_drone_battery <= 0.0:
 				# Troppo lontano o batteria esaurita: interrompi riparazione
 				is_duct_drone_repairing = false
 				repairing_damage_id = ""
-				duct_drone_repair_state_changed.emit(false, "", float(target_dmg.get("repair_progress", 0.0)))
+				duct_drone_repair_state_changed.emit(false, "", float(target_dmg.get("repair_progress")))
 			else:
-				var duration: float = maxf(1.0, float(target_dmg.get("repair_duration", 5.0)))
-				var progress: float = float(target_dmg.get("repair_progress", 0.0))
+				var duration: float = maxf(1.0, float(target_dmg.get("repair_duration")))
+				var progress: float = float(target_dmg.get("repair_progress"))
 				progress = clampf(progress + ((delta * repair_mult) / duration), 0.0, 1.0)
 				target_dmg["repair_progress"] = progress
 				duct_drone_repair_state_changed.emit(true, repairing_damage_id, progress)
@@ -860,7 +759,9 @@ func configure_initial_station_spawn() -> void:
 	var sys := get_star_system_data()
 	var station_data := {}
 	if sys != null and sys.has_method("find_primary_station"):
-		station_data = sys.find_primary_station()
+		var st := sys.find_primary_station()
+		if st != null:
+			station_data = st.to_dict()
 	if station_data.is_empty():
 		var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
 		if grid_mgr and grid_mgr.has_method("get_starting_station"):
@@ -869,9 +770,9 @@ func configure_initial_station_spawn() -> void:
 	if station_data.is_empty():
 		return
 		
-	var st_id: String = station_data.get("id", "STATION_VALKYRIE")
-	var st_name: String = station_data.get("name", "Stazione Spaziale Valkyrie")
-	var st_type: String = station_data.get("type", "STATION")
+	var st_id: String = station_data.get("id")
+	var st_name: String = station_data.get("name")
+	var st_type: String = station_data.get("type")
 	
 	# Calcola la posizione 3D della stazione nel mondo di gioco (area perimetrale a 1800m dalla prua nave)
 	var station_3d_pos := Vector3(0.0, 0.0, -default_station_approach_distance)
@@ -940,14 +841,26 @@ func get_docking_station() -> SpaceStationEntity:
 func get_duct_rooms() -> Array[Dictionary]:
 	var bp := get_ship_blueprint()
 	if bp and bp.rooms.size() > 0:
-		return bp.rooms
-	return DUCT_ROOMS
+		var res: Array[Dictionary] = []
+		for r in bp.rooms:
+			if r is Dictionary:
+				res.append(r)
+			elif r.has_method("to_dict"):
+				res.append(r.to_dict())
+		return res
+	return RoomDatabase.DUCT_ROOMS
 
 ## Ritorna i condotti della nave da ShipBlueprint o fallback a costanti
 func get_duct_corridors() -> Array[Dictionary]:
 	var bp := get_ship_blueprint()
 	if bp and bp.ducts.size() > 0:
-		return bp.ducts
+		var res: Array[Dictionary] = []
+		for d in bp.ducts:
+			if d is Dictionary:
+				res.append(d)
+			elif d.has_method("to_dict"):
+				res.append(d.to_dict())
+		return res
 	return DUCT_CORRIDORS
 
 ## Ritorna i dispositivi elettrici della nave da ShipBlueprint
@@ -956,7 +869,8 @@ func get_power_devices() -> Array[Dictionary]:
 	if not bp: return []
 	var all_devs: Array[Dictionary] = []
 	for r in bp.rooms:
-		var devs: Array = r.get("devices", [])
+		var room_obj = bp._ensure_room_is_object(r)
+		var devs: Array = room_obj.devices
 		for d in devs:
 			all_devs.append(d)
 	return all_devs
@@ -1036,7 +950,7 @@ func _is_duct_drone_position_valid(pos: Vector2) -> bool:
 	for duct in get_duct_corridors():
 		var p1: Vector2 = duct["from"]
 		var p2: Vector2 = duct["to"]
-		var width: float = float(duct.get("width", 14.0))
+		var width: float = float(duct.get("width"))
 		var seg_dist := _distance_to_segment_2d(pos, p1, p2)
 		if seg_dist <= width * 0.8:
 			return true
@@ -1119,7 +1033,7 @@ func get_ship_damages() -> Array[Dictionary]:
 func get_active_ship_damages() -> Array[Dictionary]:
 	var active: Array[Dictionary] = []
 	for dmg in ship_damages:
-		if not dmg.get("repaired", false):
+		if not dmg.get("repaired"):
 			active.append(dmg)
 	return active
 
@@ -1133,9 +1047,9 @@ func get_adjacent_damage(pos: Vector2, max_dist: float = 38.0) -> Dictionary:
 	var closest: Dictionary = {}
 	var min_d := max_dist
 	for dmg in ship_damages:
-		if dmg.get("repaired", false):
+		if dmg.get("repaired"):
 			continue
-		var d: float = pos.distance_to(dmg.get("pos", Vector2.ZERO))
+		var d: float = pos.distance_to(dmg.get("pos"))
 		if d <= min_d:
 			min_d = d
 			closest = dmg
@@ -1160,7 +1074,7 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 				randf_range(r.position.y + 10, r.position.y + r.size.y - 10)
 			)
 			if sector_name == "":
-				sector_name = room.get("name", "Settore Nave")
+				sector_name = room.get("name")
 		elif bp_ducts.size() > 0:
 			var duct: Dictionary = bp_ducts.pick_random()
 			var p1: Vector2 = duct["from"]
@@ -1168,7 +1082,7 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 			var t := randf_range(0.2, 0.8)
 			pos = p1.lerp(p2, t)
 			if sector_name == "":
-				sector_name = duct.get("name", "Condotto")
+				sector_name = duct.get("name")
 
 	if duration <= 0.0:
 		duration = randf_range(3.0, 8.0)
@@ -1206,10 +1120,10 @@ func generate_initial_ship_damages(count: int = 4) -> void:
 		var num := mini(count, bp_damages.size())
 		for i in range(num):
 			var d: Dictionary = bp_damages[i]
-			var dmg_type: String = str(d.get("type", DAMAGE_TYPE_SHORT_CIRCUIT))
-			var dmg_pos: Vector2 = d.get("pos", Vector2.ZERO)
-			var dmg_sector: String = str(d.get("sector", d.get("name", "Settore Nave")))
-			var dmg_dur: float = float(d.get("repair_cost", d.get("duration", 5.0)))
+			var dmg_type: String = str(d.get("type"))
+			var dmg_pos: Vector2 = d.get("pos")
+			var dmg_sector: String = str(d.get("sector"))
+			var dmg_dur: float = float(d.get("repair_cost"))
 			spawn_ship_damage(dmg_type, dmg_pos, dmg_sector, dmg_dur)
 	else:
 		var preset_damages := [
@@ -1270,17 +1184,17 @@ func start_duct_drone_repair(damage_id: String) -> void:
 		return
 	
 	var dmg := get_damage_by_id(damage_id)
-	if dmg.is_empty() or dmg.get("repaired", false) or duct_drone_battery <= 0.0:
+	if dmg.is_empty() or dmg.get("repaired") or duct_drone_battery <= 0.0:
 		return
 	
-	var d: float = duct_drone_pos.distance_to(dmg.get("pos", Vector2.ZERO))
-	var repair_rng: float = float(_duct_drone_active_config.get("repair_range", 42.0))
+	var d: float = duct_drone_pos.distance_to(dmg.get("pos"))
+	var repair_rng: float = float(_duct_drone_active_config.get("repair_range"))
 	if d > repair_rng:
 		return
 	
 	is_duct_drone_repairing = true
 	repairing_damage_id = damage_id
-	var progress: float = float(dmg.get("repair_progress", 0.0))
+	var progress: float = float(dmg.get("repair_progress"))
 	duct_drone_repair_state_changed.emit(true, damage_id, progress)
 	
 	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
@@ -1347,10 +1261,10 @@ func get_camera_transform(cam_id: String) -> Transform3D:
 	return Transform3D.IDENTITY
 
 func get_cameras_info() -> Array[Dictionary]:
-	return CAMERAS_METADATA
+	return RoomDatabase.CAMERAS_METADATA
 
 func get_camera_info(cam_id: String) -> Dictionary:
-	for c in CAMERAS_METADATA:
+	for c in RoomDatabase.CAMERAS_METADATA:
 		if c["id"] == cam_id:
 			return c
 	return {}
@@ -1396,7 +1310,7 @@ func open_camera_window(cam_id: String) -> FakeWindow:
 		return null
 	
 	var cam_info := get_camera_info(cam_id)
-	var title: String = "%s - Feed Esterno" % [cam_info.get("code", "CAM FEED")]
+	var title: String = "%s - Feed Esterno" % [cam_info.get("code")]
 	win_instance.title_text = title
 	
 	# Trova il desktop o il nodo contenitore finestre
@@ -1444,7 +1358,7 @@ func close_all_camera_windows() -> void:
 		close_camera_window(cam_id)
 
 func open_all_camera_windows() -> void:
-	for c in CAMERAS_METADATA:
+	for c in RoomDatabase.CAMERAS_METADATA:
 		open_camera_window(c["id"])
 
 func set_cams_config(cfg: Dictionary) -> void:
@@ -1577,7 +1491,7 @@ func get_weapon_targets() -> Array[Dictionary]:
 	
 	# Ordina per distanza crescente
 	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance", 0.0) < b.get("distance", 0.0)
+		return a.get("distance") < b.get("distance")
 	)
 	return targets
 
@@ -1585,8 +1499,8 @@ func get_weapon_targets() -> Array[Dictionary]:
 func is_armory_powered() -> bool:
 	var devices := get_power_devices()
 	for dev in devices:
-		if dev.get("id", "") == "armory_defense":
-			return dev.get("inputs_powered", 1) > 0
+		if dev.get("id") == "armory_defense":
+			return dev.get("inputs_powered") > 0
 	return true
 
 ## Esegue una richiesta di fuoco per il tipo d'arma specificato
@@ -1598,8 +1512,8 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 	
 	if not target_id.is_empty():
 		for t in get_weapon_targets():
-			if t.get("id", "") == target_id:
-				target_pos = t.get("pos", target_pos)
+			if t.get("id") == target_id:
+				target_pos = t.get("pos")
 				hit_success = true
 				break
 	
@@ -1635,14 +1549,14 @@ func trigger_active_ping(radius: float = 50000.0) -> void:
 func is_sensors_powered() -> bool:
 	var devices := get_power_devices()
 	for dev in devices:
-		if dev.get("id", "") == "sensors_radar":
-			return dev.get("inputs_powered", 1) > 0
+		if dev.get("id") == "sensors_radar":
+			return dev.get("inputs_powered") > 0
 	return true
 
 func has_radar_damage() -> bool:
 	var dmgs := get_ship_damages()
 	for d in dmgs:
-		if (d.get("system_impact", "") == "radar_ghosts" or d.get("sector", "") == "Sensori & Avionica") and not d.get("repaired", false):
+		if (d.get("system_impact") == "radar_ghosts" or d.get("sector") == "Sensori & Avionica") and not d.get("repaired"):
 			return true
 	return false
 
@@ -1835,7 +1749,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 	
 	var existing_ids: Dictionary = {}
 	for e in entities:
-		existing_ids[e.get("id", "")] = true
+		existing_ids[e.get("id")] = true
 	
 	for lrd in long_range_defaults:
 		if not existing_ids.has(lrd["id"]):
@@ -1867,7 +1781,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			})
 	
 	if not active_waypoint.is_empty():
-		var wp_pos: Vector3 = active_waypoint.get("pos", Vector3.ZERO)
+		var wp_pos: Vector3 = active_waypoint.get("pos")
 		var diff: Vector3 = wp_pos - ship_pos
 		var dist: float = diff.length()
 		var local_diff: Vector3 = ship_basis.inverse() * diff
@@ -1876,7 +1790,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 		
 		entities.append({
 			"id": "ACTIVE_WAYPOINT",
-			"name": active_waypoint.get("name", "WAYPOINT TATTICO"),
+			"name": active_waypoint.get("name"),
 			"pos": wp_pos,
 			"rel_pos": diff,
 			"distance": dist,
@@ -1895,7 +1809,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 		})
 	
 	entities.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance", 0.0) < b.get("distance", 0.0)
+		return a.get("distance") < b.get("distance")
 	)
 	return entities
 

@@ -33,8 +33,8 @@ const CONFIG_PATH: String = "Ship Drive/Programs/SystemMap/system_map_config.dat
 @onready var sector_info_text: RichTextLabel = %SectorInfoText
 @onready var grid_display: Control = %GridDisplay
 
-var parent_window: FakeWindow = null
 var can_control_map: bool = true
+var parent_window: FakeWindow = null
 
 # Stato navigazione e griglia
 var selected_sector_coords: Vector3i = Vector3i.ZERO
@@ -77,9 +77,9 @@ func _ready() -> void:
 
 func _configure_window() -> void:
 	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	call_deferred("_setup_parent_window")
+	call_deferred("_setup_parent_window", APP_TITLE, DEFAULT_WINDOW_SIZE)
 
-func _setup_parent_window() -> void:
+func _setup_parent_window(_title: String, _size: Vector2) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
@@ -134,7 +134,7 @@ func _update_permissions() -> void:
 	if NetworkManager and NetworkManager.has_method("get_local_player_role"):
 		var current_role: String = NetworkManager.get_local_player_role()
 		var is_solo: bool = NetworkManager.is_solo_mode
-		var allowed_roles = ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Factotum", "Soldier", "Soldato", ""]
+		var allowed_roles = ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Mozzo", "Soldier", "Soldato", ""]
 		can_control_map = allowed_roles.has(current_role) or is_solo
 	else:
 		can_control_map = true
@@ -224,8 +224,8 @@ func _update_route_info() -> void:
 	var body_desc := "Spazio profondo aperto."
 	if StarSystemGridManager:
 		for b in StarSystemGridManager.system_celestial_bodies:
-			if b.get("coords", Vector3i.MAX) == selected_sector_coords:
-				body_desc = "[b]%s[/b] (%s)\n%s" % [b.get("name", "Corpo Celeste"), b.get("type", "OGGETTO"), b.get("description", "")]
+			if b.get("coords") == selected_sector_coords:
+				body_desc = "[b]%s[/b] (%s)\n%s" % [b.get("name"), b.get("type"), b.get("description")]
 				break
 	if sector_info_text:
 		sector_info_text.text = body_desc
@@ -241,8 +241,8 @@ func _update_route_info() -> void:
 	if route_eta_label:
 		route_eta_label.text = "ETA TRANSITO: %.1f s" % eta_s
 	
-	var energy: float = dist_sectors * float(app_config.get("energy_cost_per_sector", 15.0))
-	var fuel: float = dist_sectors * float(app_config.get("fuel_cost_per_sector", 2.5))
+	var energy: float = dist_sectors * float(app_config.get("energy_cost_per_sector"))
+	var fuel: float = dist_sectors * float(app_config.get("fuel_cost_per_sector"))
 	if route_cost_label:
 		route_cost_label.text = "STIMA ENERGIA: %.1f MW | CARB: %.1f U" % [energy, fuel]
 
@@ -267,8 +267,8 @@ func _calculate_route_to_selected() -> void:
 	var course_vec := StarSystemGridManager.get_route_vector(cur_coords, selected_sector_coords)
 	var dist_km := StarSystemGridManager.calculate_kinematic_distance_km(cur_coords, selected_sector_coords)
 	var eta_s := maxf(3.0, dist_sectors * 4.5) if dist_sectors > 0 else 0.0
-	var energy: float = dist_sectors * float(app_config.get("energy_cost_per_sector", 15.0))
-	var fuel: float = dist_sectors * float(app_config.get("fuel_cost_per_sector", 2.5))
+	var energy: float = dist_sectors * float(app_config.get("energy_cost_per_sector"))
+	var fuel: float = dist_sectors * float(app_config.get("fuel_cost_per_sector"))
 
 	calculated_route = {
 		"from_coords": cur_coords,
@@ -305,8 +305,8 @@ func send_route_to_flight_control() -> Dictionary:
 	var target_coords: Vector3i = selected_sector_coords
 	var course_vec: Vector3 = Vector3.ZERO
 	if not calculated_route.is_empty():
-		target_coords = calculated_route.get("target_coords", selected_sector_coords)
-		course_vec = calculated_route.get("course_vector", Vector3.ZERO)
+		target_coords = calculated_route.get("target_coords")
+		course_vec = calculated_route.get("course_vector")
 	elif StarSystemGridManager:
 		var cur := StarSystemGridManager.get_current_sector_coords()
 		course_vec = StarSystemGridManager.get_route_vector(cur, target_coords)
@@ -378,10 +378,10 @@ func _on_search_submitted(text: String) -> void:
 	# Cerca per nome corpo celeste
 	if StarSystemGridManager:
 		for b in StarSystemGridManager.system_celestial_bodies:
-			var b_name: String = b.get("name", "").to_upper()
-			var b_id: String = b.get("id", "").to_upper()
+			var b_name: String = b.get("name").to_upper()
+			var b_id: String = b.get("id").to_upper()
 			if clean in b_name or clean in b_id:
-				var coords: Vector3i = b.get("coords", Vector3i.ZERO)
+				var coords: Vector3i = b.get("coords")
 				select_sector(coords)
 				_center_on_sector(coords)
 				return
@@ -484,10 +484,10 @@ func _on_grid_display_draw() -> void:
 		celestial_bodies = StarSystemGridManager.system_celestial_bodies
 
 	for body in celestial_bodies:
-		var b_coords: Vector3i = body.get("coords", Vector3i.ZERO)
+		var b_coords: Vector3i = body.get("coords")
 		var b_pos := pan_offset + Vector2(b_coords.x * cell_size, b_coords.y * cell_size)
-		var b_type: String = body.get("type", "").to_upper()
-		var b_name: String = body.get("name", "Corpo")
+		var b_type: String = body.get("type").to_upper()
+		var b_name: String = body.get("name")
 		
 		var icon_color := Color.WHITE
 		var icon_radius := 6.0 * zoom_level

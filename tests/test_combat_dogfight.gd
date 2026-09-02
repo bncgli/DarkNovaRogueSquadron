@@ -89,7 +89,7 @@ func test_enemy_ai_electronic_warfare() -> void:
 	print("✓ Test 2 superato: Meccaniche di Guerra Elettronica & Hacker convalidate.")
 
 func test_systemic_damage_and_quadrant_shields() -> void:
-	print("\n--- TEST 3: Systemic Damage Handler & 4-Quadrant Shields ---")
+	print("\n--- TEST 3: Systemic Damage Handler & 4-GlobalValues.Quadrant Shields ---")
 
 	var dmg_handler := SystemicDamageHandler.new()
 	add_child(dmg_handler)
@@ -99,12 +99,12 @@ func test_systemic_damage_and_quadrant_shields() -> void:
 	var hit_front := dmg_handler.process_hit(Vector3(0, 0, -5), 40.0, "kinetic")
 	assert(hit_front.quadrant == "FORE", "Impatto con Z negativa deve colpire quadrante FORE")
 	assert(hit_front.shield_absorbed > 0.0, "Lo scudo frontale deve assorbire parte del danno")
-	assert(dmg_handler.shields[SystemicDamageHandler.Quadrant.FORE] < 100.0, "Scudo FORE deve essere ridotto")
+	assert(dmg_handler.shields[GlobalValues.Quadrant.FORE] < 100.0, "Scudo FORE deve essere ridotto")
 
 	# 2. Impatto da poppa (AFT)
 	var hit_rear := dmg_handler.process_hit(Vector3(0, 0, 5), 30.0, "kinetic")
 	assert(hit_rear.quadrant == "AFT", "Impatto con Z positiva deve colpire quadrante AFT")
-	assert(dmg_handler.shields[SystemicDamageHandler.Quadrant.AFT] < 100.0, "Scudo AFT deve essere ridotto")
+	assert(dmg_handler.shields[GlobalValues.Quadrant.AFT] < 100.0, "Scudo AFT deve essere ridotto")
 
 	# 3. Impatto da Babordo (PORT, -X) e Tribordo (STARBOARD, +X)
 	var hit_port := dmg_handler.process_hit(Vector3(-5, 0, 0), 20.0, "kinetic")
@@ -114,7 +114,7 @@ func test_systemic_damage_and_quadrant_shields() -> void:
 
 	# 4. Colpo pesante che abbatte lo scudo e penetra nello scafo
 	var heavy_hit := dmg_handler.process_hit(Vector3(0, 0, -5), 150.0, "plasma")
-	assert(dmg_handler.shields[SystemicDamageHandler.Quadrant.FORE] == 0.0, "Scudo FORE deve essere esaurito")
+	assert(dmg_handler.shields[GlobalValues.Quadrant.FORE] == 0.0, "Scudo FORE deve essere esaurito")
 	assert(heavy_hit.hull_damage > 0.0, "Danno penetrante deve intaccare lo scafo")
 	assert(dmg_handler.hull_integrity < 100.0, "Integrità scafo deve diminuire")
 	assert(not heavy_hit.systemic_events.is_empty(), "Danno penetrante deve generare avarie a sottosistemi di bordo")
@@ -129,21 +129,21 @@ func test_alarm_level_triggers() -> void:
 	add_child(dmg_handler)
 	dmg_handler.reset()
 
-	assert(dmg_handler.current_alarm_level == SystemicDamageHandler.AlarmLevel.NORMAL, "Stato iniziale allarme deve essere NORMAL")
+	assert(dmg_handler.current_alarm_level == GlobalValues.AlarmLevel.NORMAL, "Stato iniziale allarme deve essere NORMAL")
 
 	# Scarica uno scudo a zero -> Trigger ALLARME GIALLO
-	dmg_handler.set_shield_quadrant_value(SystemicDamageHandler.Quadrant.FORE, 0.0)
-	assert(dmg_handler.current_alarm_level == SystemicDamageHandler.AlarmLevel.YELLOW_ALERT, "Esaurimento scudo su un quadrante deve innescare YELLOW_ALERT")
+	dmg_handler.set_shield_quadrant_value(GlobalValues.Quadrant.FORE, 0.0)
+	assert(dmg_handler.current_alarm_level == GlobalValues.AlarmLevel.YELLOW_ALERT, "Esaurimento scudo su un quadrante deve innescare YELLOW_ALERT")
 
 	# Danno critico allo scafo (< 25%) -> Trigger ALLARME ROSSO
 	dmg_handler.hull_integrity = 20.0
 	dmg_handler._evaluate_alarm_level()
-	assert(dmg_handler.current_alarm_level == SystemicDamageHandler.AlarmLevel.RED_ALERT, "Integrità scafo < 25% deve innescare RED_ALERT")
+	assert(dmg_handler.current_alarm_level == GlobalValues.AlarmLevel.RED_ALERT, "Integrità scafo < 25% deve innescare RED_ALERT")
 
 	# Riparazione scafo e scudi -> Ritorno a NORMAL
 	dmg_handler.repair_hull(80.0)
-	dmg_handler.set_shield_quadrant_value(SystemicDamageHandler.Quadrant.FORE, 100.0)
-	assert(dmg_handler.current_alarm_level == SystemicDamageHandler.AlarmLevel.NORMAL, "Dopo riparazioni l'allarme deve tornare a NORMAL")
+	dmg_handler.set_shield_quadrant_value(GlobalValues.Quadrant.FORE, 100.0)
+	assert(dmg_handler.current_alarm_level == GlobalValues.AlarmLevel.NORMAL, "Dopo riparazioni l'allarme deve tornare a NORMAL")
 
 	dmg_handler.queue_free()
 	print("✓ Test 4 superato: Allarme Giallo e Allarme Rosso convalidati.")

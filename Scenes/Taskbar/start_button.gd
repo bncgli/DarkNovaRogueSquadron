@@ -9,8 +9,12 @@ extends MarginContainer
 var is_mouse_over_menu: bool
 var is_mouse_over: bool
 var _dynamic_ship_app_nodes: Array[Control] = []
+var _open_submenus: Array[Panel] = []
 
 func _ready() -> void:
+	add_to_group("start_button_controller")
+	if start_menu:
+		start_menu.add_to_group("start_menu_panels")
 	_connect_system_signals()
 	_refresh_ship_apps.call_deferred()
 
@@ -153,8 +157,8 @@ func _refresh_ship_apps() -> void:
 		var term_apps = tsm.get_all_registered_apps()
 		for app_res in term_apps:
 			var d = app_res.to_dict()
-			var app_id = d.get("id", "")
-			var s_path = d.get("scene_path", "")
+			var app_id = d.get("id")
+			var s_path = d.get("scene_path")
 			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
 				apps.append(d)
 				seen_ids[app_id] = true
@@ -162,17 +166,17 @@ func _refresh_ship_apps() -> void:
 
 	# 2. Verifica se la connessione alla nave / missione è attiva per aggiungere Ship Apps
 	var is_active: bool = false
+	var nm := _get_net_mgr()
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
 		is_active = SpaceWorldManager.is_ship_connected()
-	elif _get_net_mgr() and _get_net_mgr().has_method("is_ship_connected"):
-		is_active = _get_net_mgr().is_ship_connected()
+	elif nm and nm.has_method("is_ship_connected"):
+		is_active = nm.is_ship_connected()
 	
 	var ssm = get_node_or_null("/root/ShipSoftwareManager")
 	if not is_active and ssm and ssm.get("is_mission_active"):
 		is_active = true
 	
 	if is_active:
-		var nm := _get_net_mgr()
 		var my_role: String = ""
 		var is_solo: bool = false
 		
@@ -205,42 +209,37 @@ func _refresh_ship_apps() -> void:
 				ship_apps = def_bp.get_apps_for_role(my_role, is_solo)
 		
 		for app in ship_apps:
-			var app_id = app.get("id", "")
-			var s_path = app.get("scene_path", "")
+			var app_id = app.get("id")
+			var s_path = app.get("scene_path")
 			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
 				apps.append(app)
 				seen_ids[app_id] = true
 				if not s_path.is_empty(): seen_paths[s_path] = true
 	
 	if true: # Invece di 'if is_active', ora usiamo sempre la lista apps popolata
-		var option_scene := load("res://Scenes/Taskbar/start_menu_option.tscn")
-		var insert_idx := 0
+		var root_tree = {"subfolders": {}, "apps": []}
 		for app in apps:
-			var opt: Control = option_scene.instantiate() as Control
-			var opt_title: String = str(app.get("title", app.get("name", "App Nave")))
-			var opt_desc: String = str(app.get("description", ""))
-			var opt_dev: String = str(app.get("developer", ""))
-			var opt_scene: String = str(app.get("scene_path", ""))
-			var opt_color: Color = app.get("icon_color", Color(0, 0.79, 0.95, 1.0))
-			var opt_id: String = str(app.get("id", ""))
+			var path = str(app.get("menu_path")).strip_edges()
 			
-			opt.name = "ShipApp_%s" % opt_id
-			opt.set("title_text", opt_title)
-			opt.set("description_text", opt_desc)
-			opt.set("developer_text", opt_dev)
-			opt.set("application_scene", opt_scene)
-			opt.set("game_scene", "")
-			opt.set("use_generic_pause_menu", false)
-			opt.add_to_group("dynamic_ship_apps")
+			# Fallback: se menu_path è vuoto, usa la categoria come cartella radice
+			if path.is_empty():
+				var category = str(app.get("category")).strip_edges()
+				if not category.is_empty() and category != "Applicazioni":
+					path = category
 			
-			vbox_container.add_child(opt)
-			vbox_container.move_child(opt, insert_idx)
-			insert_idx += 1
-			
-			if opt.has_method("configure_option"):
-				opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, null, opt_dev)
-			
-			_dynamic_ship_app_nodes.append(opt)
+			var current = root_tree
+			if not path.is_empty():
+				var parts = path.split("/")
+				for part in parts:
+					part = part.strip_edges()
+					if part.is_empty(): continue
+					if not current["subfolders"].has(part):
+						current["subfolders"][part] = {"subfolders": {}, "apps": []}
+					current = current["subfolders"][part]
+			current["apps"].append(app)
+		
+		var insert_idx := 0
+		_render_menu_tree(vbox_container, root_tree, 0, insert_idx, start_menu)
 	
 	_update_start_menu_size()
 	if start_menu and start_menu.position.y < 0:
@@ -249,15 +248,118 @@ func _refresh_ship_apps() -> void:
 func _update_start_menu_size() -> void:
 	if not start_menu or not vbox_container:
 		return
-	var count := vbox_container.get_child_count()
+	
+	var visible_rows := _count_visible_rows(vbox_container)
+
 	var vp_height: float = 720.0
 	if is_inside_tree():
 		var vp := get_viewport()
 		if vp:
 			vp_height = vp.get_visible_rect().size.y
 	var max_allowed_height: float = maxf(vp_height - 60.0, 200.0)
-	var desired_height: float = clampf(float(count) * 61.0 + 55.0, 200.0, max_allowed_height)
+	var desired_height: float = clampf(float(visible_rows) * 61.0 + 55.0, 200.0, max_allowed_height)
 	start_menu.size.y = desired_height
+	
+	# Se il menu è già visibile, aggiorna la posizione Y per farlo crescere verso l'alto
+	if start_menu.position.y < 0:
+		start_menu.position.y = -start_menu.size.y - 5.0
+
+func _count_visible_rows(container: Control) -> int:
+	var count := 0
+	for child in container.get_children():
+		if child is Control and child.visible:
+			if child.is_in_group("dynamic_ship_apps"):
+				if child.name.begins_with("ShipApp_") or child is Panel: # StartMenuOption è un Panel
+					count += 1
+				elif child is MarginContainer or child is VBoxContainer:
+					count += _count_visible_rows(child)
+			else:
+				# Nodi statici
+				count += 1
+	return count
+
+func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert_idx: int, current_menu: Control) -> int:
+	var option_scene := load("res://Scenes/Taskbar/start_menu_option.tscn")
+	
+	# Subfolders first
+	var subfolder_names = level["subfolders"].keys()
+	subfolder_names.sort()
+	for folder_name in subfolder_names:
+		var opt: Control = option_scene.instantiate() as Control
+		opt.add_to_group("dynamic_ship_apps")
+		container.add_child(opt)
+		if insert_idx >= 0:
+			container.move_child(opt, insert_idx)
+			insert_idx += 1
+		
+		var sub_tree = level["subfolders"][folder_name]
+		opt.configure_option(folder_name, "Cartella", "", Color.WHITE, null, "", true, sub_tree)
+		_dynamic_ship_app_nodes.append(opt)
+		
+		opt.folder_pressed.connect(func(o): _on_folder_pressed(o, current_menu))
+	
+	# Apps
+	for app in level["apps"]:
+		var opt: Control = option_scene.instantiate() as Control
+		var opt_title: String = str(app.get("title"))
+		var opt_desc: String = str(app.get("description"))
+		var opt_dev: String = str(app.get("developer"))
+		var opt_scene: String = str(app.get("scene_path"))
+		var opt_color: Color = app.get("icon_color")
+		var opt_id: String = str(app.get("id"))
+		
+		var is_game: bool = str(app.get("category")).contains("Giochi")
+		
+		opt.name = "ShipApp_%s" % opt_id
+		opt.set("title_text", opt_title)
+		opt.set("description_text", opt_desc)
+		opt.set("developer_text", opt_dev)
+		if is_game:
+			opt.set("game_scene", opt_scene)
+			opt.set("application_scene", "")
+			opt.set("use_generic_pause_menu", true)
+		else:
+			opt.set("application_scene", opt_scene)
+			opt.set("game_scene", "")
+			opt.set("use_generic_pause_menu", false)
+		opt.add_to_group("dynamic_ship_apps")
+		
+		container.add_child(opt)
+		if insert_idx >= 0:
+			container.move_child(opt, insert_idx)
+			insert_idx += 1
+		
+		if opt.has_method("configure_option"):
+			opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, null, opt_dev)
+		
+		_dynamic_ship_app_nodes.append(opt)
+	
+	return insert_idx
+
+func _on_folder_pressed(option: Control, parent_menu: Control) -> void:
+	# Close submenus of the same level or deeper
+	if parent_menu.has_method("close_submenus"):
+		parent_menu.call("close_submenus")
+	elif parent_menu == start_menu:
+		_close_all_submenus()
+	
+	var sub_menu_scene = load("res://Scenes/Taskbar/start_sub_menu.tscn")
+	var sub_menu = sub_menu_scene.instantiate()
+	sub_menu.add_to_group("start_menu_panels")
+	$"../../StartMenuAnchor".add_child(sub_menu)
+	
+	sub_menu.populate(option.get("sub_tree"), parent_menu, option)
+	
+	if "submenus" in parent_menu:
+		parent_menu.submenus.append(sub_menu)
+	else:
+		_open_submenus.append(sub_menu)
+
+func _close_all_submenus() -> void:
+	for sub in _open_submenus:
+		if is_instance_valid(sub):
+			sub.close()
+	_open_submenus.clear()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == 1 and event.is_pressed():
@@ -278,8 +380,9 @@ func _on_mouse_exited() -> void:
 	is_mouse_over = false
 
 func handle_mouse_click() -> void:
-	if is_mouse_over_menu: # Mouse clicked on empty space in menu, do nothing
-		return
+	for menu in get_tree().get_nodes_in_group("start_menu_panels"):
+		if is_instance_valid(menu) and menu.visible and menu.get_global_rect().has_point(get_global_mouse_position()):
+			return
 	
 	if is_mouse_over:
 		if start_menu.position.y > 0:
@@ -299,6 +402,7 @@ func show_start_menu() -> void:
 
 func hide_start_menu() -> void:
 	# Called from clicking on desktop
+	_close_all_submenus()
 	var tween: Tween = create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(start_menu, "position:y", 50, 0.3)

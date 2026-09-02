@@ -98,11 +98,11 @@ func _run_all_tests() -> void:
 		assert(app.can_control_drone == true, "Capitano deve avere controllo completo sul drone EVA")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Factotum / Solo Mode
-		net_mgr.request_role("Factotum")
+		# 2.6 Mozzo / Solo Mode
+		net_mgr.request_role("Mozzo")
 		await get_tree().process_frame
-		assert(app.can_control_drone == true, "Factotum deve avere controllo completo sul drone EVA")
-		print("✔ Ruolo Factotum: controllo completo abilitato")
+		assert(app.can_control_drone == true, "Mozzo deve avere controllo completo sul drone EVA")
+		print("✔ Ruolo Mozzo: controllo completo abilitato")
 	
 	# =========================================================================
 	# TEST 3: RISORSA E SOFTWARE MANAGER
@@ -183,7 +183,7 @@ func _run_all_tests() -> void:
 	assert(test_dmg.get("id") != null, "Danno breccia deve essere spawnato")
 	
 	SpaceWorldManager.set_service_drone_active_tool("welder")
-	SpaceWorldManager.set_service_drone_tool_trigger(true, str(test_dmg.get("id", "")))
+	SpaceWorldManager.set_service_drone_tool_trigger(true, str(test_dmg.get("id")))
 	drone._physics_process(1.0)
 	drone._physics_process(1.0)
 	print("✔ Saldatrice e avanzamento riparazione breccia verificati")
@@ -193,7 +193,7 @@ func _run_all_tests() -> void:
 	assert(item_added == true, "Raccolta materiale cargo deve riuscire entro la capienza max")
 	assert(drone.cargo_weight_kg == 150.0, "Il peso cargo deve essere 150 kg")
 	var dropped := drone.drop_cargo_item(0)
-	assert(dropped.get("id") == "salvage_01", "Rilascio cargo deve restituire l'oggetto rilasciato")
+	assert(dropped.get("id") == "salvage_01")
 	assert(drone.cargo_weight_kg == 0.0, "Il peso cargo deve tornare a 0 kg")
 	print("✔ Operazioni stiva cargo e harpoon validate")
 	

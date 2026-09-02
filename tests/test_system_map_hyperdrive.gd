@@ -125,7 +125,7 @@ func _run_all_tests() -> void:
 	)
 
 	var engage_res: Dictionary = flight_app.engage_hyperdrive()
-	assert(engage_res.get("success", false) == true, "L'attivazione Hyperdrive deve avere successo: %s" % str(engage_res))
+	assert(engage_res.get("success") == true, "L'attivazione Hyperdrive deve avere successo: %s" % str(engage_res))
 	assert(transit_status["started"] == true, "Segnale hyperdrive_transit_started non emesso")
 	assert(transit_status["completed"] == true, "Segnale hyperdrive_transit_completed non emesso")
 	assert(transit_status["destination"] == target_sector, "Destinazione raggiunta diversa dal settore target")

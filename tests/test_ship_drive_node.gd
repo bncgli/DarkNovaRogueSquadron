@@ -64,7 +64,7 @@ func _run_tests() -> void:
 	dummy_file_mgr.file_path = "Ship Drive"
 	add_child(dummy_file_mgr)
 	
-	dummy_file_mgr.new_file(".txt", FakeFolder.file_type_enum.TEXT_FILE, "New File", "Ship Drive")
+	dummy_file_mgr.new_file(".txt", GlobalValues.FileType.TEXT_FILE, "New File", "Ship Drive")
 	await get_tree().process_frame
 	
 	if not FileAccess.file_exists("user://files/Ship Drive/New File.txt"):
@@ -74,7 +74,7 @@ func _run_tests() -> void:
 	print("SUCCESS: 'New File.txt' created with proper extension.")
 	
 	# Create second file with collision
-	dummy_file_mgr.new_file(".txt", FakeFolder.file_type_enum.TEXT_FILE, "New File", "Ship Drive")
+	dummy_file_mgr.new_file(".txt", GlobalValues.FileType.TEXT_FILE, "New File", "Ship Drive")
 	await get_tree().process_frame
 	if not FileAccess.file_exists("user://files/Ship Drive/New File 2.txt"):
 		print("FAIL: 'New File 2.txt' was not created for colliding name!")

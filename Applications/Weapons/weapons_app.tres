@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_4nhf5")
-roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Factotum"])
+roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Mozzo"])
 power_draw_mw = 25.0
 required_subsystems = Array[String](["weapons_array", "targeting_radar"])
 is_critical = true
@@ -13,6 +13,7 @@ title = "Tactical Weapons"
 description = "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG"
 developer = "CyberDyne Orbital"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.95, 0.25, 0.25, 1)
 scene_path = "res://Applications/Weapons/weapons_app.tscn"
 default_window_size = Vector2(720, 520)

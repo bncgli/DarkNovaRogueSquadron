@@ -131,7 +131,7 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 	if type == "room":
 		var room = current_blueprint.get_room_by_id(id)
 		var lbl_w := Label.new()
-		lbl_w.text = "Power Consumption: %.2f MW" % float(room.get("power_mw", 0.0))
+		lbl_w.text = "Power Consumption: %.2f MW" % float(room.power_mw)
 		lbl_w.add_theme_color_override("font_color", Color.YELLOW)
 		inspector_container.add_child(lbl_w)
 		inspector_container.add_child(HSeparator.new())
@@ -214,12 +214,12 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 		inspector_container.add_child(dev_lbl)
 		
 		var room = current_blueprint.get_room_by_id(id)
-		var devs: Array = room.get("devices", [])
+		var devs: Array = room.devices
 		for i in range(devs.size()):
 			var dev = devs[i]
 			var dev_hbx := HBoxContainer.new()
 			var dev_name := Label.new()
-			dev_name.text = "- %s (%.0f MW)" % [dev.get("name", "Unknown"), dev.get("power_mw", 0.0)]
+			dev_name.text = "- %s (%.0f MW)" % [dev.get("name"), dev.get("power_mw")]
 			dev_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			dev_hbx.add_child(dev_name)
 			
@@ -322,7 +322,7 @@ func _update_element_property(type: String, id: String, key: String, value: Vari
 		"damage": elem = current_blueprint.get_damage_by_id(id)
 		"device": elem = current_blueprint.get_device_by_id(id)
 	
-	if not elem.is_empty():
+	if elem:
 		elem[key] = value
 		if type == "device" and key == "power_mw":
 			current_blueprint.recalculate_all_powers()
@@ -426,7 +426,7 @@ func _on_software_pressed() -> void:
 		var installed_ids = []
 		for app in current_blueprint.installed_apps:
 			installed_ids.append(app.get("id"))
-			inst_list.add_item(app.get("title", app.get("id")))
+			inst_list.add_item(app.get("title"))
 			inst_list.set_item_metadata(inst_list.get_item_count() - 1, app.get("id"))
 			
 		for app in all_apps:
@@ -484,7 +484,7 @@ func _on_drive_files_pressed() -> void:
 	
 	for file in current_blueprint.drive_files:
 		var item = tree.create_item(drive)
-		item.set_text(0, file.get("path", "unnamed"))
+		item.set_text(0, file.get("path"))
 	
 	var btn_hbx = HBoxContainer.new()
 	var btn_new = Button.new(); btn_new.text = "New File"

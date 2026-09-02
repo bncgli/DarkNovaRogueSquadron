@@ -11,29 +11,16 @@ extends Node
 ## Gestisce ed emette gli allarmi diegetici di bordo (Allarme Giallo, Allarme Rosso, Normale).
 
 signal damage_applied(damage_event: Dictionary)
-signal alarm_level_changed(old_level: AlarmLevel, new_level: AlarmLevel, reason: String)
+signal alarm_level_changed(old_level: GlobalValues.AlarmLevel, new_level: GlobalValues.AlarmLevel, reason: String)
 signal subsystem_malfunction(subsystem: String, malfunction_type: String, severity: float)
-
-enum AlarmLevel {
-	NORMAL,
-	YELLOW_ALERT,
-	RED_ALERT
-}
-
-enum Quadrant {
-	FORE,
-	AFT,
-	PORT,
-	STARBOARD
-}
 
 # --- STATO SCUDI ---
 # Capacità scudi per quadrante (0.0 - 100.0)
 var shields: Dictionary = {
-	Quadrant.FORE: 100.0,
-	Quadrant.AFT: 100.0,
-	Quadrant.PORT: 100.0,
-	Quadrant.STARBOARD: 100.0
+	GlobalValues.Quadrant.FORE: 100.0,
+	GlobalValues.Quadrant.AFT: 100.0,
+	GlobalValues.Quadrant.PORT: 100.0,
+	GlobalValues.Quadrant.STARBOARD: 100.0
 }
 var max_shield_per_quadrant: float = 100.0
 var shield_absorption_rate: float = 0.85 # 85% assorbito dallo scudo, 15% bleeds through se scudo attivo
@@ -55,34 +42,34 @@ var subsystem_integrity: Dictionary = {
 }
 
 # --- STATO ALLARME ---
-var current_alarm_level: AlarmLevel = AlarmLevel.NORMAL
+var current_alarm_level: GlobalValues.AlarmLevel = GlobalValues.AlarmLevel.NORMAL
 var active_alarms_reasons: Array[String] = []
 
 func _ready() -> void:
 	reset()
 
 func reset() -> void:
-	for q in [Quadrant.FORE, Quadrant.AFT, Quadrant.PORT, Quadrant.STARBOARD]:
+	for q in [GlobalValues.Quadrant.FORE, GlobalValues.Quadrant.AFT, GlobalValues.Quadrant.PORT, GlobalValues.Quadrant.STARBOARD]:
 		shields[q] = max_shield_per_quadrant
 	hull_integrity = max_hull_integrity
 	is_reactor_critical = false
 	has_critical_breach = false
 	for sub in subsystem_integrity.keys():
 		subsystem_integrity[sub] = 100.0
-	current_alarm_level = AlarmLevel.NORMAL
+	current_alarm_level = GlobalValues.AlarmLevel.NORMAL
 	active_alarms_reasons.clear()
 
 ## Calcola quale quadrante dello scudo viene colpito in base all'angolo/direzione di impatto
-func get_quadrant_from_hit_direction(hit_dir_local: Vector3) -> Quadrant:
+func get_quadrant_from_hit_direction(hit_dir_local: Vector3) -> GlobalValues.Quadrant:
 	var dir_norm := hit_dir_local.normalized()
 	# In coordinate locali nave Godot (-Z è prua/avanti, +Z è poppa/dietro, -X è babordo/sinistra, +X è tribordo/destra)
 	var fwd_dot := -dir_norm.z # Se positivo, viene da davanti (FORE)
 	var right_dot := dir_norm.x # Se positivo, viene da destra (STARBOARD)
 
 	if abs(fwd_dot) >= abs(right_dot):
-		return Quadrant.FORE if fwd_dot >= 0.0 else Quadrant.AFT
+		return GlobalValues.Quadrant.FORE if fwd_dot >= 0.0 else GlobalValues.Quadrant.AFT
 	else:
-		return Quadrant.STARBOARD if right_dot >= 0.0 else Quadrant.PORT
+		return GlobalValues.Quadrant.STARBOARD if right_dot >= 0.0 else GlobalValues.Quadrant.PORT
 
 ## Processa un impatto di combattimento contro la nave
 func process_hit(hit_position_local: Vector3, raw_damage: float, damage_type: String = "kinetic") -> Dictionary:
@@ -116,7 +103,7 @@ func process_hit(hit_position_local: Vector3, raw_damage: float, damage_type: St
 		systemic_events = _apply_penetrating_systemic_damage(hit_position_local, penetrating_damage, damage_type)
 
 	var result := {
-		"quadrant": Quadrant.keys()[quadrant],
+		"quadrant": GlobalValues.Quadrant.keys()[quadrant],
 		"raw_damage": raw_damage,
 		"shield_absorbed": shield_absorbed,
 		"shield_remaining": shields[quadrant],
@@ -214,7 +201,7 @@ func _get_nearest_duct_room(hit_pos: Vector3) -> String:
 ## Valuta lo stato di allarme diegetico (Allarme Giallo, Allarme Rosso, Normale)
 func _evaluate_alarm_level() -> void:
 	var old_level := current_alarm_level
-	var new_level := AlarmLevel.NORMAL
+	var new_level := GlobalValues.AlarmLevel.NORMAL
 	active_alarms_reasons.clear()
 
 	# Condizioni per Allarme Rosso:
@@ -228,28 +215,28 @@ func _evaluate_alarm_level() -> void:
 			destroyed_subsystems += 1
 
 	if hull_integrity <= 25.0:
-		new_level = AlarmLevel.RED_ALERT
+		new_level = GlobalValues.AlarmLevel.RED_ALERT
 		active_alarms_reasons.append("INTEGRITÀ SCAFO CRITICA (<25%)")
-	elif is_reactor_critical or subsystem_integrity.get("power_grid", 100.0) <= 0.0:
-		new_level = AlarmLevel.RED_ALERT
+	elif is_reactor_critical or subsystem_integrity.get("power_grid") <= 0.0:
+		new_level = GlobalValues.AlarmLevel.RED_ALERT
 		active_alarms_reasons.append("DISATTIVAZIONE REATTORE / POWER GRID COMPROMESSA")
 	elif has_critical_breach and hull_integrity <= 40.0:
-		new_level = AlarmLevel.RED_ALERT
+		new_level = GlobalValues.AlarmLevel.RED_ALERT
 		active_alarms_reasons.append("BRECCIA SCAFO CRITICA RILEVATA")
 	elif destroyed_subsystems >= 2:
-		new_level = AlarmLevel.RED_ALERT
+		new_level = GlobalValues.AlarmLevel.RED_ALERT
 		active_alarms_reasons.append("COLLASSO MULTIPLO SOTTOSISTEMI PRIMARI")
 
 	# Condizioni per Allarme Giallo (se non è già Rosso):
 	# - Avaria grave a un sottosistema primario (integrità < 35%)
 	# - Scudi esauriti su almeno un quadrante
 	# - Integrità scafo < 70%
-	if new_level != AlarmLevel.RED_ALERT:
+	if new_level != GlobalValues.AlarmLevel.RED_ALERT:
 		var has_depleted_shield := false
 		for q in shields.keys():
 			if shields[q] <= 0.0:
 				has_depleted_shield = true
-				active_alarms_reasons.append("SCUDI ESAURITI SU QUADRANTE " + Quadrant.keys()[q])
+				active_alarms_reasons.append("SCUDI ESAURITI SU QUADRANTE " + GlobalValues.Quadrant.keys()[q])
 				break
 
 		var has_subsystem_failure := false
@@ -260,7 +247,7 @@ func _evaluate_alarm_level() -> void:
 				break
 
 		if has_depleted_shield or has_subsystem_failure or hull_integrity < 70.0:
-			new_level = AlarmLevel.YELLOW_ALERT
+			new_level = GlobalValues.AlarmLevel.YELLOW_ALERT
 			if hull_integrity < 70.0 and not has_depleted_shield and not has_subsystem_failure:
 				active_alarms_reasons.append("DANNO STRUTTURALE ALLO SCAFO (<70%)")
 
@@ -274,14 +261,14 @@ func _sync_with_space_world_manager(systemic_events: Array[Dictionary]) -> void:
 		var swm_node = get_node_or_null("/root/SpaceWorldManager")
 		if swm_node and is_instance_valid(swm_node):
 			for evt in systemic_events:
-				var m_type: String = evt.get("malfunction_type", "")
+				var m_type: String = evt.get("malfunction_type")
 				if m_type == "dmg_breach" or m_type == "short_circuit":
 					var damage_type = "breach" if m_type == "dmg_breach" else "short_circuit"
 					if swm_node.has_method("report_ship_damage"):
-						swm_node.report_ship_damage(damage_type, evt.get("room", "corridor_a"), Vector2.ZERO)
+						swm_node.report_ship_damage(damage_type, evt.get("room"), Vector2.ZERO)
 
 ## Imposta il bilanciamento scudi (usato da ShieldMatrixApp)
-func set_shield_quadrant_value(quadrant: Quadrant, value: float) -> void:
+func set_shield_quadrant_value(quadrant: GlobalValues.Quadrant, value: float) -> void:
 	shields[quadrant] = clamp(value, 0.0, max_shield_per_quadrant)
 	_evaluate_alarm_level()
 
@@ -302,14 +289,14 @@ func repair_hull(amount: float) -> void:
 
 func get_system_status() -> Dictionary:
 	return {
-		"alarm_level": AlarmLevel.keys()[current_alarm_level],
+		"alarm_level": GlobalValues.AlarmLevel.keys()[current_alarm_level],
 		"active_alarms": active_alarms_reasons,
 		"hull_integrity": hull_integrity,
 		"shields": {
-			"FORE": shields[Quadrant.FORE],
-			"AFT": shields[Quadrant.AFT],
-			"PORT": shields[Quadrant.PORT],
-			"STARBOARD": shields[Quadrant.STARBOARD]
+			"FORE": shields[GlobalValues.Quadrant.FORE],
+			"AFT": shields[GlobalValues.Quadrant.AFT],
+			"PORT": shields[GlobalValues.Quadrant.PORT],
+			"STARBOARD": shields[GlobalValues.Quadrant.STARBOARD]
 		},
 		"subsystems": subsystem_integrity.duplicate()
 	}

@@ -144,7 +144,7 @@ func _run_suite() -> void:
 	comms_app._on_btn_tune_sos_pressed()
 	assert(comms_app.current_frequency == 850.5, "Frequenza deve essere 850.5 MHz")
 	var locked_sos: Variant = comms_app._get_locked_signal()
-	assert(locked_sos != null and locked_sos.get("id") == "sos_scout", "Segnale SOS Scout agganciato con successo")
+	assert(locked_sos != null and locked_sos.get("id") == "sos_scout")
 	assert(comms_app.btn_listen_signal.disabled == false, "Pulsante ascolto abilitato per segnale agganciato")
 	
 	# 2. Trascrizione messaggio SOS nel log
@@ -157,7 +157,7 @@ func _run_suite() -> void:
 	# 3. Sintonizzazione su Relay Subspaziale 1420.0 MHz
 	comms_app._on_btn_tune_subspace_pressed()
 	var locked_subspace: Variant = comms_app._get_locked_signal()
-	assert(locked_subspace != null and locked_subspace.get("id") == "subspace_corp", "Segnale Weyland-Yutani agganciato su 1420.0 MHz")
+	assert(locked_subspace != null and locked_subspace.get("id") == "subspace_corp")
 	
 	# 4. Sintonizzazione su canale pirata
 	comms_app._on_btn_tune_pirate_pressed()
@@ -238,7 +238,7 @@ func _run_suite() -> void:
 		var ship_files := SpaceWorldManager.get_ship_drive_files()
 		for f in ship_files:
 			if f.get("path") == "Ship Drive/Programs/Comms/comms_config.dat":
-				is_comms_dat_protected = f.get("is_protected", false)
+				is_comms_dat_protected = f.get("is_protected")
 				break
 	assert(is_comms_dat_protected, "comms_config.dat deve avere il flag is_protected = true")
 	print("✔ File .dat protetto dalla lettura in chiaro standard")

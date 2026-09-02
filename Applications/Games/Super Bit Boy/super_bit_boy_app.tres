@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="AppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_bitboy"]
+
+[resource]
+script = ExtResource("1_bitboy")
+is_system_app = false
+terminal_command = "superbitboy"
+is_pinned_to_taskbar = false
+app_id = "super_bit_boy"
+title = "Super Bit Boy"
+description = "Platformer arcade d'avventura retrò a 8-bit"
+developer = "BitBlit Entertainment"
+category = "Giochi & Svago"
+menu_path = "Giochi"
+icon_color = Color(0.9, 0.6, 0.1, 1)
+scene_path = "res://Applications/Games/Super Bit Boy/Scenes/Levels/level_1.tscn"
+default_window_size = Vector2(640, 480)
+drive_folder = "Games/SuperBitBoy"
+default_password = "BOY-7815"
+default_files = Array[Dictionary]([{
+"content": "# SUPER BIT BOY GAME RUNTIME CONFIGURATION
+[GAME]
+title=Super Bit Boy
+version=1.0.0
+max_levels=9
+lives=3
+sound_enabled=true
+
+[PROGRESS]
+unlocked_level=1
+stars_collected=0
+best_speedrun_time_sec=142.5
+",
+"desc": "Salvataggi di progresso livelli e record speedrun di Super Bit Boy.",
+"is_protected": false,
+"path": "Terminal Drive/Games/SuperBitBoy/game_save.dat"
+}])

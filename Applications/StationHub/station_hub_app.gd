@@ -226,9 +226,9 @@ func _on_docking_completed(station_id: String, bay_id: int, station_data: Dictio
 		undocked_overlay.visible = false
 		
 	if station_title_label:
-		station_title_label.text = "⚓ %s" % station_data.get("name", "Stazione Spaziale")
+		station_title_label.text = "⚓ %s" % station_data.get("name")
 	if station_sub_label:
-		station_sub_label.text = "Settore Operativo | Connesso a Bay 0%d | Fazione: %s" % [bay_id + 1, station_data.get("iff", "SOL-NAV-DEFENSE")]
+		station_sub_label.text = "Settore Operativo | Connesso a Bay 0%d | Fazione: %s" % [bay_id + 1, station_data.get("iff")]
 		
 	_populate_hub_data(station_data)
 
@@ -297,8 +297,8 @@ func _refresh_cargo_market_view() -> void:
 				{"id": "energy_cell", "name": "Celle Energetiche al Plasma", "category": "ENERGY_CELL", "unit_mass_kg": 10.0, "unit_volume_m3": 0.3, "unit_base_value": 180.0, "quantity": 30, "description": "Condensatori al plasma ad alta densità per ricarica sublayer e scudi."}
 			]
 		for item in station_market_goods:
-			var price: int = int(_get_effective_price(item.get("unit_base_value", 100.0), true))
-			var line := "[%s] %s | Qnt: %d | %d CR" % [item.get("category", "CARGO"), item.get("name", ""), int(item.get("quantity", 0)), price]
+			var price: int = int(_get_effective_price(item.get("unit_base_value"), true))
+			var line := "[%s] %s | Qnt: %d | %d CR" % [item.get("category"), item.get("name"), int(item.get("quantity")), price]
 			station_market_list.add_item(line)
 			
 	# Popola stiva nave
@@ -306,8 +306,8 @@ func _refresh_cargo_market_view() -> void:
 		ship_cargo_list.clear()
 		var ship_items := cargo_mgr.get_cargo_list()
 		for item in ship_items:
-			var val: int = int(_get_effective_price(item.get("unit_base_value", 100.0), false))
-			var line := "[%s] %s | Qnt: %d | Val: %d CR" % [item.get("category", "CARGO"), item.get("name", ""), int(item.get("quantity", 0)), val]
+			var val: int = int(_get_effective_price(item.get("unit_base_value"), false))
+			var line := "[%s] %s | Qnt: %d | Val: %d CR" % [item.get("category"), item.get("name"), int(item.get("quantity")), val]
 			ship_cargo_list.add_item(line)
 
 func _get_effective_price(base_price: float, is_buying: bool) -> float:
@@ -322,19 +322,19 @@ func _on_station_market_selected(index: int) -> void:
 	selected_station_cargo_idx = index
 	if index >= 0 and index < station_market_goods.size():
 		var item = station_market_goods[index]
-		var price: int = int(_get_effective_price(item.get("unit_base_value", 100.0), true))
+		var price: int = int(_get_effective_price(item.get("unit_base_value"), true))
 		if station_market_desc_label:
 			station_market_desc_label.text = "[b]%s[/b] (Categoria: %s)\nMassa: %.1f kg/u | Volume: %.1f m³/u | Prezzo FLUX: %d CR\nDisponibilità Porto: %d unità\n%s" % [
-				item.get("name", ""),
-				item.get("category", ""),
-				float(item.get("unit_mass_kg", 1.0)),
-				float(item.get("unit_volume_m3", 0.1)),
+				item.get("name"),
+				item.get("category"),
+				float(item.get("unit_mass_kg")),
+				float(item.get("unit_volume_m3")),
 				price,
-				int(item.get("quantity", 0)),
-				item.get("description", "")
+				int(item.get("quantity")),
+				item.get("description")
 			]
 		if buy_quantity_spin_box:
-			buy_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity", 1)))
+			buy_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity")))
 		if btn_buy_cargo:
 			btn_buy_cargo.disabled = not can_manage_services or not is_station_docked or credits < price
 
@@ -345,16 +345,16 @@ func _on_ship_cargo_selected(index: int) -> void:
 	var ship_items := cargo_mgr.get_cargo_list()
 	if index >= 0 and index < ship_items.size():
 		var item = ship_items[index]
-		var payout: int = int(_get_effective_price(item.get("unit_base_value", 100.0), false))
+		var payout: int = int(_get_effective_price(item.get("unit_base_value"), false))
 		if ship_cargo_desc_label:
 			ship_cargo_desc_label.text = "[b]%s[/b] (Categoria: %s)\nMassa: %.1f kg/u | Volume: %.1f m³/u | Valore di Rivendita: %d CR\nIn Stiva: %d unità\n%s" % [
-				item.get("name", ""),
-				item.get("category", ""),
-				float(item.get("unit_mass_kg", 1.0)),
-				float(item.get("unit_volume_m3", 0.1)),
+				item.get("name"),
+				item.get("category"),
+				float(item.get("unit_mass_kg")),
+				float(item.get("unit_volume_m3")),
 				payout,
-				int(item.get("quantity", 0)),
-				item.get("description", "")
+				int(item.get("quantity")),
+				item.get("description")
 			]
 		if sell_quantity_spin_box:
 			sell_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity", 1)))
@@ -826,8 +826,8 @@ func _evaluate_rbac() -> void:
 	if net_mgr and "player_role" in net_mgr:
 		role = net_mgr.player_role
 	
-	# Ruoli autorizzati ai servizi di stazione: Capitano, Ingegnere, Hacker, Pilota, Factotum
-	can_manage_services = (role == "Capitano" or role == "Ingegnere" or role == "Hacker" or role == "Pilota" or role == "Factotum" or role == "Captain" or role == "Engineer" or role == "Pilot")
+	# Ruoli autorizzati ai servizi di stazione: Capitano, Ingegnere, Hacker, Pilota, Mozzo
+	can_manage_services = (role == "Capitano" or role == "Ingegnere" or role == "Hacker" or role == "Pilota" or role == "Mozzo" or role == "Captain" or role == "Engineer" or role == "Pilot")
 	
 	if btn_repair_hull: btn_repair_hull.disabled = not can_manage_services
 	if btn_service_ducts: btn_service_ducts.disabled = not can_manage_services

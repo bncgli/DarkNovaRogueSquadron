@@ -56,7 +56,7 @@ func load_state() -> void:
 	if !wallpaper_name.is_empty():
 		wallpaper.apply_wallpaper_from_path(wallpaper_name)
 	
-	if save_dict.has(wallpaper_stretch_mode):
+	if save_dict.has("wallpaper_stretch_mode"):
 		wallpaper_stretch_mode = save_dict.wallpaper_stretch_mode
 	else:
 		wallpaper_stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED

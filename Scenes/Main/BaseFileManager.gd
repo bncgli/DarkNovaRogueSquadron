@@ -17,23 +17,23 @@ func populate_file_manager() -> void:
 			if not sdm or not sdm.get("is_drive_mounted") or not sdm.is_ship_connected():
 				continue
 		if file_path.is_empty():
-			instantiate_file(folder_name, folder_name, FakeFolder.file_type_enum.FOLDER)
+			instantiate_file(folder_name, folder_name, GlobalValues.FileType.FOLDER)
 		else:
-			instantiate_file(folder_name, "%s/%s" % [file_path, folder_name], FakeFolder.file_type_enum.FOLDER)
+			instantiate_file(folder_name, "%s/%s" % [file_path, folder_name], GlobalValues.FileType.FOLDER)
 	
 	for file_name: String in DirAccess.get_files_at("user://files/%s" % file_path):
 		if file_name.ends_with(".txt") or file_name.ends_with(".md"):
-			instantiate_file(file_name, file_path, FakeFolder.file_type_enum.TEXT_FILE)
+			instantiate_file(file_name, file_path, GlobalValues.FileType.TEXT_FILE)
 		elif file_name.ends_with(".png") or file_name.ends_with(".jpg") or file_name.ends_with(".jpeg")\
 		or file_name.ends_with(".webp"):
-			instantiate_file(file_name, file_path, FakeFolder.file_type_enum.IMAGE)
+			instantiate_file(file_name, file_path, GlobalValues.FileType.IMAGE)
 	
 	await get_tree().process_frame
 	await get_tree().process_frame # TODO fix whatever's causing a race condition :/
 	sort_folders()
 
 ## Adds a folder as a child
-func instantiate_file(file_name: String, path: String, file_type: FakeFolder.file_type_enum) -> void:
+func instantiate_file(file_name: String, path: String, file_type: GlobalValues.FileType) -> void:
 	var folder: FakeFolder = load("res://Scenes/Desktop/folder.tscn").instantiate()
 	folder.folder_name = file_name
 	folder.folder_path = path
@@ -86,17 +86,17 @@ func new_folder(new_folder_name: String = "New Folder", folder_path: String = ""
 	
 	for file_manager: FileManagerWindow in get_tree().get_nodes_in_group("file_manager_window"):
 		if file_manager.file_path == clean_dir:
-			file_manager.instantiate_file(candidate_name, rel_folder, FakeFolder.file_type_enum.FOLDER)
+			file_manager.instantiate_file(candidate_name, rel_folder, GlobalValues.FileType.FOLDER)
 			await get_tree().process_frame # Waiting for child to get added...
 			file_manager.sort_folders()
 	
 	if clean_dir.is_empty():
-		instantiate_file(candidate_name, candidate_name, FakeFolder.file_type_enum.FOLDER)
+		instantiate_file(candidate_name, candidate_name, GlobalValues.FileType.FOLDER)
 		sort_folders()
 
 ## Creates a new file.
 ## Not to be confused with instantiating which adds an existing real folder, this function CREATES one. 
-func new_file(extension: String, file_type: FakeFolder.file_type_enum, new_file_name: String = "New File", new_file_path: String = "") -> void:
+func new_file(extension: String, file_type: GlobalValues.FileType, new_file_name: String = "New File", new_file_path: String = "") -> void:
 	if not extension.begins_with("."):
 		extension = "." + extension
 	
@@ -223,6 +223,6 @@ func _custom_folder_sort(a: FakeFolder, b: FakeFolder) -> bool:
 
 ## Puts folders first in the array (as opposed to files)
 func _custom_folders_first_sort(a: FakeFolder, b: FakeFolder) -> bool:
-	if a.file_type == FakeFolder.file_type_enum.FOLDER and a.file_type != b.file_type:
+	if a.file_type == GlobalValues.FileType.FOLDER and a.file_type != b.file_type:
 		return true
 	return false

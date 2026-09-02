@@ -135,7 +135,7 @@ func test_folder_node_lock_and_open() -> void:
 	var folder_node: FakeFolder = folder_scene.instantiate()
 	folder_node.folder_name = "LockedFolder"
 	folder_node.folder_path = "LockedFolder"
-	folder_node.file_type = FakeFolder.file_type_enum.FOLDER
+	folder_node.file_type = GlobalValues.FileType.FOLDER
 	add_child(folder_node)
 	
 	# Initially no password
@@ -180,7 +180,7 @@ func test_restrictions_on_password_protected_folders() -> void:
 	var protected_folder: FakeFolder = folder_scene.instantiate()
 	protected_folder.folder_name = "ProtectedFolder"
 	protected_folder.folder_path = "ProtectedFolder"
-	protected_folder.file_type = FakeFolder.file_type_enum.FOLDER
+	protected_folder.file_type = GlobalValues.FileType.FOLDER
 	add_child(protected_folder)
 	
 	DirAccess.make_dir_absolute("user://files/ProtectedFolder")

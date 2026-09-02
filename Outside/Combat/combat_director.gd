@@ -75,8 +75,8 @@ func spawn_wave(wave_index: int, composition: Array[Dictionary] = []) -> Array[E
 
 	var enemy_counter := 0
 	for entry in target_comp:
-		var type: EnemyShipAI.ShipType = entry.get("type", EnemyShipAI.ShipType.PIRATE_FIGHTER)
-		var count: int = entry.get("count", 1)
+		var type: EnemyShipAI.ShipType = entry.get("type")
+		var count: int = entry.get("count")
 
 		for i in range(count):
 			enemy_counter += 1

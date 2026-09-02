@@ -135,8 +135,8 @@ func _run_tests() -> void:
 	
 	# Add a client in mission
 	net.players[4] = {
-		"name": "Comms Gamma",
-		"role": net.ROLE_COMMS,
+		"name": "Hacker Gamma",
+		"role": net.ROLE_HACKER,
 		"is_host": false,
 		"ready": true
 	}

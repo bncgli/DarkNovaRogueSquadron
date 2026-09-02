@@ -4,7 +4,7 @@ extends Control
 
 ## Canvas 2D interattivo per la visualizzazione e l'editing della griglia del sistema stellare e dei corpi celesti.
 
-signal entity_selected(body_dict: Dictionary)
+signal entity_selected(body: CelestialBodyData)
 signal sector_clicked(coords: Vector3i)
 signal entity_moved(body_id: String, new_coords: Vector3i)
 signal cursor_coords_changed(coords: Vector3i)
@@ -95,8 +95,8 @@ func _gui_input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
 				var hit_body := _find_body_at_pos(mb.position)
-				if not hit_body.is_empty():
-					selected_body_id = hit_body.get("id", "")
+				if hit_body:
+					selected_body_id = hit_body.id
 					drag_body_id = selected_body_id
 					is_dragging = true
 					entity_selected.emit(hit_body)
@@ -125,27 +125,27 @@ func _gui_input(event: InputEvent) -> void:
 		elif is_dragging and not drag_body_id.is_empty() and system_data != null:
 			var new_coords := screen_to_grid_coords(mm.position)
 			var b := system_data.get_body(drag_body_id)
-			if not b.is_empty():
-				b["coords"] = new_coords
+			if b:
+				b.coords = new_coords
 				queue_redraw()
 		
 		var cur_coords := screen_to_grid_coords(mm.position)
 		cursor_coords_changed.emit(cur_coords)
 
-func _find_body_at_pos(screen_pos: Vector2) -> Dictionary:
+func _find_body_at_pos(screen_pos: Vector2) -> CelestialBodyData:
 	if system_data == null:
-		return {}
+		return null
 	
 	for body in system_data.celestial_bodies:
-		var c: Vector3i = body.get("coords", Vector3i.ZERO)
+		var c: Vector3i = body.coords
 		var center := world_to_screen(Vector2(c.x, c.y))
 		var r := _get_body_render_radius(body)
 		if screen_pos.distance_to(center) <= maxf(r + 4.0, 10.0):
 			return body
-	return {}
+	return null
 
-func _get_body_render_radius(body: Dictionary) -> float:
-	var t: String = body.get("type", "PLANET").to_upper()
+func _get_body_render_radius(body: CelestialBodyData) -> float:
+	var t: String = body.type.to_upper()
 	var base_r: float = 6.0
 	match t:
 		"STAR":
@@ -223,28 +223,28 @@ func _draw_grid() -> void:
 				draw_string(font, cell_center + Vector2(-18 * zoom_level, 16 * zoom_level), sec_id, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color(0.3, 0.4, 0.5, 0.5))
 
 func _draw_orbits() -> void:
-	var star_coords := system_data.primary_star_coords
+	var star_coords :Vector3i = system_data.primary_star_coords
 	var star_center := world_to_screen(Vector2(star_coords.x, star_coords.y))
 	var orbit_color := Color(0.25, 0.35, 0.5, 0.3)
 	
 	for body in system_data.celestial_bodies:
-		var t: String = body.get("type", "").to_upper()
+		var t: String = body.type.to_upper()
 		if t in ["PLANET", "GAS_GIANT", "ASTEROID_FIELD"]:
-			var c: Vector3i = body.get("coords", Vector3i.ZERO)
+			var c: Vector3i = body.coords
 			var dist := (Vector2(c.x, c.y) - Vector2(star_coords.x, star_coords.y)).length()
 			var r_screen := dist * CELL_SIZE * zoom_level
 			if r_screen > 2.0:
 				draw_arc(star_center, r_screen, 0.0, TAU, 64, orbit_color, 1.0)
 
 func _draw_shadow_cones() -> void:
-	var star_coords := system_data.primary_star_coords
+	var star_coords :Vector3i = system_data.primary_star_coords
 	var star_pos := Vector2(star_coords.x, star_coords.y)
 	var cone_color := Color(0.0, 0.0, 0.0, 0.45)
 	
 	for body in system_data.celestial_bodies:
-		if not body.get("occluding", false):
+		if not body.occluding:
 			continue
-		var c: Vector3i = body.get("coords", Vector3i.ZERO)
+		var c: Vector3i = body.coords
 		var b_pos := Vector2(c.x, c.y)
 		var dir := (b_pos - star_pos)
 		if dir.length_squared() < 0.001:
@@ -268,15 +268,15 @@ func _draw_celestial_bodies() -> void:
 	var font := ThemeDB.fallback_font
 	
 	for body in system_data.celestial_bodies:
-		var b_id: String = body.get("id", "")
-		var b_name: String = body.get("name", "Entità")
-		var b_type: String = body.get("type", "PLANET").to_upper()
-		var c: Vector3i = body.get("coords", Vector3i.ZERO)
+		var b_id: String = body.id
+		var b_name: String = body.name
+		var b_type: String = body.type.to_upper()
+		var c: Vector3i = body.coords
 		var center := world_to_screen(Vector2(c.x, c.y))
 		var radius := _get_body_render_radius(body)
 		var col: Color = TYPE_COLORS.get(b_type, Color.WHITE)
-		if body.has("color") and body["color"] is Color:
-			col = body["color"]
+		if body.color is Color:
+			col = body.color
 			
 		var is_selected := (b_id == selected_body_id)
 		

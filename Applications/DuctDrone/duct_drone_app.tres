@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_j062u")
-roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Factotum"])
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Mozzo"])
 power_draw_mw = 10.0
 required_subsystems = Array[String](["drone_bay"])
 app_id = "duct_drone"
@@ -12,6 +12,7 @@ title = "Duct Drone"
 description = "Robottino manutenzione e schema condotti 2D"
 developer = "Aether Dynamics"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(1, 0.85, 0.2, 1)
 scene_path = "res://Applications/DuctDrone/duct_drone_app.tscn"
 drive_folder = "Programs/DuctDrone"

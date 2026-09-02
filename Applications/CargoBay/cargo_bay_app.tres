@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_cargores")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer"])
 power_draw_mw = 35.0
 required_subsystems = Array[String](["cargo", "comms"])
 app_id = "cargo_bay"
@@ -12,6 +12,7 @@ title = "Stiva Cargo & FLUX"
 description = "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net."
 developer = "NovaTech Systems"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/CargoBay/cargo_bay_app.tscn"
 default_window_size = Vector2(760, 560)

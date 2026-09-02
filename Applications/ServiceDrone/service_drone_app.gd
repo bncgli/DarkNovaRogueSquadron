@@ -1,5 +1,5 @@
 class_name ServiceDroneApp
-extends Control
+extends BaseApp
 
 ## Controller per l'applicazione "External Service Drone & EVA Operations" (Applications/ServiceDrone).
 ## Permette il pilotaggio teleguidato del drone EVA per ispezioni e riparazioni scafo,
@@ -62,7 +62,7 @@ var _is_boost: bool = false
 var _latest_telemetry: Dictionary = {}
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_connect_system_signals()
 	_connect_ui_signals()
 	_setup_viewport_world()
@@ -70,15 +70,6 @@ func _ready() -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_ui()
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	while parent_win:
-		if "window_title" in parent_win:
-			parent_win.window_title = APP_TITLE
-			break
-		parent_win = parent_win.get_parent()
 
 func _setup_viewport_world() -> void:
 	if not is_inside_tree():
@@ -299,11 +290,11 @@ func _update_permissions() -> void:
 			is_solo = not bool(nm.is_multiplayer_active)
 	
 	# Matrice RBAC:
-	# - Ingegnere, Hacker, Capitano, Factotum, Solo Mode: Controllo Completo
+	# - Ingegnere, Hacker, Capitano, Mozzo, Solo Mode: Controllo Completo
 	# - Pilota, Soldato: Sola Visualizzazione
 	var role_lower := my_role.to_lower().strip_edges()
 	if not my_role.is_empty():
-		can_control_drone = role_lower in ["engineer", "ingegnere", "hacker", "captain", "capitano", "factotum", "admin", "host"]
+		can_control_drone = role_lower in ["engineer", "ingegnere", "hacker", "captain", "capitano", "mozzo", "admin", "host"]
 	else:
 		can_control_drone = is_solo
 	
@@ -370,45 +361,6 @@ func _apply_configuration() -> void:
 	if manipulator_control:
 		manipulator_control.update_tuning(active_config)
 
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		
-		var eq_idx := line.find("=")
-		if eq_idx != -1:
-			var key := line.substr(0, eq_idx).strip_edges().to_lower()
-			var raw_val := line.substr(eq_idx + 1).strip_edges()
-			
-			var val: Variant = raw_val
-			if raw_val.to_lower() == "true":
-				val = true
-			elif raw_val.to_lower() == "false":
-				val = false
-			elif raw_val.is_valid_int():
-				val = raw_val.to_int()
-			elif raw_val.is_valid_float():
-				val = raw_val.to_float()
-			
-			result[key] = val
-	
-	file.close()
-	return result
-
-# --- TELEMETRIA & AZIONI OPERATIVE ---
-
 func _on_service_drone_state_changed(t: Dictionary) -> void:
 	_latest_telemetry = t
 	_update_telemetry_ui(t)
@@ -417,11 +369,11 @@ func _on_ship_damages_updated(_damages: Array) -> void:
 	_refresh_ui()
 
 func _update_telemetry_ui(t: Dictionary) -> void:
-	var dist: float = float(t.get("distance_to_ship", 0.0))
-	var bat: float = float(t.get("battery", 100.0))
-	var is_docked: bool = bool(t.get("is_docked", true))
-	var is_auto_dock: bool = bool(t.get("is_auto_docking", false))
-	var spd: float = float(t.get("speed", 0.0))
+	var dist: float = float(t.get("distance_to_ship"))
+	var bat: float = float(t.get("battery"))
+	var is_docked: bool = bool(t.get("is_docked"))
+	var is_auto_dock: bool = bool(t.get("is_auto_docking"))
+	var spd: float = float(t.get("speed"))
 	var cargo_c: int = int(t.get("cargo_count", 0))
 	var cargo_w: float = float(t.get("cargo_weight", 0.0))
 	var cargo_max: float = float(t.get("max_cargo_weight", 500.0))

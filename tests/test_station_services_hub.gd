@@ -94,14 +94,14 @@ func _run_all_tests() -> void:
 		hub.buy_quantity_spin_box.value = 2.0
 	
 	var buy_item := hub.station_market_goods[0]
-	var buy_price := int(hub._get_effective_price(buy_item.get("unit_base_value", 100.0), true)) * 2
+	var buy_price := int(hub._get_effective_price(buy_item.get("unit_base_value"), true)) * 2
 	
 	hub._on_btn_buy_cargo_pressed()
 	
 	assert(hub.credits == initial_credits - buy_price, "I crediti devono essere decurtati del prezzo d'acquisto")
 	assert(cargo_mgr.get_total_mass() > initial_mass, "La massa della stiva deve essere aumentata")
 	assert(cargo_mgr.get_total_volume() > initial_vol, "Il volume della stiva deve essere aumentato")
-	assert(cargo_mgr.get_item_quantity(buy_item.get("id", "")) >= 2, "La merce acquistata deve risultare nella stiva nave")
+	assert(cargo_mgr.get_item_quantity(buy_item.get("id")) >= 2, "La merce acquistata deve risultare nella stiva nave")
 	assert(flux_mgr.flux_score >= initial_flux_score, "Il rating FLUX deve essere incrementato o premiato per la transazione")
 	print("✔ Acquisto merci: scalati crediti, caricata stiva (+massa/+vol) e registrata transazione FLUX")
 	
@@ -116,7 +116,7 @@ func _run_all_tests() -> void:
 		hub.sell_quantity_spin_box.value = 1.0
 	
 	var sell_item := ship_items[0]
-	var sell_payout := int(hub._get_effective_price(sell_item.get("unit_base_value", 100.0), false))
+	var sell_payout := int(hub._get_effective_price(sell_item.get("unit_base_value"), false))
 	
 	hub._on_btn_sell_cargo_pressed()
 	
@@ -132,7 +132,7 @@ func _run_all_tests() -> void:
 	
 	hub._on_contract_item_selected(0)
 	var selected_cnt = hub.active_contracts[0]
-	var target_cnt_id: String = selected_cnt.get("id", "")
+	var target_cnt_id: String = selected_cnt.get("id")
 	
 	hub._on_accept_contract_pressed()
 	assert(hub.active_contracts[0]["is_accepted"] == true, "Il contratto deve risultare accettato su StationHub")
@@ -142,7 +142,7 @@ func _run_all_tests() -> void:
 		for c in logbook.active_contracts:
 			if c.get("id") == target_cnt_id or c.get("title") == selected_cnt.get("title"):
 				found_in_logbook = true
-				assert(c.get("status") == "IN_PROGRESS", "Il contratto deve avere stato IN_PROGRESS su Logbook")
+				assert(c.get("status") == "IN_PROGRESS")
 				break
 		assert(found_in_logbook == true, "Il contratto accettato deve essere sincronizzato e visibile su Logbook")
 	print("✔ Bacheca contratti: contratto stipulato, stato aggiornato e iniettato con successo in Logbook")
@@ -155,14 +155,14 @@ func _run_all_tests() -> void:
 	
 	hub._on_software_item_selected(0)
 	var sw_item := hub.active_software_items[0]
-	var sw_price: int = sw_item.get("price", 450)
+	var sw_price: int = sw_item.get("price")
 	var credits_before_sw := hub.credits
 	
 	hub._on_buy_software_item_pressed()
 	assert(hub.credits == credits_before_sw - sw_price, "I crediti devono essere decurtati per l'acquisto software")
 	
-	var folder: String = sw_item.get("app_target_folder", "StationHub")
-	var fname: String = sw_item.get("filename", "patch.dat")
+	var folder: String = sw_item.get("app_target_folder")
+	var fname: String = sw_item.get("filename")
 	var expected_path := "user://files/Ship Drive/Programs/%s/%s" % [folder, fname]
 	
 	assert(FileAccess.file_exists(expected_path), "Il modulo software acquistato deve essere scritto su: " + expected_path)
@@ -205,7 +205,7 @@ func _run_all_tests() -> void:
 		assert(SpaceWorldManager.get_active_ship_damages().is_empty(), "Tutte le brecce scafo su SpaceWorldManager devono essere state azzerate")
 		
 	assert(dmg_handler.hull_integrity == 100.0, "Integrità scafo su SystemicDamageHandler deve essere ripristinata al 100%")
-	assert(dmg_handler.current_alarm_level == SystemicDamageHandler.AlarmLevel.NORMAL, "Livello allarme deve tornare a NORMAL dopo le riparazioni")
+	assert(dmg_handler.current_alarm_level == GlobalValues.AlarmLevel.NORMAL, "Livello allarme deve tornare a NORMAL dopo le riparazioni")
 	print("✔ Cantiere Navale: brecce sigillate, scafo ripristinato al 100% e allarmi azzerati")
 	
 	# =========================================================================

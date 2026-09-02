@@ -33,6 +33,11 @@ extends Resource
 		category = val
 		emit_changed()
 
+@export var menu_path: String = "":
+	set(val):
+		menu_path = val
+		emit_changed()
+
 @export_group("Interfaccia & Finestra")
 @export var icon: Texture2D = null:
 	set(val):
@@ -65,7 +70,7 @@ extends Resource
 		emit_changed()
 
 @export_group("Controllo Ruoli & Matrice Nave")
-## Ruoli autorizzati ad accedere all'applicazione (es. ["Capitano", "Pilota", "Factotum"])
+## Ruoli autorizzati ad accedere all'applicazione (es. ["Capitano", "Pilota", "Mozzo"])
 @export var roles: Array[String] = []:
 	set(val):
 		roles = val
@@ -138,6 +143,7 @@ func to_dict() -> Dictionary:
 		"scene_path": scene_path,
 		"icon_color": icon_color,
 		"category": category,
+		"menu_path": menu_path,
 		"drive_folder": drive_folder,
 		"default_password": default_password,
 		"default_window_size": [default_window_size.x, default_window_size.y],
@@ -154,7 +160,7 @@ func to_dict() -> Dictionary:
 ## Verifica se un determinato ruolo (o stato di gioco) ha i permessi per visualizzare/avviare l'app
 func is_role_allowed(role_name: String, is_solo: bool = false) -> bool:
 	var clean_role := role_name.strip_edges()
-	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Factotum" or clean_role == "Captain" or clean_role == "HOST"
+	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Mozzo" or clean_role == "Captain" or clean_role == "HOST"
 	if is_super:
 		return true
 	if is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato"):
@@ -187,11 +193,11 @@ func get_effective_scene() -> PackedScene:
 func get_formatted_drive_files(drive_root_name: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for file_entry in default_files:
-		var path: String = str(file_entry.get("path", ""))
-		var file_name: String = str(file_entry.get("name", file_entry.get("file_name", "")))
-		var content: String = str(file_entry.get("content", ""))
-		var is_protected: bool = bool(file_entry.get("is_protected", true))
-		var desc: String = str(file_entry.get("desc", file_entry.get("description", "")))
+		var path: String = str(file_entry.get("path"))
+		var file_name: String = str(file_entry.get("name"))
+		var content: String = str(file_entry.get("content"))
+		var is_protected: bool = bool(file_entry.get("is_protected"))
+		var desc: String = str(file_entry.get("desc"))
 		
 		var full_rel_path: String = ""
 		if not path.is_empty():

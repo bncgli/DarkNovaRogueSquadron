@@ -40,7 +40,7 @@ func _run_all_tests() -> void:
 	
 	# Rimozione parziale
 	var removed := cargo_mgr.remove_item("alloys_durasteel", 2)
-	assert(removed.get("quantity", 0) == 2, "Devono essere state rimosse 2 unità di durasteel")
+	assert(removed.get("quantity") == 2, "Devono essere state rimosse 2 unità di durasteel")
 	assert(cargo_mgr.get_total_mass() == 220.0, "Massa totale dopo rimozione 2 durasteel (80 kg) deve essere 220.0 kg")
 	print("✔ Calcolo di massa, volume e inventario verificato con successo")
 	
@@ -217,7 +217,7 @@ func _run_all_tests() -> void:
 	var initial_credits: int = flux_mgr.credits
 	var hack_result := flux_mgr.hack_snet_disk(snet_disk, 3.5) # Hacker abile
 	
-	assert(hack_result.get("success", false) == true, "La violazione ICE con hacker skill deve avere successo")
+	assert(hack_result.get("success") == true, "La violazione ICE con hacker skill deve avere successo")
 	assert(snet_disk["metadata"]["ice_broken"] == true, "Il disco deve risultare decrittato")
 	assert(flags["snet_breached"] == true, "Il segnale snet_ice_breached deve essere emesso")
 	assert(flux_mgr.credits == initial_credits + 3500, "I crediti estratti dallo snapshot (+3500 CR) devono essere iniettati")

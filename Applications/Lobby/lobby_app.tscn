@@ -1,9 +1,16 @@
 [gd_scene format=3 uid="uid://dp61a2w1q5l4n"]
 
-[ext_resource type="Script" path="res://Applications/Lobby/lobby_app.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dtv6yl6vsulsy" path="res://Applications/Lobby/lobby_app.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.0705882, 0.0823529, 0.109804, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.141176, 0.172549, 0.227451, 1)
+border_width_bottom = 2
+border_color = Color(0.258824, 0.541176, 0.811765, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.109804, 0.129412, 0.168627, 0.9)
@@ -17,13 +24,6 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
-bg_color = Color(0.141176, 0.172549, 0.227451, 1)
-border_width_bottom = 2
-border_color = Color(0.258824, 0.541176, 0.811765, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chat"]
 bg_color = Color(0.0509804, 0.0588235, 0.0784314, 0.95)
 border_width_left = 1
@@ -36,7 +36,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="LobbyApp" type="Control"]
+[node name="LobbyApp" type="Control" unique_id=1970892246]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -45,7 +45,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Background" type="Panel" parent="." unique_id=1088233656]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -54,7 +54,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=1047724673]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -66,83 +66,83 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="ConnectionView" type="VBoxContainer" parent="Margin"]
+[node name="ConnectionView" type="VBoxContainer" parent="Margin" unique_id=1001118820]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HeaderPanel" type="PanelContainer" parent="Margin/ConnectionView"]
+[node name="HeaderPanel" type="PanelContainer" parent="Margin/ConnectionView" unique_id=1228315831]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_header")
 
-[node name="HeaderMargin" type="MarginContainer" parent="Margin/ConnectionView/HeaderPanel"]
+[node name="HeaderMargin" type="MarginContainer" parent="Margin/ConnectionView/HeaderPanel" unique_id=2110944773]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 10
 
-[node name="HBox" type="HBoxContainer" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin"]
+[node name="HBox" type="HBoxContainer" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin" unique_id=1914447407]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox"]
+[node name="Title" type="Label" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox" unique_id=2108831608]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "🛰️ PROTOCOLLO COMUNICAZIONI & LOBBY CIURMA"
 
-[node name="CallsignBox" type="HBoxContainer" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox"]
+[node name="CallsignBox" type="HBoxContainer" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox" unique_id=2123092729]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CallsignLabel" type="Label" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox/CallsignBox"]
+[node name="CallsignLabel" type="Label" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox/CallsignBox" unique_id=1452269282]
 layout_mode = 2
 text = "Nome Operatore:"
 
-[node name="CallsignEdit" type="LineEdit" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox/CallsignBox"]
+[node name="CallsignEdit" type="LineEdit" parent="Margin/ConnectionView/HeaderPanel/HeaderMargin/HBox/CallsignBox" unique_id=344398818]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
-placeholder_text = "Tuo Nominativo"
 text = "Operatore"
+placeholder_text = "Tuo Nominativo"
 
-[node name="BodySplit" type="HBoxContainer" parent="Margin/ConnectionView"]
+[node name="BodySplit" type="HBoxContainer" parent="Margin/ConnectionView" unique_id=1558133884]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="SoloCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit"]
+[node name="SoloCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit" unique_id=1131215365]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/SoloCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/SoloCard" unique_id=1097106099]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
 
-[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin" unique_id=836540456]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=718311806]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "👤 GIOCA IN SOLO"
 
-[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=41989459]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Avvia la nave in locale offline senza server di rete. Controlla tutti i sistemi di bordo in piena autonomia."
 autowrap_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=461159803]
 layout_mode = 2
 
-[node name="InfoLabel" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="InfoLabel" type="Label" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=1469784458]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.85, 1, 0.8)
 theme_override_font_sizes/font_size = 12
@@ -150,194 +150,194 @@ text = "• Controllo di volo locale
 • Telecamere perimetrali attive
 • Nessun server o porta da aprire"
 
-[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=1660658578]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SoloButton" type="Button" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox"]
+[node name="SoloButton" type="Button" parent="Margin/ConnectionView/BodySplit/SoloCard/Margin/VBox" unique_id=1527845066]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "🚀 GIOCA IN LOCALE (SOLO)"
 
-[node name="HostCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit"]
+[node name="HostCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit" unique_id=376567925]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/HostCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/HostCard" unique_id=1457933540]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
 
-[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin" unique_id=606954283]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=1627174766]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "👑 CREA ASTRONAVE (HOST)"
 
-[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=1211982389]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Avvia il server di bordo della nave. I compagni di equipaggio potranno connettersi via LAN o IP diretto."
 autowrap_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=735900279]
 layout_mode = 2
 
-[node name="NameBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="NameBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=1606865201]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/NameBox"]
+[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/NameBox" unique_id=1915204261]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Nome Nave:"
 
-[node name="HostRoomNameEdit" type="LineEdit" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/NameBox"]
+[node name="HostRoomNameEdit" type="LineEdit" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/NameBox" unique_id=1354906519]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Dark Nova"
 
-[node name="PortBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="PortBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=2066317368]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/PortBox"]
+[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/PortBox" unique_id=918745907]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Porta UDP:"
 
-[node name="HostPortSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/PortBox"]
+[node name="HostPortSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/PortBox" unique_id=1033922362]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1024.0
 max_value = 65535.0
 value = 7777.0
 
-[node name="MaxCrewBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="MaxCrewBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=1319936782]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/MaxCrewBox"]
+[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/MaxCrewBox" unique_id=1132408599]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Equipaggio Max:"
 
-[node name="HostMaxPlayersSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/MaxCrewBox"]
+[node name="HostMaxPlayersSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox/MaxCrewBox" unique_id=30539391]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 12.0
 value = 6.0
 
-[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=260952008]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HostButton" type="Button" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox"]
+[node name="HostButton" type="Button" parent="Margin/ConnectionView/BodySplit/HostCard/Margin/VBox" unique_id=1560006923]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "🚀 AVVIA SERVER NAVE"
 
-[node name="JoinCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit"]
+[node name="JoinCard" type="PanelContainer" parent="Margin/ConnectionView/BodySplit" unique_id=1434266843]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/JoinCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/BodySplit/JoinCard" unique_id=560950571]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
 
-[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin" unique_id=874614149]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="Title" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=197723930]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "🔗 UNISCITI A NAVE (CLIENT)"
 
-[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="Desc" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=685762772]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Inserisci l'indirizzo IP dell'Host della nave o seleziona una sessione rilevata automaticamente in LAN."
 autowrap_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="HSeparator" type="HSeparator" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=2111802106]
 layout_mode = 2
 
-[node name="IpBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="IpBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=2055371601]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/IpBox"]
+[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/IpBox" unique_id=1840117784]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Indirizzo IP Host:"
 
-[node name="JoinIpEdit" type="LineEdit" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/IpBox"]
+[node name="JoinIpEdit" type="LineEdit" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/IpBox" unique_id=550323752]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-placeholder_text = "127.0.0.1"
 text = "127.0.0.1"
+placeholder_text = "127.0.0.1"
 
-[node name="PortBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="PortBox" type="HBoxContainer" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=1215208022]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/PortBox"]
+[node name="Label" type="Label" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/PortBox" unique_id=1409634767]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Porta UDP:"
 
-[node name="JoinPortSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/PortBox"]
+[node name="JoinPortSpin" type="SpinBox" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/PortBox" unique_id=1027401182]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1024.0
 max_value = 65535.0
 value = 7777.0
 
-[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="Spacer" type="Control" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=1992174971]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="JoinButton" type="Button" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox"]
+[node name="JoinButton" type="Button" parent="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox" unique_id=1473746341]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "📡 COLLEGATI ALLA NAVE"
 
-[node name="LanCard" type="PanelContainer" parent="Margin/ConnectionView"]
+[node name="LanCard" type="PanelContainer" parent="Margin/ConnectionView" unique_id=1857185737]
 custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/LanCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/ConnectionView/LanCard" unique_id=923179654]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 10
 
-[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/LanCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/ConnectionView/LanCard/Margin" unique_id=1160428188]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeaderHBox" type="HBoxContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox"]
+[node name="HeaderHBox" type="HBoxContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox" unique_id=514691078]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox"]
+[node name="Title" type="Label" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox" unique_id=1839259606]
 layout_mode = 2
 text = "📶 RILEVAMENTO AUTOMATICO RETE LOCALE (LAN)"
 
-[node name="LanStatusLabel" type="Label" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox"]
+[node name="LanStatusLabel" type="Label" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox" unique_id=51133212]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -345,258 +345,258 @@ theme_override_font_sizes/font_size = 12
 text = "In ascolto..."
 horizontal_alignment = 2
 
-[node name="RescanLanButton" type="Button" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox"]
+[node name="RescanLanButton" type="Button" parent="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox" unique_id=2049154768]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Aggiorna"
 
-[node name="Scroll" type="ScrollContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox" unique_id=1030456912]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="LanServerList" type="VBoxContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox/Scroll"]
+[node name="LanServerList" type="VBoxContainer" parent="Margin/ConnectionView/LanCard/Margin/VBox/Scroll" unique_id=177483833]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="LobbyRoomView" type="VBoxContainer" parent="Margin"]
+[node name="LobbyRoomView" type="VBoxContainer" parent="Margin" unique_id=910921223]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="HeaderPanel" type="PanelContainer" parent="Margin/LobbyRoomView"]
+[node name="HeaderPanel" type="PanelContainer" parent="Margin/LobbyRoomView" unique_id=1098081963]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_header")
 
-[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/HeaderPanel"]
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/HeaderPanel" unique_id=264923897]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
-[node name="HBox" type="HBoxContainer" parent="Margin/LobbyRoomView/HeaderPanel/Margin"]
+[node name="HBox" type="HBoxContainer" parent="Margin/LobbyRoomView/HeaderPanel/Margin" unique_id=98517436]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="RoomTitleLabel" type="Label" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox"]
+[node name="RoomTitleLabel" type="Label" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox" unique_id=1594524700]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 text = "ASTRONAVE: Dark Nova | COMANDANTE: Capitano"
 
-[node name="RoomStatusBadge" type="Label" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox"]
+[node name="RoomStatusBadge" type="Label" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox" unique_id=435325792]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "[ HOST / SERVER ]"
 
-[node name="DisconnectButton" type="Button" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox"]
+[node name="DisconnectButton" type="Button" parent="Margin/LobbyRoomView/HeaderPanel/Margin/HBox" unique_id=1155577286]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Disconnetti"
 
-[node name="ResourcesPanel" type="PanelContainer" parent="Margin/LobbyRoomView"]
+[node name="ResourcesPanel" type="PanelContainer" parent="Margin/LobbyRoomView" unique_id=2042251146]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/ResourcesPanel"]
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/ResourcesPanel" unique_id=649329293]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin" unique_id=990818282]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ResHeaderHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox"]
+[node name="ResHeaderHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox" unique_id=386018058]
 layout_mode = 2
 
-[node name="ResHeaderLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox"]
+[node name="ResHeaderLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox" unique_id=81217367]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 13
 text = "🛠️ CONFIGURAZIONE RISORSE MISSIONE (NAVE & SISTEMA STELLARE)"
 
-[node name="ResPermissionBadge" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox"]
+[node name="ResPermissionBadge" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResHeaderHBox" unique_id=46536332]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "[HOST: Modificabile]"
 
-[node name="ResColumnsHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox"]
+[node name="ResColumnsHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox" unique_id=1430125216]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="ShipResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox"]
+[node name="ShipResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox" unique_id=1481958727]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="ShipResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+[node name="ShipResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol" unique_id=1432086159]
 layout_mode = 2
 
-[node name="ShipResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipResTitleHBox"]
+[node name="ShipResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipResTitleHBox" unique_id=807833203]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
 text = "🚀 Risorsa Nave (ShipBlueprint):"
 
-[node name="ShipSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+[node name="ShipSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol" unique_id=170535531]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ShipBlueprintOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox"]
+[node name="ShipBlueprintOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox" unique_id=1052991314]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SelectShipFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox"]
+[node name="SelectShipFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox" unique_id=1895526295]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Sfoglia..."
 
-[node name="ShipPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol"]
+[node name="ShipPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol" unique_id=987377705]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Nave: Dark Nova Corvette | Stanze: 10 | Condotti: 14 | App: 12"
 
-[node name="SystemResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox"]
+[node name="SystemResCol" type="VBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox" unique_id=1900232523]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="SystemResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+[node name="SystemResTitleHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol" unique_id=1561561612]
 layout_mode = 2
 
-[node name="SystemResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemResTitleHBox"]
+[node name="SystemResLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemResTitleHBox" unique_id=185439187]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
 text = "🌌 Sistema Stellare (StarSystemData):"
 
-[node name="SystemSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+[node name="SystemSelectorHBox" type="HBoxContainer" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol" unique_id=2070301428]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="StarSystemOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox"]
+[node name="StarSystemOption" type="OptionButton" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox" unique_id=1504326065]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SelectSystemFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox"]
+[node name="SelectSystemFileButton" type="Button" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox" unique_id=1422511069]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Sfoglia..."
 
-[node name="SystemPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol"]
+[node name="SystemPreviewLabel" type="Label" parent="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol" unique_id=648222468]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Sistema: Helios Nova System | Stella: (0, 0, 0) | Corpi: 10 | Stazioni: 1"
 
-[node name="ResourceFileDialog" type="FileDialog" parent="Margin/LobbyRoomView"]
+[node name="ResourceFileDialog" type="FileDialog" parent="Margin/LobbyRoomView" unique_id=1296146273]
 unique_name_in_owner = true
-title = "Seleziona Risorsa Custom"
+title = "Open a File"
 size = Vector2i(600, 400)
 ok_button_text = "Apri"
 file_mode = 0
 filters = PackedStringArray("*.tres ; Godot Resource", "*.json ; JSON Resource")
 
-[node name="MainContent" type="HBoxContainer" parent="Margin/LobbyRoomView"]
+[node name="MainContent" type="HBoxContainer" parent="Margin/LobbyRoomView" unique_id=519262770]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="LeftCol" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent"]
+[node name="LeftCol" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent" unique_id=1214964911]
 custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CrewCountLabel" type="Label" parent="Margin/LobbyRoomView/MainContent/LeftCol"]
+[node name="CrewCountLabel" type="Label" parent="Margin/LobbyRoomView/MainContent/LeftCol" unique_id=2029580578]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "MEMBRI DELL'EQUIPAGGIO (1/6)"
 
-[node name="CrewListPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol"]
+[node name="CrewListPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol" unique_id=137550863]
 custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel"]
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel" unique_id=1446988132]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="CrewScroll" type="ScrollContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel/Margin"]
+[node name="CrewScroll" type="ScrollContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel/Margin" unique_id=695130003]
 layout_mode = 2
 
-[node name="CrewListContainer" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel/Margin/CrewScroll"]
+[node name="CrewListContainer" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/CrewListPanel/Margin/CrewScroll" unique_id=948823382]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="RolesHeader" type="Label" parent="Margin/LobbyRoomView/MainContent/LeftCol"]
+[node name="RolesHeader" type="Label" parent="Margin/LobbyRoomView/MainContent/LeftCol" unique_id=974137194]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "ASSEGNAZIONE POSTAZIONI DI BORDO"
 
-[node name="RolesPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol"]
+[node name="RolesPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol" unique_id=1540892367]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel"]
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel" unique_id=272572898]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="RolesScroll" type="ScrollContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel/Margin"]
+[node name="RolesScroll" type="ScrollContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel/Margin" unique_id=459869455]
 layout_mode = 2
 
-[node name="RolesContainer" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel/Margin/RolesScroll"]
+[node name="RolesContainer" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent/LeftCol/RolesPanel/Margin/RolesScroll" unique_id=1380466601]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="RightCol" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent"]
+[node name="RightCol" type="VBoxContainer" parent="Margin/LobbyRoomView/MainContent" unique_id=2065805221]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="ChatHeader" type="Label" parent="Margin/LobbyRoomView/MainContent/RightCol"]
+[node name="ChatHeader" type="Label" parent="Margin/LobbyRoomView/MainContent/RightCol" unique_id=1651517425]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "CANALE COMUNICAZIONI & LOG DI BORDO"
 
-[node name="ChatPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/RightCol"]
+[node name="ChatPanel" type="PanelContainer" parent="Margin/LobbyRoomView/MainContent/RightCol" unique_id=1128724269]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_chat")
 
-[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatPanel"]
+[node name="Margin" type="MarginContainer" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatPanel" unique_id=384813417]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="ChatLog" type="RichTextLabel" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatPanel/Margin"]
+[node name="ChatLog" type="RichTextLabel" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatPanel/Margin" unique_id=993679106]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 2
@@ -604,34 +604,34 @@ bbcode_enabled = true
 scroll_following = true
 selection_enabled = true
 
-[node name="ChatInputBox" type="HBoxContainer" parent="Margin/LobbyRoomView/MainContent/RightCol"]
+[node name="ChatInputBox" type="HBoxContainer" parent="Margin/LobbyRoomView/MainContent/RightCol" unique_id=382614925]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ChatInput" type="LineEdit" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox"]
+[node name="ChatInput" type="LineEdit" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox" unique_id=1672211169]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Digita un messaggio per l'equipaggio..."
 
-[node name="SendChatButton" type="Button" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox"]
+[node name="SendChatButton" type="Button" parent="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox" unique_id=1866163466]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Invia"
 
-[node name="FooterBar" type="HBoxContainer" parent="Margin/LobbyRoomView"]
+[node name="FooterBar" type="HBoxContainer" parent="Margin/LobbyRoomView" unique_id=1057976381]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="ClientWaitingLabel" type="Label" parent="Margin/LobbyRoomView/FooterBar"]
+[node name="ClientWaitingLabel" type="Label" parent="Margin/LobbyRoomView/FooterBar" unique_id=1647358368]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 13
 text = "⏳ In attesa che l'equipaggio sia pronto..."
 
-[node name="ReadyButton" type="Button" parent="Margin/LobbyRoomView/FooterBar"]
+[node name="ReadyButton" type="Button" parent="Margin/LobbyRoomView/FooterBar" unique_id=805084925]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
@@ -639,7 +639,7 @@ size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 14
 text = "✅ PRONTO"
 
-[node name="LaunchMissionButton" type="Button" parent="Margin/LobbyRoomView/FooterBar"]
+[node name="LaunchMissionButton" type="Button" parent="Margin/LobbyRoomView/FooterBar" unique_id=415959803]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
@@ -652,10 +652,10 @@ text = "🚀 AVVIA MISSIONE / DECOLLO"
 [connection signal="pressed" from="Margin/ConnectionView/BodySplit/JoinCard/Margin/VBox/JoinButton" to="." method="_on_join_button_pressed"]
 [connection signal="pressed" from="Margin/ConnectionView/LanCard/Margin/VBox/HeaderHBox/RescanLanButton" to="." method="_on_rescan_lan_button_pressed"]
 [connection signal="pressed" from="Margin/LobbyRoomView/HeaderPanel/Margin/HBox/DisconnectButton" to="." method="_on_disconnect_button_pressed"]
-[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox/SelectShipFileButton" to="." method="_on_select_ship_file_button_pressed"]
 [connection signal="item_selected" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox/ShipBlueprintOption" to="." method="_on_ship_blueprint_option_item_selected"]
-[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox/SelectSystemFileButton" to="." method="_on_select_system_file_button_pressed"]
+[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/ShipResCol/ShipSelectorHBox/SelectShipFileButton" to="." method="_on_select_ship_file_button_pressed"]
 [connection signal="item_selected" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox/StarSystemOption" to="." method="_on_star_system_option_item_selected"]
+[connection signal="pressed" from="Margin/LobbyRoomView/ResourcesPanel/Margin/VBox/ResColumnsHBox/SystemResCol/SystemSelectorHBox/SelectSystemFileButton" to="." method="_on_select_system_file_button_pressed"]
 [connection signal="file_selected" from="Margin/LobbyRoomView/ResourceFileDialog" to="." method="_on_resource_file_dialog_file_selected"]
 [connection signal="text_submitted" from="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox/ChatInput" to="." method="_on_chat_input_text_submitted"]
 [connection signal="pressed" from="Margin/LobbyRoomView/MainContent/RightCol/ChatInputBox/SendChatButton" to="." method="_on_send_chat_button_pressed"]

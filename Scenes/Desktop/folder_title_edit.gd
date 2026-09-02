@@ -49,7 +49,7 @@ func trigger_rename() -> void:
 		cancel_rename()
 		return
 	
-	if folder.file_type != folder.file_type_enum.FOLDER:
+	if folder.file_type != GlobalValues.FileType.FOLDER:
 		var old_folder_name: String = folder.folder_name
 		var ext: String = old_folder_name.get_extension()
 		var new_folder_name: String
@@ -94,7 +94,7 @@ func trigger_rename() -> void:
 			elif clean_dir.is_empty() and text_editor.file_path == old_folder_name:
 				text_editor.file_path = new_folder_name
 	
-	elif folder.file_type == folder.file_type_enum.FOLDER:
+	elif folder.file_type == GlobalValues.FileType.FOLDER:
 		var old_folder_name: String = folder.folder_name
 		var old_folder_path: String = folder.folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
 		

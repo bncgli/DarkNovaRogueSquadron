@@ -24,6 +24,10 @@ extends Panel
 ## Whether to use a simple pause menu or not (spawned by pressing ESC or P)
 @export var use_generic_pause_menu: bool
 
+var is_folder: bool = false
+var sub_tree: Dictionary = {}
+signal folder_pressed(option: Control)
+
 var is_mouse_over: bool
 
 func _ready() -> void:
@@ -35,31 +39,46 @@ func _ready() -> void:
 	if has_node("%Menu Developer"):
 		%"Menu Developer".text = "[center][color=gray]%s[/color]" % developer_text
 
-func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "") -> void:
+func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "", p_is_folder: bool = false, p_sub_tree: Dictionary = {}) -> void:
 	title_text = p_title
 	description_text = p_description
 	developer_text = p_developer
 	application_scene = p_app_scene
 	game_scene = ""
 	use_generic_pause_menu = false
+	is_folder = p_is_folder
+	sub_tree = p_sub_tree
+	
 	if has_node("%Menu Title"):
 		%"Menu Title".text = "[center]%s" % title_text
 	if has_node("%Menu Description"):
-		%"Menu Description".text = "[center]%s" % description_text
+		%"Menu Description".text = "[center]%s" % (description_text if not is_folder else "")
 	if has_node("%Menu Developer"):
-		%"Menu Developer".text = "[center][color=gray]%s[/color]" % developer_text
+		%"Menu Developer".text = "[center][color=gray]%s[/color]" % (developer_text if not is_folder else "")
+	
 	var tex_rect: TextureRect = get_node_or_null("HBoxContainer/MarginContainer/TextureRect")
 	if tex_rect:
 		tex_rect.modulate = p_color
 		if p_texture:
 			tex_rect.texture = p_texture
+		elif is_folder:
+			tex_rect.texture = load("res://Art/Folder Icons/folder.png")
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == 1 and event.is_pressed():
+		accept_event()
+		if is_folder:
+			folder_pressed.emit(self)
+			return
+			
 		if spawn_inside_window:
 			spawn_window()
 		else:
 			spawn_outside_window()
+		
+		var start_button = get_tree().get_first_node_in_group("start_button_controller")
+		if start_button and start_button.has_method("hide_start_menu"):
+			start_button.hide_start_menu()
 
 func _on_mouse_entered() -> void:
 	is_mouse_over = true

@@ -1,4 +1,4 @@
-extends Control
+extends BaseApp
 class_name FlightControlApp
 
 ## Applicazione GodotOS per il controllo dei movimenti e rotazioni dell'astronave (Flight Control).
@@ -59,7 +59,6 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 @onready var btn_align_hyperdrive: Button = get_node_or_null("%BtnAlignHyperdrive")
 @onready var btn_engage_hyperdrive: Button = get_node_or_null("%BtnEngageHyperdrive")
 
-var parent_window: FakeWindow = null
 var can_control_flight: bool = true
 var active_hyperdrive_route: Dictionary = {}
 
@@ -95,7 +94,7 @@ var active_config: Dictionary = {
 }
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
 	_update_speed_mode_button()
@@ -103,11 +102,7 @@ func _ready() -> void:
 	_update_connection_state()
 	_update_permissions()
 
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	call_deferred("_setup_parent_window")
-
-func _setup_parent_window() -> void:
+func _setup_parent_window(_title: String, _size: Vector2) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
@@ -373,52 +368,18 @@ func _apply_configuration_to_ship() -> void:
 		ship = SpaceWorldManager.get_spaceship()
 	
 	if ship and is_instance_valid(ship):
-		var rcs: float = active_config.get("rcs_power_rate", 1.0)
-		ship.max_linear_speed = active_config.get("max_linear_speed", 20.0) * rcs
-		ship.linear_acceleration = active_config.get("linear_acceleration", 35.0) * rcs
-		ship.linear_deceleration = active_config.get("linear_deceleration", 20.0)
-		ship.max_angular_speed = active_config.get("max_angular_speed", 2.5) * rcs
-		ship.angular_acceleration = active_config.get("angular_acceleration", 8.0) * rcs
-		ship.angular_deceleration = active_config.get("angular_deceleration", 6.0)
+		var rcs: float = active_config.get("rcs_power_rate")
+		ship.max_linear_speed = active_config.get("max_linear_speed") * rcs
+		ship.linear_acceleration = active_config.get("linear_acceleration") * rcs
+		ship.linear_deceleration = active_config.get("linear_deceleration")
+		ship.max_angular_speed = active_config.get("max_angular_speed") * rcs
+		ship.angular_acceleration = active_config.get("angular_acceleration") * rcs
+		ship.angular_deceleration = active_config.get("angular_deceleration")
 
 ## Parsifica un file .dat formato INI/Key-Value
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	var current_section := ""
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			current_section = line.substr(1, line.length() - 2).strip_edges()
-			continue
-		
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	
-	file.close()
-	return result
-
-## Aggiorna i testi e i badge della card di configurazione .dat
 func _update_config_ui() -> void:
 	if dat_status_badge:
-		if active_config.get("is_dat_loaded", false):
+		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "● .DAT ATTIVO"
 			dat_status_badge.modulate = Color(0.3, 1.0, 0.6)
 		else:
@@ -426,10 +387,10 @@ func _update_config_ui() -> void:
 			dat_status_badge.modulate = Color(0.9, 0.7, 0.3)
 	
 	if dat_config_summary_label:
-		var spd: float = active_config.get("max_linear_speed", 20.0) * active_config.get("rcs_power_rate", 1.0)
-		var acc: float = active_config.get("linear_acceleration", 35.0) * active_config.get("rcs_power_rate", 1.0)
-		var ang: float = active_config.get("max_angular_speed", 2.5) * active_config.get("rcs_power_rate", 1.0)
-		var rcs: float = active_config.get("rcs_power_rate", 1.0)
+		var spd: float = active_config.get("max_linear_speed") * active_config.get("rcs_power_rate")
+		var acc: float = active_config.get("linear_acceleration") * active_config.get("rcs_power_rate")
+		var ang: float = active_config.get("max_angular_speed") * active_config.get("rcs_power_rate")
+		var rcs: float = active_config.get("rcs_power_rate")
 		dat_config_summary_label.text = "VMax: %.1f m/s | Accel: %.1f m/s² | Ang: %.1f rad/s | RCS Mult: %.2fx" % [spd, acc, ang, rcs]
 
 func get_active_config() -> Dictionary:
@@ -468,25 +429,25 @@ func _process(_delta: float) -> void:
 		
 		# Quota Verticale
 		if Input.is_key_pressed(KEY_SPACE):
-			move_vec.y += active_config.get("vertical_thrust_mult", 1.0)
+			move_vec.y += active_config.get("vertical_thrust_mult")
 		if Input.is_key_pressed(KEY_CTRL):
-			move_vec.y -= active_config.get("vertical_thrust_mult", 1.0)
+			move_vec.y -= active_config.get("vertical_thrust_mult")
 		
 		# Rollio (Q / E)
 		if Input.is_key_pressed(KEY_Q):
-			rot_vec.z += active_config.get("roll_thrust_mult", 1.0)
+			rot_vec.z += active_config.get("roll_thrust_mult")
 		if Input.is_key_pressed(KEY_E):
-			rot_vec.z -= active_config.get("roll_thrust_mult", 1.0)
+			rot_vec.z -= active_config.get("roll_thrust_mult")
 		
 		# Beccheggio (Frecce Su/Giu) & Imbardata (Frecce Sinistra/Destra)
 		if Input.is_key_pressed(KEY_UP):
-			rot_vec.x += active_config.get("pitch_thrust_mult", 1.0)
+			rot_vec.x += active_config.get("pitch_thrust_mult")
 		if Input.is_key_pressed(KEY_DOWN):
-			rot_vec.x -= active_config.get("pitch_thrust_mult", 1.0)
+			rot_vec.x -= active_config.get("pitch_thrust_mult")
 		if Input.is_key_pressed(KEY_LEFT):
-			rot_vec.y += active_config.get("yaw_thrust_mult", 1.0)
+			rot_vec.y += active_config.get("yaw_thrust_mult")
 		if Input.is_key_pressed(KEY_RIGHT):
-			rot_vec.y -= active_config.get("yaw_thrust_mult", 1.0)
+			rot_vec.y -= active_config.get("yaw_thrust_mult")
 		
 		# Somma input da click UI
 		move_vec += _ui_linear_input
@@ -525,7 +486,7 @@ func _update_telemetry_display(speed: float, pos: Vector3, rot: Vector3) -> void
 	if speed_value_label:
 		speed_value_label.text = "%.1f m/s" % speed
 	if speed_progress_bar:
-		var max_s: float = active_config.get("max_linear_speed", 20.0) * active_config.get("rcs_power_rate", 1.0) * _speed_multiplier
+		var max_s: float = active_config.get("max_linear_speed") * active_config.get("rcs_power_rate") * _speed_multiplier
 		speed_progress_bar.max_value = max_s
 		speed_progress_bar.value = speed
 	if pos_value_label:
@@ -629,9 +590,9 @@ func _update_hyperdrive_ui() -> void:
 	if hyperdrive_card:
 		hyperdrive_card.visible = true
 
-	var target_id: String = active_hyperdrive_route.get("target_sector_id", "")
+	var target_id: String = active_hyperdrive_route.get("target_sector_id")
 	var cur_coords := StarSystemGridManager.get_current_sector_coords() if StarSystemGridManager else Vector3i.ZERO
-	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords")
 	var dist_sectors := (Vector3(target_coords) - Vector3(cur_coords)).length()
 
 	if hyperdrive_target_label:
@@ -659,7 +620,7 @@ func get_hyperdrive_alignment_angle_deg() -> float:
 	if active_hyperdrive_route.is_empty():
 		return 0.0
 	
-	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.FORWARD)
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector")
 	if course_vec.length_squared() < 0.0001:
 		return 0.0
 
@@ -691,7 +652,7 @@ func align_to_hyperdrive_vector() -> void:
 	if not can_control_flight or active_hyperdrive_route.is_empty():
 		return
 	
-	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.FORWARD)
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector")
 	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
 	
 	# Calcola angolo yaw desiderato
@@ -722,11 +683,11 @@ func engage_hyperdrive() -> Dictionary:
 	if active_hyperdrive_route.is_empty():
 		return {"success": false, "reason": "Nessuna rotta pianificata"}
 
-	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords")
 	
 	if StarSystemGridManager:
 		var res := StarSystemGridManager.engage_hyperdrive_transit(target_coords)
-		if res.get("success", false):
+		if res.get("success"):
 			active_hyperdrive_route.clear()
 			_update_hyperdrive_ui()
 		return res

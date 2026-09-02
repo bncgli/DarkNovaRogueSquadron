@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_eoua1")
-roles = Array[String](["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Factotum", "Soldier", "Captain"])
+roles = Array[String](["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Mozzo", "Soldier", "Captain"])
 power_draw_mw = 18.0
 required_subsystems = Array[String](["sensors_array", "tactical_radar"])
 app_id = "sensors"
@@ -12,6 +12,7 @@ title = "Array Sensori & Mappa Tattica"
 description = "Mappa telemetrica spaziale a lungo raggio e spettrometria"
 developer = "AstroForge"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.2, 0.8, 0.4, 1)
 scene_path = "res://Applications/Sensors/sensors_app.tscn"
 default_window_size = Vector2(750, 520)

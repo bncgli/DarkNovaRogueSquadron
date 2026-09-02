@@ -117,7 +117,7 @@ func _update_approach_telemetry(delta: float) -> void:
 	var bay_normal := Vector3.FORWARD
 	for bay in target_station.docking_bays:
 		if bay.get("id") == assigned_bay_id:
-			bay_normal = (target_station.global_transform.basis * bay.get("approach_vector", Vector3.FORWARD)).normalized()
+			bay_normal = (target_station.global_transform.basis * bay.get("approach_vector")).normalized()
 			break
 			
 	# Angolo di allineamento tra la prua della nave e l'asse del dock
@@ -210,7 +210,7 @@ func abort_docking(reason: String = "Procedura abortita dall'operatore") -> void
 func _get_bay_name(station: SpaceStationEntity, bay_id: int) -> String:
 	for b in station.docking_bays:
 		if b.get("id") == bay_id:
-			return b.get("name", "Bay %d" % bay_id)
+			return b.get("name")
 	return "Bay %d" % bay_id
 
 func get_docking_state_string() -> String:

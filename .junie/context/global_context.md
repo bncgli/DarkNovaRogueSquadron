@@ -16,10 +16,10 @@
 | CopyPasteManager | `res://Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.tscn` | Handles global copy-paste operations. |
 | GlobalValues | `res://Scenes/Autoloads/GlobalValues/global_values.tscn` | Stores global state and configuration. |
 | DefaultValues | `res://Scenes/Autoloads/Default Values/default_values.tscn` | Stores default configuration values. |
-| NetworkManager | `res://Scenes/Networking/network_manager.tscn` | Manages networking capabilities. |
-| SpaceWorldManager | `res://Outside/space_world_manager.gd` | Manages the 3D space world environment. |
+| NetworkManager | `res://Scenes/Networking/network_manager.gd` | Gestisce il networking e la ciurma tramite il `CrewManager`. |
+| SpaceWorldManager | `res://Outside/space_world_manager.gd` | Gestisce l'ambiente 3D e coordina i sub-manager (`DuctDroneManager`, `ShipDamageManager`, `CameraFeedManager`). |
 | StarSystemGridManager | `res://Outside/StarSystemGrid/star_system_grid_manager.gd` | Manages the star system grid. |
-| RoomDatabase | `res://Scenes/Autoloads/RoomDatabase.gd` | Database of standard rooms for ship building. |
+| RoomDatabase | `res://Scenes/Autoloads/RoomDatabase.gd` | Database of standard rooms for ship building and centralized camera metadata. |
 | ShipDriveManager | `res://Scenes/Autoloads/ShipDrive/ship_drive_manager.gd` | Manages ship movement and drive systems. |
 | TerminalDriveManager | `res://Scenes/Autoloads/TerminalDrive/terminal_drive_manager.gd` | Manages terminal-related drive operations. |
 | FolderPasswordManager | `res://Scenes/Autoloads/FolderPasswordManager/folder_password_manager.gd` | Manages passwords for folders. |

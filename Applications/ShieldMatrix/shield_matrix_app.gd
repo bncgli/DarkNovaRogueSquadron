@@ -1,5 +1,5 @@
 class_name ShieldMatrixApp
-extends Control
+extends BaseApp
 
 ## Applicazione GodotOS per la Matrice Scudi & Deflettori Scafo (Shield Matrix & Hull Deflectors).
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
@@ -13,12 +13,6 @@ const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/shiel
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat"
 const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/deflector_tuning.dat"
 
-enum Quadrant {
-	FORE = 0,
-	AFT = 1,
-	PORT = 2,
-	STARBOARD = 3
-}
 
 # --- RIFERIMENTI NODI UI ---
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
@@ -96,19 +90,13 @@ var active_config: Dictionary = {
 }
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_connect_system_signals()
 	_setup_ui_signals()
 	_update_connection_state()
 	load_dat_configuration()
 	_update_permissions()
 	_refresh_ui_display()
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	if parent_win and "window_title" in parent_win:
-		parent_win.window_title = APP_TITLE
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -141,13 +129,13 @@ func _setup_ui_signals() -> void:
 		phase_sync_switch.toggled.connect(_on_phase_sync_toggled)
 	
 	if balance_fore_slider:
-		balance_fore_slider.value_changed.connect(func(v): _on_slider_ratio_changed(Quadrant.FORE, v))
+		balance_fore_slider.value_changed.connect(func(v): _on_slider_ratio_changed(GlobalValues.Quadrant.FORE, v))
 	if balance_aft_slider:
-		balance_aft_slider.value_changed.connect(func(v): _on_slider_ratio_changed(Quadrant.AFT, v))
+		balance_aft_slider.value_changed.connect(func(v): _on_slider_ratio_changed(GlobalValues.Quadrant.AFT, v))
 	if balance_port_slider:
-		balance_port_slider.value_changed.connect(func(v): _on_slider_ratio_changed(Quadrant.PORT, v))
+		balance_port_slider.value_changed.connect(func(v): _on_slider_ratio_changed(GlobalValues.Quadrant.PORT, v))
 	if balance_starboard_slider:
-		balance_starboard_slider.value_changed.connect(func(v): _on_slider_ratio_changed(Quadrant.STARBOARD, v))
+		balance_starboard_slider.value_changed.connect(func(v): _on_slider_ratio_changed(GlobalValues.Quadrant.STARBOARD, v))
 	
 	if vector_pad:
 		vector_pad.gui_input.connect(_on_vector_pad_gui_input)
@@ -187,9 +175,9 @@ func _process(delta: float) -> void:
 	_refresh_ui_display()
 
 func _simulate_shield_recharge(delta: float) -> void:
-	var base_max: float = active_config.get("max_capacity_per_quadrant", 250.0)
-	var recharge_rate: float = active_config.get("recharge_rate_per_sec", 15.0)
-	var decay_rate: float = active_config.get("decay_rate_unpowered", 25.0)
+	var base_max: float = active_config.get("max_capacity_per_quadrant")
+	var recharge_rate: float = active_config.get("recharge_rate_per_sec")
+	var decay_rate: float = active_config.get("decay_rate_unpowered")
 	var sync_mult: float = 1.15 if is_phase_synced else 0.85
 	
 	# Verifica se la nave ha danni al settore scudi che riducono la capacità
@@ -197,7 +185,7 @@ func _simulate_shield_recharge(delta: float) -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_damage_zones"):
 		var damages: Array = SpaceWorldManager.get_damage_zones()
 		for d in damages:
-			if d.get("system_impact", "") == "shields_degraded":
+			if d.get("system_impact") == "shields_degraded":
 				port_damage_penalty = float(d.get("severity", 0.0)) * 10.0
 	
 	var max_f := base_max * (ratio_fore / 0.25)
@@ -342,13 +330,13 @@ func _on_slider_ratio_changed(quadrant: int, val: float) -> void:
 	
 	var new_ratio := clampf(val / 100.0, 0.05, 0.70)
 	match quadrant:
-		Quadrant.FORE:
+		GlobalValues.Quadrant.FORE:
 			ratio_fore = new_ratio
-		Quadrant.AFT:
+		GlobalValues.Quadrant.AFT:
 			ratio_aft = new_ratio
-		Quadrant.PORT:
+		GlobalValues.Quadrant.PORT:
 			ratio_port = new_ratio
-		Quadrant.STARBOARD:
+		GlobalValues.Quadrant.STARBOARD:
 			ratio_starboard = new_ratio
 	
 	# Normalizza gli altri tre quadranti per mantenere la somma a 1.0
@@ -358,25 +346,25 @@ func _on_slider_ratio_changed(quadrant: int, val: float) -> void:
 func _normalize_ratios(fixed_quadrant: int) -> void:
 	var fixed_val: float
 	match fixed_quadrant:
-		Quadrant.FORE: fixed_val = ratio_fore
-		Quadrant.AFT: fixed_val = ratio_aft
-		Quadrant.PORT: fixed_val = ratio_port
-		Quadrant.STARBOARD: fixed_val = ratio_starboard
+		GlobalValues.Quadrant.FORE: fixed_val = ratio_fore
+		GlobalValues.Quadrant.AFT: fixed_val = ratio_aft
+		GlobalValues.Quadrant.PORT: fixed_val = ratio_port
+		GlobalValues.Quadrant.STARBOARD: fixed_val = ratio_starboard
 	
 	var rem := maxf(0.05, 1.0 - fixed_val)
 	var other_sum: float = 0.0
-	if fixed_quadrant != Quadrant.FORE: other_sum += ratio_fore
-	if fixed_quadrant != Quadrant.AFT: other_sum += ratio_aft
-	if fixed_quadrant != Quadrant.PORT: other_sum += ratio_port
-	if fixed_quadrant != Quadrant.STARBOARD: other_sum += ratio_starboard
+	if fixed_quadrant != GlobalValues.Quadrant.FORE: other_sum += ratio_fore
+	if fixed_quadrant != GlobalValues.Quadrant.AFT: other_sum += ratio_aft
+	if fixed_quadrant != GlobalValues.Quadrant.PORT: other_sum += ratio_port
+	if fixed_quadrant != GlobalValues.Quadrant.STARBOARD: other_sum += ratio_starboard
 	
 	if other_sum <= 0.001:
 		other_sum = 0.001
 	
-	if fixed_quadrant != Quadrant.FORE: ratio_fore = (ratio_fore / other_sum) * rem
-	if fixed_quadrant != Quadrant.AFT: ratio_aft = (ratio_aft / other_sum) * rem
-	if fixed_quadrant != Quadrant.PORT: ratio_port = (ratio_port / other_sum) * rem
-	if fixed_quadrant != Quadrant.STARBOARD: ratio_starboard = (ratio_starboard / other_sum) * rem
+	if fixed_quadrant != GlobalValues.Quadrant.FORE: ratio_fore = (ratio_fore / other_sum) * rem
+	if fixed_quadrant != GlobalValues.Quadrant.AFT: ratio_aft = (ratio_aft / other_sum) * rem
+	if fixed_quadrant != GlobalValues.Quadrant.PORT: ratio_port = (ratio_port / other_sum) * rem
+	if fixed_quadrant != GlobalValues.Quadrant.STARBOARD: ratio_starboard = (ratio_starboard / other_sum) * rem
 
 func _on_reset_balance_pressed() -> void:
 	if not can_control_shields or not _is_ship_operational():
@@ -484,38 +472,6 @@ func _apply_configuration() -> void:
 	
 	_refresh_ui_display()
 
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.to_lower() == "true":
-				result[key] = true
-			elif val_str.to_lower() == "false":
-				result[key] = false
-			elif val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	file.close()
-	return result
-
-# --- GESTIONE STATO DI MISSIONE & RBAC ---
 func _is_ship_operational() -> bool:
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
 		return SpaceWorldManager.is_ship_connected()
@@ -564,7 +520,7 @@ func _update_permissions() -> void:
 		is_solo or
 		my_role == "Ingegnere" or
 		my_role == "Capitano" or
-		my_role == "Factotum" or
+		my_role == "Mozzo" or
 		my_role == ""
 	)
 	

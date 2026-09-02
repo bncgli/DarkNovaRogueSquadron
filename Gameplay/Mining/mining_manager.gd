@@ -193,7 +193,7 @@ func capture_deposit(fragment: Node, collector: Node, cargo_bay: Node = null) ->
 		success = cargo_bay.add_item(res_data, 1)
 		if success:
 			# Se c'è acqua e abbiamo LifeSupport, possiamo notificarlo
-			if res_data.get("water_units", 0.0) > 0.0:
+			if res_data.get("water_units") > 0.0:
 				_replenish_life_support_water(res_data["water_units"])
 			fragment.complete_collection(cargo_bay)
 			resource_harvested.emit(res_data, "CARGO_BAY")
@@ -250,6 +250,6 @@ func scavenge_derelict_loot(derelict: Node, destination: Node) -> Dictionary:
 	if not derelict:
 		return {"error": "NO_DERELICT"}
 	var result: Dictionary = derelict.scavenge_all_available(destination)
-	if result.get("success", false):
+	if result.get("success"):
 		salvage_collected.emit(derelict.derelict_id, result)
 	return result

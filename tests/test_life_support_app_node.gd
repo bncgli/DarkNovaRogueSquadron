@@ -94,11 +94,11 @@ func _run_all_tests() -> void:
 		assert(app.can_control_life_support == true, "Capitano deve avere controllo completo sul supporto vitale")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Factotum / Solo Mode
-		net_mgr.request_role("Factotum")
+		# 2.6 Mozzo / Solo Mode
+		net_mgr.request_role("Mozzo")
 		await get_tree().process_frame
-		assert(app.can_control_life_support == true, "Factotum deve avere controllo completo sul supporto vitale")
-		print("✔ Ruolo Factotum: controllo completo abilitato")
+		assert(app.can_control_life_support == true, "Mozzo deve avere controllo completo sul supporto vitale")
+		print("✔ Ruolo Mozzo: controllo completo abilitato")
 	
 	# =========================================================================
 	# TEST 3: RISORSA E SOFTWARE MANAGER

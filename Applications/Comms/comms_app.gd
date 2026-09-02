@@ -1,5 +1,5 @@
 class_name CommsApp
-extends Control
+extends BaseApp
 
 ## Applicazione GodotOS per le Comunicazioni Subspaziali, Guerra Elettronica (EW) e Decodifica Cifrari (Hackwarfare).
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
@@ -164,7 +164,7 @@ var encrypted_packages: Array[Dictionary] = [
 ]
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_populate_options_ui()
 	_connect_system_signals()
 	_setup_ui_signals()
@@ -173,12 +173,6 @@ func _ready() -> void:
 	_update_permissions()
 	_refresh_ui_display()
 	_log_comms_message("[color=#64c8ff][SISTEMA][/color] Suite Comunicazioni Subspaziali & EW inizializzata.")
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	if parent_win and "window_title" in parent_win:
-		parent_win.window_title = APP_TITLE
 
 func _populate_options_ui() -> void:
 	# Opzioni Modalità Jammer
@@ -202,7 +196,7 @@ func _populate_options_ui() -> void:
 		cipher_package_option.clear()
 		for i in range(encrypted_packages.size()):
 			var pkg: Dictionary = encrypted_packages[i]
-			cipher_package_option.add_item(pkg.get("name", "Pacchetto #%d" % i), i)
+			cipher_package_option.add_item(pkg.get("name"), i)
 		cipher_package_option.selected = 0
 
 func _connect_system_signals() -> void:
@@ -298,8 +292,8 @@ func _process(delta: float) -> void:
 	# Gestione avanzamento decrittazione mini-gioco Hackwarfare
 	if is_decrypting:
 		var current_pkg: Dictionary = encrypted_packages[selected_package_index]
-		var diff: float = current_pkg.get("difficulty", 1.0)
-		var speed_mult: float = float(active_config.get("decryption_speed_multiplier", 1.0)) * float(active_config.get("crypto_crack_speed", 1.0))
+		var diff: float = current_pkg.get("difficulty")
+		var speed_mult: float = float(active_config.get("decryption_speed_multiplier")) * float(active_config.get("crypto_crack_speed"))
 		var step := (delta * 30.0 * speed_mult) / maxf(diff, 0.2)
 		
 		decryption_progress = clampf(decryption_progress + step, 0.0, 100.0)
@@ -359,7 +353,7 @@ func _update_permissions() -> void:
 		else:
 			is_solo = NetworkManager.is_solo_mode or my_role.is_empty()
 	
-	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Factotum" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
+	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Mozzo" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
 	
 	# Disabilita/abilita comandi attivi
 	if freq_slider:
@@ -420,8 +414,8 @@ func load_dat_configuration() -> void:
 	_apply_configuration()
 
 func _apply_configuration() -> void:
-	jamming_power_mw = float(active_config.get("jamming_power_mw", 120.0))
-	current_spoof_sig = str(active_config.get("spoofing_signature", "CORVETTE_CIVILIAN"))
+	jamming_power_mw = float(active_config.get("jamming_power_mw"))
+	current_spoof_sig = str(active_config.get("spoofing_signature"))
 	
 	if jammer_power_slider:
 		jammer_power_slider.value = jamming_power_mw
@@ -437,42 +431,6 @@ func _apply_configuration() -> void:
 	_refresh_ui_display()
 	_update_action_log("Configurazione .DAT ricaricata con successo.")
 
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.to_lower() == "true":
-				result[key] = true
-			elif val_str.to_lower() == "false":
-				result[key] = false
-			elif val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	
-	file.close()
-	return result
-
-# --- LOGICA APPLICATIVA: SINTONIZZAZIONE & WATERFALL ---
 func _on_freq_slider_changed(new_val: float) -> void:
 	current_frequency = new_val
 	_refresh_tuner_state()
@@ -511,10 +469,10 @@ func _refresh_tuner_state() -> void:
 	var locked_sig: Variant = _get_locked_signal()
 	if locked_sig != null:
 		if signal_lock_badge:
-			signal_lock_badge.text = "🔒 AGGANCIATO: %s" % locked_sig.get("name", "")
+			signal_lock_badge.text = "🔒 AGGANCIATO: %s" % locked_sig.get("name")
 			signal_lock_badge.modulate = Color(0.2, 1.0, 0.4)
 		if signal_info_label:
-			signal_info_label.text = "%s\nSorgente: %s" % [locked_sig.get("desc", ""), locked_sig.get("source", "")]
+			signal_info_label.text = "%s\nSorgente: %s" % [locked_sig.get("desc"), locked_sig.get("source")]
 		if btn_listen_signal:
 			btn_listen_signal.disabled = not can_control_comms
 	else:
@@ -531,7 +489,7 @@ func _refresh_tuner_state() -> void:
 
 func _get_locked_signal() -> Variant:
 	for sig in available_signals:
-		var sig_freq: float = sig.get("freq", 1420.0)
+		var sig_freq: float = sig.get("freq")
 		if absf(current_frequency - sig_freq) <= 15.0:
 			return sig
 	return null
@@ -553,7 +511,7 @@ func _on_jammer_toggled(button_pressed: bool) -> void:
 	
 	is_jamming_active = button_pressed
 	if is_jamming_active:
-		_log_comms_message("[color=#ff5555][GUERRA ELETTRONICA][/color] ⚡ JAMMER ATTIVATO a %.0f MW. Raggio di disturbo: %.0f m." % [jamming_power_mw, float(active_config.get("jamming_radius", 15000.0))])
+		_log_comms_message("[color=#ff5555][GUERRA ELETTRONICA][/color] ⚡ JAMMER ATTIVATO a %.0f MW. Raggio di disturbo: %.0f m." % [jamming_power_mw, float(active_config.get("jamming_radius"))])
 		_update_action_log("Jammer attivo: sensori nemici disturbati.")
 	else:
 		_log_comms_message("[color=#64c8ff][GUERRA ELETTRONICA][/color] Jammer disattivato. Emissione normale.")
@@ -566,7 +524,7 @@ func _on_jammer_power_changed(new_val: float) -> void:
 	if jammer_power_label:
 		jammer_power_label.text = "%.0f MW" % jamming_power_mw
 	if jammer_effect_label:
-		var radius_calc: float = float(active_config.get("jamming_radius", 15000.0)) * (jamming_power_mw / 120.0)
+		var radius_calc: float = float(active_config.get("jamming_radius")) * (jamming_power_mw / 120.0)
 		jammer_effect_label.text = "Efficienza Jammer: %.0f%% | Raggio: %.0f m" % [(jamming_power_mw / 180.0) * 100.0, radius_calc]
 	
 	if waterfall_canvas:
@@ -620,8 +578,8 @@ func _on_btn_start_decrypt_pressed() -> void:
 func _complete_decryption() -> void:
 	is_decrypting = false
 	var current_pkg: Dictionary = encrypted_packages[selected_package_index]
-	var extracted_key: String = current_pkg.get("extracted_key", "")
-	var intel_text: String = current_pkg.get("intel_text", "")
+	var extracted_key: String = current_pkg.get("extracted_key")
+	var intel_text: String = current_pkg.get("intel_text")
 	last_decrypted_text = "[%s]\nCHIAVE / PASSWORD: %s\nINFO: %s" % [current_pkg.get("name"), extracted_key, intel_text]
 	
 	if extracted_key_edit:
@@ -706,7 +664,7 @@ func _refresh_ui_display() -> void:
 		role_badge.modulate = Color(0.3, 0.8, 1.0) if can_control_comms else Color(0.8, 0.5, 0.2)
 	
 	if dat_status_badge:
-		if active_config.get("is_dat_loaded", false):
+		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "✔ .DAT ATTIVO"
 			dat_status_badge.modulate = Color(0.2, 0.9, 0.4)
 		else:

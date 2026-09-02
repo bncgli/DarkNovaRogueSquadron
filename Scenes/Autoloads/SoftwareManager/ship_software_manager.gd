@@ -136,19 +136,19 @@ func get_installed_apps(bp: ShipBlueprint = null) -> Array[AppResource]:
 		return get_all_registered_apps()
 	
 	for item in blueprint.installed_apps:
-		var app_id: String = str(item.get("id", ""))
+		var app_id: String = str(item.get("id"))
 		if _registered_apps.has(app_id):
 			result.append(_registered_apps[app_id])
 		else:
 			# Crea dinamicamente un AppResource dal dizionario di fallback
 			var dynamic_res := AppResource.new()
 			dynamic_res.app_id = app_id
-			dynamic_res.title = str(item.get("title", app_id))
-			dynamic_res.description = str(item.get("description", ""))
-			dynamic_res.scene_path = str(item.get("scene_path", ""))
-			dynamic_res.icon_color = item.get("icon_color", Color(0, 0.79, 0.95, 1.0))
+			dynamic_res.title = str(item.get("title"))
+			dynamic_res.description = str(item.get("description"))
+			dynamic_res.scene_path = str(item.get("scene_path"))
+			dynamic_res.icon_color = item.get("icon_color")
 			dynamic_res.roles.clear()
-			var raw_roles = item.get("roles", [])
+			var raw_roles = item.get("roles")
 			if raw_roles is Array:
 				for r in raw_roles:
 					dynamic_res.roles.append(str(r))
@@ -197,7 +197,7 @@ func uninstall_app_from_blueprint(app_id: String, bp: ShipBlueprint = null) -> b
 			files_to_clean.append(df["path"])
 	else:
 		var app_dict := blueprint.get_installed_app_by_id(app_id)
-		folder_to_clean = str(app_dict.get("drive_folder", ""))
+		folder_to_clean = str(app_dict.get("drive_folder"))
 	
 	var removed := blueprint.uninstall_app_by_id(app_id, app_res)
 	if removed:

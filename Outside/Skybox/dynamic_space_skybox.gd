@@ -119,23 +119,23 @@ func _on_system_entities_updated(entities: Array[Dictionary]) -> void:
 	for ent in entities:
 		# Non proiettare come elemento skybox lontano se siamo già all'interno dello stesso settore
 		# (le entità locali del settore sono caricate fisicamente da SpaceWorldManager)
-		var is_local: bool = ent.get("is_in_current_sector", false)
-		var dir: Vector3 = ent.get("direction", Vector3.ZERO)
-		var scale_factor: float = ent.get("apparent_angular_size", 1.0)
-		var brightness: float = ent.get("apparent_brightness", 1.0)
-		var ent_type: String = ent.get("type", "")
+		var is_local: bool = ent.get("is_in_current_sector")
+		var dir: Vector3 = ent.get("direction")
+		var scale_factor: float = ent.get("apparent_angular_size")
+		var brightness: float = ent.get("apparent_brightness")
+		var ent_type: String = ent.get("type")
 		
 		# Proietta sulla sfera dello skybox
 		var sphere_pos := dir * SKY_SPHERE_RADIUS if dir.length_squared() > 0.001 else Vector3.FORWARD * SKY_SPHERE_RADIUS
 		
 		var render_info := {
-			"id": ent.get("id", ""),
-			"name": ent.get("name", ""),
+			"id": ent.get("id"),
+			"name": ent.get("name"),
 			"type": ent_type,
 			"projected_pos": sphere_pos,
 			"apparent_scale": scale_factor,
 			"brightness": brightness,
-			"distance_sectors": ent.get("distance_sectors", 0.0),
+			"distance_sectors": ent.get("distance_sectors"),
 			"is_local": is_local
 		}
 		
@@ -146,9 +146,9 @@ func _on_system_entities_updated(entities: Array[Dictionary]) -> void:
 
 func _create_celestial_impostor_node(info: Dictionary) -> void:
 	var marker := Marker3D.new()
-	marker.name = "Impostor_%s" % info.get("id", "Unknown")
-	marker.position = info.get("projected_pos", Vector3.ZERO)
-	marker.scale = Vector3.ONE * info.get("apparent_scale", 1.0)
+	marker.name = "Impostor_%s" % info.get("id")
+	marker.position = info.get("projected_pos")
+	marker.scale = Vector3.ONE * info.get("apparent_scale")
 	marker.set_meta("entity_data", info)
 	celestial_container.add_child(marker)
 

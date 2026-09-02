@@ -8,7 +8,8 @@ var editor_view: ShipSublayerEditor = null
 var bottom_panel_button: Button = null
 
 func _enter_tree() -> void:
-	editor_view = ShipSublayerEditor.new()
+	var scene = load("res://addons/ship_sublayer_editor/ShipSublayerEditor.tscn")
+	editor_view = scene.instantiate() as ShipSublayerEditor
 	bottom_panel_button = add_control_to_bottom_panel(editor_view, "Ship Blueprint")
 
 func _exit_tree() -> void:

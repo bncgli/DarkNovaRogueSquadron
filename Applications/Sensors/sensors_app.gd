@@ -1,5 +1,5 @@
 class_name SensorsApp
-extends Control
+extends BaseApp
 
 ## Applicazione della Nave: Long-Range Sensor Array & Tactical Map (Applications/Sensors)
 ## Fornisce radar a lungo raggio fino a 50 km, sweep passivo/attivo, analisi spettrometrica
@@ -73,7 +73,7 @@ var is_radar_powered: bool = true
 var has_radar_damage: bool = false
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_init_ui_elements()
 	_connect_system_signals()
 	_connect_ui_signals()
@@ -90,15 +90,6 @@ func _process(delta: float) -> void:
 	_update_power_and_damage_state(delta)
 	_refresh_entities()
 	_update_telemetry_ui()
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	while parent_win:
-		if "window_title" in parent_win:
-			parent_win.window_title = APP_TITLE
-			break
-		parent_win = parent_win.get_parent()
 
 func _init_ui_elements() -> void:
 	if option_display_mode:
@@ -258,11 +249,11 @@ func _update_permissions() -> void:
 		is_solo = nm.is_solo_mode
 	
 	# Matrice RBAC:
-	# - Soldato, Hacker, Captain, Factotum, Solo Mode: Controllo Completo
+	# - Soldato, Hacker, Captain, Mozzo, Solo Mode: Controllo Completo
 	# - Pilota, Ingegnere: Sola Visualizzazione
 	var role_lower := my_role.to_lower()
 	if not my_role.is_empty():
-		can_control_sensors = role_lower in ["soldier", "soldato", "hacker", "captain", "capitano", "factotum", "sensori / radar", "admin", "host"]
+		can_control_sensors = role_lower in ["soldier", "soldato", "hacker", "captain", "capitano", "mozzo", "sensori / radar", "admin", "host"]
 	else:
 		can_control_sensors = is_solo
 	
@@ -334,56 +325,14 @@ func _apply_dict_to_config(data: Dictionary) -> void:
 
 func _apply_configuration() -> void:
 	if radar_display:
-		radar_display.sweep_frequency_hz = float(active_config.get("sweep_frequency_hz", 12.0))
-		radar_display.noise_filter = float(active_config.get("noise_filter", 0.92))
-		radar_display.spectrum_sensitivity = float(active_config.get("spectrum_sensitivity", 1.0))
-		radar_display.iff_auto_tag = bool(active_config.get("iff_auto_tag", true))
-		radar_display.stealth_threshold = float(active_config.get("stealth_detection_threshold", 0.35))
+		radar_display.sweep_frequency_hz = float(active_config.get("sweep_frequency_hz"))
+		radar_display.noise_filter = float(active_config.get("noise_filter"))
+		radar_display.spectrum_sensitivity = float(active_config.get("spectrum_sensitivity"))
+		radar_display.iff_auto_tag = bool(active_config.get("iff_auto_tag"))
+		radar_display.stealth_threshold = float(active_config.get("stealth_detection_threshold"))
 	
 	if sweep_label:
-		sweep_label.text = "SWEEP: %.1f Hz" % float(active_config.get("sweep_frequency_hz", 12.0))
-
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	var current_section := ""
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		
-		if line.begins_with("[") and line.ends_with("]"):
-			current_section = line.substr(1, line.length() - 2).strip_edges().to_upper()
-			continue
-		
-		var eq_idx := line.find("=")
-		if eq_idx != -1:
-			var key := line.substr(0, eq_idx).strip_edges().to_lower()
-			var raw_val := line.substr(eq_idx + 1).strip_edges()
-			
-			var val: Variant = raw_val
-			if raw_val.to_lower() == "true":
-				val = true
-			elif raw_val.to_lower() == "false":
-				val = false
-			elif raw_val.is_valid_int():
-				val = raw_val.to_int()
-			elif raw_val.is_valid_float():
-				val = raw_val.to_float()
-			
-			result[key] = val
-	
-	file.close()
-	return result
-
-# --- PROCESSO TELEMETRIA, RETE ELETTRICA E DANNI ---
+		sweep_label.text = "SWEEP: %.1f Hz" % float(active_config.get("sweep_frequency_hz"))
 
 func _update_ping_timers(delta: float) -> void:
 	if ping_cooldown > 0.0:
@@ -474,10 +423,10 @@ func _populate_target_dropdown() -> void:
 	var idx_to_select := 0
 	for i in range(detected_entities.size()):
 		var e: Dictionary = detected_entities[i]
-		var e_id: String = e.get("id", "")
-		var e_name: String = e.get("name", e_id)
-		var dist_km: float = float(e.get("distance", 0.0)) / 1000.0
-		var iff: String = e.get("iff_tag", "NEUTRAL")
+		var e_id: String = e.get("id")
+		var e_name: String = e.get("name")
+		var dist_km: float = float(e.get("distance")) / 1000.0
+		var iff: String = e.get("iff_tag")
 		
 		var label_item := "%s [%.1f km] (%s)" % [e_name, dist_km, iff]
 		target_option.add_item(label_item, i + 1)
@@ -494,16 +443,16 @@ func _update_telemetry_ui() -> void:
 		if cur_entity.is_empty():
 			target_details_label.text = "[color=#7799aa]Nessun bersaglio o contatto selezionato sul radar.[/color]\n[color=#557788]Fai clic sul radar o scegli dal menu a tendina.[/color]"
 		else:
-			var e_id: String = cur_entity.get("id", "")
-			var e_name: String = cur_entity.get("name", e_id)
-			var dist_km: float = float(cur_entity.get("distance", 0.0)) / 1000.0
-			var bearing: float = float(cur_entity.get("bearing_deg", 0.0))
-			var elev: float = float(cur_entity.get("elevation_deg", 0.0))
-			var vel: Vector3 = cur_entity.get("velocity", Vector3.ZERO)
-			var iff: String = cur_entity.get("iff_tag", "NEUTRAL")
-			var e_type: String = cur_entity.get("type", "CONTACT")
-			var mass: float = float(cur_entity.get("mass_tons", 0.0))
-			var sig: float = float(cur_entity.get("signal_signature", 0.0))
+			var e_id: String = cur_entity.get("id")
+			var e_name: String = cur_entity.get("name")
+			var dist_km: float = float(cur_entity.get("distance")) / 1000.0
+			var bearing: float = float(cur_entity.get("bearing_deg"))
+			var elev: float = float(cur_entity.get("elevation_deg"))
+			var vel: Vector3 = cur_entity.get("velocity")
+			var iff: String = cur_entity.get("iff_tag")
+			var e_type: String = cur_entity.get("type")
+			var mass: float = float(cur_entity.get("mass_tons"))
+			var sig: float = float(cur_entity.get("signal_signature"))
 			
 			var iff_color := "#55ff55"
 			if iff == "HAZARD": iff_color = "#ffaa33"
@@ -531,11 +480,11 @@ func _update_spectrometry_display(entity: Dictionary) -> void:
 		spectrometry_label.text = "[color=#557788]In attesa di scansione spettrometrica...[/color]"
 		return
 	
-	var comp: Dictionary = entity.get("composition", {})
-	var integ: float = float(entity.get("integrity", 100.0))
-	var rad: float = float(entity.get("radiation_level", 0.0))
-	var val_cr: int = int(entity.get("estimated_value_cr", 0))
-	var e_type: String = entity.get("type", "")
+	var comp: Dictionary = entity.get("composition")
+	var integ: float = float(entity.get("integrity"))
+	var rad: float = float(entity.get("radiation_level"))
+	var val_cr: int = int(entity.get("estimated_value_cr"))
+	var e_type: String = entity.get("type")
 	
 	var spec_text := "[b]Analisi Spettrometrica Materiali & Minerali:[/b]\n"
 	
@@ -561,7 +510,7 @@ func _get_entity_data(e_id: String) -> Dictionary:
 	if e_id.is_empty():
 		return {}
 	for e in detected_entities:
-		if e.get("id", "") == e_id:
+		if e.get("id") == e_id:
 			return e
 	return {}
 
@@ -605,7 +554,7 @@ func _on_active_ping_pressed() -> void:
 	if not can_control_sensors or ping_cooldown > 0.0 or not is_radar_powered:
 		return
 	
-	var r := float(active_config.get("active_ping_radius", 50000.0))
+	var r := float(active_config.get("active_ping_radius"))
 	is_pinging = true
 	ping_timer = 0.0
 	ping_cooldown = 4.0 # 4 secondi di ricarica
@@ -623,7 +572,7 @@ func _on_active_ping_pressed() -> void:
 	_update_permissions()
 
 func _on_radar_entity_selected(entity_data: Dictionary) -> void:
-	selected_entity_id = str(entity_data.get("id", ""))
+	selected_entity_id = str(entity_data.get("id"))
 	_update_permissions()
 	_update_telemetry_ui()
 
@@ -651,7 +600,7 @@ func _on_target_dropdown_selected(index: int) -> void:
 	else:
 		var target_idx := index - 1
 		if target_idx >= 0 and target_idx < detected_entities.size():
-			selected_entity_id = detected_entities[target_idx].get("id", "")
+			selected_entity_id = detected_entities[target_idx].get("id")
 	
 	_update_permissions()
 	_update_telemetry_ui()
@@ -674,7 +623,7 @@ func _on_lock_target_pressed() -> void:
 		var notif := get_node_or_null("/root/NotificationManager")
 		if notif and notif.has_method("spawn_notification"):
 			var e := _get_entity_data(locked_entity_id)
-			notif.spawn_notification("🎯 Bersaglio agganciato: %s" % e.get("name", locked_entity_id))
+			notif.spawn_notification("🎯 Bersaglio agganciato: %s" % e.get("name"))
 	
 	if radar_display:
 		radar_display.locked_entity_id = locked_entity_id
@@ -690,11 +639,11 @@ func _on_transmit_waypoint_pressed() -> void:
 		return
 	
 	var wp_data := {
-		"id": "WP_" + str(e.get("id", "")),
-		"name": "WAYPOINT: " + str(e.get("name", e.get("id", ""))),
-		"pos": e.get("pos", Vector3.ZERO),
-		"target_id": e.get("id", ""),
-		"distance": e.get("distance", 0.0),
+		"id": "WP_" + str(e.get("id")),
+		"name": "WAYPOINT: " + str(e.get("name")),
+		"pos": e.get("pos"),
+		"target_id": e.get("id"),
+		"distance": e.get("distance"),
 		"type": "TRANSMITTED_TARGET"
 	}
 	
@@ -703,7 +652,7 @@ func _on_transmit_waypoint_pressed() -> void:
 	
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
-		notif.spawn_notification("🛰️ Waypoint bersaglio trasmesso a Flight Control & Weapons: %s" % e.get("name", ""))
+		notif.spawn_notification("🛰️ Waypoint bersaglio trasmesso a Flight Control & Weapons: %s" % e.get("name"))
 
 func _on_clear_waypoint_pressed() -> void:
 	if not can_control_sensors:

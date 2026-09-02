@@ -70,8 +70,8 @@ func _on_btn_toggle_cruise_pressed() -> void:
 	
 	if controller_ref.current_state == CruiseDriveController.State.IDLE:
 		var res := controller_ref.request_engage()
-		if not res.get("success", false):
-			_show_alert(res.get("reason", "Ingaggio fallito"), true)
+		if not res.get("success"):
+			_show_alert(res.get("reason"), true)
 		else:
 			_show_alert("Sequenza di Warmup avviata...", false)
 			engage_requested.emit()
@@ -143,7 +143,7 @@ func _update_ui_state() -> void:
 	if controller_ref == null:
 		return
 	
-	var state = controller_ref.current_state
+	var state := controller_ref.current_state
 	if status_badge:
 		match state:
 			CruiseDriveController.State.IDLE:

@@ -94,11 +94,11 @@ func _run_all_tests() -> void:
 		assert(app.can_control_sensors == true, "Capitano deve avere controllo completo sui sensori")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Factotum / Solo Mode
-		net_mgr.request_role("Factotum")
+		# 2.6 Mozzo / Solo Mode
+		net_mgr.request_role("Mozzo")
 		await get_tree().process_frame
-		assert(app.can_control_sensors == true, "Factotum deve avere controllo completo sui sensori")
-		print("✔ Ruolo Factotum: controllo completo abilitato")
+		assert(app.can_control_sensors == true, "Mozzo deve avere controllo completo sui sensori")
+		print("✔ Ruolo Mozzo: controllo completo abilitato")
 	
 	# =========================================================================
 	# TEST 3: FILE .DAT E HOT-RELOADING
@@ -138,7 +138,7 @@ func _run_all_tests() -> void:
 	
 	# Test selezione contatto
 	var test_contact := app.detected_entities[0]
-	var test_id: String = test_contact.get("id", "")
+	var test_id: String = test_contact.get("id")
 	app._on_radar_entity_selected(test_contact)
 	await get_tree().process_frame
 	assert(app.selected_entity_id == test_id, "Il contatto deve risultare selezionato")

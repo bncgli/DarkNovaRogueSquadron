@@ -21,11 +21,11 @@ func _run_tests() -> void:
 	var sys_data := StarSystemData.new("SYS-TEST-01", "Test Helios System")
 	sys_data.create_default_system()
 	
-	var primary_st: Dictionary = sys_data.find_primary_station()
-	assert(not primary_st.is_empty(), "StarSystemData deve identificare la stazione spaziale primaria")
-	assert(primary_st.get("id", "") == "STATION_VALKYRIE", "L'ID della stazione primaria di default deve essere STATION_VALKYRIE")
+	var primary_st := sys_data.find_primary_station()
+	assert(primary_st != null, "StarSystemData deve identificare la stazione spaziale primaria")
+	assert(primary_st.id == "STATION_VALKYRIE", "L'ID della stazione primaria di default deve essere STATION_VALKYRIE")
 	
-	var st_coords: Vector3i = primary_st.get("coords", Vector3i.ZERO)
+	var st_coords: Vector3i = primary_st.coords
 	assert(st_coords == Vector3i(4, 12, 0), "Le coordinate di griglia della stazione devono essere (4, 12, 0)")
 	
 	var spawn_coords := sys_data.find_adjacent_spawn_sector(st_coords)
@@ -33,7 +33,7 @@ func _run_tests() -> void:
 	assert(diff.length() == 1.0 or diff.length() == sqrt(2.0), "Lo spawn deve avvenire in una casella adiacente (distanza 1 o diagonale adiacente)")
 	assert(spawn_coords != st_coords, "Le coordinate di spawn non devono sovrapporsi al settore della stazione")
 	
-	print("   [OK] Stazione primaria '%s' a %s -> Settore spawn adiacente calcolato: %s" % [primary_st.get("name"), str(st_coords), str(spawn_coords)])
+	print("   [OK] Stazione primaria '%s' a %s -> Settore spawn adiacente calcolato: %s" % [primary_st.name, str(st_coords), str(spawn_coords)])
 	success_count += 1
 	
 	print("\n--- TEST 2: Inizializzazione e Posizionamento in StarSystemGridManager ---")
@@ -55,9 +55,9 @@ func _run_tests() -> void:
 	var visible_entities: Array[Dictionary] = grid_mgr.get_visible_system_entities(current_sector)
 	var station_visible := false
 	for ent in visible_entities:
-		if ent.get("id") == primary_st.get("id"):
+		if ent.get("id") == primary_st.id:
 			station_visible = true
-			assert(ent.get("type") == "STATION", "Il tipo di entità visibile deve essere STATION")
+			assert(ent.get("type") == "STATION")
 			assert(ent.get("is_in_current_sector") == false, "La stazione non deve essere nello stesso settore di spawn")
 			break
 	assert(station_visible, "La stazione spaziale deve essere visibile nell'elenco delle entità di sistema dal settore di spawn")
@@ -97,9 +97,9 @@ func _run_tests() -> void:
 	# Verifica Waypoint attivo
 	var wp: Dictionary = world_mgr.get_active_waypoint()
 	assert(not wp.is_empty(), "SpaceWorldManager deve impostare automaticamente un waypoint verso la stazione")
-	assert(wp.get("id") == "STATION_VALKYRIE", "Il waypoint attivo deve corrispondere alla stazione")
-	assert(wp.get("type") == "STATION", "Il tipo di waypoint deve essere STATION")
-	assert(wp.get("iff_tag") == "FRIENDLY", "L'IFF tag del waypoint deve essere FRIENDLY")
+	assert(wp.get("id") == "STATION_VALKYRIE")
+	assert(wp.get("type") == "STATION")
+	assert(wp.get("iff_tag") == "FRIENDLY")
 	
 	# Verifica contatti sensori
 	var sensor_entities: Array[Dictionary] = world_mgr.get_sensor_entities()
@@ -107,8 +107,8 @@ func _run_tests() -> void:
 	for s_ent in sensor_entities:
 		if s_ent.get("id") == "STATION_VALKYRIE":
 			station_sensor_found = true
-			assert(s_ent.get("type") == "STATION", "Il tipo sensore deve essere STATION")
-			assert(s_ent.get("iff_tag") == "FRIENDLY", "L'IFF sui sensori deve essere FRIENDLY")
+			assert(s_ent.get("type") == "STATION")
+			assert(s_ent.get("iff_tag") == "FRIENDLY")
 			assert(is_equal_approx(s_ent.get("distance"), dist_3d), "La distanza sui sensori deve coincidere con la distanza 3D")
 			break
 	assert(station_sensor_found, "La stazione spaziale deve essere presente nei contatti del sensore/radar")

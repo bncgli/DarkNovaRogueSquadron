@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_656yp")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Factotum", "Captain", "Pilot", "Engineer"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer"])
 power_draw_mw = 2.0
 required_subsystems = Array[String]([])
 app_id = "flux_wallet"
@@ -12,6 +12,7 @@ title = "Flux Wallet"
 description = "Visualizzazione stato economico della nave e storico modificatori FLUX."
 developer = "VoidCore Solutions"
 category = "Sistemi Nave"
+menu_path = "Strumenti"
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/FluxWallet/flux_wallet.tscn"
 default_window_size = Vector2(550, 450)

@@ -87,78 +87,56 @@ func _populate_default_bodies(sys: StarSystemData) -> void:
 	sys.primary_star_energy = 1.3
 	sys.primary_star_radius_km = 696340.0
 	
-	sys.add_or_update_body({
-		"id": "STAR_SOL_PRIME",
-		"name": "Helios Nova (Stella Primaria)",
-		"type": "STAR",
-		"coords": Vector3i(0, 0, 0),
-		"radius_km": 696340.0,
-		"mass_tons": 1.989e27,
-		"luminosity": 1.0,
-		"color": Color(1.0, 0.96, 0.9, 1.0),
-		"occluding": false,
-		"description": "Stella di sequenza principale."
-	})
-	sys.add_or_update_body({
-		"id": "PLANET_VULCAN",
-		"name": "Vulcanus",
-		"type": "PLANET",
-		"coords": Vector3i(1, 3, 0),
-		"radius_km": 4800.0,
-		"mass_tons": 3.3e20,
-		"occluding": true,
-		"description": "Pianeta lavico interno."
-	})
-	sys.add_or_update_body({
-		"id": "PLANET_TERRA_NOVA",
-		"name": "Terra Nova Prime",
-		"type": "PLANET",
-		"coords": Vector3i(4, 8, 0),
-		"radius_km": 6371.0,
-		"mass_tons": 5.97e21,
-		"occluding": true,
-		"description": "Mondo abitabile centrale."
-	})
-	sys.add_or_update_body({
-		"id": "MOON_LUNA_SEC",
-		"name": "Selene Secundus",
-		"type": "MOON",
-		"coords": Vector3i(4, 9, 0),
-		"radius_km": 1737.0,
-		"mass_tons": 7.35e19,
-		"occluding": true,
-		"description": "Luna mineraria."
-	})
-	sys.add_or_update_body({
-		"id": "BELT_CERES",
-		"name": "Fascia Asteroidi Interna",
-		"type": "ASTEROID_FIELD",
-		"coords": Vector3i(3, 10, 0),
-		"radius_km": 25000.0,
-		"mass_tons": 1.5e18,
-		"occluding": false,
-		"description": "Denso campo di detriti."
-	})
-	sys.add_or_update_body({
-		"id": "STATION_VALKYRIE",
-		"name": "Stazione Spaziale Valkyrie",
-		"type": "STATION",
-		"coords": Vector3i(4, 12, 0),
-		"radius_km": 15.0,
-		"mass_tons": 8.5e10,
-		"occluding": false,
-		"description": "Avamposto orbitale."
-	})
-	sys.add_or_update_body({
-		"id": "GAS_GIANT_KRONOS",
-		"name": "Kronos Titan",
-		"type": "GAS_GIANT",
-		"coords": Vector3i(8, 20, 0),
-		"radius_km": 69911.0,
-		"mass_tons": 1.89e24,
-		"occluding": true,
-		"description": "Gigante gassoso anellato."
-	})
+	var star := CelestialBodyData.new("STAR_SOL_PRIME", "Helios Nova (Stella Primaria)", "STAR", Vector3i(0, 0, 0))
+	star.radius_km = 696340.0
+	star.mass_tons = 1.989e27
+	star.luminosity = 1.0
+	star.color = Color(1.0, 0.96, 0.9, 1.0)
+	star.occluding = false
+	star.description = "Stella di sequenza principale."
+	sys.add_or_update_body(star)
+
+	var vulcan := CelestialBodyData.new("PLANET_VULCAN", "Vulcanus", "PLANET", Vector3i(1, 3, 0))
+	vulcan.radius_km = 4800.0
+	vulcan.mass_tons = 3.3e20
+	vulcan.occluding = true
+	vulcan.description = "Pianeta lavico interno."
+	sys.add_or_update_body(vulcan)
+
+	var terra := CelestialBodyData.new("PLANET_TERRA_NOVA", "Terra Nova Prime", "PLANET", Vector3i(4, 8, 0))
+	terra.radius_km = 6371.0
+	terra.mass_tons = 5.97e21
+	terra.occluding = true
+	terra.description = "Mondo abitabile centrale."
+	sys.add_or_update_body(terra)
+
+	var moon := CelestialBodyData.new("MOON_LUNA_SEC", "Selene Secundus", "MOON", Vector3i(4, 9, 0))
+	moon.radius_km = 1737.0
+	moon.mass_tons = 7.35e19
+	moon.occluding = true
+	moon.description = "Luna mineraria."
+	sys.add_or_update_body(moon)
+
+	var belt := CelestialBodyData.new("BELT_CERES", "Fascia Asteroidi Interna", "ASTEROID_FIELD", Vector3i(3, 10, 0))
+	belt.radius_km = 25000.0
+	belt.mass_tons = 1.5e18
+	belt.occluding = false
+	belt.description = "Denso campo di detriti."
+	sys.add_or_update_body(belt)
+
+	var station := CelestialBodyData.new("STATION_VALKYRIE", "Stazione Spaziale Valkyrie", "STATION", Vector3i(4, 12, 0))
+	station.radius_km = 15.0
+	station.mass_tons = 8.5e10
+	station.occluding = false
+	station.description = "Avamposto orbitale."
+	sys.add_or_update_body(station)
+
+	var kronos := CelestialBodyData.new("GAS_GIANT_KRONOS", "Kronos Titan", "GAS_GIANT", Vector3i(8, 20, 0))
+	kronos.radius_km = 69911.0
+	kronos.mass_tons = 1.89e24
+	kronos.occluding = true
+	kronos.description = "Gigante gassoso anellato."
+	sys.add_or_update_body(kronos)
 
 func load_star_system(sys: StarSystemData, path: String = "") -> void:
 	current_system = sys
@@ -505,10 +483,10 @@ func _refresh_outliner() -> void:
 	others_group.set_text(0, "🛰️ Stazioni, Asteroidi & Relitti")
 	
 	for body in current_system.celestial_bodies:
-		var b_type: String = body.get("type", "PLANET").to_upper()
-		var b_name: String = body.get("name", "Entità")
-		var b_id: String = body.get("id", "")
-		var c: Vector3i = body.get("coords", Vector3i.ZERO)
+		var b_type: String = body.type.to_upper()
+		var b_name: String = body.name
+		var b_id: String = body.id
+		var c: Vector3i = body.coords
 		var sec_str := SectorData.format_coords_to_id(c)
 		
 		var parent_item := others_group
@@ -542,31 +520,31 @@ func _show_system_global_props() -> void:
 	_add_float_field("Raggio (km):", current_system.primary_star_radius_km, func(v): current_system.primary_star_radius_km = v)
 	_add_color_field("Colore Luce:", current_system.primary_star_color, func(v): current_system.primary_star_color = v; if canvas: canvas.queue_redraw())
 
-func _show_body_props(body: Dictionary) -> void:
+func _show_body_props(body: CelestialBodyData) -> void:
 	if prop_editor_vbox == null:
 		return
 	_clear_prop_editor()
-	var b_id: String = body.get("id", "")
-	var b_name: String = body.get("name", "Entità")
+	var b_id: String = body.id
+	var b_name: String = body.name
 	lbl_selected_title.text = "Modifica: %s" % b_name
 	
-	_add_text_field("ID Entità:", b_id, func(v): body["id"] = v; _refresh_outliner())
-	_add_text_field("Nome:", b_name, func(v): body["name"] = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
+	_add_text_field("ID Entità:", b_id, func(v): body.id = v; _refresh_outliner())
+	_add_text_field("Nome:", b_name, func(v): body.name = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
 	
 	var types: Array[String] = ["STAR", "PLANET", "GAS_GIANT", "MOON", "STATION", "ASTEROID_FIELD", "WRECK", "PATROL"]
-	_add_option_field("Tipo:", types, body.get("type", "PLANET"), func(v): body["type"] = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
+	_add_option_field("Tipo:", types, body.type, func(v): body.type = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
 	
-	var coords: Vector3i = body.get("coords", Vector3i.ZERO)
-	_add_vector3i_field("Coordinate Griglia:", coords, func(v): body["coords"] = v; if canvas: canvas.queue_redraw(); _refresh_outliner())
+	var coords: Vector3i = body.coords
+	_add_vector3i_field("Coordinate Griglia:", coords, func(v): body.coords = v; if canvas: canvas.queue_redraw(); _refresh_outliner())
 	
-	_add_float_field("Raggio (km):", float(body.get("radius_km", 5000.0)), func(v): body["radius_km"] = v; if canvas: canvas.queue_redraw())
-	_add_float_field("Massa (Tonnellate):", float(body.get("mass_tons", 1.0e20)), func(v): body["mass_tons"] = v)
-	_add_bool_field("Proietta Cono d'Ombra:", bool(body.get("occluding", false)), func(v): body["occluding"] = v; if canvas: canvas.queue_redraw())
-	_add_text_field("Descrizione:", body.get("description", ""), func(v): body["description"] = v)
+	_add_float_field("Raggio (km):", float(body.radius_km), func(v): body.radius_km = v; if canvas: canvas.queue_redraw())
+	_add_float_field("Massa (Tonnellate):", float(body.mass_tons), func(v): body.mass_tons = v)
+	_add_bool_field("Proietta Cono d'Ombra:", bool(body.occluding), func(v): body.occluding = v; if canvas: canvas.queue_redraw())
+	_add_text_field("Descrizione:", body.description, func(v): body.description = v)
 	
-	if body.has("color"):
-		var col: Color = body.get("color", Color.WHITE)
-		_add_color_field("Colore Display:", col, func(v): body["color"] = v; if canvas: canvas.queue_redraw())
+	if body.color is Color:
+		var col: Color = body.color
+		_add_color_field("Colore Display:", col, func(v): body.color = v; if canvas: canvas.queue_redraw())
 		
 	var btn_del := Button.new()
 	btn_del.text = "🗑️ Rimuovi Entità"
@@ -697,39 +675,39 @@ func _add_celestial_body(type: String) -> void:
 	if current_system == null:
 		return
 	var count := current_system.celestial_bodies.size() + 1
-	var new_body := {
-		"id": "BODY_%s_%d" % [type, count],
-		"name": "Nuovo %s %d" % [type.capitalize(), count],
-		"type": type,
-		"coords": Vector3i(randi_range(-8, 8), randi_range(-8, 8), 0),
-		"radius_km": 5000.0,
-		"mass_tons": 1.0e20,
-		"occluding": (type in ["PLANET", "GAS_GIANT", "MOON"]),
-		"description": "Entità celeste aggiunta tramite Star System Editor."
-	}
+	var new_body := CelestialBodyData.new(
+		"BODY_%s_%d" % [type, count],
+		"Nuovo %s %d" % [type.capitalize(), count],
+		type,
+		Vector3i(randi_range(-8, 8), randi_range(-8, 8), 0)
+	)
+	new_body.radius_km = 5000.0
+	new_body.mass_tons = 1.0e20
+	new_body.occluding = (type in ["PLANET", "GAS_GIANT", "MOON"])
+	new_body.description = "Entità celeste aggiunta tramite Star System Editor."
 	
 	if type == "STAR":
-		new_body["radius_km"] = 500000.0
-		new_body["mass_tons"] = 1.0e27
-		new_body["occluding"] = false
-		new_body["color"] = Color(1.0, 0.9, 0.4, 1.0)
+		new_body.radius_km = 500000.0
+		new_body.mass_tons = 1.0e27
+		new_body.occluding = false
+		new_body.color = Color(1.0, 0.9, 0.4, 1.0)
 	elif type == "GAS_GIANT":
-		new_body["radius_km"] = 60000.0
-		new_body["mass_tons"] = 1.5e24
-		new_body["occluding"] = true
+		new_body.radius_km = 60000.0
+		new_body.mass_tons = 1.5e24
+		new_body.occluding = true
 	elif type == "STATION":
-		new_body["radius_km"] = 10.0
-		new_body["mass_tons"] = 5.0e9
-		new_body["occluding"] = false
+		new_body.radius_km = 10.0
+		new_body.mass_tons = 5.0e9
+		new_body.occluding = false
 		
 	current_system.add_or_update_body(new_body)
 	if canvas:
-		canvas.selected_body_id = new_body["id"]
+		canvas.selected_body_id = new_body.id
 		canvas.queue_redraw()
 	_refresh_outliner()
 	_update_stats_label()
 	_show_body_props(new_body)
-	_set_status_msg("Aggiunta entità '%s'." % new_body["name"])
+	_set_status_msg("Aggiunta entità '%s'." % new_body.name)
 
 func _delete_body(body_id: String) -> void:
 	if current_system == null or body_id.is_empty():
@@ -751,8 +729,8 @@ func _on_btn_delete_selected_pressed() -> void:
 # EVENTI SELEZIONE & INTERAZIONE CANVAS
 # =============================================================================
 
-func _on_canvas_entity_selected(body: Dictionary) -> void:
-	lbl_status_selection.text = "Selezionato: %s (%s)" % [body.get("name", ""), body.get("id", "")]
+func _on_canvas_entity_selected(body: CelestialBodyData) -> void:
+	lbl_status_selection.text = "Selezionato: %s (%s)" % [body.name, body.id]
 	_show_body_props(body)
 	_refresh_outliner()
 
@@ -768,11 +746,11 @@ func _on_canvas_entity_moved(body_id: String, new_coords: Vector3i) -> void:
 	if current_system == null:
 		return
 	var b := current_system.get_body(body_id)
-	if not b.is_empty():
-		b["coords"] = new_coords
+	if b:
+		b.coords = new_coords
 		_show_body_props(b)
 		_refresh_outliner()
-		_set_status_msg("Entità '%s' spostata in %s." % [b.get("name", ""), SectorData.format_coords_to_id(new_coords)])
+		_set_status_msg("Entità '%s' spostata in %s." % [b.name, SectorData.format_coords_to_id(new_coords)])
 
 func _on_canvas_cursor_coords_changed(coords: Vector3i) -> void:
 	lbl_status_coords.text = "Cursore: [%d, %d, %d] (%s)" % [coords.x, coords.y, coords.z, SectorData.format_coords_to_id(coords)]
@@ -783,19 +761,19 @@ func _on_outliner_item_selected() -> void:
 		return
 	var meta = it.get_metadata(0)
 	if meta is Dictionary:
-		var type: String = meta.get("type", "")
+		var type: String = meta.get("type")
 		if type == "SYSTEM":
 			if canvas:
 				canvas.selected_body_id = ""
 				canvas.queue_redraw()
 			_show_system_global_props()
 		elif type == "BODY":
-			var b_id: String = meta.get("id", "")
+			var b_id: String = meta.get("id")
 			if canvas:
 				canvas.selected_body_id = b_id
 				canvas.queue_redraw()
 			var b_data := current_system.get_body(b_id)
-			if not b_data.is_empty():
+			if b_data:
 				_show_body_props(b_data)
 
 func _update_zoom_label() -> void:

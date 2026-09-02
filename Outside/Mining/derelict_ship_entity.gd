@@ -88,9 +88,9 @@ func get_sensor_scan_data() -> Dictionary:
 func _calculate_estimated_value() -> int:
 	var total: int = credits_contained
 	if not black_box_recovered:
-		total += black_box_data.get("value_credits", 0)
+		total += black_box_data.get("value_credits")
 	for mod in salvageable_modules:
-		total += int(mod.get("value_credits", 0))
+		total += int(mod.get("value_credits"))
 	return total
 
 ## Taglio laser applicato alle paratie esterne da parte del Service Drone
@@ -145,7 +145,7 @@ func infiltrate_ducts(duct_drone: Node = null) -> Dictionary:
 			"mass_kg": 5.0,
 			"volume_m3": 0.1,
 			"log_data": black_box_data,
-			"value_credits": black_box_data.get("value_credits", 500)
+			"value_credits": black_box_data.get("value_credits")
 		})
 	
 	_check_fully_scavenged()

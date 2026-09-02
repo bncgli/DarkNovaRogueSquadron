@@ -73,7 +73,7 @@ func add_entity(entity: Dictionary) -> void:
 ## Rimuove un'entità in base all'ID
 func remove_entity(entity_id: String) -> bool:
 	for i in range(macro_entities.size()):
-		if macro_entities[i].get("id", "") == entity_id:
+		if macro_entities[i].get("id") == entity_id:
 			macro_entities.remove_at(i)
 			return true
 	return false

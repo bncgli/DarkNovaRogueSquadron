@@ -1,4 +1,4 @@
-extends Control
+extends BaseApp
 class_name PowerGridApp
 
 ## Applicazione GodotOS per il monitoraggio e la gestione energetica della nave.
@@ -37,7 +37,6 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/PowerGrid/tuning.dat"
 @onready var btn_diagnostics: Button = get_node_or_null("%BtnDiagnostics")
 @onready var reload_config_button: Button = get_node_or_null("%ReloadConfigButton")
 
-var parent_window: FakeWindow = null
 var can_control: bool = true
 
 # Parametri runtime caricati dai file .dat protetti
@@ -59,6 +58,10 @@ var rooms_data: Array[Dictionary] = []
 var room_widgets: Dictionary = {}
 var system_states: Dictionary = {} # category -> bool
 
+# Terminal History
+var terminal_history: Array[String] = []
+var terminal_history_index: int = 0
+
 # Telemetria
 var total_gen_mw: float = 0.0
 var total_cons_mw: float = 0.0
@@ -69,7 +72,7 @@ var net_power_mw: float = 0.0
 signal system_power_changed(category: String, is_powered: bool)
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
 	_connect_system_signals()
@@ -101,11 +104,16 @@ func _init_room_list() -> void:
 	if not bp:
 		return
 	
-	rooms_data = bp.rooms
+	rooms_data.clear()
+	for r in bp.rooms:
+		if r is Dictionary:
+			rooms_data.append(r)
+		elif r.has_method("to_dict"):
+			rooms_data.append(r.to_dict())
 	
 	var entry_scene = load("res://Applications/PowerGrid/Components/room_power_entry.tscn")
 	for room in rooms_data:
-		var rid = room.get("id", "")
+		var rid = room.get("id")
 		if rid.is_empty(): continue
 		
 		var entry = entry_scene.instantiate()
@@ -119,7 +127,7 @@ func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 	var room = _get_room_by_id(room_id)
 	if not room.is_empty():
 		room["is_on"] = is_on
-		_print_terminal("[color=#ffffaa]Stanza %s: %s[/color]" % [room.get("name", room_id), "ACCESA" if is_on else "SPENTA"])
+		_print_terminal("[color=#ffffaa]Stanza %s: %s[/color]" % [room.get("name"), "ACCESA" if is_on else "SPENTA"])
 		_refresh_power_logic()
 		
 		# Sync with blueprint if possible
@@ -129,7 +137,7 @@ func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 
 func _get_room_by_id(room_id: String) -> Dictionary:
 	for r in rooms_data:
-		if r.get("id", "") == room_id:
+		if r.get("id") == room_id:
 			return r
 	return {}
 
@@ -140,12 +148,12 @@ func _refresh_power_logic() -> void:
 	var categories_present = {} # category -> bool
 	
 	for room in rooms_data:
-		var room_on = room.get("is_on", true)
-		var devices = room.get("devices", [])
+		var room_on = room.get("is_on")
+		var devices = room.get("devices")
 		
 		for dev in devices:
-			var p = float(dev.get("power_mw", 0.0))
-			var cat = dev.get("category", "service")
+			var p = float(dev.get("power_mw"))
+			var cat = dev.get("category")
 			
 			if room_on:
 				if p > 0:
@@ -177,8 +185,8 @@ func _update_ui_telemetry() -> void:
 		var room = _get_room_by_id(room_id)
 		if not room.is_empty():
 			var room_p = 0.0
-			for dev in room.get("devices", []):
-				room_p += float(dev.get("power_mw", 0.0))
+			for dev in room.get("devices"):
+				room_p += float(dev.get("power_mw"))
 			room_widgets[room_id].update_power(room_p)
 
 func _update_system_effects(active_categories: Dictionary) -> void:
@@ -223,20 +231,20 @@ func autobalance_grid() -> void:
 		if net_power_mw >= 0: break
 		
 		for room in rooms_data:
-			if not room.get("is_on", true): continue
+			if not room.get("is_on"): continue
 			
 			# If room only contains devices of this category (or lower), shut it down
 			var only_low_priority = true
-			var devices = room.get("devices", [])
+			var devices = room.get("devices")
 			for dev in devices:
-				var dev_cat = dev.get("category", "service")
+				var dev_cat = dev.get("category")
 				if priority_order.find(dev_cat) > priority_order.find(cat_to_cut):
 					only_low_priority = false
 					break
 			
 			if only_low_priority and not devices.is_empty():
 				room["is_on"] = false
-				var rid = room.get("id", "")
+				var rid = room.get("id")
 				if room_widgets.has(rid):
 					room_widgets[rid].power_switch.button_pressed = false
 				_refresh_power_logic()
@@ -345,11 +353,11 @@ func execute_terminal_command(raw_cmd: String) -> void:
 		"rooms", "list":
 			_print_terminal("[color=#ffffaa]=== STATO STANZE ===[/color]")
 			for r in rooms_data:
-				var is_on = r.get("is_on", true)
+				var is_on = r.get("is_on")
 				var st = "ON" if is_on else "OFF"
 				var col = "#00ff88" if is_on else "#ff4444"
-				var p_mw = r.get("power_mw", 0.0)
-				_print_terminal(" • %s: [color=%s]%s[/color] (%.0f MW)" % [r.get("name", "N/D"), col, st, p_mw])
+				var p_mw = r.get("power_mw")
+				_print_terminal(" • %s: [color=%s]%s[/color] (%.0f MW)" % [r.get("name"), col, st, p_mw])
 		
 		"set":
 			if parts.size() < 3:
@@ -378,11 +386,6 @@ func _run_diagnostics() -> void:
 		_print_terminal("Disattivare stanze non critiche per ripristinare i sistemi.")
 	else:
 		_print_terminal("[color=#00ff88]✔ Rete stabile. Margine operativo: %.0f MW[/color]" % net_power_mw)
-
-func _on_reload_config_pressed() -> void:
-	load_dat_configuration()
-	_init_room_list()
-	_refresh_power_logic()
 
 # --- GESTIONE CLICK E INTERAZIONE ---
 # Rimosso perché la mappa 2D non è più presente.
@@ -433,7 +436,7 @@ func is_operational() -> bool:
 
 func _apply_configuration() -> void:
 	if dat_status_badge:
-		if active_config.get("is_dat_loaded", false):
+		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "DAT: ATTIVO"
 			dat_status_badge.modulate = Color(0.2, 1.0, 0.5)
 		else:
@@ -442,38 +445,6 @@ func _apply_configuration() -> void:
 	
 	_refresh_power_logic()
 
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.to_lower() == "true":
-				result[key] = true
-			elif val_str.to_lower() == "false":
-				result[key] = false
-			elif val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	file.close()
-	return result
-
-# --- GESTIONE MISSIONE / STATO RETE / PERMESSI ---
 func _on_ship_connection_changed(is_connected: bool) -> void:
 	_update_connection_state()
 

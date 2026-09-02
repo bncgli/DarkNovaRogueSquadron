@@ -49,7 +49,6 @@ const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(860, 580)
 @onready var system_preview_label: Label = %SystemPreviewLabel
 @onready var resource_file_dialog: FileDialog = %ResourceFileDialog
 
-var parent_window: FakeWindow = null
 var role_buttons: Dictionary = {}
 var _active_file_picker_target: String = "" # "ship" o "system"
 var _available_ship_blueprints: Array[Dictionary] = [
@@ -76,7 +75,7 @@ func _ready() -> void:
 
 func _configure_window() -> void:
 	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	call_deferred("_setup_parent_window")
+	call_deferred("_setup_parent_window", APP_TITLE, DEFAULT_WINDOW_SIZE)
 
 func _connect_system_signals() -> void:
 	if NetworkManager:
@@ -108,8 +107,8 @@ func _exit_tree() -> void:
 		if not NetworkManager.is_connected_to_network and NetworkManager.lan_discovery:
 			NetworkManager.lan_discovery.stop()
 
-func _setup_parent_window() -> void:
-	parent_window = _find_parent_window()
+func _setup_parent_window(_title: String, _size: Vector2) -> void:
+	var parent_window := _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(700, 500)
@@ -134,10 +133,10 @@ func _build_role_buttons() -> void:
 	var roles_data := [
 		{ "id": NetworkManager.ROLE_CAPTAIN, "title": "👑 CAPITANO", "desc": "Comando generale, ordini e gestione risorse" },
 		{ "id": NetworkManager.ROLE_PILOT, "title": "🕹️ PILOTA", "desc": "Navigazione, timone e manovre di volo" },
+		{ "id": NetworkManager.ROLE_SOLDIER, "title": "⚔️ SOLDATO", "desc": "Puntamento armi, gestione sensori e difesa scafo" },
 		{ "id": NetworkManager.ROLE_ENGINEER, "title": "⚡ INGEGNERE", "desc": "Reattore, distribuzione energia e riparazioni" },
-		{ "id": NetworkManager.ROLE_TACTICAL, "title": "🎯 TATTICO / ARMI", "desc": "Puntamento torrette, sistemi di difesa e missili" },
-		{ "id": NetworkManager.ROLE_SENSORS, "title": "📡 SENSORI / RADAR", "desc": "Scansione spazio profondo, rilevamento minacce" },
-		{ "id": NetworkManager.ROLE_COMMS, "title": "📻 COMUNICAZIONI", "desc": "Decrittazione segnali, contromisure e radio" },
+		{ "id": NetworkManager.ROLE_HACKER, "title": "💾 HACKER", "desc": "Guerra elettronica, decrittazione e intrusione droni" },
+		{ "id": NetworkManager.ROLE_MOZZO, "title": "🔧 MOZZO", "desc": "Supporto multiruolo e manutenzione generale" },
 		{ "id": NetworkManager.ROLE_UNASSIGNED, "title": "⚪ NESSUNA POSTAZIONE", "desc": "In attesa di assegnazione postazione" }
 	]
 	
@@ -173,9 +172,9 @@ func _refresh_lobby_ui() -> void:
 	var host_name := "Sconosciuto"
 	var host_role := ""
 	for pid in players:
-		if players[pid].get("is_host", false):
-			host_name = players[pid].get("name", "Host")
-			host_role = players[pid].get("role", "")
+		if players[pid].get("is_host"):
+			host_name = players[pid].get("name")
+			host_role = players[pid].get("role")
 			break
 	
 	if NetworkManager.is_solo_mode:
@@ -217,14 +216,14 @@ func _refresh_lobby_ui() -> void:
 		hbox.add_theme_constant_override("separation", 10)
 		
 		var label_name := Label.new()
-		var name_prefix := "⭐ " if pinfo.get("is_host", false) else "👤 "
+		var name_prefix := "⭐ " if pinfo.get("is_host") else "👤 "
 		var is_you_str := " (TU)" if pid == local_id else ""
-		label_name.text = "%s%s%s" % [name_prefix, pinfo.get("name", "Operatore"), is_you_str]
+		label_name.text = "%s%s%s" % [name_prefix, pinfo.get("name"), is_you_str]
 		label_name.size_flags_horizontal = SIZE_EXPAND_FILL
 		hbox.add_child(label_name)
 		
 		var label_role := Label.new()
-		var r_name: String = pinfo.get("role", NetworkManager.ROLE_UNASSIGNED)
+		var r_name: String = pinfo.get("role")
 		label_role.text = "[ %s ]" % r_name
 		if r_name == NetworkManager.ROLE_HOST:
 			label_role.modulate = Color(1.0, 0.85, 0.2)
@@ -236,7 +235,7 @@ func _refresh_lobby_ui() -> void:
 		
 		# Badge stato Pronto
 		var label_ready := Label.new()
-		var is_pready: bool = pinfo.get("ready", false)
+		var is_pready: bool = pinfo.get("ready")
 		if r_name == NetworkManager.ROLE_HOST:
 			label_ready.text = "[ HOST ]"
 			label_ready.modulate = Color(1.0, 0.85, 0.2)
@@ -254,7 +253,7 @@ func _refresh_lobby_ui() -> void:
 	# Aggiornamento pulsanti ruoli
 	var local_role := ""
 	if local_id in players:
-		local_role = players[local_id].get("role", NetworkManager.ROLE_UNASSIGNED)
+		local_role = players[local_id].get("role")
 	
 	for role_id in role_buttons:
 		var data: Dictionary = role_buttons[role_id]
@@ -268,7 +267,7 @@ func _refresh_lobby_ui() -> void:
 		if role_id != NetworkManager.ROLE_UNASSIGNED:
 			for pid in players:
 				if players[pid].get("role") == role_id:
-					occupant_name = players[pid].get("name", "Qualcuno")
+					occupant_name = players[pid].get("name")
 					break
 		
 		if is_mine:
@@ -318,14 +317,14 @@ func _init_resource_selectors() -> void:
 	ship_blueprint_option.clear()
 	for i in range(_available_ship_blueprints.size()):
 		var bp_entry: Dictionary = _available_ship_blueprints[i]
-		ship_blueprint_option.add_item(bp_entry.get("name", "Ship Blueprint"), i)
-		ship_blueprint_option.set_item_metadata(i, bp_entry.get("path", ""))
+		ship_blueprint_option.add_item(bp_entry.get("name"), i)
+		ship_blueprint_option.set_item_metadata(i, bp_entry.get("path"))
 	
 	star_system_option.clear()
 	for i in range(_available_star_systems.size()):
 		var sys_entry: Dictionary = _available_star_systems[i]
-		star_system_option.add_item(sys_entry.get("name", "Star System"), i)
-		star_system_option.set_item_metadata(i, sys_entry.get("path", ""))
+		star_system_option.add_item(sys_entry.get("name"), i)
+		star_system_option.set_item_metadata(i, sys_entry.get("path"))
 
 func _refresh_resource_selection_ui() -> void:
 	if not NetworkManager or not resources_panel:
@@ -360,12 +359,12 @@ func _refresh_resource_selection_ui() -> void:
 func _update_blueprint_preview(bp_info: Dictionary) -> void:
 	if bp_info.is_empty():
 		return
-	var ship_name: String = bp_info.get("name", "Corvetta")
-	var ship_class: String = bp_info.get("class", "Standard")
-	var rooms_cnt: int = bp_info.get("rooms_count", 0)
-	var ducts_cnt: int = bp_info.get("ducts_count", 0)
-	var apps_cnt: int = bp_info.get("apps_count", 0)
-	var path: String = bp_info.get("path", "")
+	var ship_name: String = bp_info.get("name")
+	var ship_class: String = bp_info.get("class")
+	var rooms_cnt: int = bp_info.get("rooms_count")
+	var ducts_cnt: int = bp_info.get("ducts_count")
+	var apps_cnt: int = bp_info.get("apps_count")
+	var path: String = bp_info.get("path")
 	
 	ship_preview_label.text = "Nave: %s (%s) | Stanze: %d | Condotti: %d | App: %d" % [
 		ship_name, ship_class, rooms_cnt, ducts_cnt, apps_cnt
@@ -391,11 +390,11 @@ func _update_blueprint_preview(bp_info: Dictionary) -> void:
 func _update_star_system_preview(sys_info: Dictionary) -> void:
 	if sys_info.is_empty():
 		return
-	var sys_name: String = sys_info.get("name", "Sistema Stellare")
-	var star_coords: Vector3i = sys_info.get("primary_star_coords", Vector3i.ZERO)
-	var bodies_cnt: int = sys_info.get("bodies_count", 0)
-	var stations_cnt: int = sys_info.get("stations_count", 0)
-	var path: String = sys_info.get("path", "")
+	var sys_name: String = sys_info.get("name")
+	var star_coords: Vector3i = sys_info.get("primary_star_coords")
+	var bodies_cnt: int = sys_info.get("bodies_count")
+	var stations_cnt: int = sys_info.get("stations_count")
+	var path: String = sys_info.get("path")
 	
 	system_preview_label.text = "Sistema: %s | Stella: (%d, %d, %d) | Corpi: %d | Stazioni: %d" % [
 		sys_name, star_coords.x, star_coords.y, star_coords.z, bodies_cnt, stations_cnt
@@ -447,14 +446,14 @@ func _update_lan_list() -> void:
 		hbox.add_theme_constant_override("separation", 15)
 		
 		var info_lbl := Label.new()
-		info_lbl.text = "🛰️ %s (%s:%d)" % [sdata.get("name", "Dark Nova"), sdata.get("ip", "127.0.0.1"), sdata.get("port", 7777)]
+		info_lbl.text = "🛰️ %s (%s:%d)" % [sdata.get("name"), sdata.get("ip"), sdata.get("port")]
 		info_lbl.size_flags_horizontal = SIZE_EXPAND_FILL
 		hbox.add_child(info_lbl)
 		
 		var join_btn := Button.new()
 		join_btn.text = "Unisciti"
-		var target_ip: String = sdata.get("ip", "127.0.0.1")
-		var target_port: int = int(sdata.get("port", 7777))
+		var target_ip: String = sdata.get("ip")
+		var target_port: int = int(sdata.get("port"))
 		join_btn.pressed.connect(func() -> void:
 			_apply_callsign()
 			NetworkManager.join_game(callsign_edit.text, target_ip, target_port)

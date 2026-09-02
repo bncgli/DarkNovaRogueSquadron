@@ -86,24 +86,24 @@ func _process(delta: float) -> void:
 ## Processa il ciclo di vita dei canoni di abbonamento
 func process_subscriptions(delta: float) -> void:
 	for sub in subscriptions:
-		sub["time_left"] = float(sub.get("time_left", 60.0)) - delta
-		if float(sub.get("time_left", 60.0)) <= 0.0:
-			var cost: int = int(sub.get("cost", 100))
-			var auto: bool = bool(sub.get("auto_pay", true))
-			var sub_id: String = str(sub.get("id", ""))
+		sub["time_left"] = float(sub.get("time_left")) - delta
+		if float(sub.get("time_left")) <= 0.0:
+			var cost: int = int(sub.get("cost"))
+			var auto: bool = bool(sub.get("auto_pay"))
+			var sub_id: String = str(sub.get("id"))
 			
 			if auto and credits >= cost:
 				# Pagamento automatico puntuale
 				credits -= cost
-				sub["time_left"] = float(sub.get("period_sec", 60.0))
+				sub["time_left"] = float(sub.get("period_sec"))
 				sub["is_overdue"] = false
 				credits_changed.emit(credits, -cost)
 				subscription_paid.emit(sub_id, cost)
-				add_transaction(cost, false, true, "Pagamento automatico canone: " + str(sub.get("name", "")))
+				add_transaction(cost, false, true, "Pagamento automatico canone: " + str(sub.get("name")))
 				adjust_flux_score(6.0, "Puntualità canone " + sub_id)
 			else:
 				# Mancato pagamento -> Debito e rating giù
-				if not bool(sub.get("is_overdue", false)):
+				if not bool(sub.get("is_overdue")):
 					sub["is_overdue"] = true
 					total_debt += float(cost)
 					subscription_overdue.emit(sub_id, cost)
@@ -113,7 +113,7 @@ func process_subscriptions(delta: float) -> void:
 						"debt": cost,
 						"message": "Canone scaduto! Sanzione applicata al rating FLUX."
 					})
-				sub["time_left"] = float(sub.get("period_sec", 60.0))
+				sub["time_left"] = float(sub.get("period_sec"))
 
 ## Gestione del rischio di sequestro (Impound) della Corvetta
 func _process_impound_risk(delta: float) -> void:
@@ -232,14 +232,14 @@ func _update_rating_state() -> void:
 ## Salda un abbonamento o debito specifico
 func pay_subscription_manually(sub_id: String) -> bool:
 	for sub in subscriptions:
-		if sub.get("id", "") == sub_id:
-			var cost: int = int(sub.get("cost", 100))
+		if sub.get("id") == sub_id:
+			var cost: int = int(sub.get("cost"))
 			if credits >= cost:
 				credits -= cost
-				if bool(sub.get("is_overdue", false)):
+				if bool(sub.get("is_overdue")):
 					total_debt = maxf(0.0, total_debt - float(cost))
 				sub["is_overdue"] = false
-				sub["time_left"] = float(sub.get("period_sec", 60.0))
+				sub["time_left"] = float(sub.get("period_sec"))
 				credits_changed.emit(credits, -cost)
 				subscription_paid.emit(sub_id, cost)
 				adjust_flux_score(25.0, "Saldo debito/canone manuale: " + sub_id)
@@ -271,23 +271,23 @@ func pay_all_debts() -> bool:
 
 ## Viola le barriere ICE di un disco Snapshot S-Net
 func hack_snet_disk(disk_item: Dictionary, hacker_skill: float = 1.0) -> Dictionary:
-	var metadata: Dictionary = disk_item.get("metadata", {})
-	var is_snet: bool = bool(disk_item.get("is_snet_disk", false)) or str(disk_item.get("category", "")) == "SNET_DISK"
+	var metadata: Dictionary = disk_item.get("metadata")
+	var is_snet: bool = bool(disk_item.get("is_snet_disk")) or str(disk_item.get("category")) == "SNET_DISK"
 	
 	if not is_snet:
 		snet_ice_hack_failed.emit(disk_item, "L'oggetto specificato non è un supporto dati S-Net crittografato.")
 		return { "success": false, "reason": "Not an S-Net disk" }
 	
-	if bool(metadata.get("ice_broken", false)):
+	if bool(metadata.get("ice_broken")):
 		# Già violato in precedenza
 		return {
 			"success": true,
 			"already_decrypted": true,
-			"financial_snapshot": metadata.get("financial_snapshot", 2500),
-			"market_intel": metadata.get("market_intel", "Snapshot già decifrato.")
+			"financial_snapshot": metadata.get("financial_snapshot"),
+			"market_intel": metadata.get("market_intel")
 		}
 	
-	var ice_strength: int = int(metadata.get("ice_strength", 3))
+	var ice_strength: int = int(metadata.get("ice_strength"))
 	var hack_chance := clampf(0.5 + (hacker_skill * 0.3) - (float(ice_strength) * 0.1), 0.1, 0.95)
 	
 	# Verifica riuscita hack
@@ -298,16 +298,16 @@ func hack_snet_disk(disk_item: Dictionary, hacker_skill: float = 1.0) -> Diction
 		metadata["ice_strength"] = 0
 		disk_item["metadata"] = metadata
 		
-		var reward_credits: int = int(metadata.get("financial_snapshot", 2500))
+		var reward_credits: int = int(metadata.get("financial_snapshot"))
 		credits += reward_credits
 		credits_changed.emit(credits, reward_credits)
 		
 		var intel_data: Dictionary = {
 			"success": true,
-			"disk_id": disk_item.get("id", "snet_snapshot"),
+			"disk_id": disk_item.get("id"),
 			"decrypted_credits": reward_credits,
-			"market_intel": metadata.get("market_intel", "Listini riservati della corporazione estratti con successo."),
-			"sector": metadata.get("sector", "Local Sector"),
+			"market_intel": metadata.get("market_intel"),
+			"sector": metadata.get("sector"),
 			"access_codes": ["ICE-OVERRIDE-ALPHA", "FLUX-BYPASS-09"]
 		}
 		
@@ -321,7 +321,7 @@ func hack_snet_disk(disk_item: Dictionary, hacker_skill: float = 1.0) -> Diction
 		adjust_flux_score(-15.0, "Tracciamento ICE fallito su snapshot S-Net")
 		snet_ice_hack_failed.emit(disk_item, fail_reason)
 		emit_penalty("ICE_HACK_DETECTED", {
-			"disk_id": disk_item.get("id", "snet_snapshot"),
+			"disk_id": disk_item.get("id"),
 			"reason": fail_reason
 		})
 		return {

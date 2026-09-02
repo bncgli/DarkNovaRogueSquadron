@@ -1,5 +1,5 @@
 class_name DiagnosticsApp
-extends Control
+extends BaseApp
 
 ## Applicazione GodotOS per la Diagnostica di Sistema, Sicurezza Cyber, Difesa ICE e Ripristino Firmware .DAT.
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
@@ -188,7 +188,7 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 }
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_init_ui_dropdowns()
 	_connect_system_signals()
 	_connect_ui_signals()
@@ -197,15 +197,6 @@ func _ready() -> void:
 	load_dat_configuration()
 	_refresh_all_ui()
 	_log_audit("Inizializzazione modulo System Diagnostics & ICE Defense completata.")
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	while parent_win:
-		if "window_title" in parent_win:
-			parent_win.window_title = APP_TITLE
-			break
-		parent_win = parent_win.get_parent()
 
 func _init_ui_dropdowns() -> void:
 	if target_drive_option:
@@ -306,7 +297,7 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	# Aggiornamento progress barra scansione
 	if is_scanning:
-		var speed_mult: float = float(active_config.get("scan_speed_multiplier", 1.0))
+		var speed_mult: float = float(active_config.get("scan_speed_multiplier"))
 		var base_speed: float = 35.0 if scan_depth_mode == 0 else 18.0
 		scan_progress += base_speed * speed_mult * delta
 		if scan_progress >= 100.0:
@@ -316,7 +307,7 @@ func _process(delta: float) -> void:
 	
 	# Aggiornamento countdown factory reset
 	if is_factory_resetting:
-		var delay_target: float = maxf(float(active_config.get("factory_reset_delay_sec", 3.0)), 0.1)
+		var delay_target: float = maxf(float(active_config.get("factory_reset_delay_sec")), 0.1)
 		reset_progress += (100.0 / delay_target) * delta
 		if reset_progress >= 100.0:
 			reset_progress = 100.0
@@ -324,7 +315,7 @@ func _process(delta: float) -> void:
 		_update_reset_ui()
 	
 	# Rigenerazione passiva della barriera ICE
-	var recharge_rate: float = float(active_config.get("ice_recharge_rate", 5.0))
+	var recharge_rate: float = float(active_config.get("ice_recharge_rate"))
 	if current_ice_strength < max_ice_strength:
 		current_ice_strength = minf(current_ice_strength + recharge_rate * delta * 0.1, max_ice_strength)
 		_update_ice_ui()
@@ -380,8 +371,8 @@ func _update_permissions() -> void:
 		my_role = nm.get_local_player_role()
 		is_solo = nm.is_solo_mode
 	
-	# Hacker, Ingegnere, Capitano, Factotum e Solo Mode hanno pieno controllo
-	can_control_diagnostics = (is_solo or my_role == "Hacker" or my_role == "Ingegnere" or my_role == "Capitano" or my_role == "Factotum" or my_role.is_empty())
+	# Hacker, Ingegnere, Capitano, Mozzo e Solo Mode hanno pieno controllo
+	can_control_diagnostics = (is_solo or my_role == "Hacker" or my_role == "Ingegnere" or my_role == "Capitano" or my_role == "Mozzo" or my_role.is_empty())
 	
 	if role_badge:
 		var display_role := my_role if not my_role.is_empty() else ("SOLO" if is_solo else "SPETTATORE")
@@ -433,10 +424,10 @@ func load_dat_configuration() -> void:
 	_apply_configuration()
 
 func _apply_configuration() -> void:
-	max_ice_strength = float(active_config.get("ice_firewall_strength", 100.0))
+	max_ice_strength = float(active_config.get("ice_firewall_strength"))
 	current_ice_strength = clampf(current_ice_strength, 0.0, max_ice_strength)
 	
-	var depth_str: String = str(active_config.get("scan_depth", "DEEP")).to_upper()
+	var depth_str: String = str(active_config.get("scan_depth")).to_upper()
 	if depth_str == "QUICK" or depth_str == "0":
 		scan_depth_mode = 0
 		if depth_option: depth_option.selected = 0
@@ -445,7 +436,7 @@ func _apply_configuration() -> void:
 		if depth_option: depth_option.selected = 1
 	
 	if dat_status_badge:
-		if active_config.get("is_dat_loaded", false):
+		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "⚙️ .DAT: CARICATO"
 			dat_status_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
 		else:
@@ -454,43 +445,6 @@ func _apply_configuration() -> void:
 	
 	_update_ice_ui()
 	_update_firmware_ui()
-
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.to_lower() == "true":
-				result[key] = true
-			elif val_str.to_lower() == "false":
-				result[key] = false
-			elif val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	
-	file.close()
-	return result
-
-# --- MODULO 1: SCANNER INTEGRITÀ & MINACCE ---
 
 func _on_target_drive_selected(idx: int) -> void:
 	scan_target_drive = idx
@@ -548,7 +502,7 @@ func _finish_scan() -> void:
 			notif.spawn_notification("Scansione completata: Rilevate %d anomalie/minacce!" % detected_threats.size())
 	
 	# Auto-quarantena se abilitata nella configurazione
-	if bool(active_config.get("auto_quarantine_malware", true)) and not detected_threats.is_empty():
+	if bool(active_config.get("auto_quarantine_malware")) and not detected_threats.is_empty():
 		_log_audit("Auto-quarantine attiva: bonifica automatica minacce avviata.")
 		purge_threats()
 
@@ -665,7 +619,7 @@ func purge_threats() -> void:
 		return
 	
 	for threat in detected_threats:
-		var p: String = threat.get("path", "")
+		var p: String = threat.get("path")
 		var abs_p := "user://files/%s" % p
 		if FileAccess.file_exists(abs_p):
 			DirAccess.remove_absolute(abs_p)
@@ -712,7 +666,7 @@ func _update_scan_ui() -> void:
 		else:
 			for t in detected_threats:
 				var prefix := "🔴 [CRITICA]" if t.get("severity") == "CRITICAL" else "🟡 [AVVISO]"
-				threats_list.add_item("%s %s (%s) - %s" % [prefix, t.get("name", "Anomalia"), t.get("path", ""), t.get("desc", "")])
+				threats_list.add_item("%s %s (%s) - %s" % [prefix, t.get("name"), t.get("path"), t.get("desc")])
 
 # --- MODULO 2: PANNELLO ICE & DIFESA FIREWALL ---
 

@@ -193,8 +193,8 @@ func _populate_default_ship_drive_files() -> void:
 	
 	if bp_files.size() > 0:
 		for f in bp_files:
-			var path: String = str(f.get("path", ""))
-			var content: String = str(f.get("content", ""))
+			var path: String = str(f.get("path"))
+			var content: String = str(f.get("content"))
 			if not path.is_empty():
 				_write_file_content(path, content)
 		
@@ -468,8 +468,8 @@ func _rpc_receive_full_sync(snapshot: Array) -> void:
 	for item in snapshot:
 		if not item is Dictionary:
 			continue
-		var item_path: String = _normalize_rel_path(item.get("path", ""))
-		var is_dir: bool = item.get("is_dir", false)
+		var item_path: String = _normalize_rel_path(item.get("path"))
+		var is_dir: bool = item.get("is_dir")
 		var abs_path := "user://files/%s" % item_path
 		
 		if is_dir:
@@ -481,7 +481,7 @@ func _rpc_receive_full_sync(snapshot: Array) -> void:
 			var base_dir := abs_path.get_base_dir()
 			if not DirAccess.dir_exists_absolute(base_dir):
 				DirAccess.make_dir_recursive_absolute(base_dir)
-			var content: String = item.get("content", "")
+			var content: String = item.get("content")
 			var f := FileAccess.open(abs_path, FileAccess.WRITE)
 			if f:
 				f.store_string(content)

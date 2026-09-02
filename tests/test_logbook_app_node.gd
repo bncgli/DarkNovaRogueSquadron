@@ -2,7 +2,7 @@ extends Node
 
 ## Test Runner Headless per LogbookApp (Applications/Logbook)
 ## 1. Overlay / Ciclo di Vita: %DisconnectedOverlay offline vs ship_connection_changed(true)
-## 2. RBAC: Azioni contrattuali riservate al Capitano/Factotum, lettura e note aperte a tutti
+## 2. RBAC: Azioni contrattuali riservate al Capitano/Mozzo, lettura e note aperte a tutti
 ## 3. File .DAT e Hot-Reload: Parsing corretto di logbook_config.dat e journal_tuning.dat e hot-reload
 ## 4. Risorsa e Software Manager: Registrazione logbook_app.tres in ShipSoftwareManager
 ## 5. Pulizia Segnali: Verifica assenza di errori/leak dopo _exit_tree()
@@ -98,12 +98,12 @@ func _run_all_tests() -> void:
 		assert(app.clear_log_btn.disabled == false, "ClearLogBtn deve essere abilitato per Capitano")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Factotum: Controllo Completo
-		net_mgr.request_role("Factotum")
+		# 2.6 Mozzo: Controllo Completo
+		net_mgr.request_role("Mozzo")
 		await get_tree().process_frame
-		assert(app.can_manage_contracts == true, "Factotum deve avere controllo completo sui contratti")
-		assert(app.new_contract_btn.disabled == false, "NewContractBtn deve essere abilitato per Factotum")
-		print("✔ Ruolo Factotum: controllo completo abilitato")
+		assert(app.can_manage_contracts == true, "Mozzo deve avere controllo completo sui contratti")
+		assert(app.new_contract_btn.disabled == false, "NewContractBtn deve essere abilitato per Mozzo")
+		print("✔ Ruolo Mozzo: controllo completo abilitato")
 
 	# =========================================================================
 	# TEST 3: FILE .DAT E HOT-RELOADING
@@ -114,18 +114,18 @@ func _run_all_tests() -> void:
 	app.load_dat_configuration()
 	await get_tree().process_frame
 	
-	assert(app.config_data.get("app_name") == "LogbookApp", "app_name deve essere LogbookApp")
+	assert(app.config_data.get("app_name") == "LogbookApp")
 	assert(app.config_data.get("auto_log_events") == true, "auto_log_events deve essere true")
 	assert(app.config_data.get("max_history_entries") == 200, "max_history_entries deve essere 200")
 	assert(app.tuning_data.get("sync_to_ship_drive") == true, "sync_to_ship_drive deve essere true")
-	assert(app.tuning_data.get("timestamp_format") == "STAR_DATE", "timestamp_format deve essere STAR_DATE")
+	assert(app.tuning_data.get("timestamp_format") == "STAR_DATE")
 	print("✔ Parsing .DAT iniziale validato con successo")
 	
 	# Test hot-reloading su file_modified
 	if sdm and sdm.has_signal("file_modified"):
 		sdm.file_modified.emit("Ship Drive/Programs/Logbook/logbook_config.dat")
 		await get_tree().process_frame
-		assert(app.config_data.get("app_name") == "LogbookApp", "Hot-reload via file_modified verificato")
+		assert(app.config_data.get("app_name") == "LogbookApp")
 		print("✔ Hot-reloading su file_modified verificato")
 	
 	# Test pulsante ricarica .DAT
@@ -140,7 +140,7 @@ func _run_all_tests() -> void:
 	var initial_contracts_count: int = app.active_contracts.size()
 	assert(initial_contracts_count >= 2, "Devono essere presenti contratti iniziali")
 	
-	# 4.1 Aggiunta contratto da Capitano/Factotum
+	# 4.1 Aggiunta contratto da Capitano/Mozzo
 	app._on_new_contract_pressed()
 	await get_tree().process_frame
 	assert(app.active_contracts.size() == initial_contracts_count + 1, "Nuovo contratto aggiunto con successo")

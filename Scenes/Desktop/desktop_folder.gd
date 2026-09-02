@@ -2,10 +2,9 @@ extends Control
 class_name FakeFolder
 
 ## A folder that can be opened and interacted with.
-## Files like text/image files are just folders with a different file_type_enum.
+## Files like text/image files are just folders with a different GlobalValues.FileType.
 
-enum file_type_enum {FOLDER, TEXT_FILE, IMAGE}
-@export var file_type: file_type_enum
+@export var file_type: GlobalValues.FileType
 
 const FOLDER_COLOR: Color = Color("4efa82")
 const TEXT_FILE_COLOR: Color = Color("4deff5")
@@ -21,7 +20,7 @@ func _ready() -> void:
 	$"Selected Highlight".visible = false
 	%"Folder Title".text = "[center]%s" % folder_name
 	
-	if file_type == file_type_enum.FOLDER:
+	if file_type == GlobalValues.FileType.FOLDER:
 		if folder_name == "Ship Drive" and (folder_path == "Ship Drive" or folder_path == ""):
 			$Folder/TextureRect.modulate = Color("00e5ff")
 		elif folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
@@ -29,10 +28,10 @@ func _ready() -> void:
 		else:
 			$Folder/TextureRect.modulate = FOLDER_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/folder.png")
-	elif file_type == file_type_enum.TEXT_FILE:
+	elif file_type == GlobalValues.FileType.TEXT_FILE:
 		$Folder/TextureRect.modulate = TEXT_FILE_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/text_file.png")
-	elif file_type == file_type_enum.IMAGE:
+	elif file_type == GlobalValues.FileType.IMAGE:
 		$Folder/TextureRect.modulate = IMAGE_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/image.png")
 	
@@ -45,7 +44,7 @@ func update_lock_status() -> void:
 	if not has_node("%LockIcon"):
 		return
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
-	if fpm and file_type == file_type_enum.FOLDER and fpm.has_password(folder_path):
+	if fpm and file_type == GlobalValues.FileType.FOLDER and fpm.has_password(folder_path):
 		%"LockIcon".visible = true
 	else:
 		%"LockIcon".visible = false
@@ -116,17 +115,17 @@ func hide_selected_highlight() -> void:
 
 func spawn_window() -> void:
 	var window: FakeWindow
-	if file_type == file_type_enum.FOLDER:
+	if file_type == GlobalValues.FileType.FOLDER:
 		window = load("res://Scenes/Window/File Manager/file_manager_window.tscn").instantiate()
 		window.get_node("%File Manager Window").file_path = folder_path
-	elif file_type == file_type_enum.TEXT_FILE:
+	elif file_type == GlobalValues.FileType.TEXT_FILE:
 		window = load("res://Scenes/Window/Text Editor/text_editor.tscn").instantiate()
 		# TODO make this more flexible?
 		if folder_path.is_empty():
 			window.get_node("%Text Editor").populate_text(folder_name)
 		else:
 			window.get_node("%Text Editor").populate_text("%s/%s" % [folder_path, folder_name])
-	elif file_type == file_type_enum.IMAGE:
+	elif file_type == GlobalValues.FileType.IMAGE:
 		window = load("res://Scenes/Window/Image Viewer/image_viewer.tscn").instantiate()
 		if folder_path.is_empty():
 			window.get_node("%Image Viewer").import_image(folder_name)
@@ -139,11 +138,11 @@ func spawn_window() -> void:
 	var taskbar_button: Control = load("res://Scenes/Taskbar/taskbar_button.tscn").instantiate()
 	taskbar_button.target_window = window
 	
-	if file_type == file_type_enum.FOLDER:
+	if file_type == GlobalValues.FileType.FOLDER:
 		taskbar_button.active_color = FOLDER_COLOR
-	if file_type == file_type_enum.TEXT_FILE:
+	if file_type == GlobalValues.FileType.TEXT_FILE:
 		taskbar_button.active_color = TEXT_FILE_COLOR
-	elif file_type == file_type_enum.IMAGE:
+	elif file_type == GlobalValues.FileType.IMAGE:
 		taskbar_button.active_color = IMAGE_COLOR
 	
 	taskbar_button.get_node("TextureMargin/TextureRect").texture = $"Folder/TextureRect".texture
@@ -158,13 +157,13 @@ func delete_file() -> void:
 		NotificationManager.spawn_notification("Non e' possibile eliminare 'Terminal Drive'.")
 		return
 	
-	if file_type == file_type_enum.FOLDER:
+	if file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder_path):
 			NotificationManager.spawn_notification("Non e' possibile eliminare una cartella protetta da password.")
 			return
 	
-	var is_folder: bool = (file_type == file_type_enum.FOLDER)
+	var is_folder: bool = (file_type == GlobalValues.FileType.FOLDER)
 	var clean_dir := folder_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
 	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
 	var rel_item_path: String = clean_dir if is_folder else ("%s%s" % [prefix, folder_name])
@@ -197,7 +196,7 @@ func delete_file() -> void:
 	if sdm and sdm.get("is_drive_mounted"):
 		sdm.sync_delete(rel_item_path, is_folder)
 	
-	if clean_dir.is_empty() or (file_type == file_type_enum.FOLDER and len(clean_dir.split('/')) == 1):
+	if clean_dir.is_empty() or (file_type == GlobalValues.FileType.FOLDER and len(clean_dir.split('/')) == 1):
 		var desktop_file_manager: DesktopFileManager = get_tree().get_first_node_in_group("desktop_file_manager")
 		if desktop_file_manager:
 			desktop_file_manager.delete_file_with_name(folder_name)
@@ -208,7 +207,7 @@ func delete_file() -> void:
 
 func open_folder() -> void:
 	hide_selected_highlight()
-	if file_type == file_type_enum.FOLDER:
+	if file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder_path):
 			fpm.prompt_enter_password(folder_path, folder_name, func(_removed_pass: bool) -> void:
@@ -218,7 +217,7 @@ func open_folder() -> void:
 	_perform_open_folder()
 
 func _perform_open_folder() -> void:
-	if get_parent().is_in_group("file_manager_window") and file_type == file_type_enum.FOLDER:
+	if get_parent().is_in_group("file_manager_window") and file_type == GlobalValues.FileType.FOLDER:
 		get_parent().reload_window(folder_path)
 	else:
 		spawn_window()

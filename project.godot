@@ -58,15 +58,15 @@ window/vsync/vsync_mode=0
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ship_sublayer_editor/plugin.cfg", "res://addons/star_system_editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/ship_sublayer_editor/plugin.cfg")
 
 [file_customization]
 
 folder_colors={
 "res://Applications/": "orange",
+"res://Applications/Games/": "red",
 "res://Art/": "green",
 "res://Default Files/": "gray",
-"res://Games/": "red",
 "res://Outside/": "purple",
 "res://Scenes/": "blue",
 "res://Scenes/Misc/": "gray"

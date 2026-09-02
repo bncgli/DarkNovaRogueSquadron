@@ -12,7 +12,7 @@ Attualmente, molti dati fondamentali sono sparsi nel progetto o duplicati in pi�
     - `ShipClass` (attualmente in `ship_blueprint.gd`)
     - `DeviceCategory` (attualmente in `ship_blueprint.gd`)
     - `file_type_enum` (attualmente in `desktop_folder.gd`)
-- **Centralizzazione Metadati**: Spostare i metadati delle telecamere (`CAMERAS_METADATA`) e dei condotti (`DUCT_ROOMS`) da `SpaceWorldManager.gd` a risorse dedicate o al `RoomDatabase`.
+- **Centralizzazione Metadati**: Spostare i metadati delle telecamere (`CAMERAS_METADATA`) e dei condotti (`DUCT_ROOMS`) da `SpaceWorldManager.gd` al `RoomDatabase`.
 
 ## 2. Refactoring dei Manager Monolitici
 I manager principali violano il principio di singola responsabilità (SRP), rendendo il debug e l'estensione complessi.
@@ -66,8 +66,18 @@ L'analisi tramite `grep` ha identificato numerosi file che non sembrano avere ri
 - **Test Obsoleti**: La directory `tests/` contiene numerosi file (`test_ship_builder_node.gd`, ecc.) che non sono referenziati da scene o script di controllo. Si consiglia di migrare a un framework come GUT o rimuovere i test manuali non più funzionanti.
 - **Script di Utilità Sparsi**: File come `cleanup_tres.py` o script bash nella root dovrebbero essere spostati in una cartella `tools/` o documentati meglio nel `README`.
 
+## Stato Refactoring - [COMPLETATO]
+
+Tutti i punti proposti nel piano sono stati implementati:
+
+1.  **Centralizzazione**: Enum (`Quadrant`, `AlarmLevel`, `FileType`, ecc.) e metadati sono ora in `GlobalValues` e `RoomDatabase`.
+2.  **Manager**: `SpaceWorldManager` e `NetworkManager` sono stati suddivisi in componenti specializzati (`DuctDroneManager`, `ShipDamageManager`, `CameraFeedManager`, `CrewManager`).
+3.  **Applicazioni**: Creata `BaseApp.gd` e migrate tutte le app per ridurre la duplicazione.
+4.  **Dati**: Implementate risorse tipizzate (`ShipRoomData`, `ShipDuctData`, `CelestialBodyData`) per blueprint e sistemi stellari.
+5.  **Addon**: `ShipSublayerEditor` migrato verso una struttura basata su scene `.tscn`.
+6.  **Pulizia**: Organizzati script in `tools/` e test obsoleti in `tests/obsolete/`.
+
 ## Prossimi Passi Consigliati
-1. Iniziare con la centralizzazione degli enum (basso rischio, alto beneficio).
-2. Creare la `BaseApp` e migrare gradualmente le applicazioni (riduzione immediata del debito tecnico).
-3. Evolvere `ShipBlueprint` e `StarSystemData` verso risorse tipizzate (fondamentale per la stabilità a lungo termine).
-4. Pianificare la scomposizione di `SpaceWorldManager` in moduli più piccoli.
+1. Continuare la migrazione della UI per `star_system_editor` verso scene.
+2. Implementare test automatizzati per i nuovi manager utilizzando GUT.
+3. Espandere la validazione delle risorse tipizzate.

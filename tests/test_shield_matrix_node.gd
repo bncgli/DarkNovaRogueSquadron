@@ -148,7 +148,7 @@ func _run_suite() -> void:
 	assert(is_equal_approx(shield_app.ratio_starboard, 0.25), "Ratio Tribordo iniziale deve essere 0.25")
 	
 	# 2. Modifica ratio slider Prua a 50%
-	shield_app._on_slider_ratio_changed(ShieldMatrixApp.Quadrant.FORE, 50.0)
+	shield_app._on_slider_ratio_changed(GlobalValues.Quadrant.FORE, 50.0)
 	assert(is_equal_approx(shield_app.ratio_fore, 0.50), "Ratio Prua deve essere 0.50")
 	var sum_ratios := shield_app.ratio_fore + shield_app.ratio_aft + shield_app.ratio_port + shield_app.ratio_starboard
 	assert(is_equal_approx(sum_ratios, 1.0), "La somma dei ratio deve rimanere 1.0 (100%)")

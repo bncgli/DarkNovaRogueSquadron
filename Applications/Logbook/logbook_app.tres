@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_logbook")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Factotum", "Captain", "Pilot", "Engineer", "Soldier"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer", "Soldier"])
 power_draw_mw = 5.0
 required_subsystems = Array[String]([])
 app_id = "logbook"
@@ -12,6 +12,7 @@ title = "Registro di Bordo & Obiettivi"
 description = "Diario di volo, contratti sandbox, scatola nera ed eventi"
 developer = "Nebula Logic"
 category = "Sistemi Nave"
+menu_path = "Strumenti"
 icon_color = Color(0.8, 0.7, 0.2, 1)
 scene_path = "res://Applications/Logbook/logbook_app.tscn"
 default_window_size = Vector2(600, 450)

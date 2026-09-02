@@ -1,5 +1,5 @@
 class_name LifeSupportApp
-extends Control
+extends BaseApp
 
 ## Controller per l'applicazione di bordo "Life Support & Atmosphere Control" (Applications/LifeSupport).
 ## Gestisce il monitoraggio e controllo di O2, CO2, pressione barometrica, temperatura,
@@ -66,7 +66,7 @@ var selected_room_id: String = ""
 var global_scrubber_setting: float = 1.0
 
 func _ready() -> void:
-	_configure_window()
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_init_rooms_state()
 	_connect_system_signals()
 	_connect_ui_signals()
@@ -84,15 +84,6 @@ func _process(delta: float) -> void:
 	
 	_simulate_atmosphere_step(delta)
 	_update_telemetry_ui()
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
-	while parent_win:
-		if "window_title" in parent_win:
-			parent_win.window_title = APP_TITLE
-			break
-		parent_win = parent_win.get_parent()
 
 func _is_ship_operational() -> bool:
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
@@ -212,11 +203,11 @@ func _update_permissions() -> void:
 			is_solo = not bool(nm.is_multiplayer_active)
 	
 	# Matrice RBAC:
-	# - Ingegnere, Capitano, Factotum, Solo Mode: Controllo Completo
+	# - Ingegnere, Capitano, Mozzo, Solo Mode: Controllo Completo
 	# - Pilota, Soldato, Hacker: Sola Visualizzazione
 	var role_lower := my_role.to_lower().strip_edges()
 	if not my_role.is_empty():
-		can_control_life_support = role_lower in ["engineer", "ingegnere", "captain", "capitano", "factotum", "admin", "host"]
+		can_control_life_support = role_lower in ["engineer", "ingegnere", "captain", "capitano", "mozzo", "admin", "host"]
 	else:
 		can_control_life_support = is_solo
 	
@@ -261,12 +252,12 @@ func _init_rooms_state() -> void:
 		]
 	
 	for r in rooms_list:
-		var r_id: String = str(r.get("id", ""))
+		var r_id: String = str(r.get("id"))
 		rooms_state[r_id] = {
 			"id": r_id,
-			"name": str(r.get("name", r_id)),
-			"category": str(r.get("category", "General")),
-			"rect": r.get("rect", Rect2()),
+			"name": str(r.get("name")),
+			"category": str(r.get("category")),
+			"rect": r.get("rect"),
 			"o2_pct": 21.0,
 			"co2_pct": 0.04,
 			"pressure_kpa": 101.3,
@@ -312,11 +303,11 @@ func _build_room_cards_ui() -> void:
 # --- SIMULAZIONE DINAMICA ATMOSFERICA ---
 
 func _simulate_atmosphere_step(delta: float) -> void:
-	var o2_gen_rate: float = float(active_config.get("o2_generation_rate", 1.2))
-	var decomp_rate: float = float(active_config.get("decompression_rate", 1.8))
-	var auto_fire_suppress: bool = bool(active_config.get("auto_fire_suppress", false))
-	var scrubber_eff: float = float(active_config.get("scrubber_efficiency", 0.98))
-	var fire_supp_co2: float = float(active_config.get("fire_suppression_co2_level", 0.45))
+	var o2_gen_rate: float = float(active_config.get("o2_generation_rate"))
+	var decomp_rate: float = float(active_config.get("decompression_rate"))
+	var auto_fire_suppress: bool = bool(active_config.get("auto_fire_suppress"))
+	var scrubber_eff: float = float(active_config.get("scrubber_efficiency"))
+	var fire_supp_co2: float = float(active_config.get("fire_suppression_co2_level"))
 	
 	# Verifica danni breccia da SpaceWorldManager
 	var active_damages: Array[Dictionary] = []
@@ -325,13 +316,13 @@ func _simulate_atmosphere_step(delta: float) -> void:
 	
 	for r_id in rooms_state:
 		var state: Dictionary = rooms_state[r_id]
-		var r_rect: Rect2 = state.get("rect", Rect2())
+		var r_rect: Rect2 = state.get("rect")
 		
 		# Verifica se c'è un danno/breccia in questa stanza
 		var breach_present := false
 		for dmg in active_damages:
-			var d_pos: Vector2 = dmg.get("pos", Vector2.ZERO)
-			var d_type: String = str(dmg.get("type", ""))
+			var d_pos: Vector2 = dmg.get("pos")
+			var d_type: String = str(dmg.get("type"))
 			if (d_type.begins_with("dmg_breach") or d_type == "STRUCTURAL") and r_rect.has_point(d_pos):
 				breach_present = true
 				break
@@ -446,7 +437,7 @@ func _on_room_card_fire_suppressed(room_id: String) -> void:
 func _on_toggle_seal_pressed() -> void:
 	if not can_control_life_support or not rooms_state.has(selected_room_id):
 		return
-	var current_sealed: bool = bool(rooms_state[selected_room_id].get("is_sealed", false))
+	var current_sealed: bool = bool(rooms_state[selected_room_id].get("is_sealed"))
 	set_bulkhead_sealed(selected_room_id, not current_sealed)
 
 func _on_suppress_fire_pressed() -> void:
@@ -640,43 +631,6 @@ func _apply_configuration() -> void:
 		else:
 			dat_status_badge.text = "DAT: DEFAULT"
 			dat_status_badge.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
-
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		var eq_pos := line.find("=")
-		if eq_pos == -1:
-			continue
-		
-		var key := line.substr(0, eq_pos).strip_edges()
-		var val_str := line.substr(eq_pos + 1).strip_edges()
-		
-		if val_str.to_lower() == "true":
-			result[key] = true
-		elif val_str.to_lower() == "false":
-			result[key] = false
-		elif val_str.is_valid_int():
-			result[key] = val_str.to_int()
-		elif val_str.is_valid_float():
-			result[key] = val_str.to_float()
-		else:
-			result[key] = val_str
-	
-	file.close()
-	return result
 
 func _on_drive_file_modified(rel_path: String) -> void:
 	if "LifeSupport" in rel_path and rel_path.ends_with(".dat"):

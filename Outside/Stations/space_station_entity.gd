@@ -227,15 +227,15 @@ func get_telemetry_data() -> Dictionary:
 ## Trova uno slot di docking libero
 func get_available_docking_bay() -> int:
 	for bay in docking_bays:
-		if not bay.get("is_occupied", false):
-			return int(bay.get("id", -1))
+		if not bay.get("is_occupied"):
+			return int(bay.get("id"))
 	return -1
 
 ## Assegna uno slot di docking a una nave
 func assign_docking_bay(bay_id: int, ship_id: String) -> bool:
 	for i in range(docking_bays.size()):
 		if docking_bays[i].get("id") == bay_id:
-			if docking_bays[i].get("is_occupied", false):
+			if docking_bays[i].get("is_occupied"):
 				return false
 			docking_bays[i]["is_occupied"] = true
 			docking_bays[i]["assigned_ship_id"] = ship_id
@@ -256,7 +256,7 @@ func release_docking_bay(bay_id: int) -> void:
 func get_bay_global_transform(bay_id: int) -> Transform3D:
 	for bay in docking_bays:
 		if bay.get("id") == bay_id:
-			var local_pos: Vector3 = bay.get("local_pos", Vector3.ZERO)
+			var local_pos: Vector3 = bay.get("local_pos")
 			var target_pos := global_transform * local_pos
 			return Transform3D(global_transform.basis, target_pos)
 	return global_transform

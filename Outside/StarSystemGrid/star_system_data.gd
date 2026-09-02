@@ -7,14 +7,14 @@ extends Resource
 @export var system_name: String = "Helios Nova System"
 @export var description: String = "Sistema stellare principale."
 @export var primary_star_name: String = "Helios Nova"
-@export var primary_star_coords: Vector3i = Vector3i.ZERO
-@export var primary_star_color: Color = Color(1.0, 0.96, 0.9, 1.0)
+@export var primary_star_coords := Vector3i.ZERO
+@export var primary_star_color := Color(1.0, 0.96, 0.9, 1.0)
 @export var primary_star_energy: float = 1.3
 @export var primary_star_radius_km: float = 696340.0
 @export var primary_star_mass_tons: float = 1.989e27
 
-# Catalogo macro-corpi del sistema
-@export var celestial_bodies: Array[Dictionary] = []
+# Catalogo macro-corpi del sistema (Array di CelestialBodyData o Dictionary)
+@export var celestial_bodies: Array = []
 
 # Mappa/Lista di settori custom predefiniti o speciali
 @export var custom_sectors: Array[Dictionary] = []
@@ -26,40 +26,62 @@ func _init(p_id: String = "", p_name: String = "") -> void:
 		system_name = p_name
 
 ## Aggiunge o aggiorna un corpo celeste nel catalogo
-func add_or_update_body(body_data: Dictionary) -> void:
-	var body_id: String = body_data.get("id", "")
-	if body_id.is_empty():
-		body_id = "BODY_%d" % celestial_bodies.size()
-		body_data["id"] = body_id
+func add_or_update_body(p_body: Variant) -> void:
+	var body: CelestialBodyData = _ensure_body_is_object(p_body)
+	if not body:
+		return
+		
+	if body.id.is_empty():
+		body.id = "BODY_%d" % celestial_bodies.size()
 	
 	for i in range(celestial_bodies.size()):
-		if celestial_bodies[i].get("id", "") == body_id:
-			celestial_bodies[i] = body_data.duplicate(true)
+		var b = celestial_bodies[i]
+		var bid = b.get("id") if b is Dictionary else b.id
+		if bid == body.id:
+			celestial_bodies[i] = body
 			return
 			
-	celestial_bodies.append(body_data.duplicate(true))
+	celestial_bodies.append(body)
 
 ## Rimuove un corpo celeste per ID
 func remove_body(body_id: String) -> bool:
 	for i in range(celestial_bodies.size()):
-		if celestial_bodies[i].get("id", "") == body_id:
+		var b = celestial_bodies[i]
+		var bid = b.get("id") if b is Dictionary else b.id
+		if bid == body_id:
 			celestial_bodies.remove_at(i)
 			return true
 	return false
 
 ## Ritorna un corpo celeste per ID
-func get_body(body_id: String) -> Dictionary:
+func get_body(body_id: String) -> CelestialBodyData:
 	for b in celestial_bodies:
-		if b.get("id", "") == body_id:
-			return b
-	return {}
+		var bid = b.get("id", "") if b is Dictionary else b.id
+		if bid == body_id:
+			return _ensure_body_is_object(b)
+	return null
 
 ## Trova e ritorna la stazione spaziale primaria/di partenza del sistema stellare
-func find_primary_station() -> Dictionary:
+func find_primary_station() -> CelestialBodyData:
 	for b in celestial_bodies:
-		if b.get("type", "").to_upper() == "STATION":
-			return b
-	return {}
+		var b_type = b.get("type", "") if b is Dictionary else b.type
+		if b_type.to_upper() == "STATION":
+			return _ensure_body_is_object(b)
+	return null
+
+func _ensure_body_is_object(b) -> CelestialBodyData:
+	if b is CelestialBodyData:
+		return b
+	if b is Dictionary:
+		var body := CelestialBodyData.new()
+		body.from_dict(b)
+		# Aggiorniamo l'array per il futuro
+		for i in range(celestial_bodies.size()):
+			if celestial_bodies[i] == b:
+				celestial_bodies[i] = body
+				break
+		return body
+	return null
 
 ## Calcola le coordinate di un settore adiacente libero (a distanza 1 casella di griglia) rispetto alla stazione
 func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
@@ -76,14 +98,16 @@ func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
 	# Mappa coordinate già occupate da macro-corpi celesti
 	var occupied_coords: Dictionary = {}
 	for b in celestial_bodies:
-		if b.has("coords") and b["coords"] is Vector3i:
-			occupied_coords[b["coords"]] = true
+		var b_coords = b.get("coords", Vector3i.ZERO) if b is Dictionary else b.coords
+		if b_coords is Array:
+			b_coords = Vector3i(b_coords[0], b_coords[1], b_coords[2])
+		occupied_coords[b_coords] = true
 	
 	for offset in candidate_offsets:
 		var cand := station_coords + offset
 		if not occupied_coords.has(cand):
 			return cand
-			
+	
 	# Se tutti i candidati sono occupati, ritorna il primo offset standard
 	return station_coords + Vector3i(0, -1, 0)
 
@@ -106,26 +130,32 @@ func remove_custom_sector(sec_id: String) -> bool:
 			return true
 	return false
 
+func get_primary_star_coords() -> Vector3i:
+	if primary_star_coords is Vector3i:
+		return primary_star_coords
+	return Vector3i.ZERO
+
+func get_primary_star_color() -> Color:
+	if primary_star_color is Color:
+		return primary_star_color
+	return Color(1.0, 0.96, 0.9, 1.0)
+
 ## Serializzazione in dizionario
 func to_dict() -> Dictionary:
 	var bodies_serialized: Array[Dictionary] = []
 	for b in celestial_bodies:
-		var copy := b.duplicate(true)
-		if copy.has("coords") and copy["coords"] is Vector3i:
-			var c: Vector3i = copy["coords"]
-			copy["coords"] = [c.x, c.y, c.z]
-		if copy.has("color") and copy["color"] is Color:
-			var col: Color = copy["color"]
-			copy["color"] = [col.r, col.g, col.b, col.a]
-		bodies_serialized.append(copy)
+		bodies_serialized.append(b.to_dict() if b is CelestialBodyData else b)
+
+	var p_coords = get_primary_star_coords()
+	var p_color = get_primary_star_color()
 
 	return {
 		"system_id": system_id,
 		"system_name": system_name,
 		"description": description,
 		"primary_star_name": primary_star_name,
-		"primary_star_coords": [primary_star_coords.x, primary_star_coords.y, primary_star_coords.z],
-		"primary_star_color": [primary_star_color.r, primary_star_color.g, primary_star_color.b, primary_star_color.a],
+		"primary_star_coords": [p_coords.x, p_coords.y, p_coords.z],
+		"primary_star_color": [p_color.r, p_color.g, p_color.b, p_color.a],
 		"primary_star_energy": primary_star_energy,
 		"primary_star_radius_km": primary_star_radius_km,
 		"primary_star_mass_tons": primary_star_mass_tons,
@@ -155,16 +185,11 @@ func from_dict(data: Dictionary) -> void:
 		celestial_bodies.clear()
 		for b in data["celestial_bodies"]:
 			if b is Dictionary:
-				var body_dict := (b as Dictionary).duplicate(true)
-				if body_dict.has("coords"):
-					if body_dict["coords"] is Array and body_dict["coords"].size() >= 3:
-						body_dict["coords"] = Vector3i(int(body_dict["coords"][0]), int(body_dict["coords"][1]), int(body_dict["coords"][2]))
-					elif body_dict["coords"] is String:
-						body_dict["coords"] = SectorData.parse_id_to_coords(body_dict["coords"])
-				if body_dict.has("color") and body_dict["color"] is Array and body_dict["color"].size() >= 4:
-					var c = body_dict["color"]
-					body_dict["color"] = Color(c[0], c[1], c[2], c[3])
-				celestial_bodies.append(body_dict)
+				var body := CelestialBodyData.new()
+				body.from_dict(b)
+				celestial_bodies.append(body)
+			elif b is CelestialBodyData:
+				celestial_bodies.append(b)
 				
 	if data.has("custom_sectors") and data["custom_sectors"] is Array:
 		custom_sectors.clear()
@@ -189,16 +214,17 @@ func create_default_system() -> void:
 	primary_star_energy = 1.3
 	primary_star_radius_km = 696340.0
 	primary_star_mass_tons = 1.989e27
-	celestial_bodies = [
+	
+	var bodies_data: Array[Dictionary] = [
 		{
 			"id": "STAR_SOL_PRIME",
 			"name": "Helios Nova (Stella Primaria)",
 			"type": "STAR",
-			"coords": Vector3i(0, 0, 0),
+			"coords": [0, 0, 0],
 			"radius_km": 696340.0,
 			"mass_tons": 1.989e27,
 			"luminosity": 1.0,
-			"color": Color(1.0, 0.96, 0.9, 1.0),
+			"color": [1.0, 0.96, 0.9, 1.0],
 			"occluding": false,
 			"description": "Stella di sequenza principale al centro del sistema."
 		},
@@ -206,7 +232,7 @@ func create_default_system() -> void:
 			"id": "PLANET_VULCAN",
 			"name": "Vulcanus (Pianeta Roccioso)",
 			"type": "PLANET",
-			"coords": Vector3i(1, 3, 0),
+			"coords": [1, 3, 0],
 			"radius_km": 4800.0,
 			"mass_tons": 3.3e20,
 			"occluding": true,
@@ -216,7 +242,7 @@ func create_default_system() -> void:
 			"id": "PLANET_TERRA_NOVA",
 			"name": "Terra Nova Prime",
 			"type": "PLANET",
-			"coords": Vector3i(4, 8, 0),
+			"coords": [4, 8, 0],
 			"radius_km": 6371.0,
 			"mass_tons": 5.97e21,
 			"occluding": true,
@@ -226,7 +252,7 @@ func create_default_system() -> void:
 			"id": "MOON_LUNA_SEC",
 			"name": "Selene Secundus",
 			"type": "MOON",
-			"coords": Vector3i(4, 8, 0),
+			"coords": [4, 8, 0],
 			"radius_km": 1737.0,
 			"mass_tons": 7.35e19,
 			"occluding": true,
@@ -236,7 +262,7 @@ func create_default_system() -> void:
 			"id": "BELT_CERES_EX",
 			"name": "Fascia d'Asteroidi Interna",
 			"type": "ASTEROID_FIELD",
-			"coords": Vector3i(3, 10, 0),
+			"coords": [3, 10, 0],
 			"radius_km": 25000.0,
 			"mass_tons": 1.5e18,
 			"occluding": false,
@@ -246,7 +272,7 @@ func create_default_system() -> void:
 			"id": "STATION_VALKYRIE",
 			"name": "Stazione Spaziale Valkyrie",
 			"type": "STATION",
-			"coords": Vector3i(4, 12, 0),
+			"coords": [4, 12, 0],
 			"radius_km": 15.0,
 			"mass_tons": 8.5e10,
 			"occluding": false,
@@ -256,7 +282,7 @@ func create_default_system() -> void:
 			"id": "PATROL_VANGUARD",
 			"name": "Pattuglia Vanguard-7",
 			"type": "PATROL",
-			"coords": Vector3i(4, 11, 0),
+			"coords": [4, 11, 0],
 			"radius_km": 0.5,
 			"mass_tons": 45000.0,
 			"occluding": false,
@@ -266,7 +292,7 @@ func create_default_system() -> void:
 			"id": "WRECK_TITAN_GRAVE",
 			"name": "Relitto Incrociatore Titan-04",
 			"type": "WRECK",
-			"coords": Vector3i(5, 14, 0),
+			"coords": [5, 14, 0],
 			"radius_km": 2.5,
 			"mass_tons": 1.2e8,
 			"occluding": false,
@@ -276,7 +302,7 @@ func create_default_system() -> void:
 			"id": "GAS_GIANT_KRONOS",
 			"name": "Kronos Titan (Gigante Gassoso)",
 			"type": "GAS_GIANT",
-			"coords": Vector3i(8, 20, 0),
+			"coords": [8, 20, 0],
 			"radius_km": 69911.0,
 			"mass_tons": 1.89e24,
 			"occluding": true,
@@ -286,13 +312,20 @@ func create_default_system() -> void:
 			"id": "GAS_GIANT_AETHER",
 			"name": "Aetheris (Gigante di Ghiaccio)",
 			"type": "GAS_GIANT",
-			"coords": Vector3i(-12, 16, 0),
+			"coords": [-12, 16, 0],
 			"radius_km": 25362.0,
 			"mass_tons": 8.68e22,
 			"occluding": true,
 			"description": "Gigante ghiacciato all'estrema periferia del sistema."
 		}
 	]
+	
+	celestial_bodies.clear()
+	for b_dict in bodies_data:
+		var body := CelestialBodyData.new()
+		body.from_dict(b_dict)
+		celestial_bodies.append(body)
+	
 	custom_sectors = []
 
 static func get_default_star_system() -> StarSystemData:

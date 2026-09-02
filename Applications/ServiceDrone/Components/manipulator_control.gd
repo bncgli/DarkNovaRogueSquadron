@@ -105,19 +105,19 @@ func _update_tuning_labels() -> void:
 	
 	match current_tool:
 		"welder":
-			var rate := float(active_tuning.get("repair_rate", 15.0))
+			var rate := float(active_tuning.get("repair_rate"))
 			tool_info_label.text = "SALDATRICE: Tasso %.1f%%/s | Target: Falle Scafo (dmg_breach)" % rate
 		"laser":
-			var pwr := float(active_tuning.get("cutting_laser_power", 25.0))
+			var pwr := float(active_tuning.get("cutting_laser_power"))
 			tool_info_label.text = "LASER TAGLIO: Potenza %.1f MW | Target: Relitti & Sabotaggio" % pwr
 		"magnet":
-			var rng := float(active_tuning.get("magnet_range", 18.0))
-			var cap := float(active_tuning.get("cargo_capacity_kg", 500.0))
+			var rng := float(active_tuning.get("magnet_range"))
+			var cap := float(active_tuning.get("cargo_capacity_kg"))
 			tool_info_label.text = "HARPOON: Raggio %.1fm | Capacità Max: %.0f kg" % [rng, cap]
 
 func update_telemetry(t: Dictionary) -> void:
-	var is_docked: bool = t.get("is_docked", true)
-	var is_auto_dock: bool = t.get("is_auto_docking", false)
+	var is_docked: bool = t.get("is_docked")
+	var is_auto_dock: bool = t.get("is_auto_docking")
 	
 	if btn_undock:
 		btn_undock.text = "🚀 DECOLLO" if is_docked else "IN VOLO"
@@ -127,7 +127,7 @@ func update_telemetry(t: Dictionary) -> void:
 		btn_auto_dock.text = "⚓ IN RIENTRO..." if is_auto_dock else "⚓ AUTO-DOCK"
 		btn_auto_dock.disabled = not controls_enabled or is_docked
 	
-	is_tool_active = bool(t.get("is_tool_active", false))
+	is_tool_active = bool(t.get("is_tool_active"))
 	if btn_activate_tool:
 		if is_tool_active:
 			btn_activate_tool.text = "⏹ DISATTIVA STRUMENTO"
@@ -137,14 +137,14 @@ func update_telemetry(t: Dictionary) -> void:
 			btn_activate_tool.modulate = Color(0.3, 0.9, 0.5)
 	
 	if tool_progress_bar:
-		var p := float(t.get("repair_progress", 0.0)) * 100.0
+		var p := float(t.get("repair_progress")) * 100.0
 		tool_progress_bar.value = p
 		tool_progress_bar.visible = is_tool_active or p > 0.0
 	
 	if cargo_info_label:
-		var count: int = int(t.get("cargo_count", 0))
-		var w: float = float(t.get("cargo_weight", 0.0))
-		var max_w: float = float(t.get("max_cargo_weight", 500.0))
+		var count: int = int(t.get("cargo_count"))
+		var w: float = float(t.get("cargo_weight"))
+		var max_w: float = float(t.get("max_cargo_weight"))
 		cargo_info_label.text = "STIVA CARGO: %d slot | %.1f / %.0f kg (%.0f%%)" % [count, w, max_w, (w / maxf(max_w, 1.0)) * 100.0]
 
 func _on_undock_pressed() -> void:

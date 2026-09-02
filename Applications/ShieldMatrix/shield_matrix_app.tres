@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_vw54f")
-roles = Array[String](["Capitano", "Ingegnere", "Factotum"])
+roles = Array[String](["Capitano", "Ingegnere", "Mozzo"])
 power_draw_mw = 20.0
 required_subsystems = Array[String](["deflector_emitters", "reactor"])
 is_critical = true
@@ -13,6 +13,7 @@ title = "Shield Matrix"
 description = "Matrice deflettori a 4 quadranti e scudi energetici"
 developer = "CyberDyne Orbital"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.2, 0.6, 1, 1)
 scene_path = "res://Applications/ShieldMatrix/shield_matrix_app.tscn"
 default_window_size = Vector2(620, 460)

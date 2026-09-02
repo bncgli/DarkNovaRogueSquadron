@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://c3a707trssihe"]
+
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_pong"]
+
+[resource]
+script = ExtResource("1_pong")
+app_id = "pong"
+title = "Pong"
+description = "Simulazione arcade retro paddle ball per GodotOS"
+developer = "RetroArcade Corp"
+category = "Giochi & Svago"
+menu_path = "Giochi"
+icon_color = Color(0.2, 0.8, 0.9, 1)
+scene_path = "res://Applications/Games/Pong/Scenes/pong_main_menu.tscn"
+default_window_size = Vector2(640, 480)
+terminal_command = "pong"
+drive_folder = "Games/Pong"
+default_password = "PONG-7815"
+default_files = Array[Dictionary]([{
+"content": "# PONG RETRO ARCADE CONFIGURATION
+[GAME]
+title=Pong
+version=1.0.0
+paddle_speed=400.0
+ball_speed_initial=300.0
+ball_speed_max=800.0
+ai_difficulty=NORMAL
+
+[RECORDS]
+survival_longest_rally=42
+singleplayer_wins=15
+",
+"desc": "Parametri dinamica racchetta, velocità palla e record di gioco.",
+"is_protected": false,
+"path": "Terminal Drive/Games/Pong/pong_config.dat"
+}])

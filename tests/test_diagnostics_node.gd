@@ -62,7 +62,7 @@ func _run_suite() -> void:
 	print("\n--- TEST 4: Caricamento dinamico ed effetto a runtime dei parametri .dat ---")
 	diag_app.load_dat_configuration()
 	assert(diag_app.active_config.get("is_dat_loaded") == true, "Configurazione .dat deve risultare caricata")
-	assert(diag_app.active_config.get("scan_depth") == "DEEP", "scan_depth di fabbrica deve essere DEEP")
+	assert(diag_app.active_config.get("scan_depth") == "DEEP")
 	assert(diag_app.active_config.get("ice_firewall_strength") == 100.0, "ice_firewall_strength di fabbrica deve essere 100.0")
 	assert(diag_app.active_config.get("factory_reset_delay_sec") == 3.0, "factory_reset_delay_sec di fabbrica deve essere 3.0")
 	print("✔ Valori iniziali .dat caricati con successo")
@@ -121,10 +121,10 @@ func _run_suite() -> void:
 		assert(diag_app.can_control_diagnostics == true, "Capitano deve avere pieno controllo con override")
 		assert(diag_app.btn_start_scan.disabled == false, "Pulsante scansione abilitato per Capitano")
 		
-		# Ruolo Factotum (Pieno controllo & Override)
-		net_mgr.request_role("Factotum")
+		# Ruolo Mozzo (Pieno controllo & Override)
+		net_mgr.request_role("Mozzo")
 		await get_tree().process_frame
-		assert(diag_app.can_control_diagnostics == true, "Factotum deve avere pieno controllo")
+		assert(diag_app.can_control_diagnostics == true, "Mozzo deve avere pieno controllo")
 		
 		# Ruolo Pilota (Sola visualizzazione / Telemetria)
 		net_mgr.request_role("Pilota")
@@ -240,7 +240,7 @@ func _run_suite() -> void:
 	
 	var diag_installed_app := bp.get_installed_app_by_id("diagnostics")
 	assert(not diag_installed_app.is_empty(), "App Diagnostics deve essere presente nel catalogo installed_apps")
-	assert(diag_installed_app.get("title") == "System Diagnostics", "Titolo app Diagnostics in blueprint corretto")
+	assert(diag_installed_app.get("title") == "System Diagnostics")
 	assert(diag_installed_app.get("roles").has("Hacker"), "Hacker deve essere tra i ruoli autorizzati in blueprint")
 	assert(diag_installed_app.get("roles").has("Ingegnere"), "Ingegnere deve essere tra i ruoli autorizzati in blueprint")
 	

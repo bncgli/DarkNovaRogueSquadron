@@ -9,8 +9,8 @@ extends Resource
 signal blueprint_changed()
 
 # --- METADATI GENERALI ---
-const SHIP_CLASSES = ["Corvette", "Frigate", "Destroyer", "Cruiser", "Freighter", "Science Vessel", "Scout", "Carrier", "Station"]
-const DEVICE_CATEGORIES = ["command", "propulsion", "life_support", "engineering", "tactical", "sensors", "comms", "mainframe", "defense", "cargo", "service", "utility"]
+static var SHIP_CLASSES: Array[Variant] = ["Corvette", "Frigate", "Destroyer", "Cruiser", "Freighter", "Science Vessel", "Scout", "Carrier", "Station"]
+static var DEVICE_CATEGORIES: Array[Variant] = ["command", "propulsion", "life_support", "engineering", "tactical", "sensors", "comms", "mainframe", "defense", "cargo", "service", "utility"]
 
 @export var ship_id: String = "new ship":
 	set(val):
@@ -32,12 +32,12 @@ const DEVICE_CATEGORIES = ["command", "propulsion", "life_support", "engineering
 		ship_mesh_path = val
 		emit_changed()
 
-@export var ship_bounds: Rect2 = Rect2(60, 30, 480, 420):
+@export var ship_bounds := Rect2(60, 30, 480, 420):
 	set(val):
 		ship_bounds = val
 		emit_changed()
 
-@export var drone_spawn_pos: Vector2 = Vector2(300, 80):
+@export var drone_spawn_pos := Vector2(300, 80):
 	set(val):
 		drone_spawn_pos = val
 		emit_changed()
@@ -57,6 +57,35 @@ const DEVICE_CATEGORIES = ["command", "propulsion", "life_support", "engineering
 		flux_modifiers = val
 		emit_changed()
 
+# --- HELPERS PER LA ROBUSTEZZA DATI ---
+
+func _ensure_room_is_object(r) -> ShipRoomData:
+	if r is ShipRoomData:
+		return r
+	var new_room := ShipRoomData.new()
+	if r is Dictionary:
+		new_room.from_dict(r)
+	
+	# Aggiorna l'elemento nell'array per chiamate future
+	for i in range(rooms.size()):
+		if rooms[i] == r:
+			rooms[i] = new_room
+			break
+	return new_room
+
+func _ensure_duct_is_object(d) -> ShipDuctData:
+	if d is ShipDuctData:
+		return d
+	var new_duct = ShipDuctData.new()
+	if d is Dictionary:
+		new_duct.from_dict(d)
+		
+	for i in range(ducts.size()):
+		if ducts[i] == d:
+			ducts[i] = new_duct
+			break
+	return new_duct
+
 # --- TASK-019: Zona Ricarica ---
 @export var recharge_room_id: String = "":
 	set(val):
@@ -64,15 +93,15 @@ const DEVICE_CATEGORIES = ["command", "propulsion", "life_support", "engineering
 		emit_changed()
 
 # --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
-# Ogni elemento: { "id": str, "name": str, "rect": Rect2, "color": Color, "border_color": Color, "devices": Array[Dictionary], "power_mw": float, "is_on": bool }
-@export var rooms: Array[Dictionary] = []:
+# ogni elemento: ShipRoomData o Dictionary (da caricamento vecchio)
+@export var rooms: Array = []:
 	set(val):
 		rooms = val
 		emit_changed()
 
 # --- SUBLAYER 2: CONDOTTI DI MANUTENZIONE (Ducts System) ---
-# Ogni elemento: { "id": str, "name": str, "from": Vector2, "to": Vector2, "width": float, "is_blocked": bool }
-@export var ducts: Array[Dictionary] = []:
+# Ogni elemento: ShipDuctData o Dictionary
+@export var ducts: Array = []:
 	set(val):
 		ducts = val
 		emit_changed()
@@ -106,24 +135,26 @@ const DEVICE_CATEGORIES = ["command", "propulsion", "life_support", "engineering
 
 ## Ricalcola la potenza totale di una stanza sommando i power_mw dei suoi dispositivi.
 func update_room_power(room_id: String) -> void:
-	for r in rooms:
-		if r.get("id", "") == room_id:
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		if r.id == room_id:
 			var total: float = 0.0
-			var devs: Array = r.get("devices", [])
+			var devs: Array = r.devices
 			for d in devs:
-				total += float(d.get("power_mw", 0.0))
-			r["power_mw"] = total
+				total += float(d.get("power_mw"))
+			r.power_mw = total
 			emit_changed()
 			return
 
 ## Ricalcola la potenza di tutte le stanze.
 func recalculate_all_powers() -> void:
-	for r in rooms:
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
 		var total: float = 0.0
-		var devs: Array = r.get("devices", [])
+		var devs: Array = r.devices
 		for d in devs:
-			total += float(d.get("power_mw", 0.0))
-		r["power_mw"] = total
+			total += float(d.get("power_mw"))
+		r.power_mw = total
 	emit_changed()
 
 func _init() -> void:
@@ -140,33 +171,54 @@ func create_default_ship() -> void:
 	drone_spawn_heading = 0
 	
 ## Generazione procedurale del layout della nave (TASK-019).
+func get_ship_bounds() -> Rect2:
+	if ship_bounds is Rect2:
+		return ship_bounds
+	return Rect2(60, 30, 480, 420)
+
+func get_drone_spawn_pos() -> Vector2:
+	if drone_spawn_pos is Vector2:
+		return drone_spawn_pos
+	return Vector2(300, 80)
+
 func generate_random_layout(grid_size: float = 20.0) -> void:
 	rooms.clear()
 	ducts.clear()
 	damages.clear()
+	installed_apps.clear()
+	drive_files.clear()
+	drive_passwords.clear()
 	recharge_room_id = ""
 	
 	var rng = RandomNumberGenerator.new()
 	rng.randomize()
 	
-	var bounds := ship_bounds
+	var bounds: Rect2 = get_ship_bounds()
 	var margin := grid_size * 2
 	
 	var room_templates := RoomDatabase.get_room_ids()
 	if room_templates.is_empty():
 		return
 
+	# Garantiamo che ci siano alcune stanze fondamentali
+	var mandatory := ["ponte_comando", "reattore_fusione", "supporto_vitale_min", "mainframe", "pod_drone"]
+	
 	# 1. Genera Stanze
-	var room_count := rng.randi_range(5, 10)
+	var room_count := rng.randi_range(8, 14)
 	var generated_rects: Array[Rect2] = []
 	var attempts := 0
 	
-	while generated_rects.size() < room_count and attempts < 150:
+	while generated_rects.size() < room_count and attempts < 300:
 		attempts += 1
-		var template_id: String = room_templates[rng.randi() % room_templates.size()]
+		var template_id: String = ""
+		if generated_rects.size() < mandatory.size():
+			template_id = mandatory[generated_rects.size()]
+		else:
+			template_id = room_templates[rng.randi() % room_templates.size()]
+			
 		var template_data := RoomDatabase.get_room_data(template_id)
 		
-		var min_size: Vector2 = template_data.get("min_size", Vector2(60, 60))
+		var min_size: Vector2 = template_data.get("min_size")
 		var w:float = ceil(min_size.x / grid_size) * grid_size
 		var h:float = ceil(min_size.y / grid_size) * grid_size
 		
@@ -187,21 +239,14 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 		
 		if not overlap:
 			var room_id := "room_" + str(generated_rects.size() + 1)
-			var new_room := {
-				"id": room_id,
-				"name": template_data.get("name", room_id),
-				"category": template_data.get("category", "utility"),
-				"rect": new_rect,
-				"color": template_data.get("color", Color(0.3, 0.3, 0.3, 0.5)),
-				"border_color": template_data.get("color", Color(0.3, 0.3, 0.3, 0.5)).lightened(0.3),
-				"devices": [],
-				"is_on": true,
-				"power_mw": 0.0
-			}
+			var new_room := ShipRoomData.new(room_id, template_data.get("name", room_id), new_rect)
+			new_room.color = template_data.get("color", Color(0.3, 0.3, 0.3, 0.5))
+			new_room.border_color = new_room.color.lightened(0.3)
+			new_room.is_on = true
 			
 			var def_devs: Array = template_data.get("default_devices", [])
 			for d_name in def_devs:
-				new_room["devices"].append({
+				new_room.devices.append({
 					"id": room_id + "_" + str(d_name),
 					"name": str(d_name),
 					"pos": new_rect.get_center(),
@@ -215,59 +260,62 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 	
 	# 2. Connetti stanze con condotti (L-shape)
 	for i in range(rooms.size() - 1):
-		var p1: Vector2 = rooms[i]["rect"].get_center()
-		var p2: Vector2 = rooms[i+1]["rect"].get_center()
+		var r1 = _ensure_room_is_object(rooms[i])
+		var r2 = _ensure_room_is_object(rooms[i+1])
+		var p1: Vector2 = r1.rect.get_center()
+		var p2: Vector2 = r2.rect.get_center()
 		p1 = (p1 / grid_size).round() * grid_size
 		p2 = (p2 / grid_size).round() * grid_size
 		
 		var mid := Vector2(p2.x, p1.y)
 		
-		ducts.append({
-			"id": "duct_" + str(i) + "_a",
-			"from": p1,
-			"to": mid,
-			"width": 14.0,
-			"is_blocked": false
-		})
-		ducts.append({
-			"id": "duct_" + str(i) + "_b",
-			"from": mid,
-			"to": p2,
-			"width": 14.0,
-			"is_blocked": false
-		})
+		ducts.append(ShipDuctData.new("duct_" + str(i) + "_a", "Duct " + str(i) + " A", p1, mid))
+		ducts.append(ShipDuctData.new("duct_" + str(i) + "_b", "Duct " + str(i) + " B", mid, p2))
 
 	if not rooms.is_empty():
-		drone_spawn_pos = rooms[0]["rect"].position - Vector2(grid_size, grid_size)
-		recharge_room_id = rooms[0]["id"]
+		var r0 = _ensure_room_is_object(rooms[0])
+		drone_spawn_pos = r0.rect.position - Vector2(grid_size, grid_size)
+		recharge_room_id = r0.id
 		
+	# 3. Installa Applicazioni Base
+	var base_apps := ["FlightControl", "PowerGrid", "Cams", "LifeSupport", "Diagnostics", "Terminal", "SystemMap", "Logbook"]
+	for app_name in base_apps:
+		var res_path := "res://Applications/%s/%s_app.tres" % [app_name, app_name.to_snake_case()]
+		if ResourceLoader.exists(res_path):
+			var res = load(res_path)
+			if res is AppResource:
+				install_app_resource(res)
+				
 	recalculate_all_powers()
 	emit_changed()
 	
 # --- METODI DI QUERY E RICERCA ---
 
-func get_room_by_id(room_id: String) -> Dictionary:
-	for r in rooms:
-		if r.get("id", "") == room_id:
+func get_room_by_id(room_id: String) -> ShipRoomData:
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		if r.id == room_id:
 			return r
-	return {}
+	return null
 
-func get_room_at(pos: Vector2) -> Dictionary:
-	for r in rooms:
-		var rect: Rect2 = r.get("rect", Rect2())
-		if rect.has_point(pos):
+func get_room_at(pos: Vector2) -> ShipRoomData:
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		if r.rect.has_point(pos):
 			return r
-	return {}
+	return null
 
-func get_duct_by_id(duct_id: String) -> Dictionary:
-	for d in ducts:
-		if d.get("id", "") == duct_id:
+func get_duct_by_id(duct_id: String) -> ShipDuctData:
+	for i in range(ducts.size()):
+		var d = _ensure_duct_is_object(ducts[i])
+		if d.id == duct_id:
 			return d
-	return {}
+	return null
 
 func get_device_by_id(dev_id: String) -> Dictionary:
-	for r in rooms:
-		var devs: Array = r.get("devices", [])
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		var devs: Array = r.devices
 		for dev in devs:
 			if dev.get("id", "") == dev_id:
 				return dev
@@ -281,7 +329,8 @@ func get_damage_by_id(dmg_id: String) -> Dictionary:
 
 func remove_room(room_id: String) -> bool:
 	for i in range(rooms.size()):
-		if rooms[i].get("id", "") == room_id:
+		var r = _ensure_room_is_object(rooms[i])
+		if r.id == room_id:
 			rooms.remove_at(i)
 			emit_changed()
 			return true
@@ -289,19 +338,21 @@ func remove_room(room_id: String) -> bool:
 
 func remove_duct(duct_id: String) -> bool:
 	for i in range(ducts.size()):
-		if ducts[i].get("id", "") == duct_id:
+		var d = _ensure_duct_is_object(ducts[i])
+		if d.id == duct_id:
 			ducts.remove_at(i)
 			emit_changed()
 			return true
 	return false
 
 func remove_device(dev_id: String) -> bool:
-	for r in rooms:
-		var devs: Array = r.get("devices", [])
-		for i in range(devs.size()):
-			if devs[i].get("id", "") == dev_id:
-				devs.remove_at(i)
-				update_room_power(r.get("id", ""))
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		var devs: Array = r.devices
+		for j in range(devs.size()):
+			if devs[j].get("id", "") == dev_id:
+				devs.remove_at(j)
+				update_room_power(r.id)
 				emit_changed()
 				return true
 	return false
@@ -388,7 +439,7 @@ func remove_installed_app(app_id: String) -> bool:
 func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var clean_role := role_name.strip_edges()
-	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Factotum" or clean_role == "HOST"
+	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Mozzo" or clean_role == "HOST"
 	
 	for app in installed_apps:
 		if is_super:
@@ -539,27 +590,14 @@ func get_app_resources_for_role(role_name: String, is_solo: bool = false) -> Arr
 ## Converte l'intera Blueprint in un dizionario serializzabile (es. per JSON o salvataggi di rete)
 func to_dict() -> Dictionary:
 	var rooms_copy: Array = []
-	for r: Dictionary in rooms:
-		var rc: Dictionary = r.duplicate(true)
-		if rc.has("rect") and rc["rect"] is Rect2:
-			var rect: Rect2 = rc["rect"]
-			rc["rect"] = [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
-		if rc.has("color") and rc["color"] is Color:
-			var col: Color = rc["color"]
-			rc["color"] = [col.r, col.g, col.b, col.a]
-		if rc.has("border_color") and rc["border_color"] is Color:
-			var col: Color = rc["border_color"]
-			rc["border_color"] = [col.r, col.g, col.b, col.a]
-		rooms_copy.append(rc)
+	for i in range(rooms.size()):
+		var r = _ensure_room_is_object(rooms[i])
+		rooms_copy.append(r.to_dict())
 	
 	var ducts_copy: Array = []
-	for d: Dictionary in ducts:
-		var dc: Dictionary = d.duplicate(true)
-		if dc.has("from") and dc["from"] is Vector2:
-			dc["from"] = [dc["from"].x, dc["from"].y]
-		if dc.has("to") and dc["to"] is Vector2:
-			dc["to"] = [dc["to"].x, dc["to"].y]
-		ducts_copy.append(dc)
+	for i in range(ducts.size()):
+		var d = _ensure_duct_is_object(ducts[i])
+		ducts_copy.append(d.to_dict())
 		
 	var damages_copy: Array = []
 	for dmg: Dictionary in damages:
@@ -609,54 +647,57 @@ func from_dict(data: Dictionary) -> void:
 		ship_class = str(data["ship_class"])
 	if data.has("ship_mesh_path"):
 		ship_mesh_path = str(data["ship_mesh_path"])
-	if data.has("ship_bounds") and data["ship_bounds"] is Array and data["ship_bounds"].size() == 4:
-		var b: Array = data["ship_bounds"]
-		ship_bounds = Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3]))
-	if data.has("drone_spawn_pos") and data["drone_spawn_pos"] is Array and data["drone_spawn_pos"].size() == 2:
-		var p: Array = data["drone_spawn_pos"]
-		drone_spawn_pos = Vector2(float(p[0]), float(p[1]))
+		
+	if data.has("ship_bounds"):
+		var b = data["ship_bounds"]
+		if b is Array and b.size() == 4:
+			ship_bounds = Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3]))
+		elif b is Rect2:
+			ship_bounds = b
+			
+	if data.has("drone_spawn_pos"):
+		var p = data["drone_spawn_pos"]
+		if p is Array and p.size() == 2:
+			drone_spawn_pos = Vector2(float(p[0]), float(p[1]))
+		elif p is Vector2:
+			drone_spawn_pos = p
+			
 	if data.has("drone_spawn_heading"):
 		drone_spawn_heading = float(data["drone_spawn_heading"])
 	
 	if data.has("flux"):
 		flux = int(data["flux"])
 	if data.has("flux_modifiers") and data["flux_modifiers"] is Array:
-		flux_modifiers = (data["flux_modifiers"] as Array).duplicate(true)
+		flux_modifiers.clear()
+		for fm in data["flux_modifiers"]:
+			if fm is Dictionary:
+				flux_modifiers.append(fm.duplicate(true))
+			else:
+				flux_modifiers.append(fm)
 		
 	if data.has("recharge_room_id"):
 		recharge_room_id = str(data["recharge_room_id"])
 		
 	if data.has("rooms") and data["rooms"] is Array:
-		var new_rooms: Array[Dictionary] = []
+		var new_rooms: Array[ShipRoomData] = []
 		for r in data["rooms"]:
 			if r is Dictionary:
-				var rd := (r as Dictionary).duplicate(true)
-				if rd.has("rect") and rd["rect"] is Array and rd["rect"].size() == 4:
-					var arr: Array = rd["rect"]
-					rd["rect"] = Rect2(float(arr[0]), float(arr[1]), float(arr[2]), float(arr[3]))
-				if rd.has("color") and rd["color"] is Array and rd["color"].size() >= 3:
-					var arr: Array = rd["color"]
-					var a := float(arr[3]) if arr.size() > 3 else 1.0
-					rd["color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
-				if rd.has("border_color") and rd["border_color"] is Array and rd["border_color"].size() >= 3:
-					var arr: Array = rd["border_color"]
-					var a := float(arr[3]) if arr.size() > 3 else 1.0
-					rd["border_color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
-				new_rooms.append(rd)
+				var body := ShipRoomData.new()
+				body.from_dict(r)
+				new_rooms.append(body)
+			elif r is ShipRoomData:
+				new_rooms.append(r)
 		rooms = new_rooms
 		
 	if data.has("ducts") and data["ducts"] is Array:
-		var new_ducts: Array[Dictionary] = []
+		var new_ducts: Array[ShipDuctData] = []
 		for d in data["ducts"]:
 			if d is Dictionary:
-				var dd := (d as Dictionary).duplicate(true)
-				if dd.has("from") and dd["from"] is Array and dd["from"].size() == 2:
-					var arr: Array = dd["from"]
-					dd["from"] = Vector2(float(arr[0]), float(arr[1]))
-				if dd.has("to") and dd["to"] is Array and dd["to"].size() == 2:
-					var arr: Array = dd["to"]
-					dd["to"] = Vector2(float(arr[0]), float(arr[1]))
-				new_ducts.append(dd)
+				var body := ShipDuctData.new()
+				body.from_dict(d)
+				new_ducts.append(body)
+			elif d is ShipDuctData:
+				new_ducts.append(d)
 		ducts = new_ducts
 
 	if data.has("damages") and data["damages"] is Array:
@@ -664,9 +705,12 @@ func from_dict(data: Dictionary) -> void:
 		for dmg in data["damages"]:
 			if dmg is Dictionary:
 				var dmg_d := (dmg as Dictionary).duplicate(true)
-				if dmg_d.has("pos") and dmg_d["pos"] is Array and dmg_d["pos"].size() == 2:
-					var arr: Array = dmg_d["pos"]
-					dmg_d["pos"] = Vector2(float(arr[0]), float(arr[1]))
+				if dmg_d.has("pos"):
+					var p = dmg_d["pos"]
+					if p is Array and p.size() == 2:
+						dmg_d["pos"] = Vector2(float(p[0]), float(p[1]))
+					elif p is Vector2:
+						dmg_d["pos"] = p
 				new_damages.append(dmg_d)
 		damages = new_damages
 
@@ -685,12 +729,15 @@ func from_dict(data: Dictionary) -> void:
 		for app in data["installed_apps"]:
 			if app is Dictionary:
 				var ad := (app as Dictionary).duplicate(true)
-				if ad.has("icon_color") and ad["icon_color"] is Array and ad["icon_color"].size() >= 3:
-					var arr: Array = ad["icon_color"]
-					var a := float(arr[3]) if arr.size() > 3 else 1.0
-					ad["icon_color"] = Color(float(arr[0]), float(arr[1]), float(arr[2]), a)
-				elif ad.has("icon_color") and ad["icon_color"] is String:
-					ad["icon_color"] = Color.from_string(ad["icon_color"], Color.WHITE)
+				if ad.has("icon_color"):
+					var ic = ad["icon_color"]
+					if ic is Array and ic.size() >= 3:
+						var a := float(ic[3]) if ic.size() > 3 else 1.0
+						ad["icon_color"] = Color(float(ic[0]), float(ic[1]), float(ic[2]), a)
+					elif ic is String:
+						ad["icon_color"] = Color.from_string(ic, Color.WHITE)
+					elif ic is Color:
+						ad["icon_color"] = ic
 				new_apps.append(ad)
 		installed_apps = new_apps
 

@@ -112,8 +112,8 @@ func _init_default_manifest() -> void:
 func get_total_mass() -> float:
 	var total: float = 0.0
 	for item in cargo_items:
-		var qty := int(item.get("quantity", 0))
-		var unit_mass := float(item.get("unit_mass_kg", 0.0))
+		var qty := int(item.get("quantity"))
+		var unit_mass := float(item.get("unit_mass_kg"))
 		total += qty * unit_mass
 	return total
 
@@ -121,8 +121,8 @@ func get_total_mass() -> float:
 func get_total_volume() -> float:
 	var total: float = 0.0
 	for item in cargo_items:
-		var qty := int(item.get("quantity", 0))
-		var unit_vol := float(item.get("unit_volume_m3", 0.0))
+		var qty := int(item.get("quantity"))
+		var unit_vol := float(item.get("unit_volume_m3"))
 		total += qty * unit_vol
 	return total
 
@@ -147,9 +147,9 @@ func add_item(item_data: Dictionary, quantity: int = 1) -> bool:
 	if quantity <= 0:
 		return false
 	
-	var unit_mass := float(item_data.get("unit_mass_kg", 1.0))
-	var unit_vol := float(item_data.get("unit_volume_m3", 0.1))
-	var item_id := str(item_data.get("id", "unknown_item"))
+	var unit_mass := float(item_data.get("unit_mass_kg"))
+	var unit_vol := float(item_data.get("unit_volume_m3"))
+	var item_id := str(item_data.get("id"))
 	
 	if not can_fit(unit_mass, unit_vol, quantity):
 		var reason := "Capacità massima superata (Richiesti: %.1f kg / %.1f m³ - Disponibili: %.1f kg / %.1f m³)" % [
@@ -159,16 +159,16 @@ func add_item(item_data: Dictionary, quantity: int = 1) -> bool:
 		return false
 	
 	# Cerca se l'item esiste già (se non è un disco dati con metadata unici)
-	var is_snet := bool(item_data.get("is_snet_disk", false))
+	var is_snet := bool(item_data.get("is_snet_disk"))
 	var existing_idx := -1
 	if not is_snet:
 		for i in range(cargo_items.size()):
-			if cargo_items[i].get("id", "") == item_id:
+			if cargo_items[i].get("id") == item_id:
 				existing_idx = i
 				break
 	
 	if existing_idx != -1:
-		cargo_items[existing_idx]["quantity"] = int(cargo_items[existing_idx].get("quantity", 0)) + quantity
+		cargo_items[existing_idx]["quantity"] = int(cargo_items[existing_idx].get("quantity")) + quantity
 		item_added.emit(cargo_items[existing_idx], quantity)
 	else:
 		var new_item := item_data.duplicate(true)
@@ -212,8 +212,8 @@ func remove_item(item_id: String, quantity: int = 1) -> Dictionary:
 		return {}
 	
 	for i in range(cargo_items.size()):
-		if cargo_items[i].get("id", "") == item_id:
-			var current_qty := int(cargo_items[i].get("quantity", 0))
+		if cargo_items[i].get("id") == item_id:
+			var current_qty := int(cargo_items[i].get("quantity"))
 			var removed_qty := mini(current_qty, quantity)
 			var removed_item := cargo_items[i].duplicate(true)
 			removed_item["quantity"] = removed_qty
@@ -232,21 +232,21 @@ func remove_item(item_id: String, quantity: int = 1) -> Dictionary:
 ## Verifica presenza item
 func has_item(item_id: String, quantity: int = 1) -> bool:
 	for item in cargo_items:
-		if item.get("id", "") == item_id:
-			return int(item.get("quantity", 0)) >= quantity
+		if item.get("id") == item_id:
+			return int(item.get("quantity")) >= quantity
 	return false
 
 ## Restituisce la quantità presente di un dato item
 func get_item_quantity(item_id: String) -> int:
 	for item in cargo_items:
-		if item.get("id", "") == item_id:
-			return int(item.get("quantity", 0))
+		if item.get("id") == item_id:
+			return int(item.get("quantity"))
 	return 0
 
 ## Recupera item per id
 func get_item(item_id: String) -> Dictionary:
 	for item in cargo_items:
-		if item.get("id", "") == item_id:
+		if item.get("id") == item_id:
 			return item
 	return {}
 
@@ -270,8 +270,8 @@ func transfer_to_drone(item_id: String, quantity: int = 1, drone = null) -> bool
 		return false
 	
 	var item := get_item(item_id)
-	var unit_mass := float(item.get("unit_mass_kg", 1.0))
-	var item_name := str(item.get("name", item_id))
+	var unit_mass := float(item.get("unit_mass_kg"))
+	var item_name := str(item.get("name"))
 	var total_transfer_mass := unit_mass * float(quantity)
 	
 	# Se il drone è fornito o reperibile
@@ -306,7 +306,7 @@ func transfer_from_drone(item_id: String, quantity: int = 1, drone = null) -> bo
 		var found_idx := -1
 		if "cargo_items" in drone:
 			for i in range(drone.cargo_items.size()):
-				if drone.cargo_items[i].get("id", "") == item_id:
+				if drone.cargo_items[i].get("id") == item_id:
 					found_idx = i
 					item_to_add = drone.cargo_items[i].duplicate(true)
 					break
@@ -315,8 +315,8 @@ func transfer_from_drone(item_id: String, quantity: int = 1, drone = null) -> bo
 			transfer_failed.emit("drone", "ship", item_id, quantity, "Item non trovato nel cargo del drone.")
 			return false
 		
-		unit_mass = float(item_to_add.get("unit_mass_kg", item_to_add.get("weight_kg", 10.0) / float(quantity if quantity > 0 else 1)))
-		unit_vol = float(item_to_add.get("unit_volume_m3", 0.2))
+		unit_mass = float(item_to_add.get("unit_mass_kg") / float(quantity if quantity > 0 else 1))
+		unit_vol = float(item_to_add.get("unit_volume_m3"))
 		
 		if not can_fit(unit_mass, unit_vol, quantity):
 			transfer_failed.emit("drone", "ship", item_id, quantity, "Spazio insufficiente nella stiva della corvetta.")
@@ -333,8 +333,8 @@ func transfer_from_drone(item_id: String, quantity: int = 1, drone = null) -> bo
 		# Fallback da catalogo
 		if item_templates.has(item_id):
 			item_to_add = item_templates[item_id].duplicate(true)
-			unit_mass = float(item_to_add.get("unit_mass_kg", 10.0))
-			unit_vol = float(item_to_add.get("unit_volume_m3", 0.2))
+			unit_mass = float(item_to_add.get("unit_mass_kg"))
+			unit_vol = float(item_to_add.get("unit_volume_m3"))
 		else:
 			item_to_add = {
 				"id": item_id,
@@ -381,7 +381,7 @@ func transfer_from_station(item_id: String, quantity: int = 1, station = null) -
 			"is_snet_disk": false
 		}
 	
-	var unit_mass := float(item_to_add.get("unit_mass_kg", 15.0))
+	var unit_mass := float(item_to_add.get("unit_mass_kg"))
 	var unit_vol := float(item_to_add.get("unit_volume_m3", 0.3))
 	
 	if not can_fit(unit_mass, unit_vol, quantity):

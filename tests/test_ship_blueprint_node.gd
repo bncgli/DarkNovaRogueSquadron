@@ -21,7 +21,9 @@ func _run_suite() -> void:
 	assert(bp.ducts.size() == 14, "La Blueprint deve contenere 14 condotti di default")
 	
 	var all_devs := []
-	for r in bp.rooms: all_devs.append_array(r.get("devices", []))
+	for r in bp.rooms: 
+		var r_obj = bp._ensure_room_is_object(r)
+		all_devs.append_array(r_obj.devices)
 	assert(all_devs.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
 	
 	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
@@ -35,18 +37,18 @@ func _run_suite() -> void:
 	# =========================================================================
 	print("\n--- TEST 2: Metodi di Query Rapida ---")
 	var bridge_room := bp.get_room_by_id("bridge")
-	assert(not bridge_room.is_empty(), "get_room_by_id(bridge) deve trovare la stanza")
-	assert(bridge_room.get("name") == "Ponte di Comando", "Nome stanza deve essere Ponte di Comando")
+	assert(bridge_room != null, "get_room_by_id(bridge) deve trovare la stanza")
+	assert(bridge_room.name == "Ponte di Comando", "Nome stanza deve essere Ponte di Comando")
 
 	var room_at_bridge := bp.get_room_at(Vector2(250, 60))
-	assert(not room_at_bridge.is_empty(), "get_room_at deve trovare la stanza al punto (250, 60)")
-	assert(room_at_bridge.get("id") == "bridge", "La stanza trovata deve essere bridge")
+	assert(room_at_bridge != null, "get_room_at deve trovare la stanza al punto (250, 60)")
+	assert(room_at_bridge.id == "bridge", "La stanza trovata deve essere bridge")
 
 	var non_existing_room := bp.get_room_by_id("non_existing_room_id")
-	assert(non_existing_room.is_empty(), "get_room_by_id su ID inesistente deve ritornare dizionario vuoto")
+	assert(non_existing_room == null, "get_room_by_id su ID inesistente deve ritornare null")
 
 	var duct_spine := bp.get_duct_by_id("duct_spine_1")
-	assert(not duct_spine.is_empty(), "get_duct_by_id(duct_spine_1) deve trovare il condotto")
+	assert(duct_spine != null, "get_duct_by_id(duct_spine_1) deve trovare il condotto")
 
 	var reactor_dev := bp.get_device_by_id("reactor_main")
 	assert(not reactor_dev.is_empty(), "get_device_by_id(reactor_main) deve trovare il dispositivo")

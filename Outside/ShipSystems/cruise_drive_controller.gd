@@ -398,7 +398,7 @@ func _check_proximity_hazards() -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_sensor_entities"):
 		var entities: Array[Dictionary] = SpaceWorldManager.get_sensor_entities()
 		for ent in entities:
-			var ent_pos: Vector3 = ent.get("pos", Vector3.ZERO)
+			var ent_pos: Vector3 = ent.get("pos")
 			var dist: float = ship_pos.distance_to(ent_pos)
 			
 			if dist <= proximity_drop_distance:
@@ -406,7 +406,7 @@ func _check_proximity_hazards() -> void:
 				var dir_to_ent := (ent_pos - ship_pos).normalized() if dist > 0.001 else forward_vec
 				var dot_val := forward_vec.dot(dir_to_ent)
 				if dot_val > 0.2 or dist < (proximity_drop_distance * 0.5):
-					var obs_name: String = ent.get("name", "MASSA CRITICA NON IDENTIFICATA")
+					var obs_name: String = ent.get("name")
 					trigger_proximity_drop(obs_name, dist)
 					return
 	

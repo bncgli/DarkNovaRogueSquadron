@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_8e5iy")
-roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Factotum", "Captain", "Engineer"])
+roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Mozzo", "Captain", "Engineer"])
 power_draw_mw = 10.0
 required_subsystems = Array[String](["ship_core", "security_ice"])
 app_id = "diagnostics"
@@ -12,6 +12,7 @@ title = "System Diagnostics"
 description = "Centro sicurezza cyber, scansione minacce drive e barriere ICE"
 developer = "OmniCorp Software"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.2, 0.9, 0.7, 1)
 scene_path = "res://Applications/Diagnostics/diagnostics_app.tscn"
 default_window_size = Vector2(680, 500)

@@ -1,4 +1,5 @@
 extends Node
+class_name FolderPasswordManagerSingleton
 
 ## Autoload to manage password protection on folders.
 

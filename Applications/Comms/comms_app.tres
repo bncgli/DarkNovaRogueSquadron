@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_commsres")
-roles = Array[String](["Capitano", "Hacker", "Factotum", "Captain"])
+roles = Array[String](["Capitano", "Hacker", "Mozzo", "Captain"])
 power_draw_mw = 18.0
 required_subsystems = Array[String](["comms", "subspace_transceiver"])
 is_critical = false
@@ -13,6 +13,7 @@ title = "Comms & Electronic War"
 description = "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari"
 developer = "Pulse Networks"
 category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
 icon_color = Color(0.4, 0.8, 1, 1)
 scene_path = "res://Applications/Comms/comms_app.tscn"
 default_window_size = Vector2(680, 480)

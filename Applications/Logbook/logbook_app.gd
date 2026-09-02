@@ -1,5 +1,5 @@
 class_name LogbookApp
-extends Control
+extends BaseApp
 
 ## Controller per l'applicazione di bordo "Mission Logbook & Tactical Objectives" (Applications/Logbook).
 ## Funge da registro di bordo ufficiale, diario delle operazioni, tracker contratti e scatola nera.
@@ -52,7 +52,7 @@ var tuning_data: Dictionary = {
 # Ruolo e permessi RBAC
 var current_role: String = "Pilota"
 var is_solo_mode: bool = false
-var can_manage_contracts: bool = false # Solo Capitano o Factotum
+var can_manage_contracts: bool = false # Solo Capitano o Mozzo
 
 # Stato contratti ed eventi
 var active_contracts: Array[Dictionary] = []
@@ -181,18 +181,18 @@ func _update_rbac_permissions() -> void:
 		elif "is_solo" in NetworkManager:
 			is_solo_mode = bool(NetworkManager.get("is_solo"))
 	
-	# Capitano o Factotum (o Solo Mode) hanno autorizzazioni complete di gestione contratti
+	# Capitano o Mozzo (o Solo Mode) hanno autorizzazioni complete di gestione contratti
 	var role_lower := current_role.to_lower()
 	can_manage_contracts = (
 		is_solo_mode or 
 		role_lower == "captain" or 
 		role_lower == "capitano" or 
-		role_lower == "factotum"
+		role_lower == "mozzo"
 	)
 
 	if new_contract_btn:
 		new_contract_btn.disabled = not can_manage_contracts
-		new_contract_btn.tooltip_text = "Assegna nuovo contratto (Solo Capitano/Factotum)" if not can_manage_contracts else ""
+		new_contract_btn.tooltip_text = "Assegna nuovo contratto (Solo Capitano/Mozzo)" if not can_manage_contracts else ""
 	
 	if clear_log_btn:
 		clear_log_btn.disabled = not can_manage_contracts
@@ -216,49 +216,6 @@ func _on_player_list_updated() -> void:
 # -----------------------------------------------------------------------------
 # Configurazione .DAT e Hot-Reloading
 # -----------------------------------------------------------------------------
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-
-	var current_section: String = "ROOT"
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			current_section = line.substr(1, line.length() - 2).strip_edges().to_upper()
-			if not result.has(current_section):
-				result[current_section] = {}
-			continue
-
-		var eq_idx := line.find("=")
-		if eq_idx != -1:
-			var key := line.substr(0, eq_idx).strip_edges().to_lower()
-			var val_str := line.substr(eq_idx + 1).strip_edges()
-			var val: Variant = val_str
-
-			if val_str.to_lower() == "true":
-				val = true
-			elif val_str.to_lower() == "false":
-				val = false
-			elif val_str.is_valid_int():
-				val = val_str.to_int()
-			elif val_str.is_valid_float():
-				val = val_str.to_float()
-
-			if not result.has(current_section):
-				result[current_section] = {}
-			result[current_section][key] = val
-
-	file.close()
-	return result
-
 func load_dat_configuration() -> void:
 	var parsed_config: Dictionary = _parse_dat_file(CONFIG_PATH_PRIMARY)
 	if parsed_config.is_empty():
@@ -327,7 +284,7 @@ func _setup_initial_data() -> void:
 	]
 
 func _get_formatted_timestamp() -> String:
-	var tf: String = tuning_data.get("timestamp_format", "STAR_DATE")
+	var tf: String = tuning_data.get("timestamp_format")
 	if tf == "STAR_DATE":
 		return "SD-%d.%d" % [Time.get_unix_time_from_system() / 1000, randi() % 100]
 	return Time.get_time_string_from_system()
@@ -392,8 +349,8 @@ func complete_contract(contract_id: String) -> void:
 	for contract in active_contracts:
 		if contract["id"] == contract_id and contract["status"] == "IN_PROGRESS":
 			contract["status"] = "COMPLETED"
-			var r_flux: int = contract.get("reward_flux", 0)
-			var r_cr: int = contract.get("reward_credits", 0)
+			var r_flux: int = contract.get("reward_flux")
+			var r_cr: int = contract.get("reward_credits")
 			
 			# Accreditamento fondi persistenti nave
 			if SpaceWorldManager:
@@ -429,22 +386,22 @@ func _on_new_contract_pressed() -> void:
 
 ## Iniezione diretta di un contratto accettato (da StationHub o eventi diegetici)
 func add_contract(contract_data: Dictionary) -> bool:
-	var cid: String = str(contract_data.get("id", "CTR-%02d" % (active_contracts.size() + 1)))
+	var cid: String = str(contract_data.get("id"))
 	for c in active_contracts:
 		if c.get("id") == cid:
 			# Aggiorna lo stato se già presente
-			c["status"] = contract_data.get("status", "IN_PROGRESS")
+			c["status"] = contract_data.get("status")
 			_refresh_contracts_ui()
 			return true
 	
 	var new_entry := {
 		"id": cid,
-		"title": contract_data.get("title", "Contratto " + cid),
-		"description": contract_data.get("description", "Obiettivo di missione"),
-		"reward_flux": contract_data.get("reward_flux", contract_data.get("reward_credits", 500)),
-		"reward_credits": contract_data.get("reward_credits", 500),
-		"status": contract_data.get("status", "IN_PROGRESS"),
-		"issuer": contract_data.get("issuer", "Autorità Portuale")
+		"title": contract_data.get("title"),
+		"description": contract_data.get("description"),
+		"reward_flux": contract_data.get("reward_flux"),
+		"reward_credits": contract_data.get("reward_credits"),
+		"status": contract_data.get("status"),
+		"issuer": contract_data.get("issuer")
 	}
 	active_contracts.append(new_entry)
 	log_event("NUOVO CONTRATTO ACQUISITO: %s" % new_entry["title"])
@@ -457,7 +414,7 @@ func add_contract(contract_data: Dictionary) -> bool:
 func log_event(message: String) -> void:
 	var entry := "[%s] %s" % [_get_formatted_timestamp(), message]
 	black_box_events.append(entry)
-	var max_entries: int = config_data.get("max_history_entries", 200)
+	var max_entries: int = config_data.get("max_history_entries")
 	if black_box_events.size() > max_entries:
 		black_box_events.pop_front()
 	_refresh_black_box_ui()

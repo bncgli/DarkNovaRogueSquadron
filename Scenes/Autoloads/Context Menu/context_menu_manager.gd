@@ -75,7 +75,7 @@ func hide_context_menu() -> void:
 ## Adds options that would be visible when right clicking a folder
 func add_folder_options() -> void:
 	var type_name: String
-	if target.file_type == FakeFolder.file_type_enum.FOLDER:
+	if target.file_type == GlobalValues.FileType.FOLDER:
 		type_name = "Folder"
 	else:
 		type_name = "File"
@@ -86,7 +86,7 @@ func add_folder_options() -> void:
 	
 	$VBoxContainer.add_child(rename_option)
 	
-	if target.file_type == FakeFolder.file_type_enum.IMAGE:
+	if target.file_type == GlobalValues.FileType.IMAGE:
 		var set_wallpaper_option: Control = context_menu_option.instantiate()
 		set_wallpaper_option.get_node("%Option Text").text = "Set as wallpaper"
 		set_wallpaper_option.option_clicked.connect(_handle_set_wallpaper)
@@ -94,7 +94,7 @@ func add_folder_options() -> void:
 	
 	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	var is_pwd_protected: bool = false
-	if fpm and target.file_type == FakeFolder.file_type_enum.FOLDER:
+	if fpm and target.file_type == GlobalValues.FileType.FOLDER:
 		is_pwd_protected = fpm.has_password(target.folder_path)
 	
 	if not is_pwd_protected:
@@ -140,7 +140,7 @@ func add_file_manager_options() -> void:
 	
 	if !CopyPasteManager.target_folder_name.is_empty():
 		var paste_folder_option: Control = context_menu_option.instantiate()
-		if CopyPasteManager.target_folder_type == FakeFolder.file_type_enum.FOLDER:
+		if CopyPasteManager.target_folder_type == GlobalValues.FileType.FOLDER:
 			paste_folder_option.get_node("%Option Text").text = "Paste Folder"
 		else:
 			paste_folder_option.get_node("%Option Text").text = "Paste File"
@@ -167,26 +167,21 @@ func _handle_folder_password() -> void:
 		if fpm:
 			fpm.prompt_set_password(target.folder_path, target.folder_name)
 
-func _get_terminal_option() -> Node:
-	var term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer/Terminal Option")
-	if not term_option:
-		term_option = get_node_or_null("/root/Control/Taskbar/StartMenuAnchor/Start Menu/VBoxContainer/Terminal Option")
-	return term_option
-
 func _handle_open_terminal() -> void:
-	if target is FakeFolder and target.file_type == FakeFolder.file_type_enum.FOLDER:
+	if target is FakeFolder and target.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(target.folder_path):
 			var saved_target = target
 			fpm.prompt_enter_password(saved_target.folder_path, saved_target.folder_name, func(_removed_pass: bool) -> void:
-				var term_option = _get_terminal_option()
-				if term_option:
-					term_option.spawn_window()
+				var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+				if tsm:
+					tsm.launch_app("terminal")
 			)
 			return
-	var term_option = _get_terminal_option()
-	if term_option:
-		term_option.spawn_window()
+	
+	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	if tsm:
+		tsm.launch_app("terminal")
 
 func _handle_set_wallpaper() -> void:
 	# TODO make this a relative path?
@@ -199,7 +194,7 @@ func _handle_new_folder() -> void:
 	target.new_folder()
 
 func _handle_new_text_file() -> void:
-	target.new_file(".txt", FakeFolder.file_type_enum.TEXT_FILE)
+	target.new_file(".txt", GlobalValues.FileType.TEXT_FILE)
 
 func _handle_copy_folder() -> void:
 	CopyPasteManager.copy_folder(target)

@@ -108,7 +108,7 @@ func _gui_input(event: InputEvent) -> void:
 			# Controlla se è stato cliccato un contatto
 			var clicked_target := _find_entity_at_screen_pos(m_pos, 16.0)
 			if not clicked_target.is_empty():
-				selected_entity_id = clicked_target.get("id", "")
+				selected_entity_id = clicked_target.get("id")
 				entity_selected.emit(clicked_target)
 			else:
 				selected_entity_id = ""
@@ -143,8 +143,8 @@ func _find_entity_at_screen_pos(screen_pos: Vector2, hit_radius: float) -> Dicti
 	return {}
 
 func _passes_filter(e: Dictionary) -> bool:
-	var t: String = e.get("type", "")
-	var iff: String = e.get("iff_tag", "")
+	var t: String = e.get("type")
+	var iff: String = e.get("iff_tag")
 	
 	match filter_category:
 		"MINERALS":
@@ -159,12 +159,12 @@ func _passes_filter(e: Dictionary) -> bool:
 			return true
 
 func _world_to_screen(e: Dictionary, center: Vector2, radius: float) -> Vector2:
-	var dist: float = float(e.get("distance", 1000.0))
+	var dist: float = float(e.get("distance"))
 	var norm_dist := clampf(dist / max_range, 0.0, 1.0)
-	var bearing: float = deg_to_rad(float(e.get("bearing_deg", 0.0)) - 90.0)
+	var bearing: float = deg_to_rad(float(e.get("bearing_deg")) - 90.0)
 	
 	if current_mode == DisplayMode.ELEVATION_3D:
-		var elev: float = deg_to_rad(float(e.get("elevation_deg", 0.0)))
+		var elev: float = deg_to_rad(float(e.get("elevation_deg")))
 		var x := cos(bearing) * norm_dist * radius
 		var y := sin(bearing) * norm_dist * radius * 0.5 - sin(elev) * (radius * 0.35)
 		return center + Vector2(x, y)
@@ -298,21 +298,21 @@ func _draw_entities(center: Vector2, radius: float) -> void:
 		if not _passes_filter(e):
 			continue
 		
-		var dist: float = float(e.get("distance", 1000.0))
+		var dist: float = float(e.get("distance"))
 		if dist > max_range * 1.05:
 			continue
 		
 		# Controllo stealth
-		var stealth: float = float(e.get("stealth_level", 0.0))
+		var stealth: float = float(e.get("stealth_level"))
 		if stealth > stealth_threshold and not ping_active:
 			continue # Invisibile durante sweep normale a meno di ping attivo
 		
 		var s_pos := _world_to_screen(e, center, radius)
-		var e_id: String = e.get("id", "")
+		var e_id: String = e.get("id")
 		var is_sel: bool = (e_id == selected_entity_id)
 		var is_lock: bool = (e_id == locked_entity_id)
-		var iff: String = e.get("iff_tag", "NEUTRAL")
-		var e_type: String = e.get("type", "CONTACT")
+		var iff: String = e.get("iff_tag")
+		var e_type: String = e.get("type")
 		
 		# Colore IFF
 		var col: Color = Color(0.3, 0.8, 0.4) # Neutro / Verde
@@ -368,14 +368,14 @@ func _draw_entities(center: Vector2, radius: float) -> void:
 				draw_circle(s_pos, 3.5, col)
 		
 		# Vettore di velocità se in movimento
-		var vel: Vector3 = e.get("velocity", Vector3.ZERO)
+		var vel: Vector3 = e.get("velocity")
 		if vel.length_squared() > 0.05:
 			var vel_2d := Vector2(vel.x, -vel.z) * 3.0
 			draw_line(s_pos, s_pos + vel_2d, Color(col.r, col.g, col.b, 0.6), 1.0)
 		
 		# Proiezione gambo in 3D Elevation
 		if current_mode == DisplayMode.ELEVATION_3D:
-			var bearing: float = deg_to_rad(float(e.get("bearing_deg", 0.0)) - 90.0)
+			var bearing: float = deg_to_rad(float(e.get("bearing_deg")) - 90.0)
 			var norm_dist := clampf(dist / max_range, 0.0, 1.0)
 			var base_plane_pos := center + Vector2(cos(bearing) * norm_dist * radius, sin(bearing) * norm_dist * radius * 0.5)
 			draw_dashed_line(base_plane_pos, s_pos, Color(col.r, col.g, col.b, 0.4), 1.0, 2.0)
@@ -387,7 +387,7 @@ func _draw_entities(center: Vector2, radius: float) -> void:
 			var b_rect := Rect2(s_pos - Vector2(box, box) * 0.5, Vector2(box, box))
 			draw_rect(b_rect, Color(1.0, 0.9, 0.2, 0.9), false, 1.5)
 			
-			var name_str: String = str(e.get("name", "CONTATTO"))
+			var name_str: String = str(e.get("name"))
 			var d_km: float = dist / 1000.0
 			var info_txt := "%s [%.1f km]" % [name_str, d_km]
 			draw_string(ThemeDB.fallback_font, s_pos + Vector2(10, 3), info_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1.0, 0.95, 0.5, 0.9))

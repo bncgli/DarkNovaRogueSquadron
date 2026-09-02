@@ -31,7 +31,7 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 			terminal.push_line_to_output("File %s already exists." % file_name)
 			continue
 		
-		desktop.new_file(".txt", FakeFolder.file_type_enum.TEXT_FILE, file_name, current_path)
+		desktop.new_file(".txt", GlobalValues.FileType.TEXT_FILE, file_name, current_path)
 
 
 func usage() -> Array[String]:

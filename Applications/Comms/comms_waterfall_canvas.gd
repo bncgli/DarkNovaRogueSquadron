@@ -53,8 +53,8 @@ func _update_waterfall_row(_delta: float) -> void:
 		
 		# Aggiungi segnali attivi se vicini al bin
 		for sig in active_signals:
-			var sig_freq: float = sig.get("freq", 1420.0)
-			var sig_strength: float = sig.get("strength", 0.8)
+			var sig_freq: float = sig.get("freq")
+			var sig_strength: float = sig.get("strength")
 			var dist := absf(bin_freq - sig_freq)
 			if dist < 80.0:
 				var factor := 1.0 - (dist / 80.0)
@@ -166,7 +166,7 @@ func _draw_tuner_cursor() -> void:
 	# Verifica se il cursore è agganciato a un segnale
 	var is_locked := false
 	for sig in active_signals:
-		var sig_freq: float = sig.get("freq", 1420.0)
+		var sig_freq: float = sig.get("freq")
 		if absf(current_frequency - sig_freq) <= 15.0:
 			is_locked = true
 			break

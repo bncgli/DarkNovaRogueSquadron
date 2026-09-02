@@ -1,5 +1,5 @@
 class_name CargoBayApp
-extends Control
+extends BaseApp
 
 ## CargoBayApp (Applications/CargoBay)
 ## Interfaccia diegetica a finestre di GodotOS per la gestione della Stiva Cargo,
@@ -54,7 +54,7 @@ const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/CargoBay/cargo_bay
 
 # Stato runtime
 var is_ship_connected: bool = false
-var can_hack: bool = true # RBAC (Hacker, Captain, Factotum)
+var can_hack: bool = true # RBAC (Hacker, Captain, Mozzo)
 var selected_cargo_idx: int = -1
 var selected_transfer_item_id: String = ""
 var selected_sub_idx: int = -1
@@ -179,7 +179,7 @@ func _update_rbac() -> void:
 	var net_mgr = get_node_or_null("/root/NetworkManager")
 	if net_mgr:
 		var role: String = str(net_mgr.get("player_role") if "player_role" in net_mgr else "Solo")
-		can_hack = (role in ["Hacker", "Captain", "Capitano", "Factotum", "Solo", ""])
+		can_hack = (role in ["Hacker", "Captain", "Capitano", "Mozzo", "Solo", ""])
 	else:
 		can_hack = true
 	
@@ -213,43 +213,6 @@ func _on_drive_file_synced(path: String) -> void:
 	if path == CONFIG_PATH_PRIMARY or path == CONFIG_PATH_FALLBACK:
 		_load_config()
 		_refresh_all_views()
-
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		var eq_idx := line.find("=")
-		if eq_idx != -1:
-			var key := line.substr(0, eq_idx).strip_edges()
-			var val_str := line.substr(eq_idx + 1).strip_edges()
-			if val_str.is_valid_float():
-				result[key] = float(val_str)
-			elif val_str.is_valid_int():
-				result[key] = int(val_str)
-			elif val_str.to_lower() == "true":
-				result[key] = true
-			elif val_str.to_lower() == "false":
-				result[key] = false
-			else:
-				result[key] = val_str
-	file.close()
-	return result
-
-# ==============================================================================
-# AGGIORNAMENTO VISTE UI
-# ==============================================================================
 
 func _refresh_all_views() -> void:
 	_update_header()
@@ -312,16 +275,16 @@ func _update_cargo_tab() -> void:
 		cargo_item_list.clear()
 		var items := cargo_mgr.get_cargo_list()
 		for item in items:
-			var item_name := str(item.get("name", "Unknown"))
-			var qty := int(item.get("quantity", 1))
-			var mass := float(item.get("unit_mass_kg", 0.0)) * qty
-			var cat := str(item.get("category", "GEN"))
+			var item_name := str(item.get("name"))
+			var qty := int(item.get("quantity"))
+			var mass := float(item.get("unit_mass_kg")) * qty
+			var cat := str(item.get("category"))
 			var flags := ""
-			if bool(item.get("is_contraband", false)):
+			if bool(item.get("is_contraband")):
 				flags += " [ILLEGALE]"
-			if bool(item.get("is_snet_disk", false)):
-				var meta: Dictionary = item.get("metadata", {})
-				if bool(meta.get("ice_broken", false)):
+			if bool(item.get("is_snet_disk")):
+				var meta: Dictionary = item.get("metadata")
+				if bool(meta.get("ice_broken")):
 					flags += " [S-NET: DECRIPTATO]"
 				else:
 					flags += " [S-NET: ICE-BLOCCATO]"
@@ -345,16 +308,16 @@ func _update_cargo_tab() -> void:
 func _display_cargo_details(item: Dictionary) -> void:
 	if not item_details_label:
 		return
-	var text := "[b]%s[/b]\n" % str(item.get("name", "Unknown"))
-	text += "Categoria: [color=#88ddff]%s[/color]\n" % str(item.get("category", "General"))
-	text += "Quantità: %d unità\n" % int(item.get("quantity", 0))
-	text += "Massa unitaria: %.1f kg | Volume unitario: %.2f m³\n" % [float(item.get("unit_mass_kg", 0)), float(item.get("unit_volume_m3", 0))]
-	text += "Valore stimato: %d CR / unità\n" % int(item.get("unit_base_value", 0))
-	if bool(item.get("is_contraband", false)):
+	var text := "[b]%s[/b]\n" % str(item.get("name"))
+	text += "Categoria: [color=#88ddff]%s[/color]\n" % str(item.get("category"))
+	text += "Quantità: %d unità\n" % int(item.get("quantity"))
+	text += "Massa unitaria: %.1f kg | Volume unitario: %.2f m³\n" % [float(item.get("unit_mass_kg")), float(item.get("unit_volume_m3"))]
+	text += "Valore stimato: %d CR / unità\n" % int(item.get("unit_base_value"))
+	if bool(item.get("is_contraband")):
 		text += "[color=#ff5555]⚠ CARICO DI CONTRABBANDO - Rischio sequestro se scannerizzato da autorità SOL-NAV.[/color]\n"
-	if bool(item.get("is_snet_disk", false)):
+	if bool(item.get("is_snet_disk")):
 		text += "[color=#55ffff]💾 DISCO SNAPSHOT S-NET: Contiene archivi finanziari di settore.[/color]\n"
-	text += "\nDescrizione:\n%s" % str(item.get("description", "Nessuna descrizione disponibile."))
+	text += "\nDescrizione:\n%s" % str(item.get("description"))
 	item_details_label.text = text
 
 func _update_transfer_tab() -> void:
@@ -364,9 +327,9 @@ func _update_transfer_tab() -> void:
 		transfer_item_list.clear()
 		var items := cargo_mgr.get_cargo_list()
 		for item in items:
-			var id := str(item.get("id", ""))
-			var name := str(item.get("name", id))
-			var qty := int(item.get("quantity", 0))
+			var id := str(item.get("id"))
+			var name := str(item.get("name"))
+			var qty := int(item.get("quantity"))
 			transfer_item_list.add_item("%s (Disp: %d)" % [name, qty])
 	
 	if target_option_btn and target_option_btn.item_count == 0:
@@ -422,10 +385,10 @@ func _update_flux_tab() -> void:
 	if subscriptions_item_list:
 		subscriptions_item_list.clear()
 		for sub in flux_mgr.subscriptions:
-			var s_name := str(sub.get("name", "Abbonamento"))
-			var cost := int(sub.get("cost", 0))
-			var time_left := float(sub.get("time_left", 0.0))
-			var is_od := bool(sub.get("is_overdue", false))
+			var s_name := str(sub.get("name"))
+			var cost := int(sub.get("cost"))
+			var time_left := float(sub.get("time_left"))
+			var is_od := bool(sub.get("is_overdue"))
 			var status_str := "[SCADUTO - DEBITO]" if is_od else "Scade tra %.0fs" % time_left
 			var item_text := "%s - %d CR (%s)" % [s_name, cost, status_str]
 			subscriptions_item_list.add_item(item_text)
@@ -446,15 +409,15 @@ func _update_snet_tab() -> void:
 	
 	var snet_disks: Array[Dictionary] = []
 	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk", false)) or item.get("category", "") == "SNET_DISK":
+		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
 			snet_disks.append(item)
 	
 	if snet_disk_list:
 		snet_disk_list.clear()
 		for disk in snet_disks:
-			var d_name := str(disk.get("name", "Disco S-Net"))
-			var meta: Dictionary = disk.get("metadata", {})
-			var status := "DECRIPTATO" if bool(meta.get("ice_broken", false)) else "ICE Liv. %d" % int(meta.get("ice_strength", 3))
+			var d_name := str(disk.get("name"))
+			var meta: Dictionary = disk.get("metadata")
+			var status := "DECRIPTATO" if bool(meta.get("ice_broken")) else "ICE Liv. %d" % int(meta.get("ice_strength"))
 			snet_disk_list.add_item("%s [%s]" % [d_name, status])
 		
 		if selected_snet_idx >= 0 and selected_snet_idx < snet_disks.size():
@@ -475,14 +438,14 @@ func _update_snet_tab() -> void:
 func _display_snet_details(disk: Dictionary) -> void:
 	if not snet_disk_info_label:
 		return
-	var meta: Dictionary = disk.get("metadata", {})
-	var is_broken := bool(meta.get("ice_broken", false))
-	var ice_str := int(meta.get("ice_strength", 3))
+	var meta: Dictionary = disk.get("metadata")
+	var is_broken := bool(meta.get("ice_broken"))
+	var ice_str := int(meta.get("ice_strength"))
 	
-	var text := "[b]%s[/b]\n" % str(disk.get("name", "Array Dati S-Net"))
-	text += "Settore Origine: [color=#88ddff]%s[/color]\n" % str(meta.get("sector", "Sol Sector"))
+	var text := "[b]%s[/b]\n" % str(disk.get("name"))
+	text += "Settore Origine: [color=#88ddff]%s[/color]\n" % str(meta.get("sector"))
 	text += "Stato Crittografia ICE: %s\n" % ("[color=#55ff55]VIOLATO / ACCESSO COMPLETO[/color]" if is_broken else "[color=#ff5555]ATTIVO (Difficoltà Livello %d)[/color]" % ice_str)
-	text += "Valore Stimato Snapshot: %d CR\n" % int(meta.get("financial_snapshot", 2500))
+	text += "Valore Stimato Snapshot: %d CR\n" % int(meta.get("financial_snapshot"))
 	text += "\nNote Tecniche:\nGli array dati S-Net superano il vincolo galattico di assenza di FTL mediante il trasporto fisico su corrieri corazzati. L'intercettazione e la violazione delle chiavi ICE consente di appropriarsi di listini riservati e codici bancari prima della diffusione pubblica."
 	snet_disk_info_label.text = text
 	
@@ -504,13 +467,13 @@ func _on_btn_jettison_pressed() -> void:
 		return
 	var items := cargo_mgr.get_cargo_list()
 	if selected_cargo_idx < items.size():
-		var item_id := str(items[selected_cargo_idx].get("id", ""))
+		var item_id := str(items[selected_cargo_idx].get("id"))
 		cargo_mgr.remove_item(item_id, 1)
 
 func _on_transfer_item_selected(index: int) -> void:
 	var items := cargo_mgr.get_cargo_list()
 	if index >= 0 and index < items.size():
-		selected_transfer_item_id = str(items[index].get("id", ""))
+		selected_transfer_item_id = str(items[index].get("id"))
 
 func _on_btn_execute_transfer_pressed() -> void:
 	if not cargo_mgr or selected_transfer_item_id.is_empty():
@@ -552,7 +515,7 @@ func _on_btn_pay_sub_pressed() -> void:
 	if not flux_mgr or selected_sub_idx < 0:
 		return
 	if selected_sub_idx < flux_mgr.subscriptions.size():
-		var sub_id := str(flux_mgr.subscriptions[selected_sub_idx].get("id", ""))
+		var sub_id := str(flux_mgr.subscriptions[selected_sub_idx].get("id"))
 		flux_mgr.pay_subscription_manually(sub_id)
 
 func _on_btn_pay_all_debt_pressed() -> void:
@@ -563,7 +526,7 @@ func _on_snet_disk_selected(index: int) -> void:
 	selected_snet_idx = index
 	var snet_disks: Array[Dictionary] = []
 	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk", false)) or item.get("category", "") == "SNET_DISK":
+		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
 			snet_disks.append(item)
 	if index >= 0 and index < snet_disks.size():
 		_display_snet_details(snet_disks[index])
@@ -574,21 +537,21 @@ func _on_btn_hack_ice_pressed() -> void:
 	
 	var snet_disks: Array[Dictionary] = []
 	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk", false)) or item.get("category", "") == "SNET_DISK":
+		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
 			snet_disks.append(item)
 	
 	if selected_snet_idx < snet_disks.size():
 		var disk := snet_disks[selected_snet_idx]
 		var result := flux_mgr.hack_snet_disk(disk, 2.5) # Hacker skill standard
-		if result.get("success", false):
+		if result.get("success"):
 			if hack_status_label:
 				hack_status_label.text = "ICE VIOLATO CON SUCCESSO! Dati estratti."
 				hack_status_label.modulate = Color(0.3, 1.0, 0.4)
 			if intel_output_box:
 				var intel_text := "[b][color=#55ffff]REPORT DECRITTAZIONE SNAPSHOT S-NET:[/color][/b]\n"
-				intel_text += "Crediti sottratti e iniettati: [color=#ffff55]+%d CR[/color]\n" % int(result.get("decrypted_credits", 2500))
-				intel_text += "Market Intelligence: %s\n" % str(result.get("market_intel", ""))
-				intel_text += "Codici bypass generati: %s" % str(result.get("access_codes", []))
+				intel_text += "Crediti sottratti e iniettati: [color=#ffff55]+%d CR[/color]\n" % int(result.get("decrypted_credits"))
+				intel_text += "Market Intelligence: %s\n" % str(result.get("market_intel"))
+				intel_text += "Codici bypass generati: %s" % str(result.get("access_codes"))
 				intel_output_box.text = intel_text
 		else:
 			if hack_status_label:

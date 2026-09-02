@@ -88,7 +88,7 @@ func _poll_incoming_packets() -> void:
 			var data: Dictionary = json.data
 			if data.get("game") == "DarkNova":
 				data["ip"] = ip
-				var key := "%s:%s" % [ip, data.get("port", 7777)]
+				var key := "%s:%s" % [ip, data.get("port")]
 				data["key"] = key
 				known_servers[key] = {
 					"data": data,

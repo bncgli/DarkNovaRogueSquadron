@@ -9,6 +9,7 @@ title = "PodInfo"
 description = "Monitoraggio parametri vitali e gestione audio ambientale."
 developer = "Galactic MicroSystems"
 category = "Utility"
+menu_path = "Strumenti"
 is_system_app = true
 terminal_command = "pod"
 scene_path = "res://Applications/PodInfo/src/pod_info_app.tscn"

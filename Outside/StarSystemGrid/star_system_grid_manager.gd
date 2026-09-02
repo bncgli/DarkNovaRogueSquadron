@@ -44,110 +44,7 @@ var active_plotted_route: Dictionary = {}
 
 # Catalogo macro-corpi del sistema stellare ("Dark Nova Helios System")
 var current_system_data: StarSystemData = null
-var system_celestial_bodies: Array[Dictionary] = [
-	{
-		"id": "STAR_SOL_PRIME",
-		"name": "Helios Nova (Stella Primaria)",
-		"type": "STAR",
-		"coords": Vector3i(0, 0, 0),
-		"radius_km": 696340.0,
-		"mass_tons": 1.989e27,
-		"luminosity": 1.0,
-		"color": Color(1.0, 0.96, 0.9, 1.0),
-		"occluding": false,
-		"description": "Stella di sequenza principale al centro del sistema."
-	},
-	{
-		"id": "PLANET_VULCAN",
-		"name": "Vulcanus (Pianeta Roccioso)",
-		"type": "PLANET",
-		"coords": Vector3i(1, 3, 0),
-		"radius_km": 4800.0,
-		"mass_tons": 3.3e20,
-		"occluding": true,
-		"description": "Mondo lavico interno ad alta densità metallica."
-	},
-	{
-		"id": "PLANET_TERRA_NOVA",
-		"name": "Terra Nova Prime",
-		"type": "PLANET",
-		"coords": Vector3i(4, 8, 0),
-		"radius_km": 6371.0,
-		"mass_tons": 5.97e21,
-		"occluding": true,
-		"description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata."
-	},
-	{
-		"id": "MOON_LUNA_SEC",
-		"name": "Selene Secundus",
-		"type": "MOON",
-		"coords": Vector3i(4, 8, 0), # orbita nello stesso settore
-		"radius_km": 1737.0,
-		"mass_tons": 7.35e19,
-		"occluding": true,
-		"description": "Luna mineraria di Terra Nova."
-	},
-	{
-		"id": "BELT_CERES_EX",
-		"name": "Fascia d'Asteroidi Interna",
-		"type": "ASTEROID_FIELD",
-		"coords": Vector3i(3, 10, 0),
-		"radius_km": 25000.0,
-		"mass_tons": 1.5e18,
-		"occluding": false,
-		"description": "Denso campo di detriti e minerali preziosi."
-	},
-	{
-		"id": "STATION_VALKYRIE",
-		"name": "Stazione Spaziale Valkyrie",
-		"type": "STATION",
-		"coords": Vector3i(4, 12, 0),
-		"radius_km": 15.0,
-		"mass_tons": 8.5e10,
-		"occluding": false,
-		"description": "Hub orbitale militare e commerciale dell'avamposto."
-	},
-	{
-		"id": "PATROL_VANGUARD",
-		"name": "Pattuglia Vanguard-7",
-		"type": "PATROL",
-		"coords": Vector3i(4, 11, 0),
-		"radius_km": 0.5,
-		"mass_tons": 45000.0,
-		"occluding": false,
-		"description": "Squadriglia di caccia di sicurezza perimetrale."
-	},
-	{
-		"id": "WRECK_TITAN_GRAVE",
-		"name": "Relitto Incrociatore Titan-04",
-		"type": "WRECK",
-		"coords": Vector3i(5, 14, 0),
-		"radius_km": 2.5,
-		"mass_tons": 1.2e8,
-		"occluding": false,
-		"description": "Relitto bellico abbandonato ricco di materiali rari."
-	},
-	{
-		"id": "GAS_GIANT_KRONOS",
-		"name": "Kronos Titan (Gigante Gassoso)",
-		"type": "GAS_GIANT",
-		"coords": Vector3i(8, 20, 0),
-		"radius_km": 69911.0,
-		"mass_tons": 1.89e24,
-		"occluding": true,
-		"description": "Imponente gigante gassoso con complessi anelli d'idrogeno."
-	},
-	{
-		"id": "GAS_GIANT_AETHER",
-		"name": "Aetheris (Gigante di Ghiaccio)",
-		"type": "GAS_GIANT",
-		"coords": Vector3i(-12, 16, 0),
-		"radius_km": 25362.0,
-		"mass_tons": 8.68e22,
-		"occluding": true,
-		"description": "Gigante ghiacciato all'estrema periferia del sistema."
-	}
-]
+var system_celestial_bodies: Array = []
 
 func _ready() -> void:
 	if current_system_data == null:
@@ -158,20 +55,21 @@ func _ready() -> void:
 
 ## Ritorna la stazione di partenza primaria/principale presente nel sistema stellare attivo
 func get_starting_station() -> Dictionary:
-	if current_system_data != null and current_system_data.has_method("find_primary_station"):
+	if current_system_data != null:
 		var st := current_system_data.find_primary_station()
-		if not st.is_empty():
-			return st
+		if st != null:
+			return st.to_dict()
 	for b in system_celestial_bodies:
-		if b.get("type", "").to_upper() == "STATION":
-			return b
+		if b.type.to_upper() == "STATION":
+			return b.to_dict()
 	return {}
 
 ## Calcola le coordinate del settore iniziale di spawn adiacente alla stazione di partenza
 func calculate_initial_spawn_coords() -> Vector3i:
 	var station := get_starting_station()
 	if not station.is_empty():
-		var st_coords: Vector3i = station.get("coords", Vector3i(4, 12, 0))
+		var st_coords_raw = station.get("coords")
+		var st_coords: Vector3i = Vector3i(st_coords_raw[0], st_coords_raw[1], st_coords_raw[2]) if st_coords_raw is Array else st_coords_raw
 		if current_system_data != null and current_system_data.has_method("find_adjacent_spawn_sector"):
 			return current_system_data.find_adjacent_spawn_sector(st_coords)
 		return st_coords + Vector3i(0, -1, 0)
@@ -331,7 +229,7 @@ func engage_hyperdrive_transit(target_coords: Vector3i = Vector3i.ZERO) -> Dicti
 	hyperdrive_transit_completed.emit(dest)
 	
 	# Pulisce la rotta una volta completato il transito
-	if active_plotted_route.get("target_coords", Vector3i.ZERO) == dest:
+	if active_plotted_route.get("target_coords") == dest:
 		active_plotted_route.clear()
 		
 	return {
@@ -375,13 +273,13 @@ func calculate_planetary_occlusion(target_coords: Vector3i = current_sector_coor
 	
 	var ray_dir := (target_pos - star_pos).normalized()
 	var max_occlusion: float = 0.0
-	var occluding_body_found: Dictionary = {}
+	var occluding_body_found: CelestialBodyData = null
 	
 	for body in system_celestial_bodies:
-		if not body.get("occluding", false):
+		if not body.occluding:
 			continue
 		
-		var b_coords: Vector3i = body.get("coords", Vector3i.ZERO)
+		var b_coords: Vector3i = body.coords
 		var b_pos := Vector3(b_coords)
 		var body_from_star := b_pos - star_pos
 		
@@ -394,7 +292,7 @@ func calculate_planetary_occlusion(target_coords: Vector3i = current_sector_coor
 			var perp_distance := (b_pos - closest_point_on_ray).length()
 			
 			# Raggio d'ombra in unità di settore (approssimazione con raggio fisico del corpo)
-			var body_radius_km: float = body.get("radius_km", 6000.0)
+			var body_radius_km: float = body.radius_km
 			var shadow_radius_sectors: float = maxf(0.65, (body_radius_km / SECTOR_SIZE_KM) * 8.0)
 			
 			if perp_distance < shadow_radius_sectors:
@@ -410,7 +308,7 @@ func calculate_planetary_occlusion(target_coords: Vector3i = current_sector_coor
 	return {
 		"is_occluded": is_occluded,
 		"occlusion_factor": max_occlusion,
-		"occluding_body": occluding_body_found,
+		"occluding_body": occluding_body_found.to_dict() if occluding_body_found != null else {},
 		"solar_blackout": is_blackout,
 		"light_energy_factor": light_factor
 	}
@@ -418,17 +316,17 @@ func calculate_planetary_occlusion(target_coords: Vector3i = current_sector_coor
 ## Verifica rapida se il settore si trova in cono d'ombra
 func is_in_planetary_shadow(coords: Vector3i = current_sector_coords) -> bool:
 	var occ := calculate_planetary_occlusion(coords)
-	return occ.get("is_occluded", false)
+	return occ.get("is_occluded")
 
 ## Verifica se c'è un blackout completo dei pannelli solari
 func is_solar_blackout(coords: Vector3i = current_sector_coords) -> bool:
 	var occ := calculate_planetary_occlusion(coords)
-	return occ.get("solar_blackout", false)
+	return occ.get("solar_blackout")
 
 ## Calcola l'energia solare effettiva al settore (0.0 - 1.3)
 func get_effective_solar_energy(coords: Vector3i = current_sector_coords) -> float:
 	var occ := calculate_planetary_occlusion(coords)
-	var factor: float = occ.get("light_energy_factor", 1.0)
+	var factor: float = occ.get("light_energy_factor")
 	return PRIMARY_STAR_BASE_ENERGY * factor
 
 # =============================================================================
@@ -440,7 +338,14 @@ func load_star_system(sys_data: StarSystemData) -> void:
 	if sys_data == null:
 		return
 	current_system_data = sys_data
-	system_celestial_bodies = sys_data.celestial_bodies.duplicate(true)
+	system_celestial_bodies = []
+	for b in sys_data.celestial_bodies:
+		if b is Dictionary:
+			var body := CelestialBodyData.new()
+			body.from_dict(b)
+			system_celestial_bodies.append(body)
+		elif b is CelestialBodyData:
+			system_celestial_bodies.append(b)
 	_sector_cache.clear()
 	for sec_dict in sys_data.custom_sectors:
 		var sec := SectorData.new()
@@ -470,11 +375,11 @@ func get_visible_system_entities(observer_coords: Vector3i = current_sector_coor
 	var obs_pos := Vector3(observer_coords)
 	
 	for body in system_celestial_bodies:
-		var b_coords: Vector3i = body.get("coords", Vector3i.ZERO)
+		var b_coords: Vector3i = body.coords
 		var b_pos := Vector3(b_coords)
 		var diff := b_pos - obs_pos
 		var dist_sectors := diff.length()
-		var b_type: String = body.get("type", "").to_upper()
+		var b_type: String = body.type.to_upper()
 		
 		var max_range: float = 0.0
 		match b_type:
@@ -503,7 +408,7 @@ func get_visible_system_entities(observer_coords: Vector3i = current_sector_coor
 			var dist_km := dist_sectors * SECTOR_SIZE_KM
 			
 			# Calcolo scala angolare apparente (dimensione diegetica sullo skybox)
-			var radius_km: float = body.get("radius_km", 1000.0)
+			var radius_km: float = body.radius_km
 			var apparent_angular_size := 1.0
 			if dist_sectors > 0.1:
 				apparent_angular_size = clampf((radius_km / (dist_km + 1000.0)) * 50.0, 0.05, 10.0)
@@ -511,23 +416,18 @@ func get_visible_system_entities(observer_coords: Vector3i = current_sector_coor
 			# Calcolo luminosità apparente
 			var apparent_brightness := clampf(1.0 - (dist_sectors / max_range), 0.1, 1.0)
 			
-			visible_list.append({
-				"id": body.get("id", ""),
-				"name": body.get("name", ""),
-				"type": b_type,
-				"coords": b_coords,
-				"distance_sectors": dist_sectors,
-				"distance_km": dist_km,
-				"direction": dir,
-				"apparent_angular_size": apparent_angular_size,
-				"apparent_brightness": apparent_brightness,
-				"is_in_current_sector": dist_sectors < 0.1,
-				"occluding": body.get("occluding", false),
-				"raw_data": body
-			})
+			var body_dict: Dictionary = body.to_dict()
+			body_dict["distance_sectors"] = dist_sectors
+			body_dict["distance_km"] = dist_km
+			body_dict["direction"] = dir
+			body_dict["apparent_angular_size"] = apparent_angular_size
+			body_dict["apparent_brightness"] = apparent_brightness
+			body_dict["is_in_current_sector"] = dist_sectors < 0.1
+			
+			visible_list.append(body_dict)
 	
 	visible_list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance_sectors", 0.0) < b.get("distance_sectors", 0.0)
+		return a.get("distance_sectors") < b.get("distance_sectors")
 	)
 	
 	return visible_list
@@ -546,8 +446,8 @@ func get_or_generate_sector_data(coords: Vector3i) -> SectorData:
 	
 	# Associa entità note a queste coordinate
 	for body in system_celestial_bodies:
-		if body.get("coords", Vector3i.MIN) == coords:
-			data.add_entity(body)
+		if body.coords == coords:
+			data.add_entity(body.to_dict())
 	
 	# Determina tipo e descrizione in base alle entità presenti
 	if coords == PRIMARY_STAR_COORDS:
@@ -557,15 +457,15 @@ func get_or_generate_sector_data(coords: Vector3i) -> SectorData:
 		data.sun_light_energy = 3.5
 	elif data.has_entity_of_type("PLANET"):
 		data.sector_type = "PLANETARY_ORBIT"
-		data.sector_name = "Orbita di %s" % data.macro_entities[0].get("name", "Pianeta")
+		data.sector_name = "Orbita di %s" % data.macro_entities[0].get("name")
 		data.description = "Spazio orbitale stabile in prossimità del pianeta."
 	elif data.has_entity_of_type("GAS_GIANT"):
 		data.sector_type = "GAS_GIANT_WELL"
-		data.sector_name = "Pozzo Gravitazionale %s" % data.macro_entities[0].get("name", "Gigante")
+		data.sector_name = "Pozzo Gravitazionale %s" % data.macro_entities[0].get("name")
 		data.description = "Zona densa di radiazioni e tempeste atmosferiche del gigante gassoso."
 	elif data.has_entity_of_type("STATION"):
 		data.sector_type = "STATION_ORBIT"
-		data.sector_name = "Spazio Portuale %s" % data.macro_entities[0].get("name", "Stazione")
+		data.sector_name = "Spazio Portuale %s" % data.macro_entities[0].get("name")
 		data.description = "Area di traffico commerciale e pattugliamento regolamentato."
 		data.security_level = "HIGH"
 		data.traffic_density = 0.8
@@ -589,15 +489,15 @@ func get_or_generate_sector_data(coords: Vector3i) -> SectorData:
 ## Aggiorna lo stato ambientale (illuminazione, ombre, blackout) sul SectorData
 func _update_sector_environmental_state(sec_data: SectorData) -> void:
 	var occ := calculate_planetary_occlusion(sec_data.coordinates)
-	sec_data.is_in_planetary_shadow = occ.get("is_occluded", false)
-	sec_data.shadow_occlusion_factor = occ.get("occlusion_factor", 0.0)
-	sec_data.solar_panels_blackout = occ.get("solar_blackout", false)
+	sec_data.is_in_planetary_shadow = occ.get("is_occluded")
+	sec_data.shadow_occlusion_factor = occ.get("occlusion_factor")
+	sec_data.solar_panels_blackout = occ.get("solar_blackout")
 	
 	var base_sun_energy := PRIMARY_STAR_BASE_ENERGY
 	if sec_data.sector_type == "STAR_CORONA":
 		base_sun_energy = 3.5
 	
-	sec_data.sun_light_energy = base_sun_energy * occ.get("light_energy_factor", 1.0)
+	sec_data.sun_light_energy = base_sun_energy * occ.get("light_energy_factor")
 	
 	if sec_data.is_in_planetary_shadow:
 		sec_data.ambient_light_energy = clampf(0.5 * (1.0 - sec_data.shadow_occlusion_factor * 0.6), 0.15, 0.5)

@@ -35,8 +35,13 @@ Quando i requisiti non sono esplicitamente chiari, l'agente AI **deve chiedere a
 
 ### Principi Fondamentali
 1. **Architettura Data-Driven basata su Risorse**: L'aggiunta di un programma richiede la definizione della sua scena UI (`.tscn`) e della corrispondente risorsa esportabile (`.tres`), demandando ai Software Manager la gestione del Drive, delle password e dello Start Menu.
-2. **Server-Authoritative (Host-Centrico)**: Per le applicazioni della nave, la simulazione fisica e lo stato risiedono sul Server/Host. I client inviano richieste di comando (`request_*`) e ricevono aggiornamenti di stato.
-3. **Controllo Ruoli (RBAC - Role-Based Access Control)**: Ogni applicazione della nave definisce nella propria `AppResource` i ruoli autorizzati (`roles`), consentendo agli altri la sola visualizzazione (telemetria) o nascondendo il programma all'avvio della missione.
+2. **Ereditarietà Mandatoria (BaseApp)**: Ogni nuova applicazione DEVE ereditare dalla classe base `BaseApp` (`class_name BaseApp`). Questo garantisce la standardizzazione delle funzionalità core (parsing `.dat`, gestione finestre, RBAC).
+3. **Single Responsibility Principle (SRP) per i Manager**: I nuovi manager di sistema non devono essere script monolitici. Devono essere suddivisi in componenti atomici specializzati (es. `DuctDroneManager`, `CrewManager`) coordinati dal manager principale.
+4. **Utilizzo di Enum Centralizzati**: È vietata la duplicazione di enumerazioni globali (es. `Quadrant`, `AlarmLevel`, `ShipClass`). Tutte le costanti comuni devono essere referenziate tramite `GlobalValues`.
+5. **Tipizzazione Forte dei Dati**: Per tutte le strutture dati complesse esportate (es. Blueprint, Sistemi Stellari), è obbligatorio l'utilizzo di `Array[ResourceType]` (Risorse Tipizzate) al posto di `Array[Dictionary]`.
+6. **UI Addon basata su Scene**: Gli strumenti di sviluppo e gli addon dell'editor devono utilizzare scene `.tscn` per le interfacce utente, evitando la costruzione della UI interamente via codice.
+7. **Server-Authoritative (Host-Centrico)**: Per le applicazioni della nave, la simulazione fisica e lo stato risiedono sul Server/Host. I client inviano richieste di comando (`request_*`) e ricevono aggiornamenti di stato.
+8. **Controllo Ruoli (RBAC - Role-Based Access Control)**: Ogni applicazione della nave definisce nella propria `AppResource` i ruoli autorizzati (`roles`), consentendo agli altri la sola visualizzazione (telemetria) o nascondendo il programma all'avvio della missione.
 
 ---
 
@@ -233,33 +238,31 @@ NomeApp (Control) [custom_minimum_size, theme/layout]
 
 ---
 
-## 5. Pattern dello Script (`.gd`)
+## 5. Pattern dello Script (`.gd`) - Ereditarietà da `BaseApp`
 
-Di seguito il template standard per lo script controller di una nuova app:
+Tutte le applicazioni devono ereditare da `BaseApp` per sfruttare la logica predefinita di sistema. Di seguito il template standard:
 
 ```gdscript
-extends Control
+extends BaseApp
 
 ## Titolo e dimensioni preferite per la finestra di GodotOS
 const APP_TITLE: String = "NOME SISTEMA / APPLICAZIONE"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(600, 400)
 
 ## Riferimenti ai nodi UI (utilizzando Unique Names %)
-@onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 @onready var status_label: Label = get_node_or_null("%StatusLabel")
 
 func _ready() -> void:
+	# Chiamata obbligatoria alla classe base
+	super._ready()
+	
 	_configure_window()
 	_connect_system_signals()
 	_update_connection_state()
-	load_dat_configuration()
 
 func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	# Se istanziata all'interno di una FakeWindow di GodotOS:
-	var parent_window = get_parent()
-	if parent_window and "window_title" in parent_window:
-		parent_window.window_title = APP_TITLE
+	# BaseApp gestisce già custom_minimum_size e il titolo se APP_TITLE è definita
+	pass
 
 func _connect_system_signals() -> void:
 	# 1. Collegamento allo stato di connessione/missione della nave
@@ -269,11 +272,6 @@ func _connect_system_signals() -> void:
 	# 2. Collegamento a NetworkManager (opzionale se servono ruoli o chat)
 	if NetworkManager:
 		NetworkManager.player_role_changed.connect(_on_player_role_changed)
-	
-	# 3. Ascolto modifiche live ai file .dat (Hot-Reloading)
-	var sdm := get_node_or_null("/root/ShipDriveManager")
-	if sdm and sdm.has_signal("file_modified"):
-		sdm.file_modified.connect(_on_drive_file_modified)
 
 func _exit_tree() -> void:
 	# Disconnessione segnali e pulizia risorse / timer
@@ -281,87 +279,30 @@ func _exit_tree() -> void:
 		SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 	if NetworkManager and NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 		NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
-	var sdm := get_node_or_null("/root/ShipDriveManager")
-	if sdm and sdm.has_signal("file_modified") and sdm.file_modified.is_connected(_on_drive_file_modified):
-		sdm.file_modified.disconnect(_on_drive_file_modified)
 
-## Gestione del file di configurazione .dat a Runtime
-func _on_drive_file_modified(rel_path: String) -> void:
-	if "Programs/NomeApp" in rel_path and rel_path.ends_with(".dat"):
-		load_dat_configuration()
-
-func load_dat_configuration() -> void:
-	var config_data := _parse_dat_file("Ship Drive/Programs/NomeApp/config.dat")
-	if config_data.is_empty():
-		config_data = _parse_dat_file("Terminal Drive/Programs/NomeApp/config.dat")
-	
-	# Aggiorna i parametri attivi con fallback ai default
-	# active_param = config_data.get("param_key", default_param)
-	_apply_configuration()
-
+## Gestione del file di configurazione .dat (Metodo override di BaseApp)
 func _apply_configuration() -> void:
-	# Applica i parametri estratti al sistema o alla simulazione
+	# BaseApp chiama automaticamente questo metodo dopo il parsing del .dat
+	# I dati sono accessibili tramite il dizionario 'config_data' della classe base
+	# var power_rate = config_data.get("power_rate", 1.0)
 	pass
-
-func _parse_dat_file(rel_path: String) -> Dictionary:
-	var result: Dictionary = {}
-	var abs_path := "user://files/%s" % rel_path
-	if not FileAccess.file_exists(abs_path):
-		return result
-	var file := FileAccess.open(abs_path, FileAccess.READ)
-	if not file:
-		return result
-	while not file.eof_reached():
-		var line := file.get_line().strip_edges()
-		if line.is_empty() or line.begins_with("#") or line.begins_with(";"):
-			continue
-		if line.begins_with("[") and line.ends_with("]"):
-			continue
-		var eq_pos := line.find("=")
-		if eq_pos != -1:
-			var key := line.substr(0, eq_pos).strip_edges()
-			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.is_valid_float():
-				result[key] = val_str.to_float()
-			elif val_str.is_valid_int():
-				result[key] = val_str.to_int()
-			else:
-				result[key] = val_str
-	file.close()
-	return result
 
 ## Gestione dello stato Operativo / Disconnesso
 func _on_ship_connection_changed(is_connected: bool) -> void:
 	_update_connection_state()
 
 func _update_connection_state() -> void:
-	var is_operational: bool = false
-	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
-		is_operational = SpaceWorldManager.is_ship_connected()
-	elif NetworkManager and NetworkManager.has_method("is_ship_connected"):
-		is_operational = NetworkManager.is_ship_connected()
-	
-	# Mostra o nasconde l'overlay di blocco
-	if disconnected_overlay:
-		disconnected_overlay.visible = not is_operational
-	
-	# Abilita/disabilita l'input di processing
-	set_process(is_operational)
-	set_process_input(is_operational)
-	set_physics_process(is_operational)
+	# BaseApp fornisce helper per gestire l'overlay di blocco e l'input
+	var is_operational = is_ship_connected()
+	update_operational_ui(is_operational)
 
 ## Gestione autorizzazioni basate sul Ruolo
 func _on_player_role_changed(peer_id: int, new_role: String) -> void:
 	_update_permissions()
 
 func _update_permissions() -> void:
-	var my_role := ""
-	if NetworkManager:
-		my_role = NetworkManager.get_local_player_role()
-	
-	# Esempio: disabilita pulsanti di comando per chi non ha il ruolo designato
-	var can_control := (my_role == "Ingegnere" or my_role == "Capitano" or NetworkManager.is_solo_mode)
-	# %ActionButton.disabled = not can_control
+	var my_role = get_local_role()
+	# Logica specifica per i permessi...
 ```
 
 ---

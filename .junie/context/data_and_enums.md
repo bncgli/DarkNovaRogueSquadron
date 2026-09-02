@@ -1,19 +1,27 @@
 # Scattered Enums and Static Data
 
-## Key Enums
+## Centralized Enums (GlobalValues.gd)
 
-| Enum Name | File | Description |
-|-----------|------|-------------|
-| `file_type_enum` | `Scenes/Desktop/desktop_folder.gd` | Defines if an OS item is a FOLDER, TEXT_FILE, or IMAGE. |
-| `StateEnum` | `Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.gd` | COPY or CUT state. |
-| `DockingState` | `Outside/Stations/docking_manager.gd` | States of the ship docking process (UNDOCKED, CLEARANCE_REQUESTED, etc.). |
-| `AIState` | `Outside/Combat/enemy_ship_ai.gd` | States for enemy AI (PATROL, SWARM_CHASE). |
-| `ShipType` | `Outside/Combat/enemy_ship_ai.gd` | Types of enemy ships. |
-| `AlarmLevel` | `Outside/Combat/systemic_damage_handler.gd` | Ship alert levels (NORMAL, YELLOW_ALERT, etc.). |
-| `State` | `Outside/ShipSystems/cruise_drive_controller.gd` | Cruise drive states (IDLE, WARMUP, etc.). |
-| `DisplayMode` | `Applications/Sensors/Components/radar_display.gd` | Radar display modes (POLAR_2D, CARTESIAN_GRID). |
-| `WeaponGroup` | `Applications/Weapons/weapons_app.gd` | Categories of weapons (LASER, TORPEDO). |
-| `Quadrant` | `Applications/ShieldMatrix/shield_matrix_app.gd` | Ship quadrants for shielding (FORE, AFT, etc.). |
+Tutti i principali enum globali sono ora centralizzati in `Scenes/Autoloads/GlobalValues/global_values.gd`. È mandatorio utilizzare questi riferimenti invece di ridefinirli localmente.
+
+| Enum Name | Description |
+|-----------|-------------|
+| `GlobalValues.AlarmLevel` | Ship alert levels (NORMAL, YELLOW_ALERT, RED_ALERT). |
+| `GlobalValues.Quadrant` | Ship quadrants for shielding and damage (FORE, AFT, PORT, STARBOARD). |
+| `GlobalValues.ShipClass` | Classification of vessels (CORVETTE, FRIGATE, etc.). |
+| `GlobalValues.DeviceCategory` | Categories for electrical devices (COMMAND, PROPULSION, etc.). |
+| `GlobalValues.FileType` | OS item types (FOLDER, TEXT_FILE, IMAGE). |
+
+## Centralized Metadata (RoomDatabase.gd)
+
+I metadati precedentemente sparsi nei manager sono stati spostati nel `RoomDatabase`.
+
+| Metadata | Description |
+|----------|-------------|
+| `RoomDatabase.CAMERS_METADATA` | Configuration for the 6 ship cameras. |
+| `RoomDatabase.DUCT_ROOMS` | Standard room definitions and properties. |
+
+## Scattered Enums (Pending Centralization)
 
 ## Static Data / Templates
 
@@ -42,7 +50,7 @@ Contains `MINERAL_TYPES` dictionary:
 - `water_ice`: Mineral water ice.
 - `durasteel_ore`: Raw durasteel.
 
-### Ship Metadata (`SpaceWorldManager.gd`)
+### Ship Metadata (RoomDatabase.gd)
 - `CAMERAS_METADATA`: Configuration for the 6 ship cameras (Front, Rear, Left, Right, Top, Bottom).
 - `DUCT_ROOMS`: Rectangles and properties defining the ship's internal rooms for the duct drone.
 

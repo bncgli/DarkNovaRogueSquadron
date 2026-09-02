@@ -31,7 +31,7 @@ func _ready() -> void:
 			assert(title != "Cube Scene", "Nessun elemento deve avere titolo 'Cube Scene'")
 	
 	# 5. Verifica che gli altri programmi siano presenti nel menu Start
-	var expected_options := ["Lobby Option", "Terminal Option", "Godotris Option", "Super Bit Boy Option", "Snake Option", "Pong Option"]
+	var expected_options := ["Lobby Option", "Godotris Option", "Super Bit Boy Option", "Snake Option", "Pong Option"]
 	for opt_name in expected_options:
 		var opt_node = vbox.get_node_or_null(opt_name)
 		assert(opt_node != null, "Opzione %s deve essere presente nel menu Start" % opt_name)

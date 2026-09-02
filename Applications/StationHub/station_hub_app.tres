@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_shres")
-roles = Array[String](["Captain", "Engineer", "Hacker", "Pilot", "Factotum", "Capitano", "Ingegnere", "Pilota"])
+roles = Array[String](["Captain", "Engineer", "Hacker", "Pilot", "Mozzo", "Capitano", "Ingegnere", "Pilota"])
 power_draw_mw = 40.0
 required_subsystems = Array[String](["comms", "navigation"])
 app_id = "station_hub"
@@ -12,6 +12,7 @@ title = "Hub Servizi Portuali"
 description = "Interfaccia diegetica servizi di stazione: Cantiere, Mercato Firmware, Bacheca Contratti e Taverna."
 developer = "Pulse Networks"
 category = "Sistemi Nave"
+menu_path = "Strumenti"
 icon_color = Color(0.2, 0.8, 0.7, 1)
 scene_path = "res://Applications/StationHub/station_hub_app.tscn"
 default_window_size = Vector2(780, 560)

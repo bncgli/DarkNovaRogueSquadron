@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_sysmap")
-roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Factotum"])
+roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Mozzo"])
 power_draw_mw = 15.0
 required_subsystems = Array[String](["navigation_computer", "astrometrics_array"])
 app_id = "system_map"
@@ -12,6 +12,7 @@ title = "System Map & Hyperdrive"
 description = "Mappa olografica del sistema stellare e pianificazione rotte di transito Hyperdrive"
 developer = "AstroForge"
 category = "Navigazione"
+menu_path = "Strumenti"
 icon_color = Color(0.2, 0.6, 1.0, 1)
 scene_path = "res://Applications/SystemMap/system_map_app.tscn"
 default_window_size = Vector2(720, 520)

@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://be5v6p7x6n8q2"]
+
+[ext_resource type="Script" uid="uid://c7fea8sx1wo5l" path="res://addons/ship_sublayer_editor/ship_sublayer_editor.gd" id="1_script"]
+
+[node name="ShipSublayerEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Toolbar" type="PanelContainer" parent="MainVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MainHSplit" type="HSplitContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 220
+
+[node name="LeftTabs" type="TabContainer" parent="MainVBox/MainHSplit"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RightHSplit" type="HSplitContainer" parent="MainVBox/MainHSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+split_offset = 580
+
+[node name="CanvasPanel" type="PanelContainer" parent="MainVBox/MainHSplit/RightHSplit"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightPanel" type="PanelContainer" parent="MainVBox/MainHSplit/RightHSplit"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StatusBar" type="PanelContainer" parent="MainVBox"]
+unique_name_in_owner = true
+layout_mode = 2

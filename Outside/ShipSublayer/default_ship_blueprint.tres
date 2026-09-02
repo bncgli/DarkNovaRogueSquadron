@@ -1,27 +1,518 @@
 [gd_resource type="Resource" script_class="ShipBlueprint" format=3 uid="uid://vjf8sadw6tng"]
 
-[ext_resource type="Script" uid="uid://fb3y4b4gyx8x" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="1_8ivkh"]
+[ext_resource type="Script" uid="uid://dqvdvs2fhqsep" path="res://Outside/ShipSublayer/ShipDuctData.gd" id="1_10483"]
+[ext_resource type="Script" uid="uid://od5pvbqowjk" path="res://Outside/ShipSublayer/ShipRoomData.gd" id="2_tfef1"]
+[ext_resource type="Script" uid="uid://fb3y4b4gyx8x" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="3_2ervp"]
+
+[sub_resource type="Resource" id="Resource_vganl"]
+script = ExtResource("1_10483")
+id = "duct_0_b"
+name = "Duct 0 B"
+from = Vector2(180, 380)
+to = Vector2(180, 240)
+
+[sub_resource type="Resource" id="Resource_gtdma"]
+script = ExtResource("1_10483")
+id = "duct_1_b"
+name = "Duct 1 B"
+from = Vector2(380, 240)
+to = Vector2(380, 150)
+
+[sub_resource type="Resource" id="Resource_2o3qs"]
+script = ExtResource("1_10483")
+id = "duct_2_a"
+name = "Duct 2 A"
+from = Vector2(380, 150)
+to = Vector2(230, 150)
+
+[sub_resource type="Resource" id="Resource_0retm"]
+script = ExtResource("1_10483")
+id = "duct_3_a"
+name = "Duct 3 A"
+from = Vector2(230, 420)
+to = Vector2(340, 420)
+
+[sub_resource type="Resource" id="Resource_5gyaf"]
+script = ExtResource("1_10483")
+id = "duct_5_a"
+name = "Duct 5 A"
+from = Vector2(300, 440)
+to = Vector2(350, 440)
+
+[sub_resource type="Resource" id="Resource_6qj18"]
+script = ExtResource("1_10483")
+id = "duct_5_b"
+name = "Duct 5 B"
+from = Vector2(350, 440)
+to = Vector2(350, 310)
+
+[sub_resource type="Resource" id="Resource_2vxcw"]
+script = ExtResource("1_10483")
+id = "duct_6_a"
+name = "Duct 6 A"
+from = Vector2(350, 310)
+to = Vector2(260, 310)
+
+[sub_resource type="Resource" id="Resource_pv8qg"]
+script = ExtResource("2_tfef1")
+id = "room_1"
+name = "Ponte di comando"
+rect = Rect2(350, 120, 60, 80)
+color = Color(0.2, 0.4, 0.6, 0.5)
+border_color = Color(0.4, 0.7, 0.9, 0.8)
+devices = Array[Dictionary]([{
+"category": "utility",
+"id": "dev_1179285_0",
+"name": "Nuovo Dispositivo",
+"pos": Vector2(380, 160),
+"power_mw": -10.0,
+"sector": "Ponte di comando"
+}])
 
 [resource]
-script = ExtResource("1_8ivkh")
+script = ExtResource("3_2ervp")
+ship_class = ""
 ship_bounds = Rect2(60, 30, 500, 500)
 drone_spawn_pos = Vector2(65, 35)
 drone_spawn_heading = 0.0
-rooms = Array[Dictionary]([{
-"border_color": Color(0.4, 0.7, 0.9, 0.8),
-"category": "command",
-"color": Color(0.2, 0.4, 0.6, 0.5),
-"devices": [{
-"category": "utility",
-"desc": "Dispositivo in Ponte di comando.",
-"id": "dev_room_1_1",
-"is_generator": false,
-"name": "Pod Piloti",
-"pos": Vector2(280, 195),
-"power_mw": -100.0
-}],
-"id": "room_1",
-"name": "Ponte di comando",
-"power_mw": -100.0,
-"rect": Rect2(220, 170, 120, 50)
+recharge_room_id = "room_1"
+rooms = [SubResource("Resource_pv8qg")]
+ducts = [SubResource("Resource_vganl"), SubResource("Resource_gtdma"), SubResource("Resource_2o3qs"), SubResource("Resource_0retm"), SubResource("Resource_5gyaf"), SubResource("Resource_6qj18"), SubResource("Resource_2vxcw")]
+drive_files = Array[Dictionary]([{
+"content": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING
+[SYSTEM]
+app_name=FlightControls
+version=1.0.4
+status=OPERATIONAL
+rcs_subsystem=ACTIVE
+
+[FLIGHT_DYNAMICS]
+max_linear_speed=20.0
+linear_acceleration=35.0
+linear_deceleration=20.0
+max_angular_speed=2.5
+angular_acceleration=8.0
+angular_deceleration=6.0
+
+[SPEED_MODES]
+turbo_multiplier=2.0
+precision_multiplier=0.4
+",
+"desc": "Parametri di dinamica e limiti di manovra del sistema di volo.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/flight_config.dat"
+}, {
+"content": "# RCS & MAIN THRUSTERS TUNING MATRIX
+[THRUSTERS]
+rcs_power_rate=1.0
+pitch_thrust_mult=1.0
+yaw_thrust_mult=1.0
+roll_thrust_mult=1.0
+vertical_thrust_mult=1.0
+overclock_limit=1.5
+cruise_multiplier=8.0
+warmup_time_sec=4.0
+proximity_drop_distance=250.0
+heat_penalty=45.0
+",
+"desc": "Matrice di calibrazione dei propulsori RCS e di spinta principale.",
+"is_protected": true,
+"path": "Ship Drive/Programs/FlightControls/thrusters_tuning.dat"
+}, {
+"content": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION
+# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX
+[SYSTEM]
+app_name=PowerGrid
+version=1.0.4
+status=OPERATIONAL
+mode=AUTOMATIC_BALANCING
+
+[GRID_SETTINGS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+junction_switch_delay=0.25
+overload_threshold_pct=110.0
+reroute_efficiency_loss=0.05
+
+[CIRCUIT_PROTECTION]
+breaker_trip_threshold=1.4
+short_circuit_damping=0.85
+auto_reroute_on_short=false
+",
+"desc": "Configurazione reattore, soglie di sovraccarico e disgiuntori della rete.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/power_grid_config.dat"
+}, {
+"content": "# POWER GRID CALIBRATION & TUNING MATRIX
+[TUNING]
+power_efficiency_mult=1.0
+backup_line_conductivity=0.95
+switch_rate_hz=10.0
+regime_boost=1.0
+overclock_tolerance=1.2
+",
+"desc": "Matrice di conduttività e frequenza di commutazione snodi.",
+"is_protected": true,
+"path": "Ship Drive/Programs/PowerGrid/grid_tuning.dat"
+}, {
+"content": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION
+# WARNING: SENSORS & OPTICS CONFIGURATION FILE
+[SYSTEM]
+app_name=Cams
+version=1.0.4
+status=OPERATIONAL
+sensor_array=CCTV_6CH
+
+[OPTICS]
+default_fov=75.0
+min_fov=30.0
+max_fov=100.0
+zoom_step=10.0
+night_vision_intensity=0.18
+tactical_hud_contrast=0.18
+thermal_intensity=0.22
+",
+"desc": "Configurazione lenti e calibrazione array ottico a 6 canali.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/cams_config.dat"
+}, {
+"content": "# OPTICS & SENSOR CALIBRATION MATRIX
+[SENSORS]
+signal_boost=1.0
+noise_reduction=1.0
+refresh_rate_hz=60.0
+crosshair_style=STANDARD
+overclock_gain=1.0
+",
+"desc": "Taratura guadagno di segnale e filtri visivi CCTV.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Cams/optics_tuning.dat"
+}, {
+"content": "# DARK NOVA LIFE SUPPORT & ATMOSPHERE CONTROL CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME ATMOSPHERE FIRMWARE
+[SYSTEM]
+app_name=LifeSupportApp
+version=1.0.0
+status=OPERATIONAL
+
+[OXYGEN]
+o2_generation_rate=1.2
+seal_door_speed=0.5
+auto_fire_suppress=false
+",
+"desc": "Configurazione generazione O2, velocità sigillatura paratie e automazione antincendio.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/life_support_config.dat"
+}, {
+"content": "# ATMOSPHERE TUNING & DECOMPRESSION PARAMETERS MATRIX
+[PARAMETERS]
+decompression_rate=1.8
+fire_suppression_co2_level=0.45
+scrubber_efficiency=0.98
+",
+"desc": "Parametri di decompressione rapida, livelli gas inerte e efficienza scrubber CO2.",
+"is_protected": true,
+"path": "Ship Drive/Programs/LifeSupport/atmo_tuning.dat"
+}, {
+"content": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION
+# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION
+[SYSTEM]
+app_name=Diagnostics
+version=1.0.4
+status=OPERATIONAL
+diagnostics_subsystem=ACTIVE
+
+[SCANNER_SETTINGS]
+scan_depth=DEEP
+auto_quarantine_malware=true
+alert_sound=true
+scan_speed_multiplier=1.0
+tamper_detection_level=HIGH
+log_telemetry_integrity=true
+",
+"desc": "Configurazione scanner di integrità, rilevamento malware e parametri di allarme.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/diagnostics_config.dat"
+}, {
+"content": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX
+[ICE_DEFENSE]
+ice_firewall_strength=100.0
+factory_reset_delay_sec=3.0
+tamper_detection_level=HIGH
+ice_recharge_rate=5.0
+malware_purge_efficiency=1.0
+overclock_bypass_security=false
+",
+"desc": "Barriere ICE difensive, tasso di ricarica e ritardo ripristino di fabbrica.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Diagnostics/security_tuning.dat"
+}, {
+"content": "# GODOTOS TERMINAL RUNTIME CONFIGURATION
+# WARNING: TERMINAL CORE FIRMWARE FILE - DIRECT EDITING RESTRICTED
+[TERMINAL]
+terminal_id=DN-TERM-01
+shell=/bin/godotos-sh
+prompt_style=folder_arrow
+font_size=14
+theme_accent=matrix_green
+auto_scroll=true
+auto_focus=true
+show_welcome_banner=true
+history_max_entries=100
+security_level=OPERATIONAL
+",
+"desc": "Configurazione runtime del terminale UNIX",
+"is_protected": true,
+"path": "Ship Drive/systems/terminal_config.dat"
+}, {
+"content": "# GODOTOS CORE SYSTEM CONFIGURATION
+# WARNING: SYSTEM KERNEL FIRMWARE - DIEGETIC OS CONFIGURATION
+[OS_CORE]
+os_name=GodotOS
+version=1.2.0
+build=2026.08
+kernel=GodotOS-Kernel-v4.7
+architecture=x86_64_diegetic
+security_level=OPERATIONAL
+locale=it_IT.UTF-8
+drive_mount=LOCAL
+desktop_mode=MULTI_WINDOW
+window_manager=GODOTOS_WM
+vram_allocation_mb=512
+swap_enabled=true
+max_open_windows=16
+
+[SYSTEM_DRIVES]
+terminal_drive_mounted=true
+ship_drive_sync=NETWORK_SYNC
+network_sync=DISABLED
+",
+"desc": "Configurazione kernel di sistema",
+"is_protected": true,
+"path": "Ship Drive/systems/godotos_core.dat"
+}, {
+"content": "# GODOTOS DESKTOP & DISPLAY RUNTIME MATRIX
+[DESKTOP]
+wallpaper=default
+theme=matrix_green
+taskbar_position=BOTTOM
+animations_enabled=true
+notification_sound=true
+clock_format=24H
+resolution_scaling=1.0
+",
+"desc": "Parametri display e window manager",
+"is_protected": true,
+"path": "Ship Drive/systems/desktop_config.dat"
+}, {
+"content": "# DARK NOVA SYSTEM MAP & ASTROMETRICS CONFIGURATION
+[SYSTEM]
+app_name=SystemMapApp
+version=1.0.0
+status=OPERATIONAL
+
+[HYPERDRIVE]
+transit_speed_c=120.0
+energy_cost_per_sector=15.0
+fuel_cost_per_sector=2.5
+auto_route_safety=true
+",
+"desc": "Configurazione di navigazione e parametri di calcolo salto Hyperdrive.",
+"is_protected": true,
+"path": "Ship Drive/Programs/SystemMap/system_map_config.dat"
+}, {
+"content": "[SYSTEM]
+app_name=LogbookApp
+version=1.0.0
+status=OPERATIONAL
+
+[LOGGING]
+auto_log_events=true
+max_history_entries=200
+log_telemetry_errors=true
+",
+"desc": "Configurazione sistema di logging eventi e telemetria scatola nera.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/logbook_config.dat"
+}, {
+"content": "[SYNC]
+sync_to_ship_drive=true
+timestamp_format=STAR_DATE
+cloud_backup=false
+",
+"desc": "Parametri di sincronizzazione diario e formattazione timestamp.",
+"is_protected": true,
+"path": "Ship Drive/Programs/Logbook/journal_tuning.dat"
+}])
+drive_passwords = {
+"Ship Drive/Programs/Cams": "CAMS-7815",
+"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+"Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+"Ship Drive/Programs/LifeSupport": "LIFE-7815",
+"Ship Drive/Programs/Logbook": "LOGS-7815",
+"Ship Drive/Programs/PowerGrid": "GRID-7815",
+"Ship Drive/Programs/SystemMap": "MAPS-7815",
+"Ship Drive/systems": "ROOT-7815"
+}
+installed_apps = Array[Dictionary]([{
+"category": "Sistemi Nave",
+"default_password": "FLIGHT-7815",
+"default_window_size": [650.0, 480.0],
+"description": "Controlli di manovra e navigazione nave",
+"developer": "Zenith Aerospace",
+"drive_folder": "Programs/FlightControls",
+"icon_color": Color(1, 0.6, 0.2, 1),
+"id": "flight_control",
+"is_critical": true,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Sistemi Nave/Navigazione",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 15.0,
+"required_subsystems": Array[String](["engines", "nav_computer"]),
+"roles": Array[String](["Capitano", "Pilota", "Mozzo"]),
+"scene_path": "res://Applications/FlightControl/flight_control_app.tscn",
+"terminal_command": "",
+"title": "Flight Control"
+}, {
+"category": "Sistemi Nave",
+"default_password": "GRID-7815",
+"default_window_size": [800.0, 550.0],
+"description": "Mappa elettrica 2D, snodi e flussi energetici nave",
+"developer": "NovaTech Systems",
+"drive_folder": "Programs/PowerGrid",
+"icon_color": Color(0.95, 0.85, 0.2, 1),
+"id": "power_grid",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Sistemi Nave",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 12.0,
+"required_subsystems": Array[String](["reactor", "power_junctions"]),
+"roles": Array[String](["Capitano", "Ingegnere", "Mozzo"]),
+"scene_path": "res://Applications/PowerGrid/power_grid_app.tscn",
+"terminal_command": "",
+"title": "Power Grid"
+}, {
+"category": "Sistemi Nave",
+"default_password": "CAMS-7815",
+"default_window_size": [600.0, 420.0],
+"description": "Telecamere esterne dell'astronave",
+"developer": "Zenith Aerospace",
+"drive_folder": "Programs/Cams",
+"icon_color": Color(0.3, 0.9, 0.6, 1),
+"id": "cams",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Sistemi Nave/Navigazione",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 8.0,
+"required_subsystems": Array[String](["sensors_optics"]),
+"roles": Array[String](["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Mozzo"]),
+"scene_path": "res://Applications/Cams/cams_app.tscn",
+"terminal_command": "",
+"title": "Cams"
+}, {
+"category": "Sistemi Nave",
+"default_password": "LIFE-7815",
+"default_window_size": [700.0, 500.0],
+"description": "Monitoraggio e controllo parametri vitali, O2, paratie e antincendio",
+"developer": "Aether Dynamics",
+"drive_folder": "Programs/LifeSupport",
+"icon_color": Color(0.2, 0.7, 0.9, 1),
+"id": "life_support",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Sistemi Nave",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 20.0,
+"required_subsystems": Array[String](["life_support_generator"]),
+"roles": Array[String](["Engineer", "Captain", "Mozzo", "Ingegnere", "Capitano"]),
+"scene_path": "res://Applications/LifeSupport/life_support_app.tscn",
+"terminal_command": "",
+"title": "Supporto Vitale & Atmosfera"
+}, {
+"category": "Sistemi Nave",
+"default_password": "DIAG-7815",
+"default_window_size": [680.0, 500.0],
+"description": "Centro sicurezza cyber, scansione minacce drive e barriere ICE",
+"developer": "OmniCorp Software",
+"drive_folder": "Programs/Diagnostics",
+"icon_color": Color(0.2, 0.9, 0.7, 1),
+"id": "diagnostics",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Sistemi Nave",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 10.0,
+"required_subsystems": Array[String](["ship_core", "security_ice"]),
+"roles": Array[String](["Capitano", "Hacker", "Ingegnere", "Mozzo", "Captain", "Engineer"]),
+"scene_path": "res://Applications/Diagnostics/diagnostics_app.tscn",
+"terminal_command": "",
+"title": "System Diagnostics"
+}, {
+"category": "Terminale Locale",
+"default_password": "ROOT-7815",
+"default_window_size": [700.0, 450.0],
+"description": "Terminale Shell diegetico UNIX GodotOS",
+"developer": "OmniCorp Software",
+"drive_folder": "systems",
+"icon_color": Color(0.2, 0.9, 0.4, 1),
+"id": "terminal",
+"is_critical": false,
+"is_pinned_to_taskbar": true,
+"is_system_app": true,
+"menu_path": "Strumenti",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 0.0,
+"required_subsystems": Array[String]([]),
+"roles": Array[String]([]),
+"scene_path": "res://Applications/Terminal/src/terminal_scene.tscn",
+"terminal_command": "terminal",
+"title": "Terminale Shell UNIX"
+}, {
+"category": "Navigazione",
+"default_password": "MAPS-7815",
+"default_window_size": [720.0, 520.0],
+"description": "Mappa olografica del sistema stellare e pianificazione rotte di transito Hyperdrive",
+"developer": "AstroForge",
+"drive_folder": "Programs/SystemMap",
+"icon_color": Color(0.2, 0.6, 1, 1),
+"id": "system_map",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Strumenti",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 15.0,
+"required_subsystems": Array[String](["navigation_computer", "astrometrics_array"]),
+"roles": Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Mozzo"]),
+"scene_path": "res://Applications/SystemMap/system_map_app.tscn",
+"terminal_command": "",
+"title": "System Map & Hyperdrive"
+}, {
+"category": "Sistemi Nave",
+"default_password": "LOGS-7815",
+"default_window_size": [600.0, 450.0],
+"description": "Diario di volo, contratti sandbox, scatola nera ed eventi",
+"developer": "Nebula Logic",
+"drive_folder": "Programs/Logbook",
+"icon_color": Color(0.8, 0.7, 0.2, 1),
+"id": "logbook",
+"is_critical": false,
+"is_pinned_to_taskbar": false,
+"is_system_app": false,
+"menu_path": "Strumenti",
+"min_window_size": [400.0, 300.0],
+"power_draw_mw": 5.0,
+"required_subsystems": Array[String]([]),
+"roles": Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer", "Soldier"]),
+"scene_path": "res://Applications/Logbook/logbook_app.tscn",
+"terminal_command": "",
+"title": "Registro di Bordo & Obiettivi"
 }])

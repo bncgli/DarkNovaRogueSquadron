@@ -8,7 +8,7 @@ var target_folder: FakeFolder
 var target_folder_name: String
 
 var target_folder_path: String
-var target_folder_type: FakeFolder.file_type_enum
+var target_folder_type: GlobalValues.FileType
 
 enum StateEnum{COPY, CUT}
 var state: StateEnum = StateEnum.COPY
@@ -29,7 +29,7 @@ func _input(event: InputEvent) -> void:
 			paste_folder(file_manager_window.file_path)
 
 func copy_folder(folder: FakeFolder) -> void:
-	if folder.file_type == FakeFolder.file_type_enum.FOLDER:
+	if folder.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder.folder_path):
 			NotificationManager.spawn_notification("Non e' possibile copiare una cartella protetta da password.")
@@ -52,7 +52,7 @@ func cut_folder(folder: FakeFolder) -> void:
 	if folder.folder_name == "Terminal Drive" and (folder.folder_path == "Terminal Drive" or folder.folder_path == ""):
 		NotificationManager.spawn_notification("Non e' possibile tagliare 'Terminal Drive'.")
 		return
-	if folder.file_type == FakeFolder.file_type_enum.FOLDER:
+	if folder.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder.folder_path):
 			NotificationManager.spawn_notification("Non e' possibile tagliare o spostare una cartella protetta da password.")
@@ -75,7 +75,7 @@ func paste_folder(to_path: String) -> void:
 		NotificationManager.spawn_notification("Error: Nothing to copy")
 		return
 	
-	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
+	if target_folder_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(target_folder_path):
 			NotificationManager.spawn_notification("Operazione non consentita per una cartella protetta da password.")
@@ -92,7 +92,7 @@ func paste_folder_copy(to_path: String) -> void:
 	var clean_dir := to_path.replace("\\", "/").strip_edges().trim_prefix("/").trim_suffix("/")
 	var prefix := (clean_dir + "/") if not clean_dir.is_empty() else ""
 	var to: String = "user://files/%s%s" % [prefix, target_folder_name]
-	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
+	if target_folder_type == GlobalValues.FileType.FOLDER:
 		var from: String = "user://files/%s" % target_folder_path
 		if from != to:
 			DirAccess.make_dir_absolute(to)
@@ -138,7 +138,7 @@ func paste_folder_cut(to_path: String) -> void:
 	var from_prefix := (from_dir + "/") if not from_dir.is_empty() else ""
 	var old_from_rel: String = "%s%s" % [from_prefix, target_folder_name]
 	
-	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
+	if target_folder_type == GlobalValues.FileType.FOLDER:
 		var from: String = "user://files/%s" % target_folder_path
 		old_from_rel = target_folder_path
 		DirAccess.rename_absolute(from, to)
@@ -169,7 +169,7 @@ func paste_folder_cut(to_path: String) -> void:
 	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.get("is_drive_mounted"):
 		var dest_rel: String = "%s%s" % [prefix, target_folder_name]
-		sdm.sync_rename(old_from_rel, dest_rel, target_folder_type == FakeFolder.file_type_enum.FOLDER)
+		sdm.sync_rename(old_from_rel, dest_rel, target_folder_type == GlobalValues.FileType.FOLDER)
 	
 	target_folder = null
 
@@ -185,7 +185,7 @@ func copy_directory_recursively(dir_path: String, to_path: String) -> void:
 
 ## Instantiates a new file in the file manager then refreshes. Used for adding a single file without causing a full refresh.
 func instantiate_file_and_sort(file_manager: BaseFileManager, to_path: String) -> void:
-	if target_folder_type == FakeFolder.file_type_enum.FOLDER:
+	if target_folder_type == GlobalValues.FileType.FOLDER:
 		file_manager.instantiate_file(target_folder_name, "%s/%s" % [to_path, target_folder_name], target_folder_type)
 	else:
 		file_manager.instantiate_file(target_folder_name, to_path, target_folder_type)

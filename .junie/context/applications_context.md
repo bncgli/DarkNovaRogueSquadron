@@ -23,7 +23,8 @@ This directory contains the suite of applications for the GodotOS interface, rep
 | `FluxWallet/` | Economic status, Flux monitoring, and modifiers log. | `ship_blueprint.gd` |
 
 #### Technical Notes
-- Most applications are structured with a `.tscn` for the UI, a `.gd` for logic, and a `.tres` for application metadata in GodotOS.
-- Application resources are stored in `res://Applications/` and can be installed into the ship's blueprint using the **Software Manager** (unified single-line layout for programs and passwords) in `ShipSublayerEditor`.
-- The installation process automatically configures required `Ship Drive` files and passwords based on the `AppResource` definition.
-- They communicate with the ship's backend through Autoloads or by directly referencing the `spaceship.gd` entity when present in the 3D scene.
+- **Ereditarietà Mandatoria**: Tutte le applicazioni DEVONO ereditare da `BaseApp.gd` per la gestione standard di finestre, configurazione `.dat` e overlay di missione.
+- **Struttura Risorse**: Strutturate con una scena UI (`.tscn`), un controller (`.gd`) che estende `BaseApp`, e una risorsa metadati (`AppResource.tres`).
+- **Integrazione Software Manager**: Le risorse `AppResource` sono gestite dai Software Manager per l'installazione su `ShipBlueprint` o `Terminal Drive`.
+- **Configurazione Runtime**: L'utilizzo dei file `.dat` è automatizzato tramite gli helper di `BaseApp` (`_apply_configuration`).
+- **Filtro RBAC**: Lo Start Menu filtra automaticamente le app installate in base al ruolo del giocatore tramite `SpaceWorldManager.get_installed_apps_for_role()`.

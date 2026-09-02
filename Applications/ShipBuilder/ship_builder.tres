@@ -8,6 +8,7 @@ app_id = "ship_builder"
 title = "ShipBuilder"
 description = "Terminal tool for custom ship design and Blueprint management."
 category = "Terminale Locale"
+menu_path = "Strumenti"
 icon_color = Color(0.8, 0.4, 0.1, 1.0)
 scene_path = "res://Applications/ShipBuilder/ship_builder.tscn"
 default_window_size = Vector2(1000, 700)

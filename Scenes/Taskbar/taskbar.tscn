@@ -73,51 +73,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 1
 
-[node name="Lobby Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=1984271891 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "res://Applications/Lobby/lobby_app.tscn"
-title_text = "Lobby & Comms"
-description_text = "Coordina equipaggio e postazioni di volo"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer/Lobby Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(0.2, 0.8, 1, 1)
-
-[node name="Terminal Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=158647529 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = ""
-application_scene = "uid://boie5q3r1lqgy"
-title_text = "Terminal"
-description_text = "Type commands into a magic box"
-use_generic_pause_menu = false
-
-[node name="TextureRect" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer/Terminal Option/HBoxContainer/MarginContainer" index="0"]
-modulate = Color(0.91056484, 0.5161954, 0, 1)
-
-[node name="Godotris Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=776187856 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = "res://Games/Godotris/Game/godotris_game.tscn"
-title_text = "Godotris"
-description_text = "Stack blocks, clear lines!"
-
-[node name="Super Bit Boy Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=1015736987 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = "res://Games/Super Bit Boy/Scenes/Levels/level_1.tscn"
-title_text = "Super Bit Boy"
-description_text = "Hard but Fair 2D Platformer"
-
-[node name="Snake Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=1531400090 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = "res://Games/Snake/snake_scene.tscn"
-title_text = "Snake"
-description_text = "Eat fruit, grow long!"
-
-[node name="Pong Option" parent="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer" unique_id=2135916508 instance=ExtResource("2_1ualm")]
-layout_mode = 2
-game_scene = "res://Games/Pong/Scenes/pong_main_menu.tscn"
-title_text = "Pong"
-description_text = "Timeless Classic"
 
 [node name="Power Button" type="Button" parent="StartMenuAnchor/Start Menu" unique_id=879138926]
 layout_mode = 1
@@ -263,4 +218,3 @@ autostart = true
 [connection signal="mouse_exited" from="Taskbar/Start Button" to="Taskbar/Start Button" method="_on_mouse_exited"]
 [connection signal="timeout" from="Taskbar/TimeAndDate/Timer" to="Taskbar/TimeAndDate" method="_on_timer_timeout"]
 
-[editable path="StartMenuAnchor/Start Menu/ScrollContainer/VBoxContainer/Terminal Option"]

@@ -49,14 +49,14 @@ func _draw() -> void:
 	
 	# Disegna i contatti bersaglio
 	for t in targets:
-		var dist: float = float(t.get("distance", 50.0))
-		var bearing: float = deg_to_rad(float(t.get("bearing_deg", 0.0)) - 90.0)
+		var dist: float = float(t.get("distance"))
+		var bearing: float = deg_to_rad(float(t.get("bearing_deg")) - 90.0)
 		var norm_dist := clampf(dist / max_radar_dist, 0.1, 1.0)
 		var t_pos := center + Vector2(cos(bearing), sin(bearing)) * (norm_dist * radius)
 		
-		var t_id: String = t.get("id", "")
+		var t_id: String = t.get("id")
 		var is_locked: bool = (t_id == locked_target_id and has_lock)
-		var threat: String = t.get("threat_level", "NEUTRAL")
+		var threat: String = t.get("threat_level")
 		
 		var col: Color = Color(0.3, 0.8, 0.4) # Verde default
 		if threat == "HAZARD":

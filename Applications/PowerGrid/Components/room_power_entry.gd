@@ -12,15 +12,15 @@ var room_id: String = ""
 var current_power: float = 0.0
 
 func setup(data: Dictionary) -> void:
-	room_id = data.get("id", "")
-	room_name_label.text = data.get("name", room_id)
-	category_label.text = data.get("category", "General").to_upper()
+	room_id = data.get("id")
+	room_name_label.text = data.get("name")
+	category_label.text = data.get("category").to_upper()
 	
-	var is_on = data.get("is_on", true)
+	var is_on = data.get("is_on")
 	power_switch.button_pressed = is_on
 	_update_visuals(is_on)
 	
-	update_power(data.get("power_mw", 0.0))
+	update_power(data.get("power_mw"))
 
 func update_power(power_mw: float) -> void:
 	current_power = power_mw
