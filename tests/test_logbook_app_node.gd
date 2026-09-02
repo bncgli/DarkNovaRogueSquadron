@@ -2,7 +2,7 @@ extends Node
 
 ## Test Runner Headless per LogbookApp (Applications/Logbook)
 ## 1. Overlay / Ciclo di Vita: %DisconnectedOverlay offline vs ship_connection_changed(true)
-## 2. RBAC: Azioni contrattuali riservate al Capitano/Mozzo, lettura e note aperte a tutti
+## 2. RBAC: Azioni contrattuali riservate al Capitano/Stagista, lettura e note aperte a tutti
 ## 3. File .DAT e Hot-Reload: Parsing corretto di logbook_config.dat e journal_tuning.dat e hot-reload
 ## 4. Risorsa e Software Manager: Registrazione logbook_app.tres in ShipSoftwareManager
 ## 5. Pulizia Segnali: Verifica assenza di errori/leak dopo _exit_tree()
@@ -98,12 +98,12 @@ func _run_all_tests() -> void:
 		assert(app.clear_log_btn.disabled == false, "ClearLogBtn deve essere abilitato per Capitano")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Mozzo: Controllo Completo
-		net_mgr.request_role("Mozzo")
+		# 2.6 Stagista: Controllo Completo
+		net_mgr.request_role("Stagista")
 		await get_tree().process_frame
-		assert(app.can_manage_contracts == true, "Mozzo deve avere controllo completo sui contratti")
-		assert(app.new_contract_btn.disabled == false, "NewContractBtn deve essere abilitato per Mozzo")
-		print("✔ Ruolo Mozzo: controllo completo abilitato")
+		assert(app.can_manage_contracts == true, "Stagista deve avere controllo completo sui contratti")
+		assert(app.new_contract_btn.disabled == false, "NewContractBtn deve essere abilitato per Stagista")
+		print("✔ Ruolo Stagista: controllo completo abilitato")
 
 	# =========================================================================
 	# TEST 3: FILE .DAT E HOT-RELOADING
@@ -140,7 +140,7 @@ func _run_all_tests() -> void:
 	var initial_contracts_count: int = app.active_contracts.size()
 	assert(initial_contracts_count >= 2, "Devono essere presenti contratti iniziali")
 	
-	# 4.1 Aggiunta contratto da Capitano/Mozzo
+	# 4.1 Aggiunta contratto da Capitano/Stagista
 	app._on_new_contract_pressed()
 	await get_tree().process_frame
 	assert(app.active_contracts.size() == initial_contracts_count + 1, "Nuovo contratto aggiunto con successo")

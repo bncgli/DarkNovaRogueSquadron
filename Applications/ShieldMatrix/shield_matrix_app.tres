@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_vw54f")
-roles = Array[String](["Capitano", "Ingegnere", "Mozzo"])
+roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
 power_draw_mw = 20.0
 required_subsystems = Array[String](["deflector_emitters", "reactor"])
 is_critical = true

@@ -9,9 +9,9 @@ signal camera_status_changed(cam_id: String, is_open: bool)
 signal ship_connection_changed(is_connected: bool)
 signal duct_drone_state_changed(pos: Vector2, heading: float, speed: float, battery: float, lights: bool, scan_active: bool, scan_radius: float)
 signal duct_drone_reset_performed()
-signal ship_damages_updated(damages: Array)
-signal ship_damage_discovered(damage: Dictionary)
-signal ship_damage_repaired(damage: Dictionary)
+signal ship_damages_updated(damages: Array[ShipDamageRuntimeState])
+signal ship_damage_discovered(damage: ShipDamageRuntimeState)
+signal ship_damage_repaired(damage: ShipDamageRuntimeState)
 signal duct_drone_repair_state_changed(is_repairing: bool, damage_id: String, progress: float)
 signal weapon_fired(weapon_type: String, origin: Vector3, target_pos: Vector3, hit_success: bool, target_id: String)
 signal weapon_target_locked(target_id: String, target_data: Dictionary)
@@ -63,27 +63,6 @@ const DUCT_BASE_ROTATE_SPEED: float = 3.0
 const DUCT_ACCELERATION: float = 650.0
 const DUCT_DECELERATION: float = 750.0
 
-
-const DUCT_CORRIDORS: Array[Dictionary] = [
-	{"from": Vector2(300, 115), "to": Vector2(300, 135), "width": 16.0, "name": "Condotto Dorsale Alpha"},
-	{"from": Vector2(300, 195), "to": Vector2(300, 215), "width": 16.0, "name": "Condotto Reattore-Armeria"},
-	{"from": Vector2(300, 295), "to": Vector2(300, 315), "width": 18.0, "name": "Condotto Termico Motori"},
-	{"from": Vector2(230, 80), "to": Vector2(160, 80), "width": 14.0, "name": "Condotto Dati Sensori"},
-	{"from": Vector2(160, 80), "to": Vector2(160, 115), "width": 14.0, "name": "Condotto Avionica"},
-	{"from": Vector2(370, 80), "to": Vector2(440, 80), "width": 14.0, "name": "Condotto Linea Comms"},
-	{"from": Vector2(440, 80), "to": Vector2(440, 115), "width": 14.0, "name": "Condotto EW Comms"},
-	{"from": Vector2(160, 180), "to": Vector2(160, 200), "width": 14.0, "name": "Condotto Filtrazione SX"},
-	{"from": Vector2(440, 180), "to": Vector2(440, 200), "width": 14.0, "name": "Condotto Linea Merci DX"},
-	{"from": Vector2(220, 240), "to": Vector2(235, 240), "width": 14.0, "name": "Bypass Refrigerante SX"},
-	{"from": Vector2(365, 240), "to": Vector2(380, 240), "width": 14.0, "name": "Bypass Refrigerante DX"},
-	{"from": Vector2(100, 250), "to": Vector2(80, 250), "width": 14.0, "name": "Condotto RCS Sinistro"},
-	{"from": Vector2(500, 250), "to": Vector2(520, 250), "width": 14.0, "name": "Condotto RCS Destro"},
-	{"from": Vector2(160, 275), "to": Vector2(160, 350), "width": 14.0, "name": "Condotto Manutenzione SX"},
-	{"from": Vector2(160, 350), "to": Vector2(185, 350), "width": 14.0, "name": "Accesso Motori SX"},
-	{"from": Vector2(440, 275), "to": Vector2(440, 350), "width": 14.0, "name": "Condotto Manutenzione DX"},
-	{"from": Vector2(440, 350), "to": Vector2(415, 350), "width": 14.0, "name": "Accesso Motori DX"}
-]
-
 # Stato sincronizzato del Duct Drone
 var duct_drone_pos: Vector2 = INITIAL_DUCT_DRONE_POS
 var duct_drone_heading: float = INITIAL_DUCT_DRONE_HEADING
@@ -98,7 +77,7 @@ var duct_drone_angular_input: float = 0.0
 var duct_drone_speed_mult: float = 1.0
 
 # Danni strutturali e sistemici alla nave
-var ship_damages: Array[Dictionary] = []
+var ship_damages: Array[ShipDamageRuntimeState] = []
 var is_duct_drone_repairing: bool = false
 var repairing_damage_id: String = ""
 var _next_damage_idx: int = 1
@@ -134,6 +113,7 @@ var _duct_drone_active_config: Dictionary = {
 	"radar_scan_radius_max": 160.0,
 	"repair_range": 42.0,
 	"repair_speed_multiplier": 1.0,
+	"repair_efficiency": 1.0,
 	"turbo_multiplier": 2.0,
 	"precision_multiplier": 0.5,
 	"is_dat_loaded": false
@@ -586,7 +566,7 @@ func _update_duct_drone_physics(delta: float) -> void:
 	var drain_repair: float = float(_duct_drone_active_config.get("battery_drain_repair"))
 	var scan_max: float = float(_duct_drone_active_config.get("radar_scan_radius_max"))
 	var repair_rng: float = float(_duct_drone_active_config.get("repair_range"))
-	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier") * float(_duct_drone_active_config.get("repair_efficiency")))
+	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier", 1.0)) * float(_duct_drone_active_config.get("repair_efficiency", 1.0))
 
 	# 1. Rotazione Tank (gira sul posto)
 	if absf(duct_drone_angular_input) > 0.01:
@@ -639,19 +619,19 @@ func _update_duct_drone_physics(delta: float) -> void:
 	# 4. Rilevamento Danni Invisibili
 	var damages_changed := false
 	for dmg in ship_damages:
-		if dmg.get("repaired"):
+		if dmg.repaired:
 			continue
 		
-		var dmg_type: String = dmg.get("type")
-		var dmg_pos: Vector2 = dmg.get("pos")
-		var is_revealed: bool = dmg.get("revealed")
+		var dmg_type: String = dmg.type
+		var dmg_pos: Vector2 = dmg.pos
+		var is_revealed: bool = dmg.revealed
 		
 		if not is_revealed:
 			if dmg_type == DAMAGE_TYPE_BREACH and duct_drone_lights:
 				var dist := duct_drone_pos.distance_to(dmg_pos)
 				if dist <= 35.0:
-					dmg["revealed"] = true
-					dmg["revealed_by"] = "light"
+					dmg.revealed = true
+					dmg.revealed_by = "light"
 					damages_changed = true
 					ship_damage_discovered.emit(dmg)
 				elif dist <= 90.0:
@@ -659,47 +639,47 @@ func _update_duct_drone_physics(delta: float) -> void:
 					var forward := Vector2.from_angle(duct_drone_heading)
 					var angle_diff := absf(forward.angle_to(to_dmg))
 					if angle_diff <= 0.55: # cono fari (~31 gradi)
-						dmg["revealed"] = true
-						dmg["revealed_by"] = "light"
+						dmg.revealed = true
+						dmg.revealed_by = "light"
 						damages_changed = true
 						ship_damage_discovered.emit(dmg)
 			
 			elif dmg_type == DAMAGE_TYPE_SHORT_CIRCUIT and duct_drone_scan_active:
 				var dist := duct_drone_pos.distance_to(dmg_pos)
 				if dist <= duct_drone_scan_radius:
-					dmg["revealed"] = true
-					dmg["revealed_by"] = "radar"
+					dmg.revealed = true
+					dmg.revealed_by = "radar"
 					damages_changed = true
 					ship_damage_discovered.emit(dmg)
 	
 	# 5. Elaborazione Riparazione in corso
 	if is_duct_drone_repairing and repairing_damage_id != "":
-		var target_dmg: Dictionary = {}
+		var target_dmg: ShipDamageRuntimeState = null
 		for i in range(ship_damages.size()):
-			if ship_damages[i].get("id") == repairing_damage_id:
+			if ship_damages[i].id == repairing_damage_id:
 				target_dmg = ship_damages[i]
 				break
 		
-		if target_dmg.is_empty() or target_dmg.get("repaired"):
+		if target_dmg == null or target_dmg.repaired:
 			is_duct_drone_repairing = false
 			repairing_damage_id = ""
 			duct_drone_repair_state_changed.emit(false, "", 0.0)
 		else:
-			var d: float = duct_drone_pos.distance_to(target_dmg.get("pos"))
+			var d: float = duct_drone_pos.distance_to(target_dmg.pos)
 			if d > repair_rng or duct_drone_battery <= 0.0:
 				# Troppo lontano o batteria esaurita: interrompi riparazione
 				is_duct_drone_repairing = false
 				repairing_damage_id = ""
-				duct_drone_repair_state_changed.emit(false, "", float(target_dmg.get("repair_progress")))
+				duct_drone_repair_state_changed.emit(false, "", float(target_dmg.repair_progress))
 			else:
-				var duration: float = maxf(1.0, float(target_dmg.get("repair_duration")))
-				var progress: float = float(target_dmg.get("repair_progress"))
+				var duration: float = maxf(1.0, float(target_dmg.repair_duration))
+				var progress: float = float(target_dmg.repair_progress)
 				progress = clampf(progress + ((delta * repair_mult) / duration), 0.0, 1.0)
-				target_dmg["repair_progress"] = progress
+				target_dmg.repair_progress = progress
 				duct_drone_repair_state_changed.emit(true, repairing_damage_id, progress)
 				
 				if progress >= 1.0:
-					target_dmg["repaired"] = true
+					target_dmg.repaired = true
 					is_duct_drone_repairing = false
 					repairing_damage_id = ""
 					damages_changed = true
@@ -838,40 +818,28 @@ func get_docking_station() -> SpaceStationEntity:
 	return get_primary_station_entity()
 
 ## Ritorna le stanze della nave da ShipBlueprint o fallback a costanti
-func get_duct_rooms() -> Array[Dictionary]:
+func get_duct_rooms() -> Array[DuctRoomData]:
 	var bp := get_ship_blueprint()
-	if bp and bp.rooms.size() > 0:
-		var res: Array[Dictionary] = []
+	var res: Array[DuctRoomData] = []
+	if bp:
 		for r in bp.rooms:
-			if r is Dictionary:
-				res.append(r)
-			elif r.has_method("to_dict"):
-				res.append(r.to_dict())
-		return res
-	return RoomDatabase.DUCT_ROOMS
+			res.append(DuctRoomData.new(r.id, r.name, r.rect, r.color, r.border_color))
+	return res
 
 ## Ritorna i condotti della nave da ShipBlueprint o fallback a costanti
-func get_duct_corridors() -> Array[Dictionary]:
+func get_duct_corridors() -> Array[ShipDuctData]:
 	var bp := get_ship_blueprint()
 	if bp and bp.ducts.size() > 0:
-		var res: Array[Dictionary] = []
-		for d in bp.ducts:
-			if d is Dictionary:
-				res.append(d)
-			elif d.has_method("to_dict"):
-				res.append(d.to_dict())
-		return res
-	return DUCT_CORRIDORS
+		return bp.ducts
+	return []
 
 ## Ritorna i dispositivi elettrici della nave da ShipBlueprint
-func get_power_devices() -> Array[Dictionary]:
+func get_power_devices() -> Array[ShipDeviceData]:
 	var bp := get_ship_blueprint()
 	if not bp: return []
-	var all_devs: Array[Dictionary] = []
+	var all_devs: Array[ShipDeviceData] = []
 	for r in bp.rooms:
-		var room_obj = bp._ensure_room_is_object(r)
-		var devs: Array = room_obj.devices
-		for d in devs:
+		for d in r.devices:
 			all_devs.append(d)
 	return all_devs
 
@@ -880,7 +848,7 @@ func get_power_junctions() -> Array[Dictionary]:
 	return []
 
 ## Ritorna le zone/punti di danno predefiniti della nave da ShipBlueprint
-func get_damage_zones() -> Array[Dictionary]:
+func get_damage_zones() -> Array[ShipDamageData]:
 	var bp := get_ship_blueprint()
 	if bp and bp.damages.size() > 0:
 		return bp.damages
@@ -908,7 +876,7 @@ func get_drone_spawn_heading() -> float:
 	return INITIAL_DUCT_DRONE_HEADING
 
 ## Ritorna i file di sistema e file di bordo di Ship Drive da ShipBlueprint
-func get_ship_drive_files() -> Array[Dictionary]:
+func get_ship_drive_files() -> Array[ShipDriveFile]:
 	var bp := get_ship_blueprint()
 	if bp and bp.drive_files.size() > 0:
 		return bp.drive_files
@@ -922,7 +890,7 @@ func get_ship_drive_passwords() -> Dictionary:
 	return {}
 
 ## Ritorna le applicazioni mainframe installate da ShipBlueprint
-func get_installed_apps() -> Array[Dictionary]:
+func get_installed_apps() -> Array[ShipAppMetadata]:
 	var bp := get_ship_blueprint()
 	if bp and bp.installed_apps.size() > 0:
 		return bp.installed_apps
@@ -932,7 +900,7 @@ func get_installed_apps() -> Array[Dictionary]:
 	return []
 
 ## Ritorna le applicazioni mainframe installate filtrate per il ruolo del giocatore
-func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
+func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppMetadata]:
 	var bp := get_ship_blueprint()
 	if bp and bp.installed_apps.size() > 0:
 		return bp.get_apps_for_role(role_name, is_solo)
@@ -943,14 +911,14 @@ func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Ar
 
 func _is_duct_drone_position_valid(pos: Vector2) -> bool:
 	for room in get_duct_rooms():
-		var r: Rect2 = room["rect"]
+		var r: Rect2 = room.rect
 		if r.grow(-2.0).has_point(pos):
 			return true
 	
 	for duct in get_duct_corridors():
-		var p1: Vector2 = duct["from"]
-		var p2: Vector2 = duct["to"]
-		var width: float = float(duct.get("width"))
+		var p1: Vector2 = duct.from
+		var p2: Vector2 = duct.to
+		var width: float = duct.width
 		var seg_dist := _distance_to_segment_2d(pos, p1, p2)
 		if seg_dist <= width * 0.8:
 			return true
@@ -1027,38 +995,38 @@ func _rpc_client_duct_drone_scan() -> void:
 
 # --- SHIP DAMAGES & REPAIR API ---
 
-func get_ship_damages() -> Array[Dictionary]:
+func get_ship_damages() -> Array[ShipDamageRuntimeState]:
 	return ship_damages
 
-func get_active_ship_damages() -> Array[Dictionary]:
-	var active: Array[Dictionary] = []
+func get_active_ship_damages() -> Array[ShipDamageRuntimeState]:
+	var active: Array[ShipDamageRuntimeState] = []
 	for dmg in ship_damages:
-		if not dmg.get("repaired"):
+		if not dmg.repaired:
 			active.append(dmg)
 	return active
 
-func get_damage_by_id(dmg_id: String) -> Dictionary:
+func get_damage_by_id(dmg_id: String) -> ShipDamageRuntimeState:
 	for dmg in ship_damages:
-		if dmg.get("id") == dmg_id:
+		if dmg.id == dmg_id:
 			return dmg
-	return {}
+	return null
 
-func get_adjacent_damage(pos: Vector2, max_dist: float = 38.0) -> Dictionary:
-	var closest: Dictionary = {}
+func get_adjacent_damage(pos: Vector2, max_dist: float = 38.0) -> ShipDamageRuntimeState:
+	var closest: ShipDamageRuntimeState = null
 	var min_d := max_dist
 	for dmg in ship_damages:
-		if dmg.get("repaired"):
+		if dmg.repaired:
 			continue
-		var d: float = pos.distance_to(dmg.get("pos"))
+		var d: float = pos.distance_to(dmg.pos)
 		if d <= min_d:
 			min_d = d
 			closest = dmg
 	return closest
 
-func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_name: String = "", duration: float = 0.0) -> Dictionary:
+func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_name: String = "", duration: float = 0.0) -> ShipDamageRuntimeState:
 	var nm := _get_net_mgr()
 	if nm and nm.get("is_connected_to_network") and not nm.get("is_host"):
-		return {}
+		return null
 	
 	if type == "":
 		type = DAMAGE_TYPE_BREACH if randf() < 0.5 else DAMAGE_TYPE_SHORT_CIRCUIT
@@ -1067,22 +1035,22 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 		var bp_rooms := get_duct_rooms()
 		var bp_ducts := get_duct_corridors()
 		if randf() < 0.6 and bp_rooms.size() > 0:
-			var room: Dictionary = bp_rooms.pick_random()
-			var r: Rect2 = room["rect"]
+			var room: DuctRoomData = bp_rooms.pick_random()
+			var r: Rect2 = room.rect
 			pos = Vector2(
 				randf_range(r.position.x + 10, r.position.x + r.size.x - 10),
 				randf_range(r.position.y + 10, r.position.y + r.size.y - 10)
 			)
 			if sector_name == "":
-				sector_name = room.get("name")
+				sector_name = room.name
 		elif bp_ducts.size() > 0:
-			var duct: Dictionary = bp_ducts.pick_random()
-			var p1: Vector2 = duct["from"]
-			var p2: Vector2 = duct["to"]
+			var duct: ShipDuctData = bp_ducts.pick_random()
+			var p1: Vector2 = duct.from
+			var p2: Vector2 = duct.to
 			var t := randf_range(0.2, 0.8)
 			pos = p1.lerp(p2, t)
 			if sector_name == "":
-				sector_name = duct.get("name")
+				sector_name = duct.name
 
 	if duration <= 0.0:
 		duration = randf_range(3.0, 8.0)
@@ -1090,26 +1058,21 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 	var dmg_id := "dmg_%d" % _next_damage_idx
 	_next_damage_idx += 1
 
-	var dmg_dict: Dictionary = {
-		"id": dmg_id,
-		"type": type,
-		"pos": pos,
-		"sector": sector_name if sector_name != "" else "Condotto / Scafo",
-		"revealed": false,
-		"revealed_by": "",
-		"repair_progress": 0.0,
-		"repair_duration": duration,
-		"repaired": false
-	}
+	var dmg := ShipDamageRuntimeState.new(dmg_id, type, pos)
+	dmg.sector = sector_name if sector_name != "" else "Condotto / Scafo"
+	dmg.repair_duration = duration
 
-	ship_damages.append(dmg_dict)
+	ship_damages.append(dmg)
 	ship_damages_updated.emit(ship_damages)
 
 	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
 		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
-			_rpc_sync_ship_damages.rpc(ship_damages)
+			var snapshot: Array[Dictionary] = []
+			for d in ship_damages:
+				snapshot.append(d.to_dict())
+			_rpc_sync_ship_damages.rpc(snapshot)
 
-	return dmg_dict
+	return dmg
 
 func generate_initial_ship_damages(count: int = 4) -> void:
 	ship_damages.clear()
@@ -1119,11 +1082,11 @@ func generate_initial_ship_damages(count: int = 4) -> void:
 	if bp_damages.size() > 0:
 		var num := mini(count, bp_damages.size())
 		for i in range(num):
-			var d: Dictionary = bp_damages[i]
-			var dmg_type: String = str(d.get("type"))
-			var dmg_pos: Vector2 = d.get("pos")
-			var dmg_sector: String = str(d.get("sector"))
-			var dmg_dur: float = float(d.get("repair_cost"))
+			var d: ShipDamageData = bp_damages[i]
+			var dmg_type: String = d.type
+			var dmg_pos: Vector2 = d.pos
+			var dmg_sector: String = d.sector
+			var dmg_dur: float = d.repair_cost
 			spawn_ship_damage(dmg_type, dmg_pos, dmg_sector, dmg_dur)
 	else:
 		var preset_damages := [
@@ -1227,8 +1190,13 @@ func get_repairing_damage_id() -> String:
 # --- DAMAGE & REPAIR RPC HANDLERS ---
 
 @rpc("authority", "call_remote", "reliable")
-func _rpc_sync_ship_damages(damages: Array) -> void:
-	ship_damages = damages
+func _rpc_sync_ship_damages(p_damages: Array) -> void:
+	ship_damages.clear()
+	for d_dict in p_damages:
+		if d_dict is Dictionary:
+			var dmg := ShipDamageRuntimeState.new()
+			dmg.from_dict(d_dict)
+			ship_damages.append(dmg)
 	ship_damages_updated.emit(ship_damages)
 
 @rpc("authority", "call_remote", "unreliable_ordered")
@@ -1260,14 +1228,14 @@ func get_camera_transform(cam_id: String) -> Transform3D:
 		return _space_scene_instance.get_camera_global_transform(cam_id)
 	return Transform3D.IDENTITY
 
-func get_cameras_info() -> Array[Dictionary]:
+func get_cameras_info() -> Array[CameraMetadata]:
 	return RoomDatabase.CAMERAS_METADATA
 
-func get_camera_info(cam_id: String) -> Dictionary:
+func get_camera_info(cam_id: String) -> CameraMetadata:
 	for c in RoomDatabase.CAMERAS_METADATA:
-		if c["id"] == cam_id:
+		if c.id == cam_id:
 			return c
-	return {}
+	return null
 
 func is_camera_window_open(cam_id: String) -> bool:
 	if _active_camera_windows.has(cam_id):

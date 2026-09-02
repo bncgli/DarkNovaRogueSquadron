@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_8e5iy")
-roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Mozzo", "Captain", "Engineer"])
+roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Stagista", "Captain", "Engineer"])
 power_draw_mw = 10.0
 required_subsystems = Array[String](["ship_core", "security_ice"])
 app_id = "diagnostics"

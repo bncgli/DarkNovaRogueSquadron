@@ -54,7 +54,7 @@ const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/CargoBay/cargo_bay
 
 # Stato runtime
 var is_ship_connected: bool = false
-var can_hack: bool = true # RBAC (Hacker, Captain, Mozzo)
+var can_hack: bool = true # RBAC (Hacker, Captain, Stagista)
 var selected_cargo_idx: int = -1
 var selected_transfer_item_id: String = ""
 var selected_sub_idx: int = -1
@@ -179,7 +179,7 @@ func _update_rbac() -> void:
 	var net_mgr = get_node_or_null("/root/NetworkManager")
 	if net_mgr:
 		var role: String = str(net_mgr.get("player_role") if "player_role" in net_mgr else "Solo")
-		can_hack = (role in ["Hacker", "Captain", "Capitano", "Mozzo", "Solo", ""])
+		can_hack = (role in ["Hacker", "Captain", "Capitano", "Stagista", "Solo", ""])
 	else:
 		can_hack = true
 	

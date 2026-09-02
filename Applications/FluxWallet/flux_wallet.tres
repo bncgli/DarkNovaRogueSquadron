@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_656yp")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
 power_draw_mw = 2.0
 required_subsystems = Array[String]([])
 app_id = "flux_wallet"

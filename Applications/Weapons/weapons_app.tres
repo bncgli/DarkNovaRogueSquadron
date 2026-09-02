@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_4nhf5")
-roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Mozzo"])
+roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Stagista"])
 power_draw_mw = 25.0
 required_subsystems = Array[String](["weapons_array", "targeting_radar"])
 is_critical = true

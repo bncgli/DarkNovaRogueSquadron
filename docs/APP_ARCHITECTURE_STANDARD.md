@@ -329,17 +329,17 @@ func _update_permissions() -> void:
    * `SpaceWorldManager.ship_connection_changed(is_connected: bool)`: Segnale emesso all'attivazione/disattivazione dei sistemi.
    * **Integrazione Blueprint**:
      * `SpaceWorldManager.get_ship_blueprint() -> ShipBlueprint`: Ritorna l'istanza attiva di `ShipBlueprint`.
-     * `SpaceWorldManager.get_duct_rooms() -> Array[Dictionary]`: Ritorna le stanze/settori della nave.
-     * `SpaceWorldManager.get_duct_corridors() -> Array[Dictionary]`: Ritorna i condotti di manutenzione per il drone.
-     * `SpaceWorldManager.get_power_devices() -> Array[Dictionary]`: Ritorna i generatori e le utenze della rete elettrica.
-     * `SpaceWorldManager.get_power_junctions() -> Array[Dictionary]`: Ritorna gli snodi e le biforcazioni elettriche.
-     * `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna le zone di danno predefinite.
+     * `SpaceWorldManager.get_duct_rooms() -> Array[DuctRoomData]`: Ritorna le stanze/settori della nave.
+     * `SpaceWorldManager.get_duct_corridors() -> Array[ShipDuctData]`: Ritorna i condotti di manutenzione per il drone.
+     * `SpaceWorldManager.get_power_devices() -> Array[ShipDeviceData]`: Ritorna i generatori e le utenze della rete elettrica.
+     * `SpaceWorldManager.get_power_junctions() -> Array[Dictionary]`: Ritorna gli snodi e le biforcazioni elettriche (vuoto se non utilizzati).
+     * `SpaceWorldManager.get_damage_zones() -> Array[ShipDamageData]`: Ritorna le zone di danno predefinite.
      * `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i limiti dimensionali dello scafo.
      * `SpaceWorldManager.get_drone_spawn_pos() -> Vector2` & `get_drone_spawn_heading() -> float`: Ritorna le coordinate iniziali del Duct Drone.
-     * `SpaceWorldManager.get_ship_drive_files() -> Array[Dictionary]`: Ritorna l'elenco dei file iniziali del drive (`.txt`, `.dat`).
+     * `SpaceWorldManager.get_ship_drive_files() -> Array[ShipDriveFile]`: Ritorna l'elenco dei file iniziali del drive (`.txt`, `.dat`).
      * `SpaceWorldManager.get_ship_drive_passwords() -> Dictionary`: Ritorna le password delle cartelle protette di bordo.
-     * `SpaceWorldManager.get_installed_apps() -> Array[Dictionary]`: Ritorna l'elenco delle applicazioni mainframe installate sulla nave.
-     * `SpaceWorldManager.get_installed_apps_for_role(role, is_solo) -> Array[Dictionary]`: Ritorna le applicazioni mainframe filtrate per il ruolo specificato.
+     * `SpaceWorldManager.get_installed_apps() -> Array[ShipAppMetadata]`: Ritorna l'elenco delle applicazioni mainframe installate sulla nave.
+     * `SpaceWorldManager.get_installed_apps_for_role(role, is_solo) -> Array[ShipAppMetadata]`: Ritorna le applicazioni mainframe filtrate per il ruolo specificato.
 
 4. **`NetworkManager` (`Scenes/Networking/network_manager.gd`)**:
    * Gestisce socket ENet / P2P, stanze, equipaggio e chat.
@@ -455,17 +455,17 @@ Le applicazioni non devono includere coordinate o topologie hardcoded. Devono in
 
 #### Metodi Helper di `SpaceWorldManager`
 * `SpaceWorldManager.get_ship_blueprint() -> ShipBlueprint`: Ritorna l'istanza di risorsa attiva (o la blueprint di default).
-* `SpaceWorldManager.get_duct_rooms() -> Array[Dictionary]`: Ritorna l'elenco delle stanze dello scafo.
-* `SpaceWorldManager.get_duct_corridors() -> Array[Dictionary]`: Ritorna l'elenco dei condotti di transito.
-* `SpaceWorldManager.get_power_devices() -> Array[Dictionary]`: Ritorna l'elenco dei dispositivi elettrici.
+* `SpaceWorldManager.get_duct_rooms() -> Array[DuctRoomData]`: Ritorna l'elenco delle stanze dello scafo.
+* `SpaceWorldManager.get_duct_corridors() -> Array[ShipDuctData]`: Ritorna l'elenco dei condotti di transito.
+* `SpaceWorldManager.get_power_devices() -> Array[ShipDeviceData]`: Ritorna l'elenco dei dispositivi elettrici.
 * `SpaceWorldManager.get_power_junctions() -> Array[Dictionary]`: Ritorna l'elenco degli snodi di derivazione.
-* `SpaceWorldManager.get_damage_zones() -> Array[Dictionary]`: Ritorna l'elenco dei punti di danno predefiniti.
+* `SpaceWorldManager.get_damage_zones() -> Array[ShipDamageData]`: Ritorna l'elenco dei punti di danno predefiniti.
 * `SpaceWorldManager.get_ship_bounds() -> Rect2`: Ritorna i confini dimensionali della nave.
 * `SpaceWorldManager.get_drone_spawn_pos() -> Vector2`: Ritorna la posizione di spawn del drone.
-* `SpaceWorldManager.get_ship_drive_files() -> Array[Dictionary]`: Ritorna l'elenco dei file iniziali del drive.
+* `SpaceWorldManager.get_ship_drive_files() -> Array[ShipDriveFile]`: Ritorna l'elenco dei file iniziali del drive.
 * `SpaceWorldManager.get_ship_drive_passwords() -> Dictionary`: Ritorna le password delle cartelle protette di bordo.
-* `SpaceWorldManager.get_installed_apps() -> Array[Dictionary]`: Ritorna l'elenco dei programmi installati nel mainframe.
-* `SpaceWorldManager.get_installed_apps_for_role(role_name, is_solo) -> Array[Dictionary]`: Ritorna i programmi installati filtrati per ruolo.
+* `SpaceWorldManager.get_installed_apps() -> Array[ShipAppMetadata]`: Ritorna l'elenco dei programmi installati nel mainframe.
+* `SpaceWorldManager.get_installed_apps_for_role(role_name, is_solo) -> Array[ShipAppMetadata]`: Ritorna i programmi installati filtrati per ruolo.
 
 #### Pattern GDScript Consigliato per le Applicazioni
 
@@ -484,16 +484,16 @@ func _init_ship_topology() -> void:
 func _load_from_blueprint(bp: ShipBlueprint) -> void:
 	# Esempio: Caricamento stanze e condotti
 	for room in bp.rooms:
-		var room_id: String = room.get("id", "")
-		var room_rect: Rect2 = room.get("rect", Rect2())
-		var room_name: String = room.get("name", "Settore")
+		var room_id: String = room.id
+		var room_rect: Rect2 = room.rect
+		var room_name: String = room.name
 		# Inizializza elementi UI / logica...
 
 	# Esempio: Caricamento dispositivi elettrici
 	for dev in bp.devices:
-		var dev_id: String = dev.get("id", "")
-		var dev_pos: Vector2 = dev.get("pos", Vector2.ZERO)
-		var is_gen: bool = dev.get("is_generator", false)
+		var dev_id: String = dev.id
+		var dev_pos: Vector2 = dev.pos
+		var is_gen: bool = dev.is_generator # Calcolato: power_mw > 0
 		# Popola la mappa o il controller...
 
 	# Esempio: Metodi di query rapida forniti dalla Blueprint

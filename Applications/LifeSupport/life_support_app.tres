@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_lifesup")
-roles = Array[String](["Engineer", "Captain", "Mozzo", "Ingegnere", "Capitano"])
+roles = Array[String](["Engineer", "Captain", "Stagista", "Ingegnere", "Capitano"])
 power_draw_mw = 20.0
 required_subsystems = Array[String](["life_support_generator"])
 app_id = "life_support"

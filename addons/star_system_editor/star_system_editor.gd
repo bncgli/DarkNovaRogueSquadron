@@ -735,12 +735,113 @@ func _on_canvas_entity_selected(body: CelestialBodyData) -> void:
 	_refresh_outliner()
 
 func _on_canvas_sector_clicked(coords: Vector3i) -> void:
-	lbl_status_selection.text = "Settore cliccato: %s" % SectorData.format_coords_to_id(coords)
+	lbl_status_selection.text = "Settore selezionato: %s" % SectorData.format_coords_to_id(coords)
 	if canvas:
 		canvas.selected_body_id = ""
 		canvas.queue_redraw()
-	_show_system_global_props()
+	_show_sector_props(coords)
 	_refresh_outliner()
+
+func _show_sector_props(coords: Vector3i) -> void:
+	if prop_editor_vbox == null or current_system == null:
+		return
+	_clear_prop_editor()
+	
+	var sec_id := SectorData.format_coords_to_id(coords)
+	lbl_selected_title.text = "Settore: %s" % sec_id
+	
+	var sector = current_system.sectors.get(sec_id)
+	if not sector:
+		var btn_create := Button.new()
+		btn_create.text = "Personalizza Settore"
+		btn_create.pressed.connect(func():
+			var new_sec = SectorData.new()
+			new_sec.id = sec_id
+			new_sec.coords = coords
+			current_system.sectors[sec_id] = new_sec
+			_show_sector_props(coords)
+		)
+		prop_editor_vbox.add_child(btn_create)
+		return
+
+	_add_text_field("Nome Locale:", sector.sector_name, func(v): sector.sector_name = v)
+	_add_bool_field("Nebulosa presente:", sector.has_nebula, func(v): sector.has_nebula = v)
+	
+	_add_separator()
+	_add_heading("Pericoli Ambientali")
+	
+	var hazards_vbox := VBoxContainer.new()
+	prop_editor_vbox.add_child(hazards_vbox)
+	
+	for i in range(sector.hazards.size()):
+		var h_data := sector.hazards[i]
+		var frame := PanelContainer.new()
+		var inner_vbox := VBoxContainer.new()
+		frame.add_child(inner_vbox)
+		
+		_add_hazard_item_editor(inner_vbox, h_data, sector, i, coords)
+		hazards_vbox.add_child(frame)
+		hazards_vbox.add_child(HSeparator.new())
+		
+	var btn_add_h := Button.new()
+	btn_add_h.text = "+ Aggiungi Pericolo"
+	btn_add_h.pressed.connect(func():
+		var new_h := EnvironmentalHazardData.new("new_hazard", "Tempesta Ionica", "ion_storm", 5.0)
+		sector.hazards.append(new_h)
+		_show_sector_props(coords)
+	)
+	prop_editor_vbox.add_child(btn_add_h)
+
+func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData, sector: SectorData, index: int, coords: Vector3i) -> void:
+	var h_type_hbox := HBoxContainer.new()
+	var l_type := Label.new()
+	l_type.text = "Tipo:"
+	l_type.custom_minimum_size = Vector2(70, 0)
+	h_type_hbox.add_child(l_type)
+	
+	var opt_type := OptionButton.new()
+	var types := ["ion_storm", "radiation", "asteroid_drift", "emp_field", "gravity_well", "thermal_vent"]
+	for i in range(types.size()):
+		opt_type.add_item(types[i], i)
+		if types[i] == hazard.type:
+			opt_type.selected = i
+	opt_type.item_selected.connect(func(idx): hazard.type = types[idx])
+	h_type_hbox.add_child(opt_type)
+	
+	var btn_del := Button.new()
+	btn_del.text = "X"
+	btn_del.modulate = Color.CRIMSON
+	btn_del.pressed.connect(func():
+		sector.hazards.remove_at(index)
+		_show_sector_props(coords)
+	)
+	h_type_hbox.add_child(btn_del)
+	container.add_child(h_type_hbox)
+	
+	var h_name_hbox := HBoxContainer.new()
+	var l_name := Label.new()
+	l_name.text = "Nome:"
+	l_name.custom_minimum_size = Vector2(70, 0)
+	h_name_hbox.add_child(l_name)
+	var le_name := LineEdit.new()
+	le_name.text = hazard.name
+	le_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	le_name.text_changed.connect(func(v): hazard.name = v)
+	h_name_hbox.add_child(le_name)
+	container.add_child(h_name_hbox)
+	
+	var h_sev_hbox := HBoxContainer.new()
+	var l_sev := Label.new()
+	l_sev.text = "Severità:"
+	l_sev.custom_minimum_size = Vector2(70, 0)
+	h_sev_hbox.add_child(l_sev)
+	var sb_sev := SpinBox.new()
+	sb_sev.min_value = 0.0
+	sb_sev.max_value = 100.0
+	sb_sev.value = hazard.severity
+	sb_sev.value_changed.connect(func(v): hazard.severity = v)
+	h_sev_hbox.add_child(sb_sev)
+	container.add_child(h_sev_hbox)
 
 func _on_canvas_entity_moved(body_id: String, new_coords: Vector3i) -> void:
 	if current_system == null:

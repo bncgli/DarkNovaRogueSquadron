@@ -136,7 +136,7 @@ func _build_role_buttons() -> void:
 		{ "id": NetworkManager.ROLE_SOLDIER, "title": "⚔️ SOLDATO", "desc": "Puntamento armi, gestione sensori e difesa scafo" },
 		{ "id": NetworkManager.ROLE_ENGINEER, "title": "⚡ INGEGNERE", "desc": "Reattore, distribuzione energia e riparazioni" },
 		{ "id": NetworkManager.ROLE_HACKER, "title": "💾 HACKER", "desc": "Guerra elettronica, decrittazione e intrusione droni" },
-		{ "id": NetworkManager.ROLE_MOZZO, "title": "🔧 MOZZO", "desc": "Supporto multiruolo e manutenzione generale" },
+		{ "id": NetworkManager.ROLE_STAGISTA, "title": "🔧 STAGISTA", "desc": "Supporto multiruolo e manutenzione generale" },
 		{ "id": NetworkManager.ROLE_UNASSIGNED, "title": "⚪ NESSUNA POSTAZIONE", "desc": "In attesa di assegnazione postazione" }
 	]
 	

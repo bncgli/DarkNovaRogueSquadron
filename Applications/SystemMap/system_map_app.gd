@@ -134,7 +134,7 @@ func _update_permissions() -> void:
 	if NetworkManager and NetworkManager.has_method("get_local_player_role"):
 		var current_role: String = NetworkManager.get_local_player_role()
 		var is_solo: bool = NetworkManager.is_solo_mode
-		var allowed_roles = ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Mozzo", "Soldier", "Soldato", ""]
+		var allowed_roles = ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista", "Soldier", "Soldato", ""]
 		can_control_map = allowed_roles.has(current_role) or is_solo
 	else:
 		can_control_map = true

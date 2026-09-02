@@ -203,11 +203,11 @@ func _update_permissions() -> void:
 			is_solo = not bool(nm.is_multiplayer_active)
 	
 	# Matrice RBAC:
-	# - Ingegnere, Capitano, Mozzo, Solo Mode: Controllo Completo
+	# - Ingegnere, Capitano, Stagista, Solo Mode: Controllo Completo
 	# - Pilota, Soldato, Hacker: Sola Visualizzazione
 	var role_lower := my_role.to_lower().strip_edges()
 	if not my_role.is_empty():
-		can_control_life_support = role_lower in ["engineer", "ingegnere", "captain", "capitano", "mozzo", "admin", "host"]
+		can_control_life_support = role_lower in ["engineer", "ingegnere", "captain", "capitano", "stagista", "admin", "host"]
 	else:
 		can_control_life_support = is_solo
 	

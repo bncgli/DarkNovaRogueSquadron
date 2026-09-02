@@ -4,6 +4,15 @@ Tutti i cambiamenti significativi a questo progetto saranno documentati in quest
 
 ## [Unreleased]
 
+### Changed
+- Massivo refactoring dei dati core da `Dictionary` a classi basate su `Resource`.
+- `ShipBlueprint.gd`: `rooms`, `ducts`, `devices`, `damages`, `installed_apps`, `flux_modifiers` e `drive_files` ora usano `Array` tipizzati di oggetti Resource.
+- `RoomDatabase.gd`: `CAMERAS_METADATA` e `DUCT_ROOMS` convertiti in array di oggetti tipizzati.
+- `StarSystemData.gd`: `sectors` e `celestial_bodies` ora utilizzano classi Resource dedicate.
+- `CargoManager.gd`: L'inventario e i template utilizzano la nuova classe `CargoItemData`.
+- Implementati metodi `to_dict()` e `from_dict()` in tutte le nuove risorse per garantire compatibilità con salvataggi e networking.
+- Aggiornati `Ship Sublayer Editor` e `Star System Editor` per il supporto nativo alle nuove risorse.
+
 ### Added
 - Sezione "Test Pipeline" nel file README.md per documentare l'attivazione del sistema di task.
 - File `docs/task_log.md` per il tracciamento storico dei task completati.

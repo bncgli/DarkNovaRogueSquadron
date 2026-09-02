@@ -52,7 +52,7 @@ var tuning_data: Dictionary = {
 # Ruolo e permessi RBAC
 var current_role: String = "Pilota"
 var is_solo_mode: bool = false
-var can_manage_contracts: bool = false # Solo Capitano o Mozzo
+var can_manage_contracts: bool = false # Solo Capitano o Stagista
 
 # Stato contratti ed eventi
 var active_contracts: Array[Dictionary] = []
@@ -181,18 +181,18 @@ func _update_rbac_permissions() -> void:
 		elif "is_solo" in NetworkManager:
 			is_solo_mode = bool(NetworkManager.get("is_solo"))
 	
-	# Capitano o Mozzo (o Solo Mode) hanno autorizzazioni complete di gestione contratti
+	# Capitano o Stagista (o Solo Mode) hanno autorizzazioni complete di gestione contratti
 	var role_lower := current_role.to_lower()
 	can_manage_contracts = (
 		is_solo_mode or 
 		role_lower == "captain" or 
 		role_lower == "capitano" or 
-		role_lower == "mozzo"
+		role_lower == "stagista"
 	)
 
 	if new_contract_btn:
 		new_contract_btn.disabled = not can_manage_contracts
-		new_contract_btn.tooltip_text = "Assegna nuovo contratto (Solo Capitano/Mozzo)" if not can_manage_contracts else ""
+		new_contract_btn.tooltip_text = "Assegna nuovo contratto (Solo Capitano/Stagista)" if not can_manage_contracts else ""
 	
 	if clear_log_btn:
 		clear_log_btn.disabled = not can_manage_contracts

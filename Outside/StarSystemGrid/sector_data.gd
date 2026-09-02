@@ -21,8 +21,8 @@ extends Resource
 @export var solar_panels_blackout: bool = false
 
 # Liste entità e pericoli
-@export var macro_entities: Array[Dictionary] = []
-@export var environmental_hazards: Array[Dictionary] = []
+@export var macro_entities: Array[CelestialBodyData] = []
+@export var environmental_hazards: Array[EnvironmentalHazardData] = []
 
 func _init(p_coords: Vector3i = Vector3i.ZERO, p_id: String = "", p_name: String = "") -> void:
 	coordinates = p_coords
@@ -65,45 +65,63 @@ static func parse_id_to_coords(id_str: String) -> Vector3i:
 	return Vector3i(x, y, z)
 
 ## Aggiunge una macro-entità al settore
-func add_entity(entity: Dictionary) -> void:
-	if not entity.has("id"):
-		entity["id"] = "ENT_%d" % macro_entities.size()
+func add_entity(p_entity: Variant) -> void:
+	var entity: CelestialBodyData = null
+	if p_entity is CelestialBodyData:
+		entity = p_entity
+	elif p_entity is Dictionary:
+		entity = CelestialBodyData.new()
+		entity.from_dict(p_entity)
+	
+	if not entity:
+		return
+
+	if entity.id.is_empty():
+		entity.id = "ENT_%d" % macro_entities.size()
 	macro_entities.append(entity)
 
 ## Rimuove un'entità in base all'ID
 func remove_entity(entity_id: String) -> bool:
 	for i in range(macro_entities.size()):
-		if macro_entities[i].get("id") == entity_id:
+		if macro_entities[i].id == entity_id:
 			macro_entities.remove_at(i)
 			return true
 	return false
 
 ## Ritorna tutte le entità di un determinato tipo (es. STAR, PLANET, GAS_GIANT, STATION, ASTEROID_FIELD, WRECK, PATROL)
-func get_entities_by_type(type_name: String) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+func get_entities_by_type(type_name: String) -> Array[CelestialBodyData]:
+	var result: Array[CelestialBodyData] = []
 	for ent in macro_entities:
-		if ent.get("type", "").to_upper() == type_name.to_upper():
+		if ent.type.to_upper() == type_name.to_upper():
 			result.append(ent)
 	return result
 
 ## Verifica se il settore contiene un tipo di entità
 func has_entity_of_type(type_name: String) -> bool:
 	for ent in macro_entities:
-		if ent.get("type", "").to_upper() == type_name.to_upper():
+		if ent.type.to_upper() == type_name.to_upper():
 			return true
 	return false
 
 ## Ritorna corpi celesti massicci capaci di proiettare coni d'ombra
-func get_occluding_bodies() -> Array[Dictionary]:
-	var occluders: Array[Dictionary] = []
+func get_occluding_bodies() -> Array[CelestialBodyData]:
+	var occluders: Array[CelestialBodyData] = []
 	for ent in macro_entities:
-		var t: String = ent.get("type", "").to_upper()
+		var t: String = ent.type.to_upper()
 		if t in ["PLANET", "GAS_GIANT", "MOON", "SUPER_MASSIVE_STATION"]:
 			occluders.append(ent)
 	return occluders
 
 ## Serializzazione in dizionario
 func to_dict() -> Dictionary:
+	var entities_serialized: Array[Dictionary] = []
+	for ent in macro_entities:
+		entities_serialized.append(ent.to_dict())
+	
+	var hazards_serialized: Array[Dictionary] = []
+	for haz in environmental_hazards:
+		hazards_serialized.append(haz.to_dict())
+
 	return {
 		"sector_id": sector_id,
 		"coordinates": [coordinates.x, coordinates.y, coordinates.z],
@@ -119,8 +137,8 @@ func to_dict() -> Dictionary:
 		"is_in_planetary_shadow": is_in_planetary_shadow,
 		"shadow_occlusion_factor": shadow_occlusion_factor,
 		"solar_panels_blackout": solar_panels_blackout,
-		"macro_entities": macro_entities.duplicate(true),
-		"environmental_hazards": environmental_hazards.duplicate(true)
+		"macro_entities": entities_serialized,
+		"environmental_hazards": hazards_serialized
 	}
 
 ## Deserializzazione da dizionario
@@ -152,10 +170,18 @@ func from_dict(data: Dictionary) -> void:
 		macro_entities.clear()
 		for item in data["macro_entities"]:
 			if item is Dictionary:
-				macro_entities.append(item.duplicate(true))
+				var body := CelestialBodyData.new()
+				body.from_dict(item)
+				macro_entities.append(body)
+			elif item is CelestialBodyData:
+				macro_entities.append(item)
 				
 	if data.has("environmental_hazards") and data["environmental_hazards"] is Array:
 		environmental_hazards.clear()
 		for item in data["environmental_hazards"]:
 			if item is Dictionary:
-				environmental_hazards.append(item.duplicate(true))
+				var haz := EnvironmentalHazardData.new()
+				haz.from_dict(item)
+				environmental_hazards.append(haz)
+			elif item is EnvironmentalHazardData:
+				environmental_hazards.append(item)

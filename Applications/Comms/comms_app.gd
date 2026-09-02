@@ -353,7 +353,7 @@ func _update_permissions() -> void:
 		else:
 			is_solo = NetworkManager.is_solo_mode or my_role.is_empty()
 	
-	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Mozzo" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
+	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Stagista" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
 	
 	# Disabilita/abilita comandi attivi
 	if freq_slider:

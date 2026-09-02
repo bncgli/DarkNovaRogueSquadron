@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_logbook")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer", "Soldier"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Stagista", "Captain", "Pilot", "Engineer", "Soldier"])
 power_draw_mw = 5.0
 required_subsystems = Array[String]([])
 app_id = "logbook"

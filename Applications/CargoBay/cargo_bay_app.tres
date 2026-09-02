@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_cargores")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Mozzo", "Captain", "Pilot", "Engineer"])
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
 power_draw_mw = 35.0
 required_subsystems = Array[String](["cargo", "comms"])
 app_id = "cargo_bay"

@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_j062u")
-roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Mozzo"])
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista"])
 power_draw_mw = 10.0
 required_subsystems = Array[String](["drone_bay"])
 app_id = "duct_drone"

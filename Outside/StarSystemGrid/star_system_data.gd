@@ -13,11 +13,11 @@ extends Resource
 @export var primary_star_radius_km: float = 696340.0
 @export var primary_star_mass_tons: float = 1.989e27
 
-# Catalogo macro-corpi del sistema (Array di CelestialBodyData o Dictionary)
-@export var celestial_bodies: Array = []
+# Catalogo macro-corpi del sistema
+@export var celestial_bodies: Array[CelestialBodyData] = []
 
 # Mappa/Lista di settori custom predefiniti o speciali
-@export var custom_sectors: Array[Dictionary] = []
+@export var custom_sectors: Array[SectorData] = []
 
 func _init(p_id: String = "", p_name: String = "") -> void:
 	if not p_id.is_empty():
@@ -27,7 +27,13 @@ func _init(p_id: String = "", p_name: String = "") -> void:
 
 ## Aggiunge o aggiorna un corpo celeste nel catalogo
 func add_or_update_body(p_body: Variant) -> void:
-	var body: CelestialBodyData = _ensure_body_is_object(p_body)
+	var body: CelestialBodyData = null
+	if p_body is CelestialBodyData:
+		body = p_body
+	elif p_body is Dictionary:
+		body = CelestialBodyData.new()
+		body.from_dict(p_body)
+	
 	if not body:
 		return
 		
@@ -35,9 +41,7 @@ func add_or_update_body(p_body: Variant) -> void:
 		body.id = "BODY_%d" % celestial_bodies.size()
 	
 	for i in range(celestial_bodies.size()):
-		var b = celestial_bodies[i]
-		var bid = b.get("id") if b is Dictionary else b.id
-		if bid == body.id:
+		if celestial_bodies[i].id == body.id:
 			celestial_bodies[i] = body
 			return
 			
@@ -46,9 +50,7 @@ func add_or_update_body(p_body: Variant) -> void:
 ## Rimuove un corpo celeste per ID
 func remove_body(body_id: String) -> bool:
 	for i in range(celestial_bodies.size()):
-		var b = celestial_bodies[i]
-		var bid = b.get("id") if b is Dictionary else b.id
-		if bid == body_id:
+		if celestial_bodies[i].id == body_id:
 			celestial_bodies.remove_at(i)
 			return true
 	return false
@@ -56,17 +58,15 @@ func remove_body(body_id: String) -> bool:
 ## Ritorna un corpo celeste per ID
 func get_body(body_id: String) -> CelestialBodyData:
 	for b in celestial_bodies:
-		var bid = b.get("id", "") if b is Dictionary else b.id
-		if bid == body_id:
-			return _ensure_body_is_object(b)
+		if b.id == body_id:
+			return b
 	return null
 
 ## Trova e ritorna la stazione spaziale primaria/di partenza del sistema stellare
 func find_primary_station() -> CelestialBodyData:
 	for b in celestial_bodies:
-		var b_type = b.get("type", "") if b is Dictionary else b.type
-		if b_type.to_upper() == "STATION":
-			return _ensure_body_is_object(b)
+		if b.type.to_upper() == "STATION":
+			return b
 	return null
 
 func _ensure_body_is_object(b) -> CelestialBodyData:
@@ -75,11 +75,6 @@ func _ensure_body_is_object(b) -> CelestialBodyData:
 	if b is Dictionary:
 		var body := CelestialBodyData.new()
 		body.from_dict(b)
-		# Aggiorniamo l'array per il futuro
-		for i in range(celestial_bodies.size()):
-			if celestial_bodies[i] == b:
-				celestial_bodies[i] = body
-				break
 		return body
 	return null
 
@@ -98,10 +93,7 @@ func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
 	# Mappa coordinate già occupate da macro-corpi celesti
 	var occupied_coords: Dictionary = {}
 	for b in celestial_bodies:
-		var b_coords = b.get("coords", Vector3i.ZERO) if b is Dictionary else b.coords
-		if b_coords is Array:
-			b_coords = Vector3i(b_coords[0], b_coords[1], b_coords[2])
-		occupied_coords[b_coords] = true
+		occupied_coords[b.coords] = true
 	
 	for offset in candidate_offsets:
 		var cand := station_coords + offset
@@ -112,20 +104,27 @@ func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
 	return station_coords + Vector3i(0, -1, 0)
 
 ## Aggiunge o aggiorna un settore custom
-func add_or_update_custom_sector(sector_dict: Dictionary) -> void:
-	var sec_id: String = sector_dict.get("sector_id", "")
-	if sec_id.is_empty():
+func add_or_update_custom_sector(p_sector: Variant) -> void:
+	var sector: SectorData = null
+	if p_sector is SectorData:
+		sector = p_sector
+	elif p_sector is Dictionary:
+		sector = SectorData.new()
+		sector.from_dict(p_sector)
+	
+	if not sector or sector.sector_id.is_empty():
 		return
+
 	for i in range(custom_sectors.size()):
-		if custom_sectors[i].get("sector_id", "") == sec_id:
-			custom_sectors[i] = sector_dict.duplicate(true)
+		if custom_sectors[i].sector_id == sector.sector_id:
+			custom_sectors[i] = sector
 			return
-	custom_sectors.append(sector_dict.duplicate(true))
+	custom_sectors.append(sector)
 
 ## Rimuove un settore custom
 func remove_custom_sector(sec_id: String) -> bool:
 	for i in range(custom_sectors.size()):
-		if custom_sectors[i].get("sector_id", "") == sec_id:
+		if custom_sectors[i].sector_id == sec_id:
 			custom_sectors.remove_at(i)
 			return true
 	return false
@@ -144,7 +143,11 @@ func get_primary_star_color() -> Color:
 func to_dict() -> Dictionary:
 	var bodies_serialized: Array[Dictionary] = []
 	for b in celestial_bodies:
-		bodies_serialized.append(b.to_dict() if b is CelestialBodyData else b)
+		bodies_serialized.append(b.to_dict())
+
+	var sectors_serialized: Array[Dictionary] = []
+	for s in custom_sectors:
+		sectors_serialized.append(s.to_dict())
 
 	var p_coords = get_primary_star_coords()
 	var p_color = get_primary_star_color()
@@ -160,7 +163,7 @@ func to_dict() -> Dictionary:
 		"primary_star_radius_km": primary_star_radius_km,
 		"primary_star_mass_tons": primary_star_mass_tons,
 		"celestial_bodies": bodies_serialized,
-		"custom_sectors": custom_sectors.duplicate(true)
+		"custom_sectors": sectors_serialized
 	}
 
 ## Deserializzazione da dizionario
@@ -195,7 +198,11 @@ func from_dict(data: Dictionary) -> void:
 		custom_sectors.clear()
 		for s in data["custom_sectors"]:
 			if s is Dictionary:
-				custom_sectors.append(s.duplicate(true))
+				var sector := SectorData.new()
+				sector.from_dict(s)
+				custom_sectors.append(sector)
+			elif s is SectorData:
+				custom_sectors.append(s)
 
 ## Clona l'istanza corrente
 func clone() -> StarSystemData:

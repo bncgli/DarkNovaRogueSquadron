@@ -70,7 +70,7 @@ extends Resource
 		emit_changed()
 
 @export_group("Controllo Ruoli & Matrice Nave")
-## Ruoli autorizzati ad accedere all'applicazione (es. ["Capitano", "Pilota", "Mozzo"])
+## Ruoli autorizzati ad accedere all'applicazione (es. ["Capitano", "Pilota", "Stagista"])
 @export var roles: Array[String] = []:
 	set(val):
 		roles = val
@@ -160,7 +160,7 @@ func to_dict() -> Dictionary:
 ## Verifica se un determinato ruolo (o stato di gioco) ha i permessi per visualizzare/avviare l'app
 func is_role_allowed(role_name: String, is_solo: bool = false) -> bool:
 	var clean_role := role_name.strip_edges()
-	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Mozzo" or clean_role == "Captain" or clean_role == "HOST"
+	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Stagista" or clean_role == "Captain" or clean_role == "HOST"
 	if is_super:
 		return true
 	if is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato"):

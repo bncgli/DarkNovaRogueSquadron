@@ -22,3 +22,9 @@ The system contains several predefined bodies:
 ## Visibility & Environmental Effects
 - **Visibility Ranges**: Different ranges for different types of bodies (e.g., Stars are visible from 40 sectors, Stations from 4).
 - **Occlusion & Blackout**: Planets can block sunlight, causing solar panels to lose efficiency and affecting ambient lighting.
+
+## Data Structures (Resource-based)
+- `StarSystemData`: Main resource containing the system configuration.
+- `SectorData`: Resource defining a specific sector's properties and hazards.
+- `CelestialBodyData`: Resource defining planets, stars, and stations.
+- `EnvironmentalHazardData`: Resource for hazards like asteroid belts or radiation zones.

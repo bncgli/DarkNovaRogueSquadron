@@ -17,6 +17,6 @@
 - **Duct Drone**: A sub-system controlled via `DuctDroneApp`, used to repair damages tracked by `SpaceWorldManager`.
 - **Combat**: `CombatDirector` and `EnemyShipAI` interact with the player's spaceship in 3D.
 
-## Autoload Interactions
-- `FluxEconomyManager` can disable OS features (managed in `DefaultValues` or specific apps) if the player is insolvent.
-- `SpaceWorldManager` emits signals that apps like `CamsApp` and `SensorsApp` listen to.
+## Data Flow & Synchronization
+- **Resource-based State**: Core systems share state using `Resource` objects (e.g., `ShipBlueprint`, `SectorData`). This allows for consistent data across UI and simulation.
+- **Serialization**: Systems use `to_dict()` and `from_dict()` for network synchronization and persistence, ensuring all parts of the game use the same data structure regardless of the context.

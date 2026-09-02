@@ -371,8 +371,8 @@ func _update_permissions() -> void:
 		my_role = nm.get_local_player_role()
 		is_solo = nm.is_solo_mode
 	
-	# Hacker, Ingegnere, Capitano, Mozzo e Solo Mode hanno pieno controllo
-	can_control_diagnostics = (is_solo or my_role == "Hacker" or my_role == "Ingegnere" or my_role == "Capitano" or my_role == "Mozzo" or my_role.is_empty())
+	# Hacker, Ingegnere, Capitano, Stagista e Solo Mode hanno pieno controllo
+	can_control_diagnostics = (is_solo or my_role == "Hacker" or my_role == "Ingegnere" or my_role == "Capitano" or my_role == "Stagista" or my_role.is_empty())
 	
 	if role_badge:
 		var display_role := my_role if not my_role.is_empty() else ("SOLO" if is_solo else "SPETTATORE")

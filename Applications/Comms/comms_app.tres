@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_commsres")
-roles = Array[String](["Capitano", "Hacker", "Mozzo", "Captain"])
+roles = Array[String](["Capitano", "Hacker", "Stagista", "Captain"])
 power_draw_mw = 18.0
 required_subsystems = Array[String](["comms", "subspace_transceiver"])
 is_critical = false

@@ -98,10 +98,10 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not hacker_ids.has("weapons"), "Hacker NON deve avere weapons")
 	assert(not hacker_ids.has("flight_control"), "Hacker NON deve avere flight_control")
 	
-	# Ruolo: Mozzo -> Tutte le app
-	var mozzo_apps = ssm.get_apps_for_role(net.ROLE_MOZZO, false, def_bp)
-	print("App Mozzo size:", mozzo_apps.size())
-	assert(mozzo_apps.size() == ssm.get_installed_apps(def_bp).size(), "Il Mozzo deve avere accesso a tutte le applicazioni")
+	# Ruolo: Stagista -> Tutte le app
+	var stagista_apps = ssm.get_apps_for_role(net.ROLE_STAGISTA, false, def_bp)
+	print("App Stagista size:", stagista_apps.size())
+	assert(stagista_apps.size() == ssm.get_installed_apps(def_bp).size(), "Lo Stagista deve avere accesso a tutte le applicazioni")
 	
 	# Ruolo: Capitano / Solo Mode -> Tutte le app
 	var cap_apps = ssm.get_apps_for_role(net.ROLE_CAPTAIN, false, def_bp)

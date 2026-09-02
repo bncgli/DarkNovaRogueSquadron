@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_ylkgj")
-roles = Array[String](["Capitano", "Pilota", "Mozzo"])
+roles = Array[String](["Capitano", "Pilota", "Stagista"])
 power_draw_mw = 15.0
 required_subsystems = Array[String](["engines", "nav_computer"])
 is_critical = true

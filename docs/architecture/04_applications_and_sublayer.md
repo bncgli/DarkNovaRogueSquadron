@@ -111,3 +111,14 @@ Ogni giocatore a bordo assume un ruolo con autorizzazioni specifiche, gestite da
 - **Scopo**: Manovra nello spazio 3D esterno attorno allo scafo per saldare brecce esterne o eseguire estrazione laser su minerali/relitti.
 - **Interfaccia**: `Applications/ServiceDrone/service_drone_app.gd`.
 - **Target 3D**: `Outside/ServiceDrone/service_drone_entity.gd` e `Outside/Mining/mineral_deposit_entity.gd`.
+
+---
+
+## 📄 Modello Dati basato su Resource
+
+Il sublayer e i sistemi core sono stati migrati da una struttura a dizionari (`Dictionary`) a un modello basato su classi `Resource`. Questo garantisce:
+1. **Tipizzazione Forte**: Errori rilevati a tempo di compilazione/IDE.
+2. **Integrazione Inspector**: Modifica diretta dei dati nell'editor di Godot.
+3. **Serializzazione Pulita**: Metodi `to_dict()` e `from_dict()` uniformati per networking e salvataggi.
+
+Le classi principali includono `ShipRoomData`, `ShipDuctData`, `ShipDeviceData`, `ShipDamageData` e `CargoItemData`.

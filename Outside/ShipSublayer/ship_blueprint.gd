@@ -9,8 +9,8 @@ extends Resource
 signal blueprint_changed()
 
 # --- METADATI GENERALI ---
-static var SHIP_CLASSES: Array[Variant] = ["Corvette", "Frigate", "Destroyer", "Cruiser", "Freighter", "Science Vessel", "Scout", "Carrier", "Station"]
-static var DEVICE_CATEGORIES: Array[Variant] = ["command", "propulsion", "life_support", "engineering", "tactical", "sensors", "comms", "mainframe", "defense", "cargo", "service", "utility"]
+const SHIP_CLASSES: Array[String] = ["Corvette", "Frigate", "Destroyer", "Cruiser", "Freighter", "Science Vessel", "Scout", "Carrier", "Station"]
+const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support", "engineering", "tactical", "sensors", "comms", "mainframe", "defense", "cargo", "service", "utility"]
 
 @export var ship_id: String = "new ship":
 	set(val):
@@ -52,39 +52,11 @@ static var DEVICE_CATEGORIES: Array[Variant] = ["command", "propulsion", "life_s
 		flux = val
 		emit_changed()
 
-@export var flux_modifiers: Array[Dictionary] = []:
+@export var flux_modifiers: Array[ShipFluxModifier] = []:
 	set(val):
 		flux_modifiers = val
 		emit_changed()
 
-# --- HELPERS PER LA ROBUSTEZZA DATI ---
-
-func _ensure_room_is_object(r) -> ShipRoomData:
-	if r is ShipRoomData:
-		return r
-	var new_room := ShipRoomData.new()
-	if r is Dictionary:
-		new_room.from_dict(r)
-	
-	# Aggiorna l'elemento nell'array per chiamate future
-	for i in range(rooms.size()):
-		if rooms[i] == r:
-			rooms[i] = new_room
-			break
-	return new_room
-
-func _ensure_duct_is_object(d) -> ShipDuctData:
-	if d is ShipDuctData:
-		return d
-	var new_duct = ShipDuctData.new()
-	if d is Dictionary:
-		new_duct.from_dict(d)
-		
-	for i in range(ducts.size()):
-		if ducts[i] == d:
-			ducts[i] = new_duct
-			break
-	return new_duct
 
 # --- TASK-019: Zona Ricarica ---
 @export var recharge_room_id: String = "":
@@ -93,29 +65,29 @@ func _ensure_duct_is_object(d) -> ShipDuctData:
 		emit_changed()
 
 # --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
-# ogni elemento: ShipRoomData o Dictionary (da caricamento vecchio)
-@export var rooms: Array = []:
+# ogni elemento: ShipRoomData
+@export var rooms: Array[ShipRoomData] = []:
 	set(val):
 		rooms = val
 		emit_changed()
 
 # --- SUBLAYER 2: CONDOTTI DI MANUTENZIONE (Ducts System) ---
-# Ogni elemento: ShipDuctData o Dictionary
-@export var ducts: Array = []:
+# Ogni elemento: ShipDuctData
+@export var ducts: Array[ShipDuctData] = []:
 	set(val):
 		ducts = val
 		emit_changed()
 
 # --- SUBLAYER 4: ZONE E PUNTI DI DANNO (Damage Zones) ---
-# Ogni elemento: { "id": str, "type": str, "name": str, "pos": Vector2, "sector": str, "severity": float, "repair_cost": float, "desc": str, "system_impact": str }
-@export var damages: Array[Dictionary] = []:
+# Ogni elemento: ShipDamageData
+@export var damages: Array[ShipDamageData] = []:
 	set(val):
 		damages = val
 		emit_changed()
 
 # --- SUBLAYER 5 / SEZIONE SHIP DRIVE: FILE SYSTEM & PASSWORD ---
-# Ogni elemento in drive_files: { "path": str, "content": str, "is_protected": bool, "desc": str }
-@export var drive_files: Array[Dictionary] = []:
+# Ogni elemento in drive_files: ShipDriveFile
+@export var drive_files: Array[ShipDriveFile] = []:
 	set(val):
 		drive_files = val
 		emit_changed()
@@ -127,59 +99,42 @@ func _ensure_duct_is_object(d) -> ShipDuctData:
 		emit_changed()
 
 # --- SUBLAYER 6 / SEZIONE APPLICAZIONI MAINFRAME INSTALLATE ---
-# Ogni elemento in installed_apps: { "id": str, "title": str, "description": str, "scene_path": str, "icon_color": Color, "roles": Array[String] }
-@export var installed_apps: Array[Dictionary] = []:
+# Ogni elemento in installed_apps: ShipAppMetadata
+@export var installed_apps: Array[ShipAppMetadata] = []:
 	set(val):
 		installed_apps = val
 		emit_changed()
 
 ## Ricalcola la potenza totale di una stanza sommando i power_mw dei suoi dispositivi.
 func update_room_power(room_id: String) -> void:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
+	for r in rooms:
 		if r.id == room_id:
 			var total: float = 0.0
-			var devs: Array = r.devices
-			for d in devs:
-				total += float(d.get("power_mw"))
+			for d in r.devices:
+				total += d.power_mw
 			r.power_mw = total
 			emit_changed()
 			return
 
 ## Ricalcola la potenza di tutte le stanze.
 func recalculate_all_powers() -> void:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
+	for r in rooms:
 		var total: float = 0.0
-		var devs: Array = r.devices
-		for d in devs:
-			total += float(d.get("power_mw"))
+		for d in r.devices:
+			total += d.power_mw
 		r.power_mw = total
 	emit_changed()
 
-func _init() -> void:
-	if rooms.is_empty() and ducts.is_empty():
-		create_default_ship()
-
-## Inizializza la blueprint con la nave vuota.
-func create_default_ship() -> void:
-	ship_id = "new ship"
-	ship_name = "new ship"
-	ship_class = ""
-	ship_bounds = Rect2(60, 30, 500, 500)
-	drone_spawn_pos = Vector2(65, 35)
-	drone_spawn_heading = 0
-	
 ## Generazione procedurale del layout della nave (TASK-019).
 func get_ship_bounds() -> Rect2:
 	if ship_bounds is Rect2:
 		return ship_bounds
-	return Rect2(60, 30, 480, 420)
+	return Rect2(30, 30, 500, 500)
 
 func get_drone_spawn_pos() -> Vector2:
 	if drone_spawn_pos is Vector2:
 		return drone_spawn_pos
-	return Vector2(300, 80)
+	return Vector2(10, 10)
 
 func generate_random_layout(grid_size: float = 20.0) -> void:
 	rooms.clear()
@@ -218,7 +173,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 			
 		var template_data := RoomDatabase.get_room_data(template_id)
 		
-		var min_size: Vector2 = template_data.get("min_size")
+		var min_size: Vector2 = template_data.min_size
 		var w:float = ceil(min_size.x / grid_size) * grid_size
 		var h:float = ceil(min_size.y / grid_size) * grid_size
 		
@@ -239,29 +194,30 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 		
 		if not overlap:
 			var room_id := "room_" + str(generated_rects.size() + 1)
-			var new_room := ShipRoomData.new(room_id, template_data.get("name", room_id), new_rect)
-			new_room.color = template_data.get("color", Color(0.3, 0.3, 0.3, 0.5))
+			var new_room := ShipRoomData.new(room_id, template_data.name, new_rect)
+			new_room.color = template_data.color
 			new_room.border_color = new_room.color.lightened(0.3)
 			new_room.is_on = true
 			
-			var def_devs: Array = template_data.get("default_devices", [])
+			var def_devs: Array[String] = template_data.default_devices
 			for d_name in def_devs:
-				new_room.devices.append({
-					"id": room_id + "_" + str(d_name),
-					"name": str(d_name),
-					"pos": new_rect.get_center(),
-					"is_generator": str(d_name).contains("reattore"),
-					"power_mw": 10.0 if not str(d_name).contains("reattore") else 0.0,
-					"is_on": true
-				})
+				var is_reactor := str(d_name).contains("reattore")
+				var new_dev := ShipDeviceData.new(
+					room_id + "_" + str(d_name),
+					str(d_name),
+					new_rect.get_center()
+				)
+				new_dev.power_mw = 0.0 if is_reactor else 10.0
+				new_dev.sector = new_room.name
+				new_room.devices.append(new_dev)
 			
 			rooms.append(new_room)
 			generated_rects.append(new_rect)
 	
 	# 2. Connetti stanze con condotti (L-shape)
 	for i in range(rooms.size() - 1):
-		var r1 = _ensure_room_is_object(rooms[i])
-		var r2 = _ensure_room_is_object(rooms[i+1])
+		var r1 = rooms[i]
+		var r2 = rooms[i+1]
 		var p1: Vector2 = r1.rect.get_center()
 		var p2: Vector2 = r2.rect.get_center()
 		p1 = (p1 / grid_size).round() * grid_size
@@ -273,7 +229,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 		ducts.append(ShipDuctData.new("duct_" + str(i) + "_b", "Duct " + str(i) + " B", mid, p2))
 
 	if not rooms.is_empty():
-		var r0 = _ensure_room_is_object(rooms[0])
+		var r0 = rooms[0]
 		drone_spawn_pos = r0.rect.position - Vector2(grid_size, grid_size)
 		recharge_room_id = r0.id
 		
@@ -292,45 +248,39 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 # --- METODI DI QUERY E RICERCA ---
 
 func get_room_by_id(room_id: String) -> ShipRoomData:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
+	for r in rooms:
 		if r.id == room_id:
 			return r
 	return null
 
 func get_room_at(pos: Vector2) -> ShipRoomData:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
+	for r in rooms:
 		if r.rect.has_point(pos):
 			return r
 	return null
 
 func get_duct_by_id(duct_id: String) -> ShipDuctData:
-	for i in range(ducts.size()):
-		var d = _ensure_duct_is_object(ducts[i])
+	for d in ducts:
 		if d.id == duct_id:
 			return d
 	return null
 
-func get_device_by_id(dev_id: String) -> Dictionary:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
-		var devs: Array = r.devices
-		for dev in devs:
-			if dev.get("id", "") == dev_id:
+func get_device_by_id(dev_id: String) -> ShipDeviceData:
+	for r in rooms:
+		for dev in r.devices:
+			if dev.id == dev_id:
 				return dev
-	return {}
+	return null
 
-func get_damage_by_id(dmg_id: String) -> Dictionary:
+func get_damage_by_id(dmg_id: String) -> ShipDamageData:
 	for d in damages:
-		if d.get("id", "") == dmg_id:
+		if d.id == dmg_id:
 			return d
-	return {}
+	return null
 
 func remove_room(room_id: String) -> bool:
 	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
-		if r.id == room_id:
+		if rooms[i].id == room_id:
 			rooms.remove_at(i)
 			emit_changed()
 			return true
@@ -338,20 +288,17 @@ func remove_room(room_id: String) -> bool:
 
 func remove_duct(duct_id: String) -> bool:
 	for i in range(ducts.size()):
-		var d = _ensure_duct_is_object(ducts[i])
-		if d.id == duct_id:
+		if ducts[i].id == duct_id:
 			ducts.remove_at(i)
 			emit_changed()
 			return true
 	return false
 
 func remove_device(dev_id: String) -> bool:
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
-		var devs: Array = r.devices
-		for j in range(devs.size()):
-			if devs[j].get("id", "") == dev_id:
-				devs.remove_at(j)
+	for r in rooms:
+		for j in range(r.devices.size()):
+			if r.devices[j].id == dev_id:
+				r.devices.remove_at(j)
 				update_room_power(r.id)
 				emit_changed()
 				return true
@@ -359,38 +306,33 @@ func remove_device(dev_id: String) -> bool:
 
 func remove_damage(dmg_id: String) -> bool:
 	for i in range(damages.size()):
-		if damages[i].get("id", "") == dmg_id:
+		if damages[i].id == dmg_id:
 			damages.remove_at(i)
 			emit_changed()
 			return true
 	return false
 
-func get_drive_file_by_path(path: String) -> Dictionary:
+func get_drive_file_by_path(path: String) -> ShipDriveFile:
 	for f in drive_files:
-		if f.get("path", "") == path:
+		if f.path == path:
 			return f
-	return {}
+	return null
 
 func set_drive_file(path: String, content: String, is_protected: bool = false, desc: String = "") -> void:
 	for i in range(drive_files.size()):
-		if drive_files[i].get("path", "") == path:
-			drive_files[i]["content"] = content
-			drive_files[i]["is_protected"] = is_protected
+		if drive_files[i].path == path:
+			drive_files[i].content = content
+			drive_files[i].is_protected = is_protected
 			if desc != "":
-				drive_files[i]["desc"] = desc
+				drive_files[i].desc = desc
 			emit_changed()
 			return
-	drive_files.append({
-		"path": path,
-		"content": content,
-		"is_protected": is_protected,
-		"desc": desc
-	})
+	drive_files.append(ShipDriveFile.new(path, content, is_protected, desc))
 	emit_changed()
 
 func remove_drive_file(path: String) -> bool:
 	for i in range(drive_files.size()):
-		if drive_files[i].get("path", "") == path:
+		if drive_files[i].path == path:
 			drive_files.remove_at(i)
 			emit_changed()
 			return true
@@ -410,45 +352,52 @@ func remove_drive_password(path: String) -> bool:
 		return true
 	return false
 
-func get_installed_app_by_id(app_id: String) -> Dictionary:
+func get_installed_app_by_id(app_id: String) -> ShipAppMetadata:
 	for app in installed_apps:
-		if app.get("id", "") == app_id:
+		if app.id == app_id:
 			return app
-	return {}
+	return null
 
-func set_installed_app(app_id: String, app_data: Dictionary) -> void:
+func set_installed_app(app_id: String, app_data: Variant) -> void:
+	var metadata: ShipAppMetadata = null
+	if app_data is ShipAppMetadata:
+		metadata = app_data
+	elif app_data is Dictionary:
+		metadata = ShipAppMetadata.new()
+		metadata.from_dict(app_data)
+	
+	if not metadata: return
+	metadata.id = app_id
+
 	for i in range(installed_apps.size()):
-		if installed_apps[i].get("id", "") == app_id:
-			installed_apps[i] = app_data.duplicate(true)
-			installed_apps[i]["id"] = app_id
+		if installed_apps[i].id == app_id:
+			installed_apps[i] = metadata
 			emit_changed()
 			return
-	var new_app := app_data.duplicate(true)
-	new_app["id"] = app_id
-	installed_apps.append(new_app)
+	installed_apps.append(metadata)
 	emit_changed()
 
 func remove_installed_app(app_id: String) -> bool:
 	for i in range(installed_apps.size()):
-		if installed_apps[i].get("id", "") == app_id:
+		if installed_apps[i].id == app_id:
 			installed_apps.remove_at(i)
 			emit_changed()
 			return true
 	return false
 
-func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppMetadata]:
+	var result: Array[ShipAppMetadata] = []
 	var clean_role := role_name.strip_edges()
-	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Mozzo" or clean_role == "HOST"
+	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Stagista" or clean_role == "HOST"
 	
 	for app in installed_apps:
 		if is_super:
-			result.append(app.duplicate(true))
+			result.append(app)
 			continue
 		
-		var allowed: Array = app.get("roles", [])
+		var allowed: Array = app.roles
 		if allowed.is_empty():
-			result.append(app.duplicate(true))
+			result.append(app)
 			continue
 			
 		var role_matched := false
@@ -467,11 +416,11 @@ func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[Dictio
 				break
 		
 		if role_matched:
-			result.append(app.duplicate(true))
+			result.append(app)
 	
 	if result.is_empty() and (clean_role == "Non Assegnato" or clean_role == ""):
 		for app in installed_apps:
-			result.append(app.duplicate(true))
+			result.append(app)
 	
 	return result
 
@@ -509,7 +458,7 @@ func uninstall_app_resource(res: AppResource) -> bool:
 		var prefix := full_folder + "/"
 		var i := drive_files.size() - 1
 		while i >= 0:
-			var f_path: String = drive_files[i].get("path", "")
+			var f_path: String = drive_files[i].get("path")
 			if f_path.begins_with(prefix) or f_path == full_folder:
 				drive_files.remove_at(i)
 				emit_changed()
@@ -536,7 +485,7 @@ func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 	var app_dict := get_installed_app_by_id(app_id)
 	var removed := remove_installed_app(app_id)
 	if not app_dict.is_empty():
-		var folder: String = str(app_dict.get("drive_folder", ""))
+		var folder: String = str(app_dict.get("drive_folder"))
 		if not folder.is_empty():
 			var folder_rel := folder.trim_prefix("/").trim_suffix("/")
 			var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
@@ -544,7 +493,7 @@ func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 			var prefix := full_folder + "/"
 			var i := drive_files.size() - 1
 			while i >= 0:
-				var f_path: String = drive_files[i].get("path", "")
+				var f_path: String = drive_files[i].get("path")
 				if f_path.begins_with(prefix) or f_path == full_folder:
 					drive_files.remove_at(i)
 					emit_changed()
@@ -555,7 +504,7 @@ func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 func get_installed_app_resources() -> Array[AppResource]:
 	var result: Array[AppResource] = []
 	for app_dict in installed_apps:
-		var app_id: String = str(app_dict.get("id", ""))
+		var app_id: String = str(app_dict.get("id"))
 		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
 		var res: AppResource = null
 		if ssm and ssm.has_method("get_registered_app"):
@@ -567,11 +516,11 @@ func get_installed_app_resources() -> Array[AppResource]:
 		if not res:
 			res = AppResource.new()
 			res.app_id = app_id
-			res.title = str(app_dict.get("title", app_id))
-			res.description = str(app_dict.get("description", ""))
-			res.scene_path = str(app_dict.get("scene_path", ""))
-			res.icon_color = app_dict.get("icon_color", Color(0, 0.79, 0.95, 1.0))
-			var raw_roles = app_dict.get("roles", [])
+			res.title = str(app_dict.get("title"))
+			res.description = str(app_dict.get("description"))
+			res.scene_path = str(app_dict.get("scene_path"))
+			res.icon_color = app_dict.get("icon_color")
+			var raw_roles = app_dict.get("roles")
 			if raw_roles is Array:
 				for r in raw_roles:
 					res.roles.append(str(r))
@@ -590,34 +539,29 @@ func get_app_resources_for_role(role_name: String, is_solo: bool = false) -> Arr
 ## Converte l'intera Blueprint in un dizionario serializzabile (es. per JSON o salvataggi di rete)
 func to_dict() -> Dictionary:
 	var rooms_copy: Array = []
-	for i in range(rooms.size()):
-		var r = _ensure_room_is_object(rooms[i])
+	for r in rooms:
 		rooms_copy.append(r.to_dict())
 	
 	var ducts_copy: Array = []
-	for i in range(ducts.size()):
-		var d = _ensure_duct_is_object(ducts[i])
+	for d in ducts:
 		ducts_copy.append(d.to_dict())
 		
 	var damages_copy: Array = []
-	for dmg: Dictionary in damages:
-		var dmg_c: Dictionary = dmg.duplicate(true)
-		if dmg_c.has("pos") and dmg_c["pos"] is Vector2:
-			dmg_c["pos"] = [dmg_c["pos"].x, dmg_c["pos"].y]
-		damages_copy.append(dmg_c)
+	for dmg in damages:
+		damages_copy.append(dmg.to_dict())
 		
 	var drive_files_copy: Array = []
-	for df: Dictionary in drive_files:
-		drive_files_copy.append(df.duplicate(true))
+	for df in drive_files:
+		drive_files_copy.append(df.to_dict())
 		
 	var installed_apps_copy: Array = []
-	for app: Dictionary in installed_apps:
-		var ac: Dictionary = app.duplicate(true)
-		if ac.has("icon_color") and ac["icon_color"] is Color:
-			var col: Color = ac["icon_color"]
-			ac["icon_color"] = [col.r, col.g, col.b, col.a]
-		installed_apps_copy.append(ac)
+	for app in installed_apps:
+		installed_apps_copy.append(app.to_dict())
 		
+	var flux_modifiers_copy: Array = []
+	for fm in flux_modifiers:
+		flux_modifiers_copy.append(fm.to_dict())
+
 	return {
 		"ship_id": ship_id,
 		"ship_name": ship_name,
@@ -627,7 +571,7 @@ func to_dict() -> Dictionary:
 		"drone_spawn_pos": [drone_spawn_pos.x, drone_spawn_pos.y],
 		"drone_spawn_heading": drone_spawn_heading,
 		"flux": flux,
-		"flux_modifiers": flux_modifiers.duplicate(true),
+		"flux_modifiers": flux_modifiers_copy,
 		"recharge_room_id": recharge_room_id,
 		"rooms": rooms_copy,
 		"ducts": ducts_copy,
@@ -671,75 +615,67 @@ func from_dict(data: Dictionary) -> void:
 		flux_modifiers.clear()
 		for fm in data["flux_modifiers"]:
 			if fm is Dictionary:
-				flux_modifiers.append(fm.duplicate(true))
-			else:
+				var mod := ShipFluxModifier.new()
+				mod.from_dict(fm)
+				flux_modifiers.append(mod)
+			elif fm is ShipFluxModifier:
 				flux_modifiers.append(fm)
 		
 	if data.has("recharge_room_id"):
 		recharge_room_id = str(data["recharge_room_id"])
 		
 	if data.has("rooms") and data["rooms"] is Array:
-		var new_rooms: Array[ShipRoomData] = []
+		rooms.clear()
 		for r in data["rooms"]:
 			if r is Dictionary:
 				var body := ShipRoomData.new()
 				body.from_dict(r)
-				new_rooms.append(body)
+				rooms.append(body)
 			elif r is ShipRoomData:
-				new_rooms.append(r)
-		rooms = new_rooms
+				rooms.append(r)
 		
 	if data.has("ducts") and data["ducts"] is Array:
-		var new_ducts: Array[ShipDuctData] = []
+		ducts.clear()
 		for d in data["ducts"]:
 			if d is Dictionary:
 				var body := ShipDuctData.new()
 				body.from_dict(d)
-				new_ducts.append(body)
+				ducts.append(body)
 			elif d is ShipDuctData:
-				new_ducts.append(d)
-		ducts = new_ducts
+				ducts.append(d)
 
 	if data.has("damages") and data["damages"] is Array:
-		var new_damages: Array[Dictionary] = []
+		damages.clear()
 		for dmg in data["damages"]:
 			if dmg is Dictionary:
-				var dmg_d := (dmg as Dictionary).duplicate(true)
-				if dmg_d.has("pos"):
-					var p = dmg_d["pos"]
-					if p is Array and p.size() == 2:
-						dmg_d["pos"] = Vector2(float(p[0]), float(p[1]))
-					elif p is Vector2:
-						dmg_d["pos"] = p
-				new_damages.append(dmg_d)
-		damages = new_damages
+				var body := ShipDamageData.new()
+				body.from_dict(dmg)
+				damages.append(body)
+			elif dmg is ShipDamageData:
+				damages.append(dmg)
 
 	if data.has("drive_files") and data["drive_files"] is Array:
-		var new_df: Array[Dictionary] = []
+		drive_files.clear()
 		for item in data["drive_files"]:
 			if item is Dictionary:
-				new_df.append((item as Dictionary).duplicate(true))
-		drive_files = new_df
+				var body := ShipDriveFile.new()
+				body.from_dict(item)
+				drive_files.append(body)
+			elif item is ShipDriveFile:
+				drive_files.append(item)
 
 	if data.has("drive_passwords") and data["drive_passwords"] is Dictionary:
 		drive_passwords = (data["drive_passwords"] as Dictionary).duplicate(true)
 
 	if data.has("installed_apps") and data["installed_apps"] is Array:
-		var new_apps: Array[Dictionary] = []
+		installed_apps.clear()
 		for app in data["installed_apps"]:
 			if app is Dictionary:
-				var ad := (app as Dictionary).duplicate(true)
-				if ad.has("icon_color"):
-					var ic = ad["icon_color"]
-					if ic is Array and ic.size() >= 3:
-						var a := float(ic[3]) if ic.size() > 3 else 1.0
-						ad["icon_color"] = Color(float(ic[0]), float(ic[1]), float(ic[2]), a)
-					elif ic is String:
-						ad["icon_color"] = Color.from_string(ic, Color.WHITE)
-					elif ic is Color:
-						ad["icon_color"] = ic
-				new_apps.append(ad)
-		installed_apps = new_apps
+				var body := ShipAppMetadata.new()
+				body.from_dict(app)
+				installed_apps.append(body)
+			elif app is ShipAppMetadata:
+				installed_apps.append(app)
 
 	emit_changed()
 

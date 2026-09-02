@@ -121,10 +121,10 @@ func _run_suite() -> void:
 		assert(diag_app.can_control_diagnostics == true, "Capitano deve avere pieno controllo con override")
 		assert(diag_app.btn_start_scan.disabled == false, "Pulsante scansione abilitato per Capitano")
 		
-		# Ruolo Mozzo (Pieno controllo & Override)
-		net_mgr.request_role("Mozzo")
+		# Ruolo Stagista (Pieno controllo & Override)
+		net_mgr.request_role("Stagista")
 		await get_tree().process_frame
-		assert(diag_app.can_control_diagnostics == true, "Mozzo deve avere pieno controllo")
+		assert(diag_app.can_control_diagnostics == true, "Stagista deve avere pieno controllo")
 		
 		# Ruolo Pilota (Sola visualizzazione / Telemetria)
 		net_mgr.request_role("Pilota")

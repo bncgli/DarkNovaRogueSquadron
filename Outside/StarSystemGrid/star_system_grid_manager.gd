@@ -8,7 +8,7 @@ signal sector_loaded(sector_data: SectorData)
 signal celestial_occlusion_changed(is_occluded: bool, occlusion_factor: float)
 signal solar_blackout_changed(in_blackout: bool)
 signal lighting_updated(sun_direction: Vector3, light_energy: float, ambient_energy: float)
-signal system_entities_updated(visible_entities: Array[Dictionary])
+signal system_entities_updated(visible_entities: Array[CelestialBodyData])
 signal route_plotted(target_sector_coords: Vector3i, course_vector: Vector3)
 signal hyperdrive_transit_started(target_sector_coords: Vector3i)
 signal hyperdrive_transit_completed(target_sector_coords: Vector3i)
@@ -44,7 +44,7 @@ var active_plotted_route: Dictionary = {}
 
 # Catalogo macro-corpi del sistema stellare ("Dark Nova Helios System")
 var current_system_data: StarSystemData = null
-var system_celestial_bodies: Array = []
+var system_celestial_bodies: Array[CelestialBodyData] = []
 
 func _ready() -> void:
 	if current_system_data == null:
@@ -54,22 +54,19 @@ func _ready() -> void:
 		load_sector(current_sector_coords)
 
 ## Ritorna la stazione di partenza primaria/principale presente nel sistema stellare attivo
-func get_starting_station() -> Dictionary:
+func get_starting_station() -> CelestialBodyData:
 	if current_system_data != null:
-		var st := current_system_data.find_primary_station()
-		if st != null:
-			return st.to_dict()
+		return current_system_data.find_primary_station()
 	for b in system_celestial_bodies:
 		if b.type.to_upper() == "STATION":
-			return b.to_dict()
-	return {}
+			return b
+	return null
 
 ## Calcola le coordinate del settore iniziale di spawn adiacente alla stazione di partenza
 func calculate_initial_spawn_coords() -> Vector3i:
 	var station := get_starting_station()
-	if not station.is_empty():
-		var st_coords_raw = station.get("coords")
-		var st_coords: Vector3i = Vector3i(st_coords_raw[0], st_coords_raw[1], st_coords_raw[2]) if st_coords_raw is Array else st_coords_raw
+	if station != null:
+		var st_coords: Vector3i = station.coords
 		if current_system_data != null and current_system_data.has_method("find_adjacent_spawn_sector"):
 			return current_system_data.find_adjacent_spawn_sector(st_coords)
 		return st_coords + Vector3i(0, -1, 0)
@@ -340,17 +337,12 @@ func load_star_system(sys_data: StarSystemData) -> void:
 	current_system_data = sys_data
 	system_celestial_bodies = []
 	for b in sys_data.celestial_bodies:
-		if b is Dictionary:
-			var body := CelestialBodyData.new()
-			body.from_dict(b)
-			system_celestial_bodies.append(body)
-		elif b is CelestialBodyData:
+		if b is CelestialBodyData:
 			system_celestial_bodies.append(b)
 	_sector_cache.clear()
-	for sec_dict in sys_data.custom_sectors:
-		var sec := SectorData.new()
-		sec.from_dict(sec_dict)
-		_sector_cache[sec.sector_id] = sec
+	for sec in sys_data.custom_sectors:
+		if sec is SectorData:
+			_sector_cache[sec.sector_id] = sec
 	current_sector_coords = calculate_initial_spawn_coords()
 	load_sector(current_sector_coords)
 
@@ -361,11 +353,11 @@ func export_to_star_system_data() -> StarSystemData:
 	sys.primary_star_energy = PRIMARY_STAR_BASE_ENERGY
 	sys.primary_star_radius_km = PRIMARY_STAR_RADIUS_KM
 	sys.celestial_bodies = system_celestial_bodies.duplicate(true)
-	var customs: Array[Dictionary] = []
+	var customs: Array[SectorData] = []
 	for sec_id in _sector_cache:
 		var sec_res = _sector_cache[sec_id]
 		if sec_res is SectorData:
-			customs.append(sec_res.to_dict())
+			customs.append(sec_res)
 	sys.custom_sectors = customs
 	return sys
 

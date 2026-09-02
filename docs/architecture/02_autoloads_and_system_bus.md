@@ -33,6 +33,7 @@ graph LR
     CPM[CopyPasteManager]:::util
     GV[GlobalValues]:::util
     DV[DefaultValues]:::util
+    RD[RoomDatabase]:::util
 
     %% Relazioni Network
     NM -- "RPC Sync & Role Events" --> SSM
@@ -104,3 +105,9 @@ graph LR
   - `software_installed(app_id)`
   - `role_permissions_updated(allowed_apps_array)`
   - `file_system_changed(path, action_type)`
+
+### 6. `RoomDatabase` (`Scenes/Autoloads/RoomDatabase.gd`)
+- **Ruolo**: Database statico e centralizzato delle definizioni delle stanze, metadati telecamere e configurazioni sublayer. Utilizza oggetti `Resource` tipizzati (`ShipRoomData`, `CameraMetadata`).
+- **Funzioni Chiave**:
+  - `get_room_data(id)`: Restituisce l'oggetto `ShipRoomData` per una stanza specifica.
+  - Mantenimento dell'array `CAMERAS_METADATA`.

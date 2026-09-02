@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_sysmap")
-roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Mozzo"])
+roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista"])
 power_draw_mw = 15.0
 required_subsystems = Array[String](["navigation_computer", "astrometrics_array"])
 app_id = "system_map"

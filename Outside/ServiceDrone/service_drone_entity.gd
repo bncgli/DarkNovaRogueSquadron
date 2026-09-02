@@ -238,31 +238,31 @@ func _process_welder(delta: float) -> void:
 		return
 	
 	# Se c'è una breccia vicina (o target specificato), salda la falla
-	var target_dmg: Dictionary = {}
+	var target_dmg: ShipDamageRuntimeState = null
 	if target_breach_id != "":
 		target_dmg = SpaceWorldManager.get_damage_by_id(target_breach_id)
 	
-	if target_dmg.is_empty():
+	if target_dmg == null:
 		# Cerca la prima breccia scafo attiva
 		var active_dmgs := SpaceWorldManager.get_active_ship_damages()
 		for d in active_dmgs:
-			if d.get("type") == SpaceWorldManager.DAMAGE_TYPE_BREACH:
+			if d.type == SpaceWorldManager.DAMAGE_TYPE_BREACH:
 				target_dmg = d
-				target_breach_id = str(d.get("id"))
+				target_breach_id = d.id
 				break
 	
-	if not target_dmg.is_empty() and not target_dmg.get("repaired"):
+	if target_dmg != null and not target_dmg.repaired:
 		var repair_delta: float = (repair_rate / 100.0) * delta
-		var cur_p: float = float(target_dmg.get("repair_progress")) + repair_delta
-		target_dmg["repair_progress"] = minf(1.0, cur_p)
-		repair_progress = target_dmg["repair_progress"]
+		var cur_p: float = target_dmg.repair_progress + repair_delta
+		target_dmg.repair_progress = minf(1.0, cur_p)
+		repair_progress = target_dmg.repair_progress
 		
 		if cur_p >= 1.0:
-			target_dmg["repaired"] = true
-			target_dmg["repair_progress"] = 1.0
+			target_dmg.repaired = true
+			target_dmg.repair_progress = 1.0
 			SpaceWorldManager.ship_damage_repaired.emit(target_dmg)
 			SpaceWorldManager.ship_damages_updated.emit(SpaceWorldManager.get_ship_damages())
-			breach_welded.emit(str(target_dmg.get("id")))
+			breach_welded.emit(target_dmg.id)
 			target_breach_id = ""
 			is_tool_active = false
 			if laser_mesh:

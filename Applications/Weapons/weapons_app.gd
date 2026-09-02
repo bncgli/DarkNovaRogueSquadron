@@ -313,10 +313,10 @@ func _update_permissions() -> void:
 		my_role = nm.get_local_player_role()
 		is_solo = nm.is_solo_mode
 	
-	# RBAC: Soldato, Tattico / Armi, Capitano, Mozzo, Solo Mode hanno pieno controllo
+	# RBAC: Soldato, Tattico / Armi, Capitano, Stagista, Solo Mode hanno pieno controllo
 	can_control_weapons = (
 		is_solo or
-		my_role in ["Soldato", "Tattico / Armi", "Capitano", "Mozzo", "Admin", "Host"] or
+		my_role in ["Soldato", "Tattico / Armi", "Capitano", "Stagista", "Admin", "Host"] or
 		my_role.is_empty() # Fallback se nessun ruolo impostato
 	)
 	

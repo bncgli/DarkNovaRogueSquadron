@@ -20,3 +20,4 @@ Handles the 3D space simulation, entities, and ship physical subsystems.
 #### Technical Notes
 - The `Outside` module represents the "real world" simulation that the OS applications interact with.
 - `SpaceWorldManager` is the primary entry point for managing life-cycle of 3D objects.
+- **Resource Refactoring**: Ship and system data (Rooms, Ducts, Damages, Celestial Bodies) are now strictly typed via `Resource` classes instead of `Dictionary` objects, improving sync reliability between the 3D simulation and OS applications.

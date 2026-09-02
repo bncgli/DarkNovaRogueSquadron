@@ -136,22 +136,18 @@ func get_installed_apps(bp: ShipBlueprint = null) -> Array[AppResource]:
 		return get_all_registered_apps()
 	
 	for item in blueprint.installed_apps:
-		var app_id: String = str(item.get("id"))
+		var app_id: String = item.id
 		if _registered_apps.has(app_id):
 			result.append(_registered_apps[app_id])
 		else:
-			# Crea dinamicamente un AppResource dal dizionario di fallback
+			# Crea dinamicamente un AppResource dai metadati
 			var dynamic_res := AppResource.new()
 			dynamic_res.app_id = app_id
-			dynamic_res.title = str(item.get("title"))
-			dynamic_res.description = str(item.get("description"))
-			dynamic_res.scene_path = str(item.get("scene_path"))
-			dynamic_res.icon_color = item.get("icon_color")
-			dynamic_res.roles.clear()
-			var raw_roles = item.get("roles")
-			if raw_roles is Array:
-				for r in raw_roles:
-					dynamic_res.roles.append(str(r))
+			dynamic_res.title = item.title
+			dynamic_res.description = item.description
+			dynamic_res.scene_path = item.scene_path
+			dynamic_res.icon_color = item.icon_color
+			dynamic_res.roles = item.roles.duplicate()
 			result.append(dynamic_res)
 			
 	return result

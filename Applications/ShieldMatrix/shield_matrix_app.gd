@@ -520,7 +520,7 @@ func _update_permissions() -> void:
 		is_solo or
 		my_role == "Ingegnere" or
 		my_role == "Capitano" or
-		my_role == "Mozzo" or
+		my_role == "Stagista" or
 		my_role == ""
 	)
 	

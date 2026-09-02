@@ -94,11 +94,11 @@ func _run_all_tests() -> void:
 		assert(app.can_control_sensors == true, "Capitano deve avere controllo completo sui sensori")
 		print("✔ Ruolo Capitano: controllo completo abilitato")
 		
-		# 2.6 Mozzo / Solo Mode
-		net_mgr.request_role("Mozzo")
+		# 2.6 Stagista / Solo Mode
+		net_mgr.request_role("Stagista")
 		await get_tree().process_frame
-		assert(app.can_control_sensors == true, "Mozzo deve avere controllo completo sui sensori")
-		print("✔ Ruolo Mozzo: controllo completo abilitato")
+		assert(app.can_control_sensors == true, "Stagista deve avere controllo completo sui sensori")
+		print("✔ Ruolo Stagista: controllo completo abilitato")
 	
 	# =========================================================================
 	# TEST 3: FILE .DAT E HOT-RELOADING

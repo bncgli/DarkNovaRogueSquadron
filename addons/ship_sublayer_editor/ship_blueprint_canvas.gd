@@ -120,6 +120,18 @@ func _ready() -> void:
 	clip_contents = true
 	mouse_filter = MOUSE_FILTER_PASS
 
+func _dict_to_rect2(v: Variant) -> Rect2:
+	if v is Rect2: return v
+	if v is Array and v.size() >= 4:
+		return Rect2(float(v[0]), float(v[1]), float(v[2]), float(v[3]))
+	return Rect2()
+
+func _dict_to_vec2(v: Variant) -> Vector2:
+	if v is Vector2: return v
+	if v is Array and v.size() >= 2:
+		return Vector2(float(v[0]), float(v[1]))
+	return Vector2.ZERO
+
 func set_zoom(new_zoom: float) -> void:
 	zoom_level = clampf(new_zoom, 0.25, 4.0)
 	queue_redraw()
@@ -272,7 +284,7 @@ func _handle_left_click_released(world_pos: Vector2, snapped_world: Vector2) -> 
 			var room := blueprint.get_room_by_id(selected_id)
 			if _has_dragged_significantly and room:
 				var new_rect: Rect2 = room.rect
-				var old_rect: Rect2 = drag_element_start_state.get("rect")
+				var old_rect := _dict_to_rect2(drag_element_start_state.get("rect"))
 				room.rect = old_rect
 				action_committed.emit("Ridimensiona Stanza")
 				room.rect = new_rect
@@ -299,24 +311,20 @@ func _apply_element_state(elem_type: String, elem_id: String, state: Dictionary)
 		"room":
 			var r := blueprint.get_room_by_id(elem_id)
 			if r and state.has("rect"):
-				r.rect = state["rect"]
+				r.rect = _dict_to_rect2(state["rect"])
 		"duct":
 			var d := blueprint.get_duct_by_id(elem_id)
 			if d:
-				if state.has("from"): d.from = state["from"]
-				if state.has("to"): d.to = state["to"]
-		"device":
-			var dev := blueprint.get_device_by_id(elem_id)
-			if not dev.is_empty() and state.has("pos"):
-				dev["pos"] = state["pos"]
+				if state.has("from"): d.from = _dict_to_vec2(state["from"])
+				if state.has("to"): d.to = _dict_to_vec2(state["to"])
 		"damage":
 			var dmg := blueprint.get_damage_by_id(elem_id)
-			if not dmg.is_empty() and state.has("pos"):
-				dmg["pos"] = state["pos"]
+			if dmg and state.has("pos"):
+				dmg.pos = _dict_to_vec2(state["pos"])
 		"spawn":
-			if state.has("pos"): blueprint.drone_spawn_pos = state["pos"]
+			if state.has("pos"): blueprint.drone_spawn_pos = _dict_to_vec2(state["pos"])
 		"bounds":
-			if state.has("bounds"): blueprint.ship_bounds = state["bounds"]
+			if state.has("bounds"): blueprint.ship_bounds = _dict_to_rect2(state["bounds"])
 
 func _handle_element_drag(current_world_pos: Vector2) -> void:
 	var snapped_world := snap_pos(current_world_pos)
@@ -326,7 +334,7 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 		var room := blueprint.get_room_by_id(selected_id)
 		if not room:
 			return
-		var start_rect: Rect2 = drag_element_start_state.get("rect")
+		var start_rect := _dict_to_rect2(drag_element_start_state.get("rect"))
 		var new_rect := start_rect
 		match resize_handle_index:
 			0: # Top-Left
@@ -358,40 +366,33 @@ func _handle_element_drag(current_world_pos: Vector2) -> void:
 		"room":
 			var r := blueprint.get_room_by_id(selected_id)
 			if r:
-				var orig_rect: Rect2 = drag_element_start_state.get("rect")
+				var orig_rect := _dict_to_rect2(drag_element_start_state.get("rect"))
 				r.rect = Rect2(orig_rect.position + delta_pos, orig_rect.size)
 				blueprint.emit_changed()
 				queue_redraw()
 		"duct":
 			var d := blueprint.get_duct_by_id(selected_id)
 			if d:
-				var orig_from: Vector2 = drag_element_start_state.get("from")
-				var orig_to: Vector2 = drag_element_start_state.get("to")
+				var orig_from := _dict_to_vec2(drag_element_start_state.get("from"))
+				var orig_to := _dict_to_vec2(drag_element_start_state.get("to"))
 				d.from = orig_from + delta_pos
 				d.to = orig_to + delta_pos
 				blueprint.emit_changed()
 				queue_redraw()
-		"device":
-			var dev := blueprint.get_device_by_id(selected_id)
-			if not dev.is_empty():
-				var orig_pos: Vector2 = drag_element_start_state.get("pos")
-				dev["pos"] = orig_pos + delta_pos
-				blueprint.emit_changed()
-				queue_redraw()
 		"damage":
 			var dmg := blueprint.get_damage_by_id(selected_id)
-			if not dmg.is_empty():
-				var orig_pos: Vector2 = drag_element_start_state.get("pos")
-				dmg["pos"] = orig_pos + delta_pos
+			if dmg:
+				var orig_pos := _dict_to_vec2(drag_element_start_state.get("pos"))
+				dmg.pos = orig_pos + delta_pos
 				blueprint.emit_changed()
 				queue_redraw()
 		"spawn":
-			var orig_pos: Vector2 = drag_element_start_state.get("pos")
+			var orig_pos := _dict_to_vec2(drag_element_start_state.get("pos"))
 			blueprint.drone_spawn_pos = orig_pos + delta_pos
 			blueprint.emit_changed()
 			queue_redraw()
 		"bounds":
-			var orig_bounds: Rect2 = drag_element_start_state.get("bounds")
+			var orig_bounds := _dict_to_rect2(drag_element_start_state.get("bounds"))
 			blueprint.ship_bounds = Rect2(orig_bounds.position + delta_pos, orig_bounds.size)
 			blueprint.emit_changed()
 			queue_redraw()
@@ -406,35 +407,23 @@ func _pick_element_at(world_pos: Vector2) -> Dictionary:
 
 	if show_damages:
 		for dmg in blueprint.damages:
-			var pos: Vector2 = dmg.get("pos")
+			var pos: Vector2 = dmg.pos
 			if world_pos.distance_to(pos) <= pick_rad:
-				return {"type": "damage", "id": dmg.get("id"), "data": dmg}
-
-	if show_devices:
-		for r in blueprint.rooms:
-			var room_obj:ShipRoomData = blueprint._ensure_room_is_object(r)
-			var devs: Array = room_obj.devices
-			for dev in devs:
-				var pos: Vector2 = dev.get("pos")
-				var box := Rect2(pos - Vector2(16, 16), Vector2(32, 32))
-				if box.has_point(world_pos) or world_pos.distance_to(pos) <= pick_rad:
-					return {"type": "device", "id": dev.get("id"), "data": dev}
+				return {"type": "damage", "id": dmg.id, "data": dmg.to_dict()}
 
 	if show_ducts:
 		for d in blueprint.ducts:
-			var duct_obj := blueprint._ensure_duct_is_object(d)
-			var p1: Vector2 = duct_obj.from
-			var p2: Vector2 = duct_obj.to
-			var w: float = duct_obj.width
+			var p1: Vector2 = d.from
+			var p2: Vector2 = d.to
+			var w: float = d.width
 			if _distance_to_segment(world_pos, p1, p2) <= maxf(w * 0.5 + 4.0, 8.0 / zoom_level):
-				return {"type": "duct", "id": duct_obj.id, "data": duct_obj.to_dict()}
+				return {"type": "duct", "id": d.id, "data": d.to_dict()}
 
 	if show_rooms:
 		for r in blueprint.rooms:
-			var room_obj := blueprint._ensure_room_is_object(r)
-			var rect: Rect2 = room_obj.rect
+			var rect: Rect2 = r.rect
 			if rect.has_point(world_pos):
-				return {"type": "room", "id": room_obj.id, "data": room_obj.to_dict()}
+				return {"type": "room", "id": r.id, "data": r.to_dict(), "rect": rect}
 
 	if show_bounds:
 		var b: Rect2 = blueprint.ship_bounds
@@ -498,10 +487,11 @@ func _get_selected_element_data() -> Dictionary:
 			return blueprint.get_room_by_id(selected_id).to_dict()
 		"duct":
 			return blueprint.get_duct_by_id(selected_id).to_dict()
-		"device":
-			return blueprint.get_device_by_id(selected_id)
 		"damage":
-			return blueprint.get_damage_by_id(selected_id)
+			return blueprint.get_damage_by_id(selected_id).to_dict()
+		"device":
+			var dev := blueprint.get_device_by_id(selected_id)
+			return dev.to_dict() if dev else {}
 		"spawn":
 			return {"pos": blueprint.drone_spawn_pos, "heading": blueprint.drone_spawn_heading}
 		"bounds":
@@ -531,41 +521,36 @@ func paste_selection(offset: Vector2 = Vector2(20, 20)) -> void:
 	
 	match _clipboard_type:
 		"room":
-			var rect: Rect2 = data_to_paste.get("rect")
+			var rect := _dict_to_rect2(data_to_paste.get("rect"))
 			var new_p1 := rect.position + offset
 			var new_p2 := new_p1 + rect.size
 			_finish_add_room(new_p1, new_p2)
-			# Applica i dati extra (colore, nome, ecc.)
 			var new_room := blueprint.get_room_by_id(selected_id)
 			if new_room:
-				for key in data_to_paste:
-					if key != "id" and key != "rect":
-						new_room[key] = data_to_paste[key]
+				var old_id := new_room.id
+				new_room.from_dict(data_to_paste)
+				new_room.id = old_id
+				new_room.rect = Rect2(new_p1, rect.size)
 		"duct":
-			var p1: Vector2 = data_to_paste.get("from") + offset
-			var p2: Vector2 = data_to_paste.get("to") + offset
-			_finish_add_duct(p1, p2)
+			var p1 := _dict_to_vec2(data_to_paste.get("from"))
+			var p2 := _dict_to_vec2(data_to_paste.get("to"))
+			_finish_add_duct(p1 + offset, p2 + offset)
 			var new_duct := blueprint.get_duct_by_id(selected_id)
 			if new_duct:
-				for key in data_to_paste:
-					if key != "id" and key != "from" and key != "to":
-						new_duct[key] = data_to_paste[key]
-		"device":
-			var pos: Vector2 = data_to_paste.get("pos") + offset
-			_finish_add_device(pos)
-			var new_dev: Dictionary = blueprint.get_device_by_id(selected_id)
-			if not new_dev.is_empty():
-				for key in data_to_paste:
-					if key != "id" and key != "pos":
-						new_dev[key] = data_to_paste[key]
+				var old_id := new_duct.id
+				new_duct.from_dict(data_to_paste)
+				new_duct.id = old_id
+				new_duct.from = p1 + offset
+				new_duct.to = p2 + offset
 		"damage":
-			var pos: Vector2 = data_to_paste.get("pos") + offset
-			_finish_add_damage(pos)
-			var new_dmg: Dictionary = blueprint.get_damage_by_id(selected_id)
-			if not new_dmg.is_empty():
-				for key in data_to_paste:
-					if key != "id" and key != "pos":
-						new_dmg[key] = data_to_paste[key]
+			var pos := _dict_to_vec2(data_to_paste.get("pos"))
+			_finish_add_damage(pos + offset)
+			var new_dmg: ShipDamageData = blueprint.get_damage_by_id(selected_id)
+			if new_dmg:
+				var old_id := new_dmg.id
+				new_dmg.from_dict(data_to_paste)
+				new_dmg.id = old_id
+				new_dmg.pos = pos + offset
 	
 	blueprint.emit_changed()
 	queue_redraw()
@@ -574,7 +559,7 @@ func paste_selection(offset: Vector2 = Vector2(20, 20)) -> void:
 
 func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 	var template_data := RoomDatabase.get_room_data(selected_room_template)
-	var min_size: Vector2 = template_data.get("min_size")
+	var min_size: Vector2 = template_data.min_size
 	
 	var top_left := Vector2(minf(p1.x, p2.x), minf(p1.y, p2.y))
 	var size_rect := (p2 - p1).abs()
@@ -589,16 +574,13 @@ func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 		next_idx += 1
 		new_id = "room_%d" % next_idx
 		
-	var room_name: String = template_data.get("name")
+	var room_name: String = template_data.name
 	
-	var new_room: Dictionary = {
-		"id": new_id,
-		"name": room_name,
-		"rect": Rect2(top_left, size_rect),
-		"color": template_data.get("color"),
-		"border_color": Color(0.4, 0.7, 0.9, 0.8),
-		"category": template_data.get("category")
-	}
+	var new_room := ShipRoomData.new(new_id, room_name, Rect2(top_left, size_rect))
+	new_room.color = template_data.color
+	new_room.border_color = Color(0.4, 0.7, 0.9, 0.8)
+	new_room.category = template_data.category
+	new_room.default_devices = template_data.default_devices
 	
 	action_committed.emit("Aggiungi Stanza: " + room_name)
 	blueprint.rooms.append(new_room)
@@ -618,80 +600,42 @@ func _finish_add_duct(p1: Vector2, p2: Vector2) -> void:
 	while blueprint.get_duct_by_id(new_id):
 		next_idx += 1
 		new_id = "duct_%d" % next_idx
-	var new_duct: Dictionary = {
-		"id": new_id,
-		"name": "Condotto %d" % next_idx,
-		"from": p1,
-		"to": p2,
-		"width": 14.0,
-		"is_blocked": false
-	}
+	var new_duct := ShipDuctData.new(new_id, "Condotto %d" % next_idx, p1, p2)
+	new_duct.width = 14.0
+	new_duct.is_blocked = false
+	
 	action_committed.emit("Aggiungi Condotto")
 	blueprint.ducts.append(new_duct)
 	blueprint.emit_changed()
 	selected_type = "duct"
 	selected_id = new_id
-	element_selected.emit(selected_type, selected_id, new_duct)
-	current_tool = ToolMode.SELECT
-	tool_changed.emit(ToolMode.SELECT)
-
-func _finish_add_device(pos: Vector2) -> void:
-	var room_here := blueprint.get_room_at(pos)
-	if not room_here:
-		return
-		
-	var new_dev := _add_device_internal(room_here, pos, "Nuovo Dispositivo", false)
-	
-	action_committed.emit("Aggiungi Dispositivo")
-	blueprint.emit_changed()
-	selected_type = "device"
-	selected_id = new_dev["id"]
-	element_selected.emit(selected_type, selected_id, new_dev)
+	element_selected.emit(selected_type, selected_id, new_duct.to_dict())
 	current_tool = ToolMode.SELECT
 	tool_changed.emit(ToolMode.SELECT)
 
 func _finish_add_damage(pos: Vector2) -> void:
 	var next_idx := blueprint.damages.size() + 1
 	var new_id := "dmg_%d" % next_idx
-	while not blueprint.get_damage_by_id(new_id).is_empty():
+	while blueprint.get_damage_by_id(new_id):
 		next_idx += 1
 		new_id = "dmg_%d" % next_idx
-	var new_dmg: Dictionary = {
-		"id": new_id,
-		"type": "breach",
-		"name": "Nuovo Punto di Danno %d" % next_idx,
-		"pos": pos,
-		"sector": "Sconosciuto",
-		"severity": 5.0,
-		"repair_cost": 10.0,
-		"desc": "Nuovo danno strutturale.",
-		"system_impact": "none"
-	}
+	
+	var new_dmg := ShipDamageData.new(new_id, "Nuovo Punto di Danno %d" % next_idx, pos)
+	new_dmg.type = "breach"
+	new_dmg.sector = "Sconosciuto"
+	new_dmg.severity = 5.0
+	new_dmg.repair_cost = 10.0
+	new_dmg.desc = "Nuovo danno strutturale."
+	new_dmg.system_impact = "none"
+	
 	action_committed.emit("Aggiungi Danno")
 	blueprint.damages.append(new_dmg)
 	blueprint.emit_changed()
 	selected_type = "damage"
 	selected_id = new_id
-	element_selected.emit(selected_type, selected_id, new_dmg)
+	element_selected.emit(selected_type, selected_id, new_dmg.to_dict())
 	current_tool = ToolMode.SELECT
 	tool_changed.emit(ToolMode.SELECT)
-
-func _add_device_internal(room: ShipRoomData, pos: Vector2, dev_name: String, is_gen: bool) -> Dictionary:
-	var next_idx := room.devices.size() + 1
-	var new_id := "dev_%s_%d" % [room.id, next_idx]
-		
-	var new_dev: Dictionary = {
-		"id": new_id,
-		"name": dev_name,
-		"pos": pos,
-		"is_generator": is_gen,
-		"power_mw": 500.0 if is_gen else -100.0,
-		"category": "utility",
-		"desc": "Dispositivo in %s." % room.name
-	}
-	room.devices.append(new_dev)
-	blueprint.update_room_power(room.id)
-	return new_dev
 
 func delete_element(elem_type: String, elem_id: String) -> void:
 	if not blueprint:
@@ -745,9 +689,6 @@ func _draw() -> void:
 	if show_ducts:
 		_draw_ducts()
 		
-	if show_devices:
-		_draw_power_grid()
-		
 	if show_damages:
 		_draw_damages()
 		
@@ -777,15 +718,15 @@ func _draw_grid() -> void:
 func _draw_rooms() -> void:
 	var font: Font = ThemeDB.fallback_font
 	for r in blueprint.rooms:
-		var rect: Rect2 = r.get("rect")
-		var col: Color = r.get("color")
-		var border_col: Color = r.get("border_color")
+		var rect: Rect2 = r.rect
+		var col: Color = r.color
+		var border_col: Color = r.border_color
 		var screen_rect := Rect2(world_to_screen(rect.position), rect.size * zoom_level)
 		
-		var is_selected: bool = (selected_type == "room" and selected_id == r.get("id"))
+		var is_selected: bool = (selected_type == "room" and selected_id == r.id)
 		
 		# Riempimento (se spenta, scuriamo)
-		var is_on: bool = r.get("is_on")
+		var is_on: bool = r.is_on
 		var fill_col := col
 		if not is_on:
 			fill_col = col.lerp(Color.BLACK, 0.4)
@@ -801,7 +742,7 @@ func _draw_rooms() -> void:
 		draw_rect(screen_rect, b_color, false, b_width)
 		
 		# Feedback speciale TASK-019: Stanza Ricarica
-		if blueprint.recharge_room_id == r.get("id"):
+		if blueprint.recharge_room_id == r.id:
 			var recharge_col := Color(0.9, 1.0, 0.2, 0.9)
 			var pulse := (sin(Time.get_ticks_msec() * 0.005) * 0.5 + 0.5) * 0.3 + 0.7
 			recharge_col.a *= pulse
@@ -809,7 +750,7 @@ func _draw_rooms() -> void:
 		
 		# Etichetta Nome Stanza
 		if show_labels:
-			var label_str: String = str(r.get("name"))
+			var label_str: String = r.name
 			var label_pos := screen_rect.position + Vector2(6, 16 * zoom_level)
 			var font_sz: int = int(clampf(12.0 * zoom_level, 9.0, 16.0))
 			draw_string(font, label_pos, label_str, HORIZONTAL_ALIGNMENT_LEFT, int(screen_rect.size.x - 12), font_sz, Color(0.9, 0.95, 1.0, 0.9))
@@ -832,10 +773,10 @@ func _draw_resize_handles(screen_rect: Rect2) -> void:
 func _draw_ducts() -> void:
 	var font: Font = ThemeDB.fallback_font
 	for d in blueprint.ducts:
-		var p1: Vector2 = d.get("from", Vector2.ZERO)
-		var p2: Vector2 = d.get("to", Vector2.ZERO)
-		var width: float = float(d.get("width", 14.0)) * zoom_level
-		var is_selected: bool = (selected_type == "duct" and selected_id == d.get("id", ""))
+		var p1: Vector2 = d.from
+		var p2: Vector2 = d.to
+		var width: float = d.width * zoom_level
+		var is_selected: bool = (selected_type == "duct" and selected_id == d.id)
 		var sp1 := world_to_screen(p1)
 		var sp2 := world_to_screen(p2)
 		
@@ -843,7 +784,7 @@ func _draw_ducts() -> void:
 		var pipe_color := Color(0.12, 0.45, 0.65, 0.7)
 		if is_selected:
 			pipe_color = COLOR_SELECTION
-		elif d.get("is_blocked", false):
+		elif d.is_blocked:
 			pipe_color = Color(0.8, 0.25, 0.2, 0.7)
 			
 		draw_line(sp1, sp2, Color(0.04, 0.15, 0.22, 0.9), width + 4.0) # Bordo scuro
@@ -856,53 +797,17 @@ func _draw_ducts() -> void:
 
 		if show_labels and zoom_level >= 0.8:
 			var mid_point := (sp1 + sp2) * 0.5
-			var duct_name: String = str(d.get("name", d.get("id", "")))
+			var duct_name: String = d.name
 			draw_string(font, mid_point + Vector2(4, -4), duct_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.6, 0.8, 1.0, 0.85))
-
-func _draw_power_grid() -> void:
-	var font: Font = ThemeDB.fallback_font
-	
-	# Disegna Dispositivi (Devices)
-	if show_devices:
-		for r in blueprint.rooms:
-			var devs: Array = r.get("devices")
-			for dev in devs:
-				var pos: Vector2 = dev.get("pos", Vector2.ZERO)
-				var spos := world_to_screen(pos)
-				var is_gen: bool = dev.get("is_generator", false)
-				var is_selected: bool = (selected_type == "device" and selected_id == dev.get("id", ""))
-				var box_size := Vector2(20, 20) * zoom_level
-				var box_rect := Rect2(spos - box_size * 0.5, box_size)
-				
-				var dev_color := Color(1.0, 0.45, 0.2, 0.95) if is_gen else Color(0.3, 0.75, 1.0, 0.9)
-				if is_selected:
-					dev_color = COLOR_SELECTION
-					
-				# Background glow / indicatore di stato
-				draw_circle(spos, box_size.x * 0.6, Color(dev_color.r, dev_color.g, dev_color.b, 0.15))
-				
-				draw_rect(box_rect, Color(0.08, 0.1, 0.14, 0.95), true)
-				draw_rect(box_rect, dev_color, false, 1.5 * zoom_level)
-				
-				# Simbolo icona (⚡ per Generatore, ⚙ per Carico)
-				var icon_sym := "⚡" if is_gen else "⚙"
-				var font_sz: int = int(clampf(14.0 * zoom_level, 10.0, 18.0))
-				draw_string(font, box_rect.position + Vector2(0, 16 * zoom_level), icon_sym, HORIZONTAL_ALIGNMENT_CENTER, int(box_rect.size.x), font_sz, dev_color)
-
-				if show_labels and zoom_level >= 0.7:
-					var dev_name: String = str(dev.get("name", dev.get("id", "")))
-					var mw_val: float = float(dev.get("power_mw", 0.0))
-					var label_str := "%s (%d MW)" % [dev_name, int(mw_val)]
-					draw_string(font, spos + Vector2(16, 4), label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.95, 1.0, 0.9))
 
 func _draw_damages() -> void:
 	var font: Font = ThemeDB.fallback_font
 	for dmg in blueprint.damages:
-		var pos: Vector2 = dmg.get("pos", Vector2.ZERO)
+		var pos: Vector2 = dmg.pos
 		var spos := world_to_screen(pos)
-		var is_selected: bool = (selected_type == "damage" and selected_id == dmg.get("id", ""))
-		var dmg_type: String = str(dmg.get("type", "breach"))
-		var sev: float = float(dmg.get("severity", 5.0))
+		var is_selected: bool = (selected_type == "damage" and selected_id == dmg.id)
+		var dmg_type: String = dmg.type
+		var sev: float = dmg.severity
 		
 		var radius := (8.0 + sev * 0.8) * zoom_level
 		var dmg_color := Color(1.0, 0.25, 0.25, 0.75) if dmg_type == "breach" else Color(1.0, 0.8, 0.15, 0.75)
@@ -915,7 +820,7 @@ func _draw_damages() -> void:
 		draw_circle(spos, 3.0 * zoom_level, dmg_color, true)
 		
 		if show_labels and zoom_level >= 0.7:
-			var dmg_name: String = str(dmg.get("name", dmg.get("id", "")))
+			var dmg_name: String = dmg.name
 			draw_string(font, spos + Vector2(12, -4), dmg_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1.0, 0.5, 0.5, 0.9))
 
 func _draw_drone_spawn() -> void:

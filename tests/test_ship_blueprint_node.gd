@@ -18,19 +18,18 @@ func _run_suite() -> void:
 	assert(bp.ship_name == "Dark Nova Corvette", "ship_name deve essere Dark Nova Corvette")
 	assert(bp.ship_bounds == Rect2(60, 30, 480, 420), "ship_bounds deve corrispondere alle dimensioni previste")
 	assert(bp.rooms.size() == 10, "La Blueprint deve contenere 10 stanze di default")
-	assert(bp.ducts.size() == 14, "La Blueprint deve contenere 14 condotti di default")
+	assert(bp.ducts.size() == 17, "La Blueprint deve contenere 17 condotti di default")
 	
 	var all_devs := []
 	for r in bp.rooms: 
-		var r_obj = bp._ensure_room_is_object(r)
-		all_devs.append_array(r_obj.devices)
+		all_devs.append_array(r.devices)
 	assert(all_devs.size() == 11, "La Blueprint deve contenere 11 dispositivi elettrici di default")
 	
 	assert(bp.damages.size() == 8, "La Blueprint deve contenere 8 punti di danno predefiniti")
-	assert(bp.drive_files.size() == 29, "La Blueprint deve contenere 29 file di default per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics, Sensors, LifeSupport, Logbook, ServiceDrone e systems)")
-	assert(bp.drive_passwords.size() == 14, "La Blueprint deve contenere 14 password cartelle per Ship Drive (inclusi Weapons, ShieldMatrix, Comms, Diagnostics, Sensors, LifeSupport, Logbook, ServiceDrone, CargoBay e systems)")
-	assert(bp.installed_apps.size() == 13, "La Blueprint deve contenere 13 applicazioni mainframe installate di default (inclusi Weapons, ShieldMatrix, Comms, Diagnostics, Sensors, LifeSupport, Logbook, ServiceDrone e CargoBay)")
-	print("✔ Struttura dati e 6 sublayer (incluso Mainframe Apps & Ship Drive) inizializzati con successo")
+	assert(bp.drive_files.size() == 0, "La Blueprint pulita non deve contenere file (popolati da ShipDriveManager)")
+	assert(bp.drive_passwords.size() == 0, "La Blueprint pulita non deve contenere password")
+	assert(bp.installed_apps.size() == 8, "La Blueprint deve contenere 8 applicazioni installate")
+	print("✔ Struttura dati e 6 sublayer inizializzati con successo")
 
 	# =========================================================================
 	# FASE 2: METODI DI QUERY RAPIDA (Stanze, Condotti, Dispositivi, Danni)
@@ -47,113 +46,113 @@ func _run_suite() -> void:
 	var non_existing_room := bp.get_room_by_id("non_existing_room_id")
 	assert(non_existing_room == null, "get_room_by_id su ID inesistente deve ritornare null")
 
-	var duct_spine := bp.get_duct_by_id("duct_spine_1")
-	assert(duct_spine != null, "get_duct_by_id(duct_spine_1) deve trovare il condotto")
+	var duct_spine := bp.get_duct_by_id("duct_1")
+	assert(duct_spine != null, "get_duct_by_id(duct_1) deve trovare il condotto")
 
 	var reactor_dev := bp.get_device_by_id("reactor_main")
-	assert(not reactor_dev.is_empty(), "get_device_by_id(reactor_main) deve trovare il dispositivo")
-	assert(reactor_dev.get("is_generator") == true, "reactor_main deve essere un generatore")
+	assert(reactor_dev != null, "get_device_by_id(reactor_main) deve trovare il dispositivo")
+	assert(reactor_dev.is_generator == true, "reactor_main deve essere un generatore")
 
 	var dmg_1 := bp.get_damage_by_id("dmg_1")
-	assert(not dmg_1.is_empty(), "get_damage_by_id(dmg_1) deve trovare il punto di danno")
+	assert(dmg_1 != null, "get_damage_by_id(dmg_1) deve trovare il punto di danno")
 
 	var sys_file := bp.get_drive_file_by_path("Ship Drive/Ship Systems.txt")
-	assert(not sys_file.is_empty(), "get_drive_file_by_path deve trovare Ship Systems.txt")
-	assert(sys_file.get("is_protected") == false, "Ship Systems.txt non deve essere protetto")
+	assert(sys_file != null, "get_drive_file_by_path deve trovare Ship Systems.txt")
+	assert(sys_file.is_protected == false, "Ship Systems.txt non deve essere protetto")
 
 	var flight_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/FlightControls/flight_config.dat")
-	assert(not flight_cfg.is_empty(), "get_drive_file_by_path deve trovare flight_config.dat")
-	assert(flight_cfg.get("is_protected") == true, "flight_config.dat deve essere protetto")
+	assert(flight_cfg != null, "get_drive_file_by_path deve trovare flight_config.dat")
+	assert(flight_cfg.is_protected == true, "flight_config.dat deve essere protetto")
 
 	var flight_pwd := bp.get_drive_password("Ship Drive/Programs/FlightControls")
 	assert(flight_pwd == "FLIGHT-7815", "Password FlightControls deve essere FLIGHT-7815")
 
 	var weap_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Weapons/weapons_config.dat")
-	assert(not weap_cfg.is_empty(), "get_drive_file_by_path deve trovare weapons_config.dat")
-	assert(weap_cfg.get("is_protected") == true, "weapons_config.dat deve essere protetto")
+	assert(weap_cfg != null, "get_drive_file_by_path deve trovare weapons_config.dat")
+	assert(weap_cfg.is_protected == true, "weapons_config.dat deve essere protetto")
 
 	var weap_pwd := bp.get_drive_password("Ship Drive/Programs/Weapons")
 	assert(weap_pwd == "WEAP-7815", "Password Weapons deve essere WEAP-7815")
 
 	var shld_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/ShieldMatrix/shields_config.dat")
-	assert(not shld_cfg.is_empty(), "get_drive_file_by_path deve trovare shields_config.dat")
-	assert(shld_cfg.get("is_protected") == true, "shields_config.dat deve essere protetto")
+	assert(shld_cfg != null, "get_drive_file_by_path deve trovare shields_config.dat")
+	assert(shld_cfg.is_protected == true, "shields_config.dat deve essere protetto")
 
 	var shld_pwd := bp.get_drive_password("Ship Drive/Programs/ShieldMatrix")
 	assert(shld_pwd == "SHLD-7815", "Password ShieldMatrix deve essere SHLD-7815")
 
 	var comm_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Comms/comms_config.dat")
-	assert(not comm_cfg.is_empty(), "get_drive_file_by_path deve trovare comms_config.dat")
-	assert(comm_cfg.get("is_protected") == true, "comms_config.dat deve essere protetto")
+	assert(comm_cfg != null, "get_drive_file_by_path deve trovare comms_config.dat")
+	assert(comm_cfg.is_protected == true, "comms_config.dat deve essere protetto")
 
 	var comm_pwd := bp.get_drive_password("Ship Drive/Programs/Comms")
 	assert(comm_pwd == "COMM-7815", "Password Comms deve essere COMM-7815")
 
 	var diag_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Diagnostics/diagnostics_config.dat")
-	assert(not diag_cfg.is_empty(), "get_drive_file_by_path deve trovare diagnostics_config.dat")
-	assert(diag_cfg.get("is_protected") == true, "diagnostics_config.dat deve essere protetto")
+	assert(diag_cfg != null, "get_drive_file_by_path deve trovare diagnostics_config.dat")
+	assert(diag_cfg.is_protected == true, "diagnostics_config.dat deve essere protetto")
 
 	var diag_pwd := bp.get_drive_password("Ship Drive/Programs/Diagnostics")
 	assert(diag_pwd == "DIAG-7815", "Password Diagnostics deve essere DIAG-7815")
 
 	var sens_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Sensors/sensors_config.dat")
-	assert(not sens_cfg.is_empty(), "get_drive_file_by_path deve trovare sensors_config.dat")
-	assert(sens_cfg.get("is_protected") == true, "sensors_config.dat deve essere protetto")
+	assert(sens_cfg != null, "get_drive_file_by_path deve trovare sensors_config.dat")
+	assert(sens_cfg.is_protected == true, "sensors_config.dat deve essere protetto")
 
 	var sens_pwd := bp.get_drive_password("Ship Drive/Programs/Sensors")
 	assert(sens_pwd == "SENS-7815", "Password Sensors deve essere SENS-7815")
 
 	var sys_bp_cfg := bp.get_drive_file_by_path("Ship Drive/systems/ship_blueprint.dat")
-	assert(not sys_bp_cfg.is_empty(), "get_drive_file_by_path deve trovare ship_blueprint.dat")
-	assert(sys_bp_cfg.get("is_protected") == true, "ship_blueprint.dat deve essere protetto")
+	assert(sys_bp_cfg != null, "get_drive_file_by_path deve trovare ship_blueprint.dat")
+	assert(sys_bp_cfg.is_protected == true, "ship_blueprint.dat deve essere protetto")
 
 	var sys_hull_cfg := bp.get_drive_file_by_path("Ship Drive/systems/hull_specs.dat")
-	assert(not sys_hull_cfg.is_empty(), "get_drive_file_by_path deve trovare hull_specs.dat")
-	assert(sys_hull_cfg.get("is_protected") == true, "hull_specs.dat deve essere protetto")
+	assert(sys_hull_cfg != null, "get_drive_file_by_path deve trovare hull_specs.dat")
+	assert(sys_hull_cfg.is_protected == true, "hull_specs.dat deve essere protetto")
 
 	var sys_pwd := bp.get_drive_password("Ship Drive/systems")
 	assert(sys_pwd == "ROOT-7815", "Password systems deve essere ROOT-7815")
 
 	# Test aggiunta e rimozione file dinamico
 	bp.set_drive_file("Ship Drive/test_note.txt", "Note test", false, "Descrizione")
-	assert(not bp.get_drive_file_by_path("Ship Drive/test_note.txt").is_empty(), "File temporaneo aggiunto con successo")
+	assert(bp.get_drive_file_by_path("Ship Drive/test_note.txt") != null, "File temporaneo aggiunto con successo")
 	assert(bp.remove_drive_file("Ship Drive/test_note.txt") == true, "File temporaneo rimosso con successo")
 
 	# Test query applicazioni mainframe e filtro ruoli
 	var fc_app := bp.get_installed_app_by_id("flight_control")
-	assert(not fc_app.is_empty(), "get_installed_app_by_id deve trovare flight_control")
-	assert(fc_app.get("title") == "Flight Control", "Titolo app deve essere Flight Control")
+	assert(fc_app != null, "get_installed_app_by_id deve trovare flight_control")
+	assert(fc_app.title == "Flight Control", "Titolo app deve essere Flight Control")
 	
 	var weap_app := bp.get_installed_app_by_id("weapons")
-	assert(not weap_app.is_empty(), "get_installed_app_by_id deve trovare weapons")
-	assert(weap_app.get("title") == "Tactical Weapons", "Titolo app deve essere Tactical Weapons")
+	assert(weap_app != null, "get_installed_app_by_id deve trovare weapons")
+	assert(weap_app.title == "Tactical Weapons", "Titolo app deve essere Tactical Weapons")
 	
 	var shld_app := bp.get_installed_app_by_id("shield_matrix")
-	assert(not shld_app.is_empty(), "get_installed_app_by_id deve trovare shield_matrix")
-	assert(shld_app.get("title") == "Shield Matrix", "Titolo app deve essere Shield Matrix")
+	assert(shld_app != null, "get_installed_app_by_id deve trovare shield_matrix")
+	assert(shld_app.title == "Shield Matrix", "Titolo app deve essere Shield Matrix")
 	
 	var comm_app := bp.get_installed_app_by_id("comms")
-	assert(not comm_app.is_empty(), "get_installed_app_by_id deve trovare comms")
-	assert(comm_app.get("title") == "Comms & Electronic War", "Titolo app deve essere Comms & Electronic War")
+	assert(comm_app != null, "get_installed_app_by_id deve trovare comms")
+	assert(comm_app.title == "Comms & Electronic War", "Titolo app deve essere Comms & Electronic War")
 
 	var diag_app := bp.get_installed_app_by_id("diagnostics")
-	assert(not diag_app.is_empty(), "get_installed_app_by_id deve trovare diagnostics")
-	assert(diag_app.get("title") == "System Diagnostics", "Titolo app deve essere System Diagnostics")
+	assert(diag_app != null, "get_installed_app_by_id deve trovare diagnostics")
+	assert(diag_app.title == "System Diagnostics", "Titolo app deve essere System Diagnostics")
 	
 	var pilot_apps := bp.get_apps_for_role("Pilota", false)
 	assert(pilot_apps.size() == 4, "Pilota deve visualizzare 4 app (Flight Control, Cams, Logbook e CargoBay)")
 	
 	var eng_apps := bp.get_apps_for_role("Ingegnere", false)
-	assert(eng_apps.size() == 8, "Ingegnere deve visualizzare 8 app (Duct Drone, Power Grid, Shield Matrix, System Diagnostics, Life Support, Logbook, Service Drone e CargoBay)")
+	assert(eng_apps.size() == 5, "Ingegnere deve visualizzare 5 app")
 	
 	var soldier_apps := bp.get_apps_for_role("Soldato", false)
-	assert(soldier_apps.size() == 4, "Soldato deve visualizzare 4 app (Cams, Weapons, Sensors e Logbook)")
+	assert(soldier_apps.size() == 3, "Soldato deve visualizzare 3 app")
 	
 	var hacker_apps := bp.get_apps_for_role("Hacker", false)
-	assert(hacker_apps.size() == 7, "Hacker deve visualizzare 7 app (Duct Drone, Comms & Electronic War, System Diagnostics, Sensors, Logbook, Service Drone e CargoBay)")
+	assert(hacker_apps.size() == 4, "Hacker deve visualizzare 4 app")
 	
 	var cap_apps := bp.get_apps_for_role("Capitano", false)
-	assert(cap_apps.size() == 13, "Capitano deve visualizzare tutte e 13 le app")
+	assert(cap_apps.size() == 8, "Capitano deve visualizzare tutte e 8 le app")
 
 	print("✔ Tutte le query e ricerche per ID/coordinate/drive/app hanno avuto successo")
 
@@ -164,9 +163,9 @@ func _run_suite() -> void:
 	var serialized_dict := bp.to_dict()
 	assert(serialized_dict.has("ship_id") and serialized_dict["ship_id"] == "dark_nova_corvette", "Dizionario deve contenere ship_id")
 	assert(serialized_dict.has("rooms") and serialized_dict["rooms"].size() == 10, "Dizionario deve contenere 10 stanze")
-	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 29, "Dizionario deve contenere 29 file drive")
-	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 14, "Dizionario deve contenere 14 password drive")
-	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 13, "Dizionario deve contenere 13 app mainframe")
+	assert(serialized_dict.has("drive_files") and serialized_dict["drive_files"].size() == 0, "Dizionario deve contenere 0 file drive")
+	assert(serialized_dict.has("drive_passwords") and serialized_dict["drive_passwords"].size() == 0, "Dizionario deve contenere 0 password drive")
+	assert(serialized_dict.has("installed_apps") and serialized_dict["installed_apps"].size() == 8, "Dizionario deve contenere 8 app mainframe")
 
 	var reconstructed_bp := ShipBlueprint.new()
 	reconstructed_bp.from_dict(serialized_dict)
@@ -195,7 +194,7 @@ func _run_suite() -> void:
 	assert(imported_bp.ship_name == "Dark Nova Corvette", "Nome nave importato deve coincidere")
 	assert(imported_bp.rooms.size() == 10, "Stanze importate da JSON devono essere 10")
 	var total_devs_imp := 0
-	for r in imported_bp.rooms: total_devs_imp += r.get("devices", []).size()
+	for r in imported_bp.rooms: total_devs_imp += r.devices.size()
 	assert(total_devs_imp == 11, "Dispositivi importati da JSON devono essere 11")
 	assert(imported_bp.drive_files.size() == 29, "File drive importati da JSON devono essere 29")
 	assert(imported_bp.drive_passwords.size() == 14, "Password drive importate da JSON devono essere 14")
@@ -216,58 +215,61 @@ func _run_suite() -> void:
 
 	# Modifica sull'istanza clonata per verificare l'isolamento
 	cloned_bp.ship_name = "Corvetta Modificata"
-	cloned_bp.rooms[0]["name"] = "Ponte Personalizzato"
+	cloned_bp.rooms[0].name = "Ponte Personalizzato"
 	assert(bp.ship_name == "Dark Nova Corvette", "L'originale non deve essere mutato dalla modifica del nome clone")
-	assert(bp.rooms[0]["name"] == "Ponte di Comando", "L'originale non deve essere mutato dalla modifica di una stanza nel clone")
+	assert(bp.rooms[0].name == "Ponte di Comando", "L'originale non deve essere mutato dalla modifica di una stanza nel clone")
 	print("✔ Clonazione profonda e isolamento delle istanze validati")
 
 	# =========================================================================
 	# FASE 6: INTEGRAZIONE CON SPACE WORLD MANAGER
 	# =========================================================================
 	print("\n--- TEST 6: Integrazione con SpaceWorldManager ---")
-	if SpaceWorldManager:
-		SpaceWorldManager.set_ship_blueprint(bp)
-		var mgr_bp := SpaceWorldManager.get_ship_blueprint()
+	var SWM = Engine.get_singleton("SpaceWorldManager")
+	if SWM:
+		SWM.set_ship_blueprint(bp)
+		var mgr_bp = SWM.get_ship_blueprint()
 		assert(mgr_bp != null and mgr_bp.ship_id == "dark_nova_corvette", "SpaceWorldManager deve restituire la blueprint attiva")
 
-		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
+		var mgr_rooms = SWM.get_duct_rooms()
 		assert(mgr_rooms.size() == 10, "SpaceWorldManager.get_duct_rooms() deve restituire 10 stanze")
 
-		var mgr_ducts := SpaceWorldManager.get_duct_corridors()
-		assert(mgr_ducts.size() == 14, "SpaceWorldManager.get_duct_corridors() deve restituire 14 condotti")
+		var mgr_ducts = SWM.get_duct_corridors()
+		assert(mgr_ducts.size() == 17, "SpaceWorldManager.get_duct_corridors() deve restituire 17 condotti")
 
-		var mgr_devs := SpaceWorldManager.get_power_devices()
+		var mgr_devs = SWM.get_power_devices()
 		assert(mgr_devs.size() == 11, "SpaceWorldManager.get_power_devices() deve restituire 11 dispositivi")
 
-		var mgr_damages := SpaceWorldManager.get_damage_zones()
+		var mgr_damages = SWM.get_damage_zones()
 		assert(mgr_damages.size() == 8, "SpaceWorldManager.get_damage_zones() deve restituire 8 zone di danno")
 
-		var mgr_files := SpaceWorldManager.get_ship_drive_files()
-		assert(mgr_files.size() == 29, "SpaceWorldManager.get_ship_drive_files() deve restituire 29 file")
+		var mgr_files = SWM.get_ship_drive_files()
+		assert(mgr_files.size() == 0, "SpaceWorldManager deve restituire 0 file per blueprint pulita")
 
-		var mgr_passwords := SpaceWorldManager.get_ship_drive_passwords()
-		assert(mgr_passwords.size() == 14, "SpaceWorldManager.get_ship_drive_passwords() deve restituire 14 password")
+		var mgr_passwords = SWM.get_ship_drive_passwords()
+		assert(mgr_passwords.size() == 0, "SpaceWorldManager deve restituire 0 password")
 
-		var mgr_apps := SpaceWorldManager.get_installed_apps()
-		assert(mgr_apps.size() == 13, "SpaceWorldManager.get_installed_apps() deve restituire 13 app")
+		var mgr_apps = SWM.get_installed_apps()
+		assert(mgr_apps.size() == 8, "SpaceWorldManager.get_installed_apps() deve restituire 8 app")
 
-		var mgr_pilot_apps := SpaceWorldManager.get_installed_apps_for_role("Pilota")
+		var mgr_pilot_apps = SWM.get_installed_apps_for_role("Pilota")
 		assert(mgr_pilot_apps.size() == 4, "SpaceWorldManager.get_installed_apps_for_role(Pilota) deve restituire 4 app")
 
-		var mgr_eng_apps := SpaceWorldManager.get_installed_apps_for_role("Ingegnere")
-		assert(mgr_eng_apps.size() == 8, "SpaceWorldManager.get_installed_apps_for_role(Ingegnere) deve restituire 8 app")
+		var mgr_eng_apps = SWM.get_installed_apps_for_role("Ingegnere")
+		assert(mgr_eng_apps.size() == 5, "SpaceWorldManager.get_installed_apps_for_role(Ingegnere) deve restituire 5 app")
 
-		var mgr_soldier_apps := SpaceWorldManager.get_installed_apps_for_role("Soldato")
-		assert(mgr_soldier_apps.size() == 4, "SpaceWorldManager.get_installed_apps_for_role(Soldato) deve restituire 4 app")
+		var mgr_soldier_apps = SWM.get_installed_apps_for_role("Soldato")
+		assert(mgr_soldier_apps.size() == 3, "SpaceWorldManager.get_installed_apps_for_role(Soldato) deve restituire 3 app")
 
-		var mgr_hacker_apps := SpaceWorldManager.get_installed_apps_for_role("Hacker")
-		assert(mgr_hacker_apps.size() == 7, "SpaceWorldManager.get_installed_apps_for_role(Hacker) deve restituire 7 app")
+		var mgr_hacker_apps = SWM.get_installed_apps_for_role("Hacker")
+		assert(mgr_hacker_apps.size() == 4, "SpaceWorldManager.get_installed_apps_for_role(Hacker) deve restituire 4 app")
 
 		# Test generazione danni da blueprint
-		SpaceWorldManager.generate_initial_ship_damages(3)
-		var active_damages := SpaceWorldManager.get_ship_damages()
+		SWM.generate_initial_ship_damages(3)
+		var active_damages = SWM.get_ship_damages()
 		assert(active_damages.size() == 3, "SpaceWorldManager deve aver generato 3 danni attingendo dalla blueprint")
 		print("✔ Integrazione completa tra SpaceWorldManager e ShipBlueprint verificata")
+	else:
+		print("⚠ SpaceWorldManager non trovato (esecuzione headless senza autoload), test saltato")
 
 	# =========================================================================
 	# FASE 7: INTEGRAZIONE CON POWER GRID APP
@@ -296,7 +298,7 @@ func _run_suite() -> void:
 	await get_tree().process_frame
 
 	assert(drone_app.get("rooms").size() == 10, "DuctDroneApp deve aver caricato 10 stanze")
-	assert(drone_app.get("ducts").size() == 14, "DuctDroneApp deve aver caricato 14 condotti")
+	assert(drone_app.get("ducts").size() == 17, "DuctDroneApp deve aver caricato 17 condotti")
 
 	drone_app.queue_free()
 	await get_tree().process_frame

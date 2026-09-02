@@ -17,4 +17,5 @@ Dark Nova Rogue Squadron is a Godot-based game that simulates a fake operating s
 - **Ship Layer (Outside)**: Handles 3D movement, combat, docking, and physical ship state.
 - **Economy Layer**: Handles FLUX rating, debts, cargo logistics, and S-Net hacking.
 - **Sublayer (Duct Drone)**: Internal maintenance and repair system within the ship's ducts.
+- **Data Model**: Uses a Resource-based architecture for core systems (ShipBlueprint, StarSystemData, Cargo), ensuring consistency across all game layers and facilitating editor integration.
 

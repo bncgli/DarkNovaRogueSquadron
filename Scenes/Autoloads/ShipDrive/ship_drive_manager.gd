@@ -182,7 +182,7 @@ func _populate_default_ship_drive_files() -> void:
 	if files.size() > 0 or dirs.size() > 0:
 		return
 	
-	var bp_files: Array[Dictionary] = []
+	var bp_files: Array[ShipDriveFile] = []
 	var bp_passwords: Dictionary = {}
 	
 	if SpaceWorldManager:
@@ -193,8 +193,8 @@ func _populate_default_ship_drive_files() -> void:
 	
 	if bp_files.size() > 0:
 		for f in bp_files:
-			var path: String = str(f.get("path"))
-			var content: String = str(f.get("content"))
+			var path: String = f.path
+			var content: String = f.content
 			if not path.is_empty():
 				_write_file_content(path, content)
 		

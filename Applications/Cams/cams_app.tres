@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_656yp")
-roles = Array[String](["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Mozzo"])
+roles = Array[String](["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Stagista"])
 power_draw_mw = 8.0
 required_subsystems = Array[String](["sensors_optics"])
 app_id = "cams"

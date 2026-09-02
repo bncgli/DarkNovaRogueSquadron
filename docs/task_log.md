@@ -89,3 +89,9 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 ### TASK-020: Consolidamento Direttive Post-Refactoring
 - **Stato**: Completato.
 - **Dettagli**: Integrazione delle nuove linee guida architetturali in `docs/APP_ARCHITECTURE_STANDARD.md` e allineamento del contesto AI in `.junie/context/`. Le modifiche includono l'obbligatorietà di `BaseApp`, la modularizzazione dei manager, la centralizzazione di enum/metadati e l'uso di risorse tipizzate.
+
+## 2026-09-02
+
+### TASK-021: Aggiornamento Documentazione Post-Refactoring Resource
+- **Stato**: Completato.
+- **Dettagli**: Aggiornamento massivo della documentazione tecnica e dei file di contesto Junie per riflettere il passaggio dai dizionari alle classi Resource tipizzate per ShipBlueprint, StarSystem, Cargo e metadati globali.

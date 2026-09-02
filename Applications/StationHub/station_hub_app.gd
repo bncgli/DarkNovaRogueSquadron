@@ -826,8 +826,8 @@ func _evaluate_rbac() -> void:
 	if net_mgr and "player_role" in net_mgr:
 		role = net_mgr.player_role
 	
-	# Ruoli autorizzati ai servizi di stazione: Capitano, Ingegnere, Hacker, Pilota, Mozzo
-	can_manage_services = (role == "Capitano" or role == "Ingegnere" or role == "Hacker" or role == "Pilota" or role == "Mozzo" or role == "Captain" or role == "Engineer" or role == "Pilot")
+	# Ruoli autorizzati ai servizi di stazione: Capitano, Ingegnere, Hacker, Pilota, Stagista
+	can_manage_services = (role == "Capitano" or role == "Ingegnere" or role == "Hacker" or role == "Pilota" or role == "Stagista" or role == "Captain" or role == "Engineer" or role == "Pilot")
 	
 	if btn_repair_hull: btn_repair_hull.disabled = not can_manage_services
 	if btn_service_ducts: btn_service_ducts.disabled = not can_manage_services

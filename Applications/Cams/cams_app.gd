@@ -202,11 +202,11 @@ func _update_permissions() -> void:
 		my_role = NetworkManager.get_local_player_role()
 		is_solo = NetworkManager.is_solo_mode
 	
-	# Controllo abilitato per Soldato, Capitano, Mozzo, Solo Mode o Ruolo non assegnato
+	# Controllo abilitato per Soldato, Capitano, Stagista, Solo Mode o Ruolo non assegnato
 	can_control_cams = (
 		my_role == NetworkManager.ROLE_SOLDIER or
 		my_role == NetworkManager.ROLE_CAPTAIN or
-		my_role == NetworkManager.ROLE_MOZZO or
+		my_role == NetworkManager.ROLE_STAGISTA or
 		my_role == "" or
 		my_role == NetworkManager.ROLE_UNASSIGNED or
 		is_solo

@@ -10,3 +10,4 @@ Handles the economic logic, Flux currency, and cargo management.
 #### Technical Notes
 - Both managers are registered as Autoloads (`CargoManager` and `FluxEconomyManager`).
 - They handle the persistence and synchronization of player assets across the game.
+- `CargoManager` now uses the `CargoItemData` resource class for all items in the inventory, replacing the previous dictionary-based system for better type safety.

@@ -24,7 +24,7 @@ const ROLE_PILOT: String = "Pilota"
 const ROLE_SOLDIER: String = "Soldato"
 const ROLE_ENGINEER: String = "Ingegnere"
 const ROLE_HACKER: String = "Hacker"
-const ROLE_MOZZO: String = "Mozzo"
+const ROLE_STAGISTA: String = "Stagista"
 
 const ALL_ROLES: Array[String] = [
 	ROLE_CAPTAIN,
@@ -32,7 +32,7 @@ const ALL_ROLES: Array[String] = [
 	ROLE_SOLDIER,
 	ROLE_ENGINEER,
 	ROLE_HACKER,
-	ROLE_MOZZO
+	ROLE_STAGISTA
 ]
 
 var transport: NetworkTransport = null

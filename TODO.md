@@ -108,3 +108,8 @@
   - **Criteri di accettazione**: Algoritmo random funzionante, selezione stanza ricarica con bordo speciale, fix bug disegno.
   - **File Task**: `task_queue/009_sublayer_editor_features.md`
   - **Stato**: Completato (2026-09-01).
+
+- [x] **TASK-021**: Aggiornamento Documentazione Post-Refactoring Resource
+  - **Descrizione**: Aggiornamento di CHANGELOG.md, .junie/context e docs/architecture per riflettere il passaggio da Dictionary a Resource.
+  - **Criteri di accettazione**: Tutti i file di contesto aggiornati con le nuove classi Resource e relazioni di sistema.
+  - **Stato**: Completato (2026-09-02).

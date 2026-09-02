@@ -25,3 +25,4 @@ Custom Godot editor plugin and standalone tool for managing ship blueprints (`Sh
 - **Location**: `addons/ship_sublayer_editor/`
 - **Dependency**: Uses `ShipBlueprint` (res://Outside/ShipSublayer/ship_blueprint.gd).
 - **Auto-linking**: Automatically identifies passwords related to applications based on `drive_folder` or matching IDs.
+- **Resource Management**: The editor now handles `ShipRoomData`, `ShipDuctData`, and `ShipDeviceData` resources natively, utilizing Godot's built-in Resource inspector features for editing properties.
