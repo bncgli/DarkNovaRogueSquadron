@@ -21,7 +21,7 @@ static var ROOMS: Dictionary[String, ShipRoomData] = {
 }
 
 static func _create_room(p_id: String, p_name: String, p_min_size: Vector2, p_default_devices: Array[String], p_color: Color) -> ShipRoomData:
-	var r = ShipRoomData.new(p_id, p_name)
+	var r := ShipRoomData.new(p_id, p_name)
 	r.min_size = p_min_size
 	r.default_devices = p_default_devices
 	r.color = p_color
@@ -44,5 +44,5 @@ static func get_room_data(id: String) -> ShipRoomData:
 	return ROOMS.get(id)
 
 static func get_room_name(id: String) -> String:
-	var room = ROOMS.get(id)
+	var room: Variant = ROOMS.get(id)
 	return room.name if room else ""

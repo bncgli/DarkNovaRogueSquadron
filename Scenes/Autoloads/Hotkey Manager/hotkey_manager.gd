@@ -13,7 +13,7 @@ func _input(event: InputEvent) -> void:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	if event.is_action_pressed("open_in_file_manager"):
 		if OS.has_feature("web"):
-			NotificationManager.spawn_notification("GodotOS can't let you browse files on a browser. Download GodotOS to import/export files!")
+			NotificationManagerSingleton.spawn_notification("GodotOS can't let you browse files on a browser. Download GodotOS to import/export files!")
 		else:
 			OS.shell_show_in_file_manager(ProjectSettings.globalize_path("user://files/"))
 	

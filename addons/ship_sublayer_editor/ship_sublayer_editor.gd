@@ -1221,7 +1221,7 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 			
 			var room_devs := room.devices
 			for i in range(room_devs.size()):
-				var dev = room_devs[i]
+				var dev: Dictionary = room_devs[i]
 				var d_h := HBoxContainer.new()
 				var d_lbl := Label.new()
 				d_lbl.text = "- %s (%.0f MW)" % [dev.name, dev.power_mw]
@@ -1783,7 +1783,7 @@ func _add_flux_modifiers_editor() -> void:
 	v_box.add_child(list_vbox)
 	
 	for i in range(current_blueprint.flux_modifiers.size()):
-		var mod := current_blueprint.flux_modifiers[i]
+		var mod: ShipFluxModifier = current_blueprint.flux_modifiers[i]
 		var h := HBoxContainer.new()
 		
 		var spin := SpinBox.new()
@@ -1997,7 +1997,7 @@ func _on_outliner_tree_item_selected() -> void:
 	var selected_item := outliner_tree.get_selected()
 	if not selected_item:
 		return
-	var meta = selected_item.get_metadata(0)
+	var meta: Variant = selected_item.get_metadata(0)
 	if meta is Dictionary:
 		var elem_type: String = str(meta.get("type", ""))
 		var elem_id: String = str(meta.get("id", ""))

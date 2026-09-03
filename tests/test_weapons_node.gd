@@ -213,7 +213,8 @@ func _run_suite() -> void:
 		add_child(term)
 		await get_tree().process_frame
 		
-		var cat_cmd = load("res://Applications/Terminal/commands/cat_command.gd").new()
+		var cat_script: GDScript = load("res://Applications/Terminal/commands/cat_command.gd")
+		var cat_cmd = cat_script.new()
 		term.virtual_path_manager.set_path("Ship Drive/Programs/Weapons")
 		var args: Array[String] = ["weapons_config.dat"]
 		cat_cmd.execute(term, args)

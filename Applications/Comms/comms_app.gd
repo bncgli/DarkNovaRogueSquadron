@@ -196,7 +196,7 @@ func _populate_options_ui() -> void:
 		cipher_package_option.clear()
 		for i in range(encrypted_packages.size()):
 			var pkg: Dictionary = encrypted_packages[i]
-			cipher_package_option.add_item(pkg.get("name"), i)
+			cipher_package_option.add_item(str(pkg.get("name", "Pacchetto Ignoto")), i)
 		cipher_package_option.selected = 0
 
 func _connect_system_signals() -> void:
@@ -292,8 +292,8 @@ func _process(delta: float) -> void:
 	# Gestione avanzamento decrittazione mini-gioco Hackwarfare
 	if is_decrypting:
 		var current_pkg: Dictionary = encrypted_packages[selected_package_index]
-		var diff: float = current_pkg.get("difficulty")
-		var speed_mult: float = float(active_config.get("decryption_speed_multiplier")) * float(active_config.get("crypto_crack_speed"))
+		var diff: float = float(current_pkg.get("difficulty", 1.0))
+		var speed_mult: float = float(active_config.get("decryption_speed_multiplier", 1.0)) * float(active_config.get("crypto_crack_speed", 1.0))
 		var step := (delta * 30.0 * speed_mult) / maxf(diff, 0.2)
 		
 		decryption_progress = clampf(decryption_progress + step, 0.0, 100.0)
@@ -316,7 +316,7 @@ func _is_ship_operational() -> bool:
 func _on_ship_connection_changed(_is_connected: bool) -> void:
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_ui_display()
@@ -348,12 +348,13 @@ func _update_permissions() -> void:
 	var is_solo := true
 	if NetworkManager:
 		my_role = NetworkManager.get_local_player_role()
-		if NetworkManager.has_method("has_active_session"):
-			is_solo = NetworkManager.is_solo_mode or not NetworkManager.has_active_session()
-		else:
-			is_solo = NetworkManager.is_solo_mode or my_role.is_empty()
+		is_solo = NetworkManager.is_solo_mode
 	
-	can_control_comms = (my_role.is_empty() or my_role == "Hacker" or my_role == "Capitano" or my_role == "Stagista" or my_role == "Pilota" or my_role == "Ingegnere" or my_role == "Captain" or my_role == "Pilot" or is_solo)
+	var role_lower := my_role.to_lower()
+	if not my_role.is_empty():
+		can_control_comms = role_lower in ["hacker", "capitano", "captain", "stagista", "admin", "host"]
+	else:
+		can_control_comms = is_solo
 	
 	# Disabilita/abilita comandi attivi
 	if freq_slider:
@@ -414,8 +415,8 @@ func load_dat_configuration() -> void:
 	_apply_configuration()
 
 func _apply_configuration() -> void:
-	jamming_power_mw = float(active_config.get("jamming_power_mw"))
-	current_spoof_sig = str(active_config.get("spoofing_signature"))
+	jamming_power_mw = float(active_config.get("jamming_power_mw", 120.0))
+	current_spoof_sig = str(active_config.get("spoofing_signature", "CORVETTE_CIVILIAN"))
 	
 	if jammer_power_slider:
 		jammer_power_slider.value = jamming_power_mw
@@ -489,7 +490,7 @@ func _refresh_tuner_state() -> void:
 
 func _get_locked_signal() -> Variant:
 	for sig in available_signals:
-		var sig_freq: float = sig.get("freq")
+		var sig_freq: float = float(sig.get("freq", 0.0))
 		if absf(current_frequency - sig_freq) <= 15.0:
 			return sig
 	return null
@@ -499,7 +500,7 @@ func _on_btn_listen_signal_pressed() -> void:
 		return
 	var sig: Variant = _get_locked_signal()
 	if sig != null:
-		_log_comms_message("[color=#ffdd55][RICEZIONE][/color] %s: %s (Fonte: %s)" % [sig.get("name"), sig.get("desc"), sig.get("source")])
+		_log_comms_message("[color=#ffdd55][RICEZIONE][/color] %s: %s (Fonte: %s)" % [str(sig.get("name", "Segnale")), str(sig.get("desc", "")), str(sig.get("source", "Ignota"))])
 		_update_action_log("Messaggio trascritto nel registro di bordo.")
 
 # --- LOGICA APPLICATIVA: GUERRA ELETTRONICA (EW) ---
@@ -695,7 +696,7 @@ func request_station_docking(station: SpaceStationEntity = null, dm: DockingMana
 		return false
 	var target_dm := dm if dm != null else docking_manager
 	if not target_dm:
-		var st_mgr = get_node_or_null("/root/StationManager")
+		var st_mgr := get_node_or_null("/root/StationManager")
 		if st_mgr is DockingManager:
 			target_dm = st_mgr
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_docking_manager"):
@@ -713,7 +714,7 @@ func request_station_docking(station: SpaceStationEntity = null, dm: DockingMana
 		if SpaceWorldManager and SpaceWorldManager.has_method("get_station_entity"):
 			target_station = SpaceWorldManager.get_station_entity()
 		elif is_inside_tree():
-			var found_st = get_tree().root.find_child("SpaceStationEntity", true, false)
+			var found_st := get_tree().root.find_child("SpaceStationEntity", true, false)
 			if found_st is SpaceStationEntity:
 				target_station = found_st
 	
@@ -730,7 +731,7 @@ func _on_docking_clearance_granted(station_id: String, bay_id: int, message: Str
 	docking_clearance_granted.emit(station_id, bay_id)
 	_log_comms_message("[color=#00ff88][DOCKING AUTORIZZATO][/color] Stazione %s: %s" % [station_id, message])
 	_update_action_log("Autorizzazione attracco concessa: Bay 0%d." % (bay_id + 1))
-	var nm = get_node_or_null("/root/NotificationManager")
+	var nm := get_node_or_null("/root/NotificationManager")
 	if nm and nm.has_method("send_notification"):
 		nm.send_notification("Controllo Portuale", "Autorizzazione attracco concessa (Bay 0%d)." % (bay_id + 1))
 	elif nm and nm.has_method("spawn_notification"):
@@ -746,7 +747,7 @@ func _on_docking_completed_event(station_id: String, bay_id: int, _st_data: Dict
 	docking_completed.emit(station_id, bay_id)
 	_log_comms_message("[color=#00ff88][AGGANCIO COMPLETATO][/color] Nave ancorata con successo a Stazione %s (Bay 0%d). Servizi Station Hub sbloccati su GodotOS." % [station_id, bay_id + 1])
 	_update_action_log("Aggancio stazione completato.")
-	var nm = get_node_or_null("/root/NotificationManager")
+	var nm := get_node_or_null("/root/NotificationManager")
 	if nm and nm.has_method("send_notification"):
 		nm.send_notification("Controllo Portuale", "Attracco completato. Servizi Station Hub operativi.")
 	elif nm and nm.has_method("spawn_notification"):

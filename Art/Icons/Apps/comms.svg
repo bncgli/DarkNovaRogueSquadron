@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path d="M14 44 C24 50 40 50 50 44 L32 20 Z" fill="#FFFFFF" />
+  <line x1="32" y1="20" x2="32" y2="8" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" />
+  <circle cx="32" cy="7" r="3" fill="#FFFFFF" />
+  <!-- Radio Waves -->
+  <path d="M22 14 A16 16 0 0 1 42 14" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+  <path d="M14 8 A26 26 0 0 1 50 8" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+  <!-- Base mount -->
+  <polygon points="24,54 40,54 36,46 28,46" fill="#FFFFFF" />
+</svg>

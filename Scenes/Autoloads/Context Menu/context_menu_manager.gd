@@ -171,15 +171,15 @@ func _handle_open_terminal() -> void:
 	if target is FakeFolder and target.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(target.folder_path):
-			var saved_target = target
+			var saved_target: Control = target
 			fpm.prompt_enter_password(saved_target.folder_path, saved_target.folder_name, func(_removed_pass: bool) -> void:
-				var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+				var tsm: Node = get_node_or_null("/root/TerminalSoftwareManager")
 				if tsm:
 					tsm.launch_app("terminal")
 			)
 			return
 	
-	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm: Node = get_node_or_null("/root/TerminalSoftwareManager")
 	if tsm:
 		tsm.launch_app("terminal")
 

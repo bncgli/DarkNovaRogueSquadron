@@ -85,7 +85,7 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(600, 420)
 		parent_window.title_text = APP_TITLE
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
 
@@ -125,7 +125,7 @@ func _connect_signals() -> void:
 		if not StarSystemGridManager.route_plotted.is_connected(_on_system_route_plotted):
 			StarSystemGridManager.route_plotted.connect(_on_system_route_plotted)
 
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_signal("file_synced"):
 		if not sdm.file_synced.is_connected(_on_file_synced):
 			sdm.file_synced.connect(_on_file_synced)
@@ -134,7 +134,7 @@ func _update_permissions() -> void:
 	if NetworkManager and NetworkManager.has_method("get_local_player_role"):
 		var current_role: String = NetworkManager.get_local_player_role()
 		var is_solo: bool = NetworkManager.is_solo_mode
-		var allowed_roles = ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista", "Soldier", "Soldato", ""]
+		var allowed_roles := ["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista", "Soldier", "Soldato", ""]
 		can_control_map = allowed_roles.has(current_role) or is_solo
 	else:
 		can_control_map = true
@@ -161,8 +161,8 @@ func _load_config() -> void:
 			continue
 		var parts := line.split("=", false, 1)
 		if parts.size() == 2:
-			var key := parts[0].strip_edges().to_lower()
-			var val_str := parts[1].strip_edges()
+			var key: String = parts[0].strip_edges().to_lower()
+			var val_str: Variant = parts[1].strip_edges()
 			match key:
 				"transit_speed_c":
 					app_config["transit_speed_c"] = val_str.to_float()
@@ -194,7 +194,7 @@ func _update_system_info() -> void:
 	# Vettore di prua della nave (da Spaceship o SpaceWorldManager)
 	var heading_deg: float = 0.0
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			heading_deg = rad_to_deg(ship.rotation.y)
 	if ship_heading_label:
@@ -305,13 +305,13 @@ func send_route_to_flight_control() -> Dictionary:
 	var target_coords: Vector3i = selected_sector_coords
 	var course_vec: Vector3 = Vector3.ZERO
 	if not calculated_route.is_empty():
-		target_coords = calculated_route.get("target_coords")
-		course_vec = calculated_route.get("course_vector")
+		target_coords = calculated_route.get("target_coords", selected_sector_coords)
+		course_vec = calculated_route.get("course_vector", Vector3.ZERO)
 	elif StarSystemGridManager:
 		var cur := StarSystemGridManager.get_current_sector_coords()
 		course_vec = StarSystemGridManager.get_route_vector(cur, target_coords)
 
-	var mgr = get_node_or_null("/root/StarSystemGridManager")
+	var mgr := get_node_or_null("/root/StarSystemGridManager")
 	if mgr and mgr.has_method("plot_route"):
 		mgr.plot_route(target_coords)
 	elif StarSystemGridManager and StarSystemGridManager.has_method("plot_route"):
@@ -378,8 +378,9 @@ func _on_search_submitted(text: String) -> void:
 	# Cerca per nome corpo celeste
 	if StarSystemGridManager:
 		for b in StarSystemGridManager.system_celestial_bodies:
-			var b_name: String = b.get("name").to_upper()
-			var b_id: String = b.get("id").to_upper()
+			if b == null: continue
+			var b_name: String = str(b.get("name")).to_upper()
+			var b_id: String = str(b.get("id")).to_upper()
 			if clean in b_name or clean in b_id:
 				var coords: Vector3i = b.get("coords")
 				select_sector(coords)
@@ -481,7 +482,16 @@ func _on_grid_display_draw() -> void:
 	# Macro-corpi celesti
 	var celestial_bodies: Array[Dictionary] = []
 	if StarSystemGridManager:
-		celestial_bodies = StarSystemGridManager.system_celestial_bodies
+		var mgr_bodies := StarSystemGridManager.system_celestial_bodies
+		for b in mgr_bodies:
+			if b is CelestialBodyData:
+				celestial_bodies.append({
+					"coords": b.coords,
+					"type": b.type,
+					"name": b.name
+				})
+			else:
+				celestial_bodies.append(b)
 
 	for body in celestial_bodies:
 		var b_coords: Vector3i = body.get("coords")
@@ -537,7 +547,7 @@ func _on_grid_display_draw() -> void:
 	# Icona e vettore di prua nave
 	var heading_deg: float = 0.0
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			heading_deg = rad_to_deg(ship.rotation.y)
 

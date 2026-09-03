@@ -92,7 +92,7 @@ var scan_pulse_radius: float = 0.0
 var scan_pulse_active: bool = false
 
 # Gestione danni & riparazioni
-var ship_damages: Array[Dictionary] = []
+var ship_damages: Array = []
 var is_repairing: bool = false
 var current_repair_target_id: String = ""
 var current_repair_progress: float = 0.0
@@ -242,10 +242,26 @@ func _ready() -> void:
 	if SpaceWorldManager:
 		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
 		if mgr_rooms.size() > 0:
-			rooms = mgr_rooms
+			rooms.clear()
+			for r in mgr_rooms:
+				rooms.append({
+					"id": r.id,
+					"name": r.name,
+					"rect": r.rect,
+					"color": r.color,
+					"border_color": r.color.lightened(0.3)
+				})
+					
 		var mgr_ducts := SpaceWorldManager.get_duct_corridors()
 		if mgr_ducts.size() > 0:
-			ducts = mgr_ducts
+			ducts.clear()
+			for d in mgr_ducts:
+				ducts.append({
+					"from": d.from,
+					"to": d.to,
+					"width": d.width,
+					"name": d.name
+				})
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
@@ -263,7 +279,7 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(720, 500)
 		parent_window.title_text = APP_TITLE
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
 
@@ -336,7 +352,14 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.ship_damage_repaired.connect(_on_ship_damage_repaired)
 		if not SpaceWorldManager.duct_drone_repair_state_changed.is_connected(_on_repair_state_changed):
 			SpaceWorldManager.duct_drone_repair_state_changed.connect(_on_repair_state_changed)
-		ship_damages = SpaceWorldManager.get_ship_damages()
+		
+		var mgr_damages := SpaceWorldManager.get_ship_damages()
+		ship_damages.clear()
+		for sd in mgr_damages:
+			if sd is ShipDamageRuntimeState:
+				ship_damages.append(sd.to_dict())
+			else:
+				ship_damages.append(sd)
 	else:
 		_init_standalone_damages()
 	
@@ -385,7 +408,7 @@ func _on_ship_drive_mounted() -> void:
 	load_dat_configuration()
 
 func _on_file_synced(path: String) -> void:
-	if path.begins_with("Ship Drive/Programs/DuctDrone"):
+	if "Programs/DuctDrone" in path and path.ends_with(".dat"):
 		load_dat_configuration()
 
 ## Carica i parametri di funzionamento del drone dai file .dat protetti in Ship Drive
@@ -400,24 +423,18 @@ func load_dat_configuration() -> Dictionary:
 	
 	var has_dat := not cfg_dict.is_empty() or not tuning_dict.is_empty()
 	
-	active_config["linear_speed"] = cfg_dict.get("linear_speed")
-	active_config["linear_acceleration"] = cfg_dict.get("linear_acceleration")
-	active_config["linear_deceleration"] = cfg_dict.get("linear_deceleration")
-	active_config["rotate_speed"] = cfg_dict.get("rotate_speed")
-	active_config["battery_max"] = cfg_dict.get("battery_max")
-	active_config["battery_drain_move"] = cfg_dict.get("battery_drain_move")
-	active_config["battery_drain_lights"] = cfg_dict.get("battery_drain_lights")
-	active_config["battery_drain_radar"] = cfg_dict.get("battery_drain_radar")
-	active_config["battery_drain_repair"] = cfg_dict.get("battery_drain_repair")
-	active_config["radar_scan_radius_max"] = cfg_dict.get("radar_scan_radius_max")
-	active_config["repair_range"] = cfg_dict.get("repair_range")
-	active_config["repair_speed_multiplier"] = cfg_dict.get("repair_speed_multiplier")
+	for k in cfg_dict:
+		if cfg_dict[k] is String and (cfg_dict[k] as String).is_valid_float():
+			active_config[k] = float(cfg_dict[k])
+		else:
+			active_config[k] = cfg_dict[k]
 	
-	active_config["turbo_multiplier"] = tuning_dict.get("turbo_multiplier")
-	active_config["precision_multiplier"] = tuning_dict.get("precision_multiplier")
-	active_config["repair_efficiency"] = tuning_dict.get("repair_efficiency")
-	active_config["radar_intensity"] = tuning_dict.get("radar_intensity")
-	active_config["overclock_speed_gain"] = tuning_dict.get("overclock_speed_gain")
+	for k in tuning_dict:
+		if tuning_dict[k] is String and (tuning_dict[k] as String).is_valid_float():
+			active_config[k] = float(tuning_dict[k])
+		else:
+			active_config[k] = tuning_dict[k]
+			
 	active_config["is_dat_loaded"] = has_dat
 	
 	_apply_configuration()
@@ -542,14 +559,11 @@ func _update_permissions() -> void:
 	else:
 		is_solo = true
 	
-	can_control = (
-		my_role == NetworkManager.ROLE_ENGINEER or
-		my_role == NetworkManager.ROLE_CAPTAIN or
-		my_role == NetworkManager.ROLE_PILOT or
-		my_role == "" or
-		my_role == NetworkManager.ROLE_UNASSIGNED or
-		is_solo
-	)
+	var role_lower := my_role.to_lower()
+	if not my_role.is_empty():
+		can_control = role_lower in ["ingegnere", "engineer", "capitano", "captain", "stagista", "hacker", "pilota", "pilot", "admin", "host"]
+	else:
+		can_control = is_solo
 	
 	if role_badge:
 		if is_solo:
@@ -646,25 +660,35 @@ func _process(delta: float) -> void:
 	if map_canvas:
 		map_canvas.queue_redraw()
 
+func _parse_pos(val: Variant) -> Vector2:
+	if val is Vector2:
+		return val
+	if val is Array and val.size() >= 2:
+		return Vector2(float(val[0]), float(val[1]))
+	return Vector2.ZERO
+
 func _update_nearby_damage() -> void:
 	nearby_damage = {}
 	var min_d := 38.0
 	for dmg in ship_damages:
-		if dmg.get("repaired"):
+		var is_repaired: bool = bool(dmg.repaired if "repaired" in dmg else dmg.get("repaired", false))
+		if is_repaired:
 			continue
-		var pos: Vector2 = dmg.get("pos")
-		var d := drone_pos.distance_to(pos)
+		var dpos: Vector2 = _parse_pos(dmg.pos if "pos" in dmg else dmg.get("pos"))
+		var d := drone_pos.distance_to(dpos)
 		if d <= min_d:
 			min_d = d
-			nearby_damage = dmg
+			nearby_damage = dmg if dmg is Dictionary else (dmg.to_dict() if dmg.has_method("to_dict") else {})
 
 func _update_damage_ui() -> void:
 	var total_active := 0
 	var revealed_count := 0
 	for dmg in ship_damages:
-		if not dmg.get("repaired"):
+		var is_repaired: bool = bool(dmg.repaired if "repaired" in dmg else dmg.get("repaired", false))
+		if not is_repaired:
 			total_active += 1
-			if dmg.get("revealed"):
+			var is_revealed: bool = bool(dmg.revealed if "revealed" in dmg else dmg.get("revealed", false))
+			if is_revealed:
 				revealed_count += 1
 	
 	if damage_count_label:
@@ -679,7 +703,7 @@ func _update_damage_ui() -> void:
 		if not nearby_damage.is_empty():
 			var type_str := "Breccia Scafo" if nearby_damage.get("type") == "breach" else "Cortocircuito"
 			var is_revealed: bool = nearby_damage.get("revealed")
-			var dur: float = float(nearby_damage.get("repair_duration"))
+			var dur: float = float(nearby_damage.get("repair_duration", 5.0))
 			if is_revealed:
 				nearby_damage_label.text = "⚠️ Adiacente a: %s (Tempo: %.1fs)" % [type_str, dur]
 				nearby_damage_label.modulate = Color(1.0, 0.75, 0.2)
@@ -712,7 +736,7 @@ func _update_damage_ui() -> void:
 			repair_status_label.modulate = Color(0.2, 1.0, 0.8)
 		else:
 			var target_dmg := nearby_damage if not nearby_damage.is_empty() else {}
-			var p: float = float(target_dmg.get("repair_progress"))
+			var p: float = float(target_dmg.get("repair_progress", 0.0))
 			repair_progress_bar.value = p * 100.0
 			if p > 0.0:
 				repair_status_label.text = "Progresso salvato: %3.0f%%" % (p * 100.0)
@@ -734,7 +758,7 @@ func _on_repair_button_pressed() -> void:
 	
 	_update_nearby_damage()
 	if not nearby_damage.is_empty():
-		var dmg_id: String = nearby_damage.get("id")
+		var dmg_id: String = str(nearby_damage.get("id", ""))
 		if SpaceWorldManager:
 			SpaceWorldManager.start_duct_drone_repair(dmg_id)
 		else:
@@ -791,27 +815,40 @@ func _init_standalone_damages() -> void:
 
 func _local_simulate_repair_and_discovery(delta: float) -> void:
 	for dmg in ship_damages:
-		if dmg.get("repaired"):
+		var is_repaired: bool = bool(dmg.repaired if "repaired" in dmg else dmg.get("repaired", false))
+		if is_repaired:
 			continue
-		var is_revealed: bool = dmg.get("revealed")
+		var is_revealed: bool = bool(dmg.revealed if "revealed" in dmg else dmg.get("revealed", false))
 		if not is_revealed:
-			var dtype: String = dmg.get("type")
-			var dpos: Vector2 = dmg.get("pos")
+			var dtype: String = str(dmg.type if "type" in dmg else dmg.get("type", ""))
+			var dpos: Vector2 = _parse_pos(dmg.pos if "pos" in dmg else dmg.get("pos"))
 			if dtype == "breach" and lights_enabled:
 				var dist := drone_pos.distance_to(dpos)
 				if dist <= 35.0:
-					dmg["revealed"] = true
-					dmg["revealed_by"] = "light"
+					if dmg is Dictionary:
+						dmg["revealed"] = true
+						dmg["revealed_by"] = "light"
+					else:
+						dmg.revealed = true
+						dmg.revealed_by = "light"
 				elif dist <= 90.0:
 					var to_dmg := (dpos - drone_pos).normalized()
 					var forward := Vector2.from_angle(drone_heading)
 					if absf(forward.angle_to(to_dmg)) <= 0.55:
-						dmg["revealed"] = true
-						dmg["revealed_by"] = "light"
+						if dmg is Dictionary:
+							dmg["revealed"] = true
+							dmg["revealed_by"] = "light"
+						else:
+							dmg.revealed = true
+							dmg.revealed_by = "light"
 			elif dtype == "short_circuit" and scan_pulse_active:
 				if drone_pos.distance_to(dpos) <= scan_pulse_radius:
-					dmg["revealed"] = true
-					dmg["revealed_by"] = "radar"
+					if dmg is Dictionary:
+						dmg["revealed"] = true
+						dmg["revealed_by"] = "radar"
+					else:
+						dmg.revealed = true
+						dmg.revealed_by = "radar"
 	
 	if lights_enabled:
 		drone_battery = maxf(0.0, drone_battery - 0.75 * delta)
@@ -823,15 +860,16 @@ func _local_simulate_repair_and_discovery(delta: float) -> void:
 	if is_repairing and current_repair_target_id != "":
 		var target_dmg: Dictionary = {}
 		for dmg in ship_damages:
-			if dmg.get("id") == current_repair_target_id:
-				target_dmg = dmg
+			var d_id: String = str(dmg.id if "id" in dmg else dmg.get("id", ""))
+			if d_id == current_repair_target_id:
+				target_dmg = dmg if dmg is Dictionary else (dmg.to_dict() if dmg.has_method("to_dict") else {})
 				break
-		if target_dmg.is_empty() or target_dmg.get("repaired") or drone_pos.distance_to(target_dmg.get("pos")) > 42.0 or drone_battery <= 0.0:
+		if target_dmg.is_empty() or target_dmg.get("repaired") or drone_pos.distance_to(_parse_pos(target_dmg.get("pos"))) > 42.0 or drone_battery <= 0.0:
 			is_repairing = false
 			current_repair_target_id = ""
 		else:
-			var dur: float = maxf(1.0, float(target_dmg.get("repair_duration")))
-			var p: float = float(target_dmg.get("repair_progress"))
+			var dur: float = maxf(1.0, float(target_dmg.get("repair_duration", 5.0)))
+			var p: float = float(target_dmg.get("repair_progress", 0.0))
 			p = clampf(p + (delta / dur), 0.0, 1.0)
 			target_dmg["repair_progress"] = p
 			current_repair_progress = p
@@ -843,15 +881,19 @@ func _local_simulate_repair_and_discovery(delta: float) -> void:
 func _on_ship_damages_updated(damages: Array) -> void:
 	ship_damages = damages
 
-func _on_ship_damage_discovered(damage: Dictionary) -> void:
+func _on_ship_damage_discovered(damage: Variant) -> void:
 	if status_summary_label:
-		var type_str := "BRECCIA nello scafo" if damage.get("type") == "breach" else "CORTOCIRCUITO elettrico"
-		status_summary_label.text = "⚠️ Rilevato %s nel settore %s!" % [type_str, damage.get("sector")]
+		var dtype: String = str(damage.type if "type" in damage else damage.get("type", ""))
+		var dsec: String = str(damage.sector if "sector" in damage else damage.get("sector", ""))
+		var type_str := "BRECCIA nello scafo" if dtype == "breach" else "CORTOCIRCUITO elettrico"
+		status_summary_label.text = "⚠️ Rilevato %s nel settore %s!" % [type_str, dsec]
 
-func _on_ship_damage_repaired(damage: Dictionary) -> void:
+func _on_ship_damage_repaired(damage: Variant) -> void:
 	if status_summary_label:
-		var type_str := "Breccia" if damage.get("type") == "breach" else "Cortocircuito"
-		status_summary_label.text = "✔ %s riparato con successo in %s!" % [type_str, damage.get("sector")]
+		var dtype: String = str(damage.type if "type" in damage else damage.get("type", ""))
+		var dsec: String = str(damage.sector if "sector" in damage else damage.get("sector", ""))
+		var type_str := "Breccia" if dtype == "breach" else "Cortocircuito"
+		status_summary_label.text = "✔ %s riparato con successo in %s!" % [type_str, dsec]
 
 func _on_repair_state_changed(rep: bool, dmg_id: String, progress: float) -> void:
 	is_repairing = rep
@@ -1148,21 +1190,22 @@ func _draw_damages(canvas: Control, trans: Transform2D) -> void:
 	var time_now := Time.get_ticks_msec() * 0.003
 	
 	for dmg in ship_damages:
-		if dmg.get("repaired"):
+		var is_repaired: bool = bool(dmg.repaired if "repaired" in dmg else dmg.get("repaired", false))
+		if is_repaired:
 			# Disegna indicatore verde di danno risolto / riparato
-			var pos_val: Vector2 = dmg.get("pos")
+			var pos_val: Vector2 = _parse_pos(dmg.pos if "pos" in dmg else dmg.get("pos"))
 			var p: Vector2 = trans * pos_val
 			canvas.draw_circle(p, 3.5 * s, Color(0.2, 0.8, 0.4, 0.3))
 			canvas.draw_arc(p, 5.5 * s, 0, TAU, 16, Color(0.2, 0.9, 0.5, 0.6), 1.0 * s, true)
 			continue
 		
-		var is_revealed: bool = dmg.get("revealed")
+		var is_revealed: bool = bool(dmg.revealed if "revealed" in dmg else dmg.get("revealed", false))
 		if not is_revealed:
 			continue # Invisibile finché non scoperto tramite Luce o Radar
 		
-		var dmg_pos: Vector2 = dmg.get("pos")
+		var dmg_pos: Vector2 = _parse_pos(dmg.pos if "pos" in dmg else dmg.get("pos"))
 		var p := trans * dmg_pos
-		var dtype: String = dmg.get("type")
+		var dtype: String = str(dmg.type if "type" in dmg else dmg.get("type", ""))
 		
 		if dtype == "breach":
 			# --- BRECCIA NELLO SCAFO / CONDOTTO (Arancione / Rosso allerta) ---
@@ -1215,8 +1258,9 @@ func _draw_repair_overlay(canvas: Control, trans: Transform2D) -> void:
 	if is_repairing and current_repair_target_id != "":
 		var target_pos := Vector2.ZERO
 		for dmg in ship_damages:
-			if dmg.get("id") == current_repair_target_id:
-				target_pos = dmg.get("pos")
+			var d_id: String = str(dmg.id if "id" in dmg else dmg.get("id", ""))
+			if d_id == current_repair_target_id:
+				target_pos = _parse_pos(dmg.pos if "pos" in dmg else dmg.get("pos"))
 				break
 		
 		if target_pos != Vector2.ZERO:
@@ -1241,7 +1285,7 @@ func _draw_repair_overlay(canvas: Control, trans: Transform2D) -> void:
 			canvas.draw_string(font, dmg_scr + Vector2(-10 * s, 22 * s), pct_text, HORIZONTAL_ALIGNMENT_CENTER, -1, int(10 * s), Color(0.3, 1.0, 0.7, 1.0))
 			
 	elif not nearby_damage.is_empty() and nearby_damage.get("revealed"):
-		var near_pos: Vector2 = nearby_damage.get("pos")
+		var near_pos: Vector2 = _parse_pos(nearby_damage.get("pos"))
 		var dmg_scr: Vector2 = trans * near_pos
 		var ring_radius := 14.0 * s
 		canvas.draw_arc(dmg_scr, ring_radius, 0, TAU, 24, Color(0.2, 1.0, 0.6, 0.8), 1.5 * s, true)
@@ -1299,26 +1343,28 @@ func _draw_ship_hull(canvas: Control, trans: Transform2D) -> void:
 	
 	# Bordo luminoso dello scafo
 	for i in range(transformed_hull.size()):
-		var p1 := transformed_hull[i]
-		var p2 := transformed_hull[(i + 1) % transformed_hull.size()]
+		var p1: Variant = transformed_hull[i]
+		var p2: Variant = transformed_hull[(i + 1) % transformed_hull.size()]
 		canvas.draw_line(p1, p2, Color(0.25, 0.55, 0.85, 0.8), 2.0)
 
 func _draw_rooms(canvas: Control, trans: Transform2D) -> void:
 	for room in rooms:
-		var r: Rect2 = room["rect"]
+		var r: Rect2 = room.get("rect", Rect2())
 		var p1 := trans * r.position
 		var p2 := trans * (r.position + r.size)
 		var transformed_rect := Rect2(p1, p2 - p1)
 		
 		# Riempimento stanza
-		canvas.draw_rect(transformed_rect, room["color"])
+		var col: Color = room.get("color", Color(0.2, 0.4, 0.6, 0.5))
+		canvas.draw_rect(transformed_rect, col)
 		# Bordo stanza
-		canvas.draw_rect(transformed_rect, room["border_color"], false, 1.5)
+		var bcol: Color = room.get("border_color", col.lightened(0.3))
+		canvas.draw_rect(transformed_rect, bcol, false, 1.5)
 		
 		# Etichetta stanza
 		var font: Font = ThemeDB.fallback_font
 		var text_pos := p1 + Vector2(6, 14)
-		canvas.draw_string(font, text_pos, room["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.9, 1.0, 0.85))
+		canvas.draw_string(font, text_pos, str(room.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.9, 1.0, 0.85))
 
 func _draw_ducts(canvas: Control, trans: Transform2D) -> void:
 	for duct in ducts:

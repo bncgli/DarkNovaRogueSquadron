@@ -18,7 +18,7 @@ func _ready() -> void:
 func _discover_scene_stations() -> void:
 	if not is_inside_tree():
 		return
-	var root = get_tree().root
+	var root := get_tree().root
 	_scan_for_stations_recursive(root)
 
 func _scan_for_stations_recursive(node: Node) -> void:

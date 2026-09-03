@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="10" y="10" width="44" height="44" rx="10" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="4" />
+  <!-- Center Star/Hex/App Symbol -->
+  <polygon points="32,18 42,24 42,40 32,46 22,40 22,24" fill="#FFFFFF" />
+  <circle cx="32" cy="32" r="4" fill="#000000" fill-opacity="0.3" />
+</svg>

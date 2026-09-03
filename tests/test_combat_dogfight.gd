@@ -164,12 +164,12 @@ func test_combat_director_waves_and_coordination() -> void:
 	assert(director.active_enemies.size() == 3, "Active enemies deve tracciare 3 navi")
 
 	# Test attacco soldato
-	var target_id := spawned_enemies[0].ship_id
+	var target_id: String = spawned_enemies[0].ship_id
 	var hit_res := director.fire_player_weapon_at(target_id, 100.0)
 	assert(hit_res.is_destroyed == true, "Colpo ad alto danno deve distruggere il drone nemico")
 
 	# Test EW Hacker tramite CombatDirector
-	var target_fighter_id := spawned_enemies[2].ship_id
+	var target_fighter_id: String = spawned_enemies[2].ship_id
 	var jam_ok := director.execute_ew_jamming(target_fighter_id, 6.0)
 	assert(jam_ok == true, "EW Jamming tramite director deve avere successo")
 

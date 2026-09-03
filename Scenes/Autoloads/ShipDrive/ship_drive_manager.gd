@@ -96,7 +96,7 @@ func _on_ship_connection_changed(_is_connected: bool) -> void:
 func _on_network_connection_state_changed(_is_connected: bool, _is_host: bool) -> void:
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 
 func _on_mission_ended() -> void:
@@ -177,12 +177,10 @@ func unmount_drive() -> void:
 	ship_drive_unmounted.emit()
 
 func _populate_default_ship_drive_files() -> void:
-	var files := DirAccess.get_files_at(SHIP_DRIVE_ROOT_DIR)
-	var dirs := DirAccess.get_directories_at(SHIP_DRIVE_ROOT_DIR)
-	if files.size() > 0 or dirs.size() > 0:
+	if FileAccess.file_exists("user://files/Ship Drive/Ship Systems.txt") and FileAccess.file_exists("user://files/Ship Drive/Programs/Weapons/weapons_config.dat"):
 		return
 	
-	var bp_files: Array[ShipDriveFile] = []
+	var bp_files: Array = []
 	var bp_passwords: Dictionary = {}
 	
 	if SpaceWorldManager:
@@ -193,15 +191,27 @@ func _populate_default_ship_drive_files() -> void:
 	
 	if bp_files.size() > 0:
 		for f in bp_files:
-			var path: String = f.path
-			var content: String = f.content
+			var path: String = f.path if f is ShipDriveFile else str(f.get("path", ""))
+			var content: String = f.content if f is ShipDriveFile else str(f.get("content", ""))
 			if not path.is_empty():
 				_write_file_content(path, content)
+		
+		# File di testo informativi di base se non inclusi nella blueprint
+		if not FileAccess.file_exists("user://files/Ship Drive/Ship Systems.txt"):
+			_write_file_content("Ship Drive/Ship Systems.txt", "=== DARK NOVA - SISTEMI NAVE ===\nReattore Principale: ONLINE (100% Efficienza)\nPropulsione Sub-Luce: ATTIVA\nScudi Deflettori: OPERATIVI\nArray Sensori & Cams: 6 Canali Attivi (Prua, Poppa, Babordo, Tribordo, Dorsale, Ventrale)\nSottosistemi di Guida: Calibrati\n")
+		if not FileAccess.file_exists("user://files/Ship Drive/Flight Log.txt"):
+			_write_file_content("Ship Drive/Flight Log.txt", "=== REGISTRO DI BORDO ===\n[STARDATE 7815.4] Connessione al sistema centrale stabilita.\nTutti i sistemi della Dark Nova sono pronti alla navigazione spaziale.\nEquipaggio autorizzato ad accedere all'unita' condivisa Ship Drive.\n")
+		if not FileAccess.file_exists("user://files/Ship Drive/Crew Directives.txt"):
+			_write_file_content("Ship Drive/Crew Directives.txt", "=== DIRETTIVE EQUIPAGGIO ===\n1. Mantenere monitorati i feed video delle telecamere esterne durante la navigazione.\n2. Coordinare le manovre di volo e la spinta propulsori con la plancia.\n3. Condividere report di missione e file di rotta all'interno dello Ship Drive.\n")
 		
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and bp_passwords.size() > 0:
 			for folder_path in bp_passwords:
 				fpm.set_password(str(folder_path), str(bp_passwords[folder_path]))
+				
+		var ssm := get_node_or_null("/root/ShipSoftwareManager")
+		if ssm and ssm.has_method("populate_all_installed_ship_drive_apps"):
+			ssm.populate_all_installed_ship_drive_apps()
 		return
 	
 	_write_file_content("Ship Drive/Ship Systems.txt", "=== DARK NOVA - SISTEMI NAVE ===\nReattore Principale: ONLINE (100% Efficienza)\nPropulsione Sub-Luce: ATTIVA\nScudi Deflettori: OPERATIVI\nArray Sensori & Cams: 6 Canali Attivi (Prua, Poppa, Babordo, Tribordo, Dorsale, Ventrale)\nSottosistemi di Guida: Calibrati\n")
@@ -611,7 +621,7 @@ func _apply_file_write(rel_path: String, content: String) -> void:
 				if te_path == rel_path:
 					te.text = content
 					te.text_edited = false
-					var top_bar_title = te.get_node_or_null("../../Top Bar/Title Text")
+					var top_bar_title := te.get_node_or_null("../../Top Bar/Title Text")
 					if top_bar_title:
 						top_bar_title.text = "[center]%s" % rel_path.split("/")[-1]
 	

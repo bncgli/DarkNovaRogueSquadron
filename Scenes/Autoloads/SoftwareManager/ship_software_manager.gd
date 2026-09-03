@@ -123,7 +123,7 @@ func get_active_blueprint() -> ShipBlueprint:
 	if active_blueprint_override != null:
 		return active_blueprint_override
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
-		var bp = SpaceWorldManager.get_ship_blueprint()
+		var bp := SpaceWorldManager.get_ship_blueprint()
 		if bp:
 			return bp
 	return ShipBlueprint.get_default_blueprint()

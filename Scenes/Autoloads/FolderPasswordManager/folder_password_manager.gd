@@ -74,9 +74,9 @@ func rename_path(old_path: String, new_path: String) -> void:
 			keys_to_move.append(k)
 	
 	for old_k in keys_to_move:
-		var pass_val = _passwords[old_k]
-		var suffix = old_k.substr(norm_old.length())
-		var new_k = norm_new + suffix
+		var pass_val: Variant = _passwords[old_k]
+		var suffix := old_k.substr(norm_old.length())
+		var new_k := norm_new + suffix
 		_passwords.erase(old_k)
 		_passwords[new_k] = pass_val
 		changed = true
@@ -94,9 +94,9 @@ func copy_path(from_path: String, to_path: String) -> void:
 	var changed := false
 	for k: String in _passwords.keys():
 		if k == norm_from or k.begins_with(norm_from + "/"):
-			var pass_val = _passwords[k]
-			var suffix = k.substr(norm_from.length())
-			var new_k = norm_to + suffix
+			var pass_val: Variant = _passwords[k]
+			var suffix := k.substr(norm_from.length())
+			var new_k := norm_to + suffix
 			_passwords[new_k] = pass_val
 			changed = true
 	
@@ -143,21 +143,21 @@ func load_passwords() -> void:
 
 func prompt_set_password(folder_path: String, folder_name: String) -> void:
 	if has_password(folder_path):
-		NotificationManager.spawn_notification("La cartella ha gia' una password.")
+		NotificationManagerSingleton.spawn_notification("La cartella ha gia' una password.")
 		return
 	var scene: PackedScene = load("res://Scenes/Window/Password Dialog/set_password_dialog.tscn")
-	var dlg = scene.instantiate()
+	var dlg := scene.instantiate()
 	dlg.setup(folder_path, folder_name)
-	var parent_node = get_tree().current_scene
+	var parent_node := get_tree().current_scene
 	if parent_node == null:
 		parent_node = get_tree().root
 	parent_node.add_child(dlg)
 
 func prompt_enter_password(folder_path: String, folder_name: String, on_success: Callable, on_cancel: Callable = Callable()) -> void:
 	var scene: PackedScene = load("res://Scenes/Window/Password Dialog/enter_password_dialog.tscn")
-	var dlg = scene.instantiate()
+	var dlg := scene.instantiate()
 	dlg.setup(folder_path, folder_name, on_success, on_cancel)
-	var parent_node = get_tree().current_scene
+	var parent_node := get_tree().current_scene
 	if parent_node == null:
 		parent_node = get_tree().root
 	parent_node.add_child(dlg)

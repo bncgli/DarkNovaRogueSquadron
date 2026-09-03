@@ -21,8 +21,25 @@ extends Resource
 @export var solar_panels_blackout: bool = false
 
 # Liste entità e pericoli
-@export var macro_entities: Array[CelestialBodyData] = []
-@export var environmental_hazards: Array[EnvironmentalHazardData] = []
+@export var macro_entities: Array = []:
+	set(val):
+		macro_entities = _ensure_objects(val, CelestialBodyData)
+
+@export var environmental_hazards: Array = []:
+	set(val):
+		environmental_hazards = _ensure_objects(val, EnvironmentalHazardData)
+
+func _ensure_objects(list: Array, type: GDScript) -> Array:
+	var new_list := []
+	for item in list:
+		if item is Dictionary:
+			var obj = type.new()
+			if obj.has_method("from_dict"):
+				obj.from_dict(item)
+			new_list.append(obj)
+		else:
+			new_list.append(item)
+	return new_list
 
 func _init(p_coords: Vector3i = Vector3i.ZERO, p_id: String = "", p_name: String = "") -> void:
 	coordinates = p_coords
@@ -143,45 +160,44 @@ func to_dict() -> Dictionary:
 
 ## Deserializzazione da dizionario
 func from_dict(data: Dictionary) -> void:
-	sector_id = data.get("sector_id", sector_id)
-	if data.has("coordinates") and data["coordinates"] is Array and data["coordinates"].size() >= 3:
-		coordinates = Vector3i(data["coordinates"][0], data["coordinates"][1], data["coordinates"][2])
-	sector_name = data.get("sector_name", sector_name)
-	sector_type = data.get("sector_type", sector_type)
-	description = data.get("description", description)
-	security_level = data.get("security_level", security_level)
-	traffic_density = data.get("traffic_density", traffic_density)
+	sector_id = str(data.get("sector_id", sector_id))
+	if data.has("coordinates"):
+		var coords_data: Variant = data["coordinates"]
+		if coords_data is Array and coords_data.size() >= 3:
+			coordinates = Vector3i(int(coords_data[0]), int(coords_data[1]), int(coords_data[2]))
+		elif coords_data is Vector3i:
+			coordinates = coords_data
+			
+	sector_name = str(data.get("sector_name", sector_name))
+	sector_type = str(data.get("sector_type", sector_type))
+	description = str(data.get("description", description))
+	security_level = str(data.get("security_level", security_level))
+	traffic_density = float(data.get("traffic_density", traffic_density))
 	
-	if data.has("ambient_light_color") and data["ambient_light_color"] is Array and data["ambient_light_color"].size() >= 4:
-		var c = data["ambient_light_color"]
-		ambient_light_color = Color(c[0], c[1], c[2], c[3])
-	ambient_light_energy = data.get("ambient_light_energy", ambient_light_energy)
+	if data.has("ambient_light_color"):
+		var c: Variant = data["ambient_light_color"]
+		if c is Array and c.size() >= 3:
+			var a := float(c[3]) if c.size() > 3 else 1.0
+			ambient_light_color = Color(float(c[0]), float(c[1]), float(c[2]), a)
+		elif c is Color:
+			ambient_light_color = c
+	ambient_light_energy = float(data.get("ambient_light_energy", ambient_light_energy))
 	
-	if data.has("sun_light_color") and data["sun_light_color"] is Array and data["sun_light_color"].size() >= 4:
-		var sc = data["sun_light_color"]
-		sun_light_color = Color(sc[0], sc[1], sc[2], sc[3])
-	sun_light_energy = data.get("sun_light_energy", sun_light_energy)
+	if data.has("sun_light_color"):
+		var sc: Variant = data["sun_light_color"]
+		if sc is Array and sc.size() >= 3:
+			var a := float(sc[3]) if sc.size() > 3 else 1.0
+			sun_light_color = Color(float(sc[0]), float(sc[1]), float(sc[2]), a)
+		elif sc is Color:
+			sun_light_color = sc
+	sun_light_energy = float(data.get("sun_light_energy", sun_light_energy))
 	
-	is_in_planetary_shadow = data.get("is_in_planetary_shadow", is_in_planetary_shadow)
-	shadow_occlusion_factor = data.get("shadow_occlusion_factor", shadow_occlusion_factor)
-	solar_panels_blackout = data.get("solar_panels_blackout", solar_panels_blackout)
+	is_in_planetary_shadow = bool(data.get("is_in_planetary_shadow", is_in_planetary_shadow))
+	shadow_occlusion_factor = float(data.get("shadow_occlusion_factor", shadow_occlusion_factor))
+	solar_panels_blackout = bool(data.get("solar_panels_blackout", solar_panels_blackout))
 	
 	if data.has("macro_entities") and data["macro_entities"] is Array:
-		macro_entities.clear()
-		for item in data["macro_entities"]:
-			if item is Dictionary:
-				var body := CelestialBodyData.new()
-				body.from_dict(item)
-				macro_entities.append(body)
-			elif item is CelestialBodyData:
-				macro_entities.append(item)
+		macro_entities = data["macro_entities"]
 				
 	if data.has("environmental_hazards") and data["environmental_hazards"] is Array:
-		environmental_hazards.clear()
-		for item in data["environmental_hazards"]:
-			if item is Dictionary:
-				var haz := EnvironmentalHazardData.new()
-				haz.from_dict(item)
-				environmental_hazards.append(haz)
-			elif item is EnvironmentalHazardData:
-				environmental_hazards.append(item)
+		environmental_hazards = data["environmental_hazards"]

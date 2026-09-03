@@ -108,7 +108,7 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(500, 440)
 		parent_window.title_text = APP_TITLE
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
 
@@ -475,7 +475,7 @@ func _physics_process(_delta: float) -> void:
 	
 	# Aggiorna telemetria
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			var cur_speed: float = ship.linear_velocity.length()
 			var cur_pos: Vector3 = ship.global_position if ship.is_inside_tree() else ship.position
@@ -590,9 +590,9 @@ func _update_hyperdrive_ui() -> void:
 	if hyperdrive_card:
 		hyperdrive_card.visible = true
 
-	var target_id: String = active_hyperdrive_route.get("target_sector_id")
+	var target_id: String = active_hyperdrive_route.get("target_sector_id", "")
 	var cur_coords := StarSystemGridManager.get_current_sector_coords() if StarSystemGridManager else Vector3i.ZERO
-	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords")
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
 	var dist_sectors := (Vector3(target_coords) - Vector3(cur_coords)).length()
 
 	if hyperdrive_target_label:
@@ -620,13 +620,13 @@ func get_hyperdrive_alignment_angle_deg() -> float:
 	if active_hyperdrive_route.is_empty():
 		return 0.0
 	
-	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector")
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.ZERO)
 	if course_vec.length_squared() < 0.0001:
 		return 0.0
 
 	var ship_forward := Vector3.FORWARD
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			# Direzione di prua (-Z nello spazio locale della nave trasformato in globale)
 			ship_forward = -ship.global_transform.basis.z.normalized()
@@ -652,7 +652,7 @@ func align_to_hyperdrive_vector() -> void:
 	if not can_control_flight or active_hyperdrive_route.is_empty():
 		return
 	
-	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector")
+	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.ZERO)
 	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
 	
 	# Calcola angolo yaw desiderato
@@ -661,7 +661,7 @@ func align_to_hyperdrive_vector() -> void:
 	var target_yaw_deg := -rad_to_deg(target_angle_rad) + 90.0
 
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			ship.rotation_degrees.y = fposmod(target_yaw_deg, 360.0)
 			ship.rotation_degrees.x = 0.0
@@ -683,7 +683,7 @@ func engage_hyperdrive() -> Dictionary:
 	if active_hyperdrive_route.is_empty():
 		return {"success": false, "reason": "Nessuna rotta pianificata"}
 
-	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords")
+	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
 	
 	if StarSystemGridManager:
 		var res := StarSystemGridManager.engage_hyperdrive_transit(target_coords)

@@ -1,21 +1,23 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://cserissrtlrl"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_sdres"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_sdres"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/service_drone.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_sdres")
-roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista", "Captain", "Engineer"])
-power_draw_mw = 80.0
-required_subsystems = Array[String](["service_bay"])
+icon = ExtResource("1_icon")
 app_id = "service_drone"
 title = "Drone di Servizio EVA"
 description = "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser"
 developer = "Aether Dynamics"
 category = "Sistemi Nave"
-menu_path = "Sistemi Nave"
+menu_path = "Sistemi Nave/Enginering"
 icon_color = Color(0.9, 0.5, 0.2, 1)
 scene_path = "res://Applications/ServiceDrone/service_drone_app.tscn"
 default_window_size = Vector2(720, 520)
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista", "Captain", "Engineer"])
+power_draw_mw = 80.0
+required_subsystems = Array[String](["service_bay"])
 drive_folder = "Programs/ServiceDrone"
 default_password = "SERV-7815"
 default_files = Array[Dictionary]([{

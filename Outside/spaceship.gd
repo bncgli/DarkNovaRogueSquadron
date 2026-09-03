@@ -86,7 +86,7 @@ func get_camera_mount(cam_id: String) -> Marker3D:
 func get_cruise_controller() -> Node:
 	if cruise_controller and is_instance_valid(cruise_controller):
 		return cruise_controller
-	var found = get_node_or_null("CruiseDriveController")
+	var found := get_node_or_null("CruiseDriveController")
 	if found:
 		cruise_controller = found
 		return cruise_controller

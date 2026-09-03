@@ -235,14 +235,14 @@ func _run_suite() -> void:
 	# FASE 9: INTEGRAZIONE SHIPBLUEPRINT & SUBLAYER 6
 	# =========================================================================
 	print("\n--- TEST 9: Integrazione ShipBlueprint & Catalogo Mainframe ---")
-	var bp = SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
+	var bp := SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
 	assert(bp != null, "ShipBlueprint attiva trovata")
 	
 	var diag_installed_app := bp.get_installed_app_by_id("diagnostics")
-	assert(not diag_installed_app.is_empty(), "App Diagnostics deve essere presente nel catalogo installed_apps")
-	assert(diag_installed_app.get("title") == "System Diagnostics")
-	assert(diag_installed_app.get("roles").has("Hacker"), "Hacker deve essere tra i ruoli autorizzati in blueprint")
-	assert(diag_installed_app.get("roles").has("Ingegnere"), "Ingegnere deve essere tra i ruoli autorizzati in blueprint")
+	assert(diag_installed_app != null, "App Diagnostics deve essere presente nel catalogo installed_apps")
+	assert(diag_installed_app.title == "System Diagnostics")
+	assert(diag_installed_app.roles.has("Hacker"), "Hacker deve essere tra i ruoli autorizzati in blueprint")
+	assert(diag_installed_app.roles.has("Ingegnere"), "Ingegnere deve essere tra i ruoli autorizzati in blueprint")
 	
 	var passwords := SpaceWorldManager.get_ship_drive_passwords()
 	assert(passwords.has("Ship Drive/Programs/Diagnostics"), "Password Diagnostics presente nel gestore password")

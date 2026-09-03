@@ -23,7 +23,7 @@ extends FakeWindow
 @onready var grid_toggle_btn: Button = %GridToggleBtn
 
 var camera_id: String = "front"
-var camera_metadata: Dictionary = {}
+var camera_metadata: CameraMetadata = null
 
 var default_fov: float = 75.0
 var current_fov: float = 75.0
@@ -79,11 +79,11 @@ func apply_optics_config(config: Dictionary) -> void:
 	_apply_filter_mode()
 	_update_telemetry(0.0)
 
-func setup_camera(p_cam_id: String, p_info: Dictionary) -> void:
+func setup_camera(p_cam_id: String, p_info: CameraMetadata) -> void:
 	camera_id = p_cam_id
 	camera_metadata = p_info
 	
-	title_text = "%s - Feed Esterno" % [p_info.get("code")]
+	title_text = "%s - Feed Esterno" % [p_info.code if p_info else p_cam_id.to_upper()]
 	var title_lbl: Node = get_node_or_null("Top Bar/Title Text")
 	if title_lbl:
 		title_lbl.text = "[center]" + title_text
@@ -131,8 +131,8 @@ func _process(delta: float) -> void:
 
 func _update_hud_display() -> void:
 	if cam_code_label:
-		var code_str: String = camera_metadata.get("code")
-		var dir_str: String = camera_metadata.get("direction")
+		var code_str: String = camera_metadata.code if camera_metadata else "CAM-??"
+		var dir_str: String = camera_metadata.direction if camera_metadata else "N/D"
 		cam_code_label.text = "● %s  [%s]" % [code_str, dir_str]
 	
 	_apply_filter_mode()

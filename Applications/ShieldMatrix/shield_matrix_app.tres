@@ -1,22 +1,24 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://dpibcnv00108k"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_vw54f"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_vw54f"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/shield_matrix.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_vw54f")
-roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
-power_draw_mw = 20.0
-required_subsystems = Array[String](["deflector_emitters", "reactor"])
-is_critical = true
+icon = ExtResource("1_icon")
 app_id = "shield_matrix"
 title = "Shield Matrix"
 description = "Matrice deflettori a 4 quadranti e scudi energetici"
 developer = "CyberDyne Orbital"
 category = "Sistemi Nave"
-menu_path = "Sistemi Nave"
+menu_path = "Sistemi Nave/Warfare"
 icon_color = Color(0.2, 0.6, 1, 1)
 scene_path = "res://Applications/ShieldMatrix/shield_matrix_app.tscn"
 default_window_size = Vector2(620, 460)
+roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
+power_draw_mw = 20.0
+required_subsystems = Array[String](["deflector_emitters", "reactor"])
+is_critical = true
 drive_folder = "Programs/ShieldMatrix"
 default_password = "SHLD-7815"
 default_files = Array[Dictionary]([{

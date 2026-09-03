@@ -32,7 +32,7 @@ func copy_folder(folder: FakeFolder) -> void:
 	if folder.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder.folder_path):
-			NotificationManager.spawn_notification("Non e' possibile copiare una cartella protetta da password.")
+			NotificationManagerSingleton.spawn_notification("Non e' possibile copiare una cartella protetta da password.")
 			return
 	if target_folder:
 		target_folder.modulate.a = 1
@@ -43,19 +43,19 @@ func copy_folder(folder: FakeFolder) -> void:
 	target_folder_type = folder.file_type
 	folder.modulate.a = 0.8
 	state = StateEnum.COPY
-	NotificationManager.spawn_notification("Copied [color=59ea90][wave freq=7]%s[/wave][/color]" % target_folder_name)
+	NotificationManagerSingleton.spawn_notification("Copied [color=59ea90][wave freq=7]%s[/wave][/color]" % target_folder_name)
 
 func cut_folder(folder: FakeFolder) -> void:
 	if folder.folder_name == "Ship Drive" and (folder.folder_path == "Ship Drive" or folder.folder_path == ""):
-		NotificationManager.spawn_notification("Non e' possibile tagliare 'Ship Drive'.")
+		NotificationManagerSingleton.spawn_notification("Non e' possibile tagliare 'Ship Drive'.")
 		return
 	if folder.folder_name == "Terminal Drive" and (folder.folder_path == "Terminal Drive" or folder.folder_path == ""):
-		NotificationManager.spawn_notification("Non e' possibile tagliare 'Terminal Drive'.")
+		NotificationManagerSingleton.spawn_notification("Non e' possibile tagliare 'Terminal Drive'.")
 		return
 	if folder.file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder.folder_path):
-			NotificationManager.spawn_notification("Non e' possibile tagliare o spostare una cartella protetta da password.")
+			NotificationManagerSingleton.spawn_notification("Non e' possibile tagliare o spostare una cartella protetta da password.")
 			return
 	
 	if target_folder:
@@ -67,18 +67,18 @@ func cut_folder(folder: FakeFolder) -> void:
 	target_folder_path = folder.folder_path
 	target_folder_type = folder.file_type
 	state = StateEnum.CUT
-	NotificationManager.spawn_notification("Cutting [color=59ea90][wave freq=7]%s[/wave][/color]" % target_folder_name)
+	NotificationManagerSingleton.spawn_notification("Cutting [color=59ea90][wave freq=7]%s[/wave][/color]" % target_folder_name)
 
 ## Pastes the folder, caling paste_folder_copy() or paste_folder_cut() depending on the state selected
 func paste_folder(to_path: String) -> void:
 	if target_folder_name.is_empty():
-		NotificationManager.spawn_notification("Error: Nothing to copy")
+		NotificationManagerSingleton.spawn_notification("Error: Nothing to copy")
 		return
 	
 	if target_folder_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(target_folder_path):
-			NotificationManager.spawn_notification("Operazione non consentita per una cartella protetta da password.")
+			NotificationManagerSingleton.spawn_notification("Operazione non consentita per una cartella protetta da password.")
 			target_folder_name = ""
 			target_folder = null
 			return
@@ -175,7 +175,7 @@ func paste_folder_cut(to_path: String) -> void:
 
 func copy_directory_recursively(dir_path: String, to_path: String) -> void:
 	if to_path.begins_with(dir_path):
-		NotificationManager.spawn_notification("ERROR: Can't copy a folder into itself!")
+		NotificationManagerSingleton.spawn_notification("ERROR: Can't copy a folder into itself!")
 		return
 	for dir_name in DirAccess.get_directories_at(dir_path):
 		DirAccess.make_dir_absolute("%s/%s" % [to_path, dir_name])

@@ -53,7 +53,7 @@ func save_file() -> void:
 		return
 	
 	if !FileAccess.file_exists("user://files/%s" % file_path):
-		NotificationManager.spawn_notification("[color=fc6c64]Couldn't save text file: File no longer exists")
+		NotificationManagerSingleton.spawn_notification("[color=fc6c64]Couldn't save text file: File no longer exists")
 		return
 	
 	var file: FileAccess = FileAccess.open("user://files/%s" % file_path, FileAccess.WRITE)

@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="AppResource" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_ykulu"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/pod_info.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_ykulu")
+icon = ExtResource("1_icon")
 app_id = "pod_info"
 title = "PodInfo"
 description = "Monitoraggio parametri vitali e gestione audio ambientale."

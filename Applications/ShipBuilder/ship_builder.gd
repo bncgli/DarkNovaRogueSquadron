@@ -22,7 +22,7 @@ func _ready() -> void:
 	_new_blueprint()
 
 func _setup_file_menu() -> void:
-	var popup = file_menu_btn.get_popup()
+	var popup := file_menu_btn.get_popup()
 	popup.clear()
 	popup.add_item("Nuovo", 2)
 	popup.add_item("Salva", 0)
@@ -38,7 +38,7 @@ func _on_file_menu_id_pressed(id: int) -> void:
 
 func _configure_window() -> void:
 	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_window = get_parent()
+	var parent_window := get_parent()
 	if parent_window and "window_title" in parent_window:
 		parent_window.window_title = APP_TITLE
 
@@ -78,7 +78,7 @@ func _add_layer_checkbox(label_text: String, property: String) -> void:
 	var cb := CheckBox.new()
 	cb.text = label_text
 	cb.button_pressed = canvas.get(property)
-	cb.toggled.connect(func(pressed): canvas.set(property, pressed))
+	cb.toggled.connect(func(pressed: bool) -> void: canvas.set(property, pressed))
 	layer_list.add_child(cb)
 
 func _new_blueprint() -> void:
@@ -92,11 +92,11 @@ func _on_new_pressed() -> void:
 	_rebuild_inspector("", "", {})
 
 func _on_tool_selected(index: int) -> void:
-	var mode = tool_selector.get_item_id(index)
+	var mode := tool_selector.get_item_id(index)
 	canvas.current_tool = mode
 
 func _on_room_template_selected(index: int) -> void:
-	var room_id = room_list.get_item_metadata(index)
+	var room_id := room_list.get_item_metadata(index)
 	canvas.selected_room_template = room_id
 
 func _on_canvas_tool_changed(new_tool: int) -> void:
@@ -129,7 +129,7 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 	inspector_container.add_child(HSeparator.new())
 	
 	if type == "room":
-		var room = current_blueprint.get_room_by_id(id)
+		var room := current_blueprint.get_room_by_id(id)
 		var lbl_w := Label.new()
 		lbl_w.text = "Power Consumption: %.2f MW" % float(room.power_mw)
 		lbl_w.add_theme_color_override("font_color", Color.YELLOW)
@@ -145,23 +145,23 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 		lbl.custom_minimum_size.x = 80
 		hbx.add_child(lbl)
 		
-		var val = data[key]
+		var val: Variant = data[key]
 		if val is String:
 			if key == "category":
 				var opt := OptionButton.new()
-				var cats = ShipBlueprint.DEVICE_CATEGORIES
+				var cats := ShipBlueprint.DEVICE_CATEGORIES
 				for c in cats:
 					opt.add_item(c.capitalize())
-				var idx = cats.find(val)
+				var idx := cats.find(val)
 				if idx != -1: opt.select(idx)
-				opt.item_selected.connect(func(i): _update_element_property(type, id, key, cats[i]))
+				opt.item_selected.connect(func(i: int) -> void: _update_element_property(type, id, key, cats[i]))
 				opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				hbx.add_child(opt)
 			else:
 				var edit := LineEdit.new()
 				edit.text = val
 				edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				edit.text_submitted.connect(func(new_text): _update_element_property(type, id, key, new_text))
+				edit.text_submitted.connect(func(new_text: String) -> void: _update_element_property(type, id, key, new_text))
 				hbx.add_child(edit)
 		elif val is float or val is int:
 			var spin := SpinBox.new()
@@ -169,13 +169,13 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 			spin.allow_lesser = true
 			spin.value = float(val)
 			spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			spin.value_changed.connect(func(new_val): _update_element_property(type, id, key, new_val))
+			spin.value_changed.connect(func(new_val: float) -> void: _update_element_property(type, id, key, new_val))
 			hbx.add_child(spin)
 		elif val is Color:
 			var picker := ColorPickerButton.new()
 			picker.color = val
 			picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			picker.color_changed.connect(func(new_col): _update_element_property(type, id, key, new_col))
+			picker.color_changed.connect(func(new_col: Color) -> void: _update_element_property(type, id, key, new_col))
 			hbx.add_child(picker)
 		elif val is Rect2:
 			var v_hbx := VBoxContainer.new()
@@ -191,17 +191,17 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 			v_hbx.add_child(pos_hbx); v_hbx.add_child(size_hbx)
 			hbx.add_child(v_hbx)
 			
-			sx.value_changed.connect(func(v): _update_element_property(type, id, key, Rect2(Vector2(v, sy.value), Vector2(sw.value, sh.value))))
-			sy.value_changed.connect(func(v): _update_element_property(type, id, key, Rect2(Vector2(sx.value, v), Vector2(sw.value, sh.value))))
-			sw.value_changed.connect(func(v): _update_element_property(type, id, key, Rect2(val.position, Vector2(v, sh.value))))
-			sh.value_changed.connect(func(v): _update_element_property(type, id, key, Rect2(val.position, Vector2(sw.value, v))))
+			sx.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Rect2(Vector2(v, sy.value), Vector2(sw.value, sh.value))))
+			sy.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Rect2(Vector2(sx.value, v), Vector2(sw.value, sh.value))))
+			sw.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Rect2(val.position, Vector2(v, sh.value))))
+			sh.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Rect2(val.position, Vector2(sw.value, v))))
 		elif val is Vector2:
 			var v_hbx := HBoxContainer.new()
 			v_hbx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var sx := SpinBox.new(); sx.value = val.x; sx.prefix = "X:"
 			var sy := SpinBox.new(); sy.value = val.y; sy.prefix = "Y:"
-			sx.value_changed.connect(func(v): _update_element_property(type, id, key, Vector2(v, sy.value)))
-			sy.value_changed.connect(func(v): _update_element_property(type, id, key, Vector2(sx.value, v)))
+			sx.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Vector2(v, sy.value)))
+			sy.value_changed.connect(func(v: float) -> void: _update_element_property(type, id, key, Vector2(sx.value, v)))
 			v_hbx.add_child(sx); v_hbx.add_child(sy)
 			hbx.add_child(v_hbx)
 		
@@ -213,13 +213,13 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 		dev_lbl.text = "Devices:"
 		inspector_container.add_child(dev_lbl)
 		
-		var room = current_blueprint.get_room_by_id(id)
+		var room := current_blueprint.get_room_by_id(id)
 		var devs: Array = room.devices
 		for i in range(devs.size()):
-			var dev = devs[i]
+			var dev: ShipDeviceData = devs[i]
 			var dev_hbx := HBoxContainer.new()
 			var dev_name := Label.new()
-			dev_name.text = "- %s (%.0f MW)" % [dev.get("name"), dev.get("power_mw")]
+			dev_name.text = "- %s (%.0f MW)" % [dev.name if dev else "N/D", dev.power_mw if dev else 0.0]
 			dev_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			dev_hbx.add_child(dev_name)
 			
@@ -254,7 +254,7 @@ func _rebuild_ship_inspector() -> void:
 	inspector_container.add_child(title)
 	inspector_container.add_child(HSeparator.new())
 	
-	var fields = [
+	var fields: Array[Dictionary] = [
 		{"name": "ship_id", "label": "Ship ID"},
 		{"name": "ship_name", "label": "Ship Name"},
 		{"name": "ship_class", "label": "Category"},
@@ -270,13 +270,13 @@ func _rebuild_ship_inspector() -> void:
 		
 		if field.name == "ship_class":
 			var opt := OptionButton.new()
-			var classes = ShipBlueprint.SHIP_CLASSES
+			var classes := ShipBlueprint.SHIP_CLASSES
 			for c in classes:
 				opt.add_item(c)
-			var cur_val = str(current_blueprint.get(field.name))
-			var idx = classes.find(cur_val)
+			var cur_val := str(current_blueprint.get(field.name))
+			var idx := classes.find(cur_val)
 			if idx != -1: opt.select(idx)
-			opt.item_selected.connect(func(i): 
+			opt.item_selected.connect(func(i: int) -> void: 
 				current_blueprint.set(field.name, classes[i])
 				current_blueprint.emit_changed()
 			)
@@ -286,7 +286,7 @@ func _rebuild_ship_inspector() -> void:
 			var edit := LineEdit.new()
 			edit.text = str(current_blueprint.get(field.name))
 			edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			edit.text_submitted.connect(func(new_text): 
+			edit.text_submitted.connect(func(new_text: String) -> void: 
 				current_blueprint.set(field.name, new_text)
 				current_blueprint.emit_changed()
 			)
@@ -300,7 +300,7 @@ func _rebuild_ship_inspector() -> void:
 					fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 					fd.access = FileDialog.ACCESS_RESOURCES
 					fd.filters = PackedStringArray(["*.tres ; Resource", "*.obj ; Wavefront OBJ", "*.scn ; Scene"])
-					fd.file_selected.connect(func(path):
+					fd.file_selected.connect(func(path: String) -> void:
 						edit.text = path
 						current_blueprint.set(field.name, path)
 						current_blueprint.emit_changed()
@@ -315,7 +315,7 @@ func _rebuild_ship_inspector() -> void:
 
 func _update_element_property(type: String, id: String, key: String, value: Variant) -> void:
 	if not current_blueprint: return
-	var elem = {}
+	var elem: Variant = null
 	match type:
 		"room": elem = current_blueprint.get_room_by_id(id)
 		"duct": elem = current_blueprint.get_duct_by_id(id)
@@ -323,7 +323,10 @@ func _update_element_property(type: String, id: String, key: String, value: Vari
 		"device": elem = current_blueprint.get_device_by_id(id)
 	
 	if elem:
-		elem[key] = value
+		if elem is Dictionary:
+			elem[key] = value
+		else:
+			elem.set(key, value)
 		if type == "device" and key == "power_mw":
 			current_blueprint.recalculate_all_powers()
 		current_blueprint.emit_changed()
@@ -338,13 +341,13 @@ func _on_save_pressed() -> void:
 	fd.access = FileDialog.ACCESS_FILESYSTEM
 	fd.filters = PackedStringArray(["*.tres ; Godot Resource"])
 	
-	var base_dir = "user://files/Terminal Drive/Programs/ShipBuilder"
+	var base_dir := "user://files/Terminal Drive/Programs/ShipBuilder"
 	if not DirAccess.dir_exists_absolute(base_dir):
 		DirAccess.make_dir_recursive_absolute(base_dir)
 	fd.current_dir = base_dir
 	
-	fd.file_selected.connect(func(path):
-		var err = ResourceSaver.save(current_blueprint, path)
+	fd.file_selected.connect(func(path: String) -> void:
+		var err := ResourceSaver.save(current_blueprint, path)
 		if err == OK:
 			_update_status("Saved to %s" % path.get_file())
 		else:
@@ -362,8 +365,8 @@ func _on_load_pressed() -> void:
 	fd.filters = PackedStringArray(["*.tres ; Godot Resource"])
 	fd.current_dir = "user://files/Terminal Drive/Programs/ShipBuilder"
 	
-	fd.file_selected.connect(func(path):
-		var res = load(path)
+	fd.file_selected.connect(func(path: String) -> void:
+		var res := load(path)
 		if res is ShipBlueprint:
 			current_blueprint = res
 			canvas.blueprint = current_blueprint
@@ -378,52 +381,52 @@ func _on_load_pressed() -> void:
 	fd.popup_centered(Vector2(700, 500))
 
 func _on_software_pressed() -> void:
-	var window = Window.new()
+	var window := Window.new()
 	window.title = "Software Manager"
 	window.size = Vector2(600, 450)
 	window.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 	window.close_requested.connect(window.queue_free)
 	
-	var panel = PanelContainer.new()
+	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	window.add_child(panel)
 	
-	var hbx = HBoxContainer.new()
+	var hbx := HBoxContainer.new()
 	panel.add_child(hbx)
 	
-	var market_vb = VBoxContainer.new()
+	var market_vb := VBoxContainer.new()
 	market_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lbl_m = Label.new(); lbl_m.text = "Marketplace (Available)"; market_vb.add_child(lbl_m)
-	var market_list = ItemList.new()
+	var lbl_m := Label.new(); lbl_m.text = "Marketplace (Available)"; market_vb.add_child(lbl_m)
+	var market_list := ItemList.new()
 	market_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	market_vb.add_child(market_list)
 	hbx.add_child(market_vb)
 	
-	var mid_vb = VBoxContainer.new()
+	var mid_vb := VBoxContainer.new()
 	mid_vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	var btn_add = Button.new(); btn_add.text = " Install >> "
-	var btn_rem = Button.new(); btn_rem.text = " << Uninstall "
+	var btn_add := Button.new(); btn_add.text = " Install >> "
+	var btn_rem := Button.new(); btn_rem.text = " << Uninstall "
 	mid_vb.add_child(btn_add); mid_vb.add_child(btn_rem)
 	hbx.add_child(mid_vb)
 	
-	var inst_vb = VBoxContainer.new()
+	var inst_vb := VBoxContainer.new()
 	inst_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lbl_i = Label.new(); lbl_i.text = "Installed Software"; inst_vb.add_child(lbl_i)
-	var inst_list = ItemList.new()
+	var lbl_i := Label.new(); lbl_i.text = "Installed Software"; inst_vb.add_child(lbl_i)
+	var inst_list := ItemList.new()
 	inst_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	inst_vb.add_child(inst_list)
 	hbx.add_child(inst_vb)
 	
-	var refresh_lists = func():
+	var refresh_lists := func() -> void:
 		market_list.clear()
 		inst_list.clear()
-		var all_apps = []
+		var all_apps: Array = []
 		if Engine.has_singleton("ShipSoftwareManager"):
 			all_apps = Engine.get_singleton("ShipSoftwareManager").get_all_registered_apps()
 		elif get_node_or_null("/root/ShipSoftwareManager"):
-			all_apps = get_node("/root/ShipSoftwareManager").get_all_registered_apps()
+			all_apps = (get_node("/root/ShipSoftwareManager") as Node).get_all_registered_apps()
 			
-		var installed_ids = []
+		var installed_ids: Array[String] = []
 		for app in current_blueprint.installed_apps:
 			installed_ids.append(app.get("id"))
 			inst_list.add_item(app.get("title"))
@@ -436,22 +439,22 @@ func _on_software_pressed() -> void:
 				
 	refresh_lists.call()
 	
-	btn_add.pressed.connect(func():
-		var sel = market_list.get_selected_items()
+	btn_add.pressed.connect(func() -> void:
+		var sel := market_list.get_selected_items()
 		if sel.size() > 0:
-			var app_id = market_list.get_item_metadata(sel[0])
-			var app_res = null
+			var app_id := market_list.get_item_metadata(sel[0])
+			var app_res: Resource = null
 			if get_node_or_null("/root/ShipSoftwareManager"):
-				app_res = get_node("/root/ShipSoftwareManager").get_registered_app(app_id)
+				app_res = (get_node("/root/ShipSoftwareManager") as Node).get("registered_apps").get(app_id)
 			if app_res:
 				current_blueprint.install_app_resource(app_res)
 				refresh_lists.call()
 	)
 	
-	btn_rem.pressed.connect(func():
-		var sel = inst_list.get_selected_items()
+	btn_rem.pressed.connect(func() -> void:
+		var sel := inst_list.get_selected_items()
 		if sel.size() > 0:
-			var app_id = inst_list.get_item_metadata(sel[0])
+			var app_id := inst_list.get_item_metadata(sel[0])
 			current_blueprint.uninstall_app_by_id(app_id)
 			refresh_lists.call()
 	)
@@ -460,35 +463,35 @@ func _on_software_pressed() -> void:
 	window.popup()
 
 func _on_drive_files_pressed() -> void:
-	var window = Window.new()
+	var window := Window.new()
 	window.title = "Drive Files"
 	window.size = Vector2(500, 400)
 	window.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
 	window.close_requested.connect(window.queue_free)
 	
-	var panel = PanelContainer.new()
+	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	window.add_child(panel)
 	
-	var vb = VBoxContainer.new()
+	var vb := VBoxContainer.new()
 	panel.add_child(vb)
 	
-	var tree = Tree.new()
+	var tree := Tree.new()
 	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(tree)
 	
-	var root = tree.create_item()
+	var root := tree.create_item()
 	tree.hide_root = true
-	var drive = tree.create_item(root)
+	var drive := tree.create_item(root)
 	drive.set_text(0, "Ship Drive")
 	
 	for file in current_blueprint.drive_files:
-		var item = tree.create_item(drive)
+		var item := tree.create_item(drive)
 		item.set_text(0, file.get("path"))
 	
-	var btn_hbx = HBoxContainer.new()
-	var btn_new = Button.new(); btn_new.text = "New File"
-	var btn_del = Button.new(); btn_del.text = "Delete"
+	var btn_hbx := HBoxContainer.new()
+	var btn_new := Button.new(); btn_new.text = "New File"
+	var btn_del := Button.new(); btn_del.text = "Delete"
 	btn_hbx.add_child(btn_new); btn_hbx.add_child(btn_del)
 	vb.add_child(btn_hbx)
 	

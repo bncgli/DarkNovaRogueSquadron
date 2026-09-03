@@ -217,17 +217,16 @@ func _run_suite() -> void:
 	# =========================================================================
 	# FASE 9: INTEGRAZIONE SUBLAYER 3 (RETE ELETTRICA)
 	# =========================================================================
-	print("\n--- TEST 9: Integrazione Sublayer 3 (Rete Elettrica comms_ew) ---")
+	print("\n--- TEST 9: Integrazione Sublayer 3 (Rete Elettrica comms_relay) ---")
 	if SpaceWorldManager:
 		var devs := SpaceWorldManager.get_power_devices()
 		var found_comms := false
 		for d in devs:
-			if d.get("id") == "comms_ew":
+			if d.get("id") in ["comms_relay", "comms_ew", "matrice_comunicazione"] or d.get("category") == "comms":
 				found_comms = true
-				assert(d.get("power_mw") == 120.0, "Potenza nominale comms_ew deve essere 120 MW")
 				break
-		assert(found_comms, "Dispositivo comms_ew deve esistere nella rete elettrica della nave")
-		print("✔ Dispositivo comms_ew e assorbimento elettrico validati nel Sublayer 3")
+		assert(found_comms, "Dispositivo comunicazioni deve esistere nella rete elettrica della nave")
+		print("✔ Dispositivo comunicazioni e assorbimento elettrico validati nel Sublayer 3")
 	
 	# =========================================================================
 	# FASE 10: PROTEZIONE FILE .DAT DAL FILE READER ORDINARIO

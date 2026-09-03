@@ -61,7 +61,7 @@ func _on_ok_remove_pressed() -> void:
 		_resolved = true
 		if fpm:
 			fpm.remove_password(folder_path)
-		NotificationManager.spawn_notification("Password rimossa per [color=59ea90]%s[/color]." % folder_name)
+		NotificationManagerSingleton.spawn_notification("Password rimossa per [color=59ea90]%s[/color]." % folder_name)
 		var cb := on_success_callback
 		_on_close_button_pressed()
 		if cb.is_valid():

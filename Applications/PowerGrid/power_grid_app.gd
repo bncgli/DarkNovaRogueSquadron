@@ -1,6 +1,8 @@
 extends BaseApp
 class_name PowerGridApp
 
+const RoomPowerEntry = preload("res://Applications/PowerGrid/Components/room_power_entry.gd")
+
 ## Applicazione GodotOS per il monitoraggio e la gestione energetica della nave.
 ## Gestisce l'alimentazione delle stanze, i carichi dei dispositivi e il bilanciamento energetico.
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
@@ -100,7 +102,7 @@ func _init_room_list() -> void:
 		child.queue_free()
 	room_widgets.clear()
 	
-	var bp = _get_blueprint()
+	var bp := _get_blueprint()
 	if not bp:
 		return
 	
@@ -111,12 +113,12 @@ func _init_room_list() -> void:
 		elif r.has_method("to_dict"):
 			rooms_data.append(r.to_dict())
 	
-	var entry_scene = load("res://Applications/PowerGrid/Components/room_power_entry.tscn")
+	var entry_scene: PackedScene = load("res://Applications/PowerGrid/Components/room_power_entry.tscn")
 	for room in rooms_data:
-		var rid = room.get("id")
+		var rid: String = str(room.get("id", ""))
 		if rid.is_empty(): continue
 		
-		var entry = entry_scene.instantiate()
+		var entry := entry_scene.instantiate() as RoomPowerEntry
 		room_list_container.add_child(entry)
 		entry.setup(room)
 		entry.power_toggled.connect(_on_room_power_toggled)
@@ -124,20 +126,20 @@ func _init_room_list() -> void:
 		entry.set_enabled(can_control)
 
 func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
-	var room = _get_room_by_id(room_id)
+	var room := _get_room_by_id(room_id)
 	if not room.is_empty():
 		room["is_on"] = is_on
-		_print_terminal("[color=#ffffaa]Stanza %s: %s[/color]" % [room.get("name"), "ACCESA" if is_on else "SPENTA"])
+		_print_terminal("[color=#ffffaa]Stanza %s: %s[/color]" % [str(room.get("name", "Ignota")), "ACCESA" if is_on else "SPENTA"])
 		_refresh_power_logic()
 		
 		# Sync with blueprint if possible
-		var bp = _get_blueprint()
+		var bp := _get_blueprint()
 		if bp:
 			bp.emit_changed()
 
 func _get_room_by_id(room_id: String) -> Dictionary:
 	for r in rooms_data:
-		if r.get("id") == room_id:
+		if str(r.get("id", "")) == room_id:
 			return r
 	return {}
 
@@ -145,15 +147,15 @@ func _refresh_power_logic() -> void:
 	total_gen_mw = 0.0
 	total_cons_mw = 0.0
 	
-	var categories_present = {} # category -> bool
+	var categories_present := {} # category -> bool
 	
 	for room in rooms_data:
-		var room_on = room.get("is_on")
-		var devices = room.get("devices")
+		var room_on: bool = bool(room.get("is_on", false))
+		var devices: Array = room.get("devices", [])
 		
 		for dev in devices:
-			var p = float(dev.get("power_mw"))
-			var cat = dev.get("category")
+			var p := float(dev.get("power_mw", 0.0))
+			var cat: Variant = dev.get("category", "unknown")
 			
 			if room_on:
 				if p > 0:
@@ -173,7 +175,7 @@ func _update_ui_telemetry() -> void:
 		total_power_label.text = "GEN: %.0f / CONS: %.0f MW" % [total_gen_mw, total_cons_mw]
 	
 	if efficiency_label:
-		var net_text = "BILANCIO: %.0f MW" % net_power_mw
+		var net_text := "BILANCIO: %.0f MW" % net_power_mw
 		efficiency_label.text = net_text
 		if net_power_mw >= 0:
 			efficiency_label.modulate = Color(0.2, 1.0, 0.5)
@@ -182,15 +184,15 @@ func _update_ui_telemetry() -> void:
 	
 	# Update room widgets power display
 	for room_id in room_widgets:
-		var room = _get_room_by_id(room_id)
+		var room := _get_room_by_id(room_id)
 		if not room.is_empty():
-			var room_p = 0.0
-			for dev in room.get("devices"):
-				room_p += float(dev.get("power_mw"))
+			var room_p := 0.0
+			for dev in room.get("devices", []):
+				room_p += float(dev.get("power_mw", 0.0))
 			room_widgets[room_id].update_power(room_p)
 
 func _update_system_effects(active_categories: Dictionary) -> void:
-	var categories = [
+	var categories := [
 		"defence", "mainframe", "comms", "tactical", "propulsion", 
 		"service", "sensors", "life_support", "command", "engineering", "cargo"
 	]
@@ -198,10 +200,10 @@ func _update_system_effects(active_categories: Dictionary) -> void:
 	# Basic logic: if net power is negative, we start losing systems from lowest priority.
 	# For now, let's just say if net < 0, all systems are at risk, or we just follow room status.
 	
-	var is_deficit = net_power_mw < 0
+	var is_deficit := net_power_mw < 0
 	
 	for cat in categories:
-		var should_be_on = active_categories.has(cat) and not is_deficit
+		var should_be_on := active_categories.has(cat) and not is_deficit
 		
 		# If it's a critical system, maybe it stays on longer?
 		if is_deficit:
@@ -225,26 +227,26 @@ func autobalance_grid() -> void:
 	_print_terminal("[color=#ffaa00]Bilanciamento automatico: spegnimento stanze non essenziali...[/color]")
 	
 	# Simple heuristic: shut down until net_power >= 0
-	var priority_order = ["cargo", "service", "mainframe", "engineering", "comms", "sensors", "tactical", "defence", "propulsion", "command", "life_support"]
+	var priority_order := ["cargo", "service", "mainframe", "engineering", "comms", "sensors", "tactical", "defence", "propulsion", "command", "life_support"]
 	
 	for cat_to_cut in priority_order:
 		if net_power_mw >= 0: break
 		
 		for room in rooms_data:
-			if not room.get("is_on"): continue
+			if not bool(room.get("is_on", false)): continue
 			
 			# If room only contains devices of this category (or lower), shut it down
-			var only_low_priority = true
-			var devices = room.get("devices")
+			var only_low_priority := true
+			var devices: Array = room.get("devices", [])
 			for dev in devices:
-				var dev_cat = dev.get("category")
+				var dev_cat: Variant = dev.get("category", "unknown")
 				if priority_order.find(dev_cat) > priority_order.find(cat_to_cut):
 					only_low_priority = false
 					break
 			
 			if only_low_priority and not devices.is_empty():
 				room["is_on"] = false
-				var rid = room.get("id")
+				var rid: String = str(room.get("id", ""))
 				if room_widgets.has(rid):
 					room_widgets[rid].power_switch.button_pressed = false
 				_refresh_power_logic()
@@ -332,7 +334,7 @@ func execute_terminal_command(raw_cmd: String) -> void:
 	if parts.is_empty():
 		return
 	
-	var verb := parts[0].to_lower()
+	var verb: String = parts[0].to_lower()
 	
 	match verb:
 		"help", "?":
@@ -347,24 +349,24 @@ func execute_terminal_command(raw_cmd: String) -> void:
 			_print_terminal("[color=#ffffaa]=== BILANCIO ENERGETICO ===[/color]")
 			_print_terminal("Produzione: %.0f MW" % total_gen_mw)
 			_print_terminal("Consumo: %.0f MW" % total_cons_mw)
-			var col = "#00ff88" if net_power_mw >= 0 else "#ff4444"
+			var col := "#00ff88" if net_power_mw >= 0 else "#ff4444"
 			_print_terminal("Netto: [color=%s]%.0f MW[/color]" % [col, net_power_mw])
 		
 		"rooms", "list":
 			_print_terminal("[color=#ffffaa]=== STATO STANZE ===[/color]")
 			for r in rooms_data:
-				var is_on = r.get("is_on")
-				var st = "ON" if is_on else "OFF"
-				var col = "#00ff88" if is_on else "#ff4444"
-				var p_mw = r.get("power_mw")
-				_print_terminal(" • %s: [color=%s]%s[/color] (%.0f MW)" % [r.get("name"), col, st, p_mw])
+				var is_on: bool = bool(r.get("is_on", false))
+				var st := "ON" if is_on else "OFF"
+				var col := "#00ff88" if is_on else "#ff4444"
+				var p_mw: float = float(r.get("power_mw", 0.0))
+				_print_terminal(" • %s: [color=%s]%s[/color] (%.0f MW)" % [str(r.get("name", "Ignota")), col, st, p_mw])
 		
 		"set":
 			if parts.size() < 3:
 				_print_terminal("[color=#ff5555]Uso: set <room_id> <on|off>[/color]")
 				return
-			var rid = parts[1]
-			var val = parts[2].to_lower() == "on"
+			var rid: String = parts[1]
+			var val: Variant = parts[2].to_lower() == "on"
 			_on_room_power_toggled(rid, val)
 			if room_widgets.has(rid):
 				room_widgets[rid].power_switch.button_pressed = val
@@ -451,7 +453,7 @@ func _on_ship_connection_changed(is_connected: bool) -> void:
 func _on_ship_damages_updated(_damages: Array) -> void:
 	_refresh_power_logic()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 
 func _on_mission_ended() -> void:
@@ -480,7 +482,11 @@ func _update_permissions() -> void:
 		if "is_solo_mode" in NetworkManager:
 			is_solo = NetworkManager.is_solo_mode
 	
-	can_control = (my_role == "Ingegnere" or my_role == "Capitano" or is_solo)
+	var role_lower := my_role.to_lower()
+	if not my_role.is_empty():
+		can_control = role_lower in ["ingegnere", "engineer", "capitano", "captain", "stagista", "admin", "host"]
+	else:
+		can_control = is_solo
 	
 	if role_badge:
 		var role_txt := my_role if my_role != "" else ("SOLO" if is_solo else "SPETTATORE")
@@ -488,7 +494,8 @@ func _update_permissions() -> void:
 		role_badge.modulate = Color(0.2, 1.0, 0.5) if can_control else Color(1.0, 0.8, 0.2)
 	
 	for widget in room_widgets.values():
-		widget.set_enabled(can_control)
+		if widget and widget.has_method("set_enabled"):
+			widget.set_enabled(can_control)
 
 func _get_net_mgr() -> Node:
 	if is_inside_tree():

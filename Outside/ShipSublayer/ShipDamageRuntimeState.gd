@@ -31,17 +31,17 @@ func to_dict() -> Dictionary:
 	}
 
 func from_dict(data: Dictionary) -> void:
-	id = data.get("id", id)
-	type = data.get("type", type)
+	id = str(data.get("id", id))
+	type = str(data.get("type", type))
 	if data.has("pos"):
-		var p = data["pos"]
+		var p: Variant = data["pos"]
 		if p is Array and p.size() == 2:
-			pos = Vector2(p[0], p[1])
+			pos = Vector2(float(p[0]), float(p[1]))
 		elif p is Vector2:
 			pos = p
-	sector = data.get("sector", sector)
+	sector = str(data.get("sector", sector))
 	revealed = bool(data.get("revealed", revealed))
-	revealed_by = data.get("revealed_by", revealed_by)
+	revealed_by = str(data.get("revealed_by", revealed_by))
 	repair_progress = float(data.get("repair_progress", repair_progress))
 	repair_duration = float(data.get("repair_duration", repair_duration))
 	repaired = bool(data.get("repaired", repaired))

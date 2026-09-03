@@ -37,7 +37,7 @@ func _run_tests() -> void:
 	success_count += 1
 	
 	print("\n--- TEST 2: Inizializzazione e Posizionamento in StarSystemGridManager ---")
-	var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+	var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
 	var local_grid_mgr := false
 	if grid_mgr == null:
 		grid_mgr = StarSystemGridManagerSingleton.new()
@@ -65,7 +65,7 @@ func _run_tests() -> void:
 	success_count += 1
 	
 	print("\n--- TEST 3: Configurazione Spazio 3D, Orientamento Nave, Waypoint e Sensori in SpaceWorldManager ---")
-	var world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	var local_world_mgr := false
 	if world_mgr == null:
 		world_mgr = SpaceWorldManagerSingleton.new()
@@ -118,8 +118,8 @@ func _run_tests() -> void:
 	
 	print("\n--- TEST 4: Bivio Operativo (Avvicinamento per Docking vs Allontanamento/Rotta Fuga) ---")
 	# 1. Test opzione A: Manovra di avvicinamento per docking
-	var dm_script = load("res://Outside/Stations/docking_manager.gd")
-	var dm = dm_script.new()
+	var dm_script: GDScript = load("res://Outside/Stations/docking_manager.gd")
+	var dm: Node = dm_script.new()
 	add_child(dm)
 	var req_res: bool = dm.request_docking_clearance(station_entity, "DARK-NOVA-TEST", "SOL-NAV-DEFENSE")
 	assert(req_res == true, "La richiesta di clearance radio verso la stazione adiacente deve avere successo")

@@ -37,8 +37,8 @@ func _run_tests() -> void:
 		return
 	
 	var flight_app: FlightControlApp = flight_scene.instantiate() as FlightControlApp
-	var cams_app = cams_scene.instantiate()
-	var lobby_app = lobby_scene.instantiate()
+	var cams_app := cams_scene.instantiate()
+	var lobby_app := lobby_scene.instantiate()
 	
 	add_child(flight_app)
 	add_child(cams_app)
@@ -59,7 +59,7 @@ func _run_tests() -> void:
 	print("SUCCESS: Overlays are visible and display 'Connettersi alla nave'.")
 	
 	# Verify camera won't open when disconnected
-	var cam_win = swm.open_camera_window("front")
+	var cam_win := swm.open_camera_window("front")
 	if cam_win != null:
 		print("FAIL: Camera window opened while disconnected!")
 		get_tree().quit(1)
@@ -152,7 +152,7 @@ func _run_tests() -> void:
 	print("SUCCESS: Flight input correctly passed to ship in Solo mode.")
 	
 	# Test camera open in solo mode
-	var cam_front_win = swm.open_camera_window("front")
+	var cam_front_win := swm.open_camera_window("front")
 	if cam_front_win == null or not swm.is_camera_window_open("front"):
 		print("FAIL: Camera window could not be opened in solo mode!")
 		get_tree().quit(1)
@@ -186,7 +186,7 @@ func _run_tests() -> void:
 	print("SUCCESS: Disconnection cleanly resets ship state, closes feeds, and shows overlays.")
 	
 	print("\n--- Test 5: Multiplayer Host Connection & Mission Start ---")
-	var err = net.host_game("Capitano", 7815, "Nave Multiplayer", 4)
+	var err := net.host_game("Capitano", 7815, "Nave Multiplayer", 4)
 	if err != OK:
 		print("FAIL: Could not host game: ", err)
 		get_tree().quit(1)

@@ -8,7 +8,21 @@ extends Resource
 @export var color: Color = Color(1, 1, 1, 0.5)
 @export var border_color: Color = Color(1, 1, 1, 0.8)
 @export var category: String = "command"
-@export var devices: Array[ShipDeviceData] = []
+@export var devices: Array = []:
+	set(val):
+		devices = _ensure_objects(val, ShipDeviceData)
+
+func _ensure_objects(list: Array, type: GDScript) -> Array:
+	var new_list := []
+	for item in list:
+		if item is Dictionary:
+			var obj = type.new()
+			if obj.has_method("from_dict"):
+				obj.from_dict(item)
+			new_list.append(obj)
+		else:
+			new_list.append(item)
+	return new_list
 @export var default_devices: Array[String] = []
 @export var min_size: Vector2 = Vector2.ZERO
 @export var power_mw: float = 0.0
@@ -39,43 +53,36 @@ func to_dict() -> Dictionary:
 	}
 
 func from_dict(data: Dictionary) -> void:
-	id = data.get("id")
-	name = data.get("name")
+	id = str(data.get("id", id))
+	name = str(data.get("name", name))
 	
 	if data.has("rect"):
-		if data["rect"] is Array and data["rect"].size() == 4:
-			var r = data["rect"]
-			rect = Rect2(r[0], r[1], r[2], r[3])
-		elif data["rect"] is Rect2:
-			rect = data["rect"]
+		var r_data: Variant = data["rect"]
+		if r_data is Array and r_data.size() == 4:
+			rect = Rect2(float(r_data[0]), float(r_data[1]), float(r_data[2]), float(r_data[3]))
+		elif r_data is Rect2:
+			rect = r_data
 			
 	if data.has("color"):
-		if data["color"] is Array and data["color"].size() >= 3:
-			var c = data["color"]
-			var a = c[3] if c.size() > 3 else 1.0
-			color = Color(c[0], c[1], c[2], a)
-		elif data["color"] is Color:
-			color = data["color"]
+		var c: Variant = data["color"]
+		if c is Array and c.size() >= 3:
+			var a := float(c[3]) if c.size() > 3 else 1.0
+			color = Color(float(c[0]), float(c[1]), float(c[2]), a)
+		elif c is Color:
+			color = c
 
 	if data.has("border_color"):
-		if data["border_color"] is Array and data["border_color"].size() >= 3:
-			var c = data["border_color"]
-			var a = c[3] if c.size() > 3 else 1.0
-			border_color = Color(c[0], c[1], c[2], a)
-		elif data["border_color"] is Color:
-			border_color = data["border_color"]
+		var bc: Variant = data["border_color"]
+		if bc is Array and bc.size() >= 3:
+			var a := float(bc[3]) if bc.size() > 3 else 1.0
+			border_color = Color(float(bc[0]), float(bc[1]), float(bc[2]), a)
+		elif bc is Color:
+			border_color = bc
 			
-	category = data.get("category")
+	category = data.get("category", category)
 			
 	if data.has("devices") and data["devices"] is Array:
-		devices.clear()
-		for d in data["devices"]:
-			if d is Dictionary:
-				var dev := ShipDeviceData.new()
-				dev.from_dict(d)
-				devices.append(dev)
-			elif d is ShipDeviceData:
-				devices.append(d)
+		devices = data["devices"]
 				
 	if data.has("default_devices") and data["default_devices"] is Array:
 		default_devices.clear()
@@ -83,10 +90,11 @@ func from_dict(data: Dictionary) -> void:
 			default_devices.append(str(d))
 			
 	if data.has("min_size"):
-		if data["min_size"] is Array and data["min_size"].size() == 2:
-			min_size = Vector2(data["min_size"][0], data["min_size"][1])
-		elif data["min_size"] is Vector2:
-			min_size = data["min_size"]
+		var ms: Variant = data["min_size"]
+		if ms is Array and ms.size() == 2:
+			min_size = Vector2(float(ms[0]), float(ms[1]))
+		elif ms is Vector2:
+			min_size = ms
 		
-	power_mw = data.get("power_mw")
-	is_on = data.get("is_on")
+	power_mw = float(data.get("power_mw", power_mw))
+	is_on = bool(data.get("is_on", is_on))

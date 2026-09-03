@@ -58,10 +58,10 @@ signal station_scanned(station_data: Dictionary)
 }
 
 # Inventario / Dati specifici del mercato e contratti offerti da questa stazione
-var market_catalog: Array[Dictionary] = []
-var active_contracts: Array[Dictionary] = []
-var tavern_rumors: Array[Dictionary] = []
-var warehouse_cargo: Array[Dictionary] = []
+@export var market_catalog: Array[Dictionary] = []
+@export var active_contracts: Array[Dictionary] = []
+@export var tavern_rumors: Array[Dictionary] = []
+@export var warehouse_cargo: Array[Dictionary] = []
 
 func _ready() -> void:
 	_init_station_defaults()
@@ -118,6 +118,7 @@ func _init_station_defaults() -> void:
 				"title": "Pattugliamento Settore Asteroidi 'Theta-9'",
 				"issuer": "Autorità Portuale di Settore",
 				"reward_credits": 1200,
+				"reward_flux": 1800,
 				"description": "Scansione e verifica di 3 anomalie gravitazionali nel campo asteroidale.",
 				"target_sector": "Theta-9",
 				"is_accepted": false,
@@ -128,6 +129,7 @@ func _init_station_defaults() -> void:
 				"title": "Taglia: Corsaro 'Red Vulture'",
 				"issuer": "Consorzio di Sicurezza Spaziale",
 				"reward_credits": 2500,
+				"reward_flux": 3200,
 				"description": "Neutralizzare o scansionare la fregata pirata nell'avamposto periferico.",
 				"target_sector": "Zeta-3",
 				"is_accepted": false,
@@ -138,6 +140,7 @@ func _init_station_defaults() -> void:
 				"title": "Consegna Merci: 100x Naniti Medici",
 				"issuer": "Laboratorio Bio-Sintetico",
 				"reward_credits": 800,
+				"reward_flux": 1000,
 				"description": "Trasporto e consegna componenti critici per i filtri di Life Support.",
 				"target_sector": "Centauri-Prime",
 				"is_accepted": false,
@@ -227,7 +230,7 @@ func get_telemetry_data() -> Dictionary:
 ## Trova uno slot di docking libero
 func get_available_docking_bay() -> int:
 	for bay in docking_bays:
-		if not bay.get("is_occupied"):
+		if not bay.get("is_occupied", false):
 			return int(bay.get("id"))
 	return -1
 
@@ -256,7 +259,7 @@ func release_docking_bay(bay_id: int) -> void:
 func get_bay_global_transform(bay_id: int) -> Transform3D:
 	for bay in docking_bays:
 		if bay.get("id") == bay_id:
-			var local_pos: Vector3 = bay.get("local_pos")
+			var local_pos: Vector3 = bay.get("local_pos", Vector3.ZERO)
 			var target_pos := global_transform * local_pos
 			return Transform3D(global_transform.basis, target_pos)
 	return global_transform

@@ -77,7 +77,7 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(460, 420)
 		parent_window.title_text = APP_TITLE
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
 
@@ -363,10 +363,10 @@ func _update_button_visual(cam_id: String, is_active: bool) -> void:
 	if btn == null:
 		return
 	
-	var info: Dictionary = SpaceWorldManager.get_camera_info(cam_id) if SpaceWorldManager else {}
-	var name_str: String = info.get("name")
-	var dir_str: String = info.get("direction")
-	var icon_str: String = info.get("icon")
+	var info: CameraMetadata = SpaceWorldManager.get_camera_info(cam_id) if SpaceWorldManager else null
+	var name_str: String = info.name if info else "SCONOSCIUTA"
+	var dir_str: String = info.direction if info else "N/D"
+	var icon_str: String = info.icon if info else ""
 	
 	if is_active:
 		btn.text = "%s %s\n[%s]  ● ATTIVA" % [icon_str, name_str.to_upper(), dir_str]
@@ -425,7 +425,7 @@ func _on_reset_optics_pressed() -> void:
 		return
 	load_dat_configuration()
 	for cam_id in cam_buttons:
-		var win = SpaceWorldManager.get_camera_window(cam_id)
+		var win := SpaceWorldManager.get_camera_window(cam_id)
 		if win and is_instance_valid(win) and win.has_method("_on_zoom_reset_pressed"):
 			win._on_zoom_reset_pressed()
 	var notif := get_node_or_null("/root/NotificationManager")

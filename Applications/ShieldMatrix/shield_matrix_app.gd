@@ -175,9 +175,9 @@ func _process(delta: float) -> void:
 	_refresh_ui_display()
 
 func _simulate_shield_recharge(delta: float) -> void:
-	var base_max: float = active_config.get("max_capacity_per_quadrant")
-	var recharge_rate: float = active_config.get("recharge_rate_per_sec")
-	var decay_rate: float = active_config.get("decay_rate_unpowered")
+	var base_max: float = float(active_config.get("max_capacity_per_quadrant", 250.0))
+	var recharge_rate: float = float(active_config.get("recharge_rate_per_sec", 15.0))
+	var decay_rate: float = float(active_config.get("decay_rate_unpowered", 25.0))
 	var sync_mult: float = 1.15 if is_phase_synced else 0.85
 	
 	# Verifica se la nave ha danni al settore scudi che riducono la capacità
@@ -185,8 +185,10 @@ func _simulate_shield_recharge(delta: float) -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_damage_zones"):
 		var damages: Array = SpaceWorldManager.get_damage_zones()
 		for d in damages:
-			if d.get("system_impact") == "shields_degraded":
-				port_damage_penalty = float(d.get("severity", 0.0)) * 10.0
+			var impact: Variant = d.system_impact if d is ShipDamageData else d.get("system_impact", "")
+			if str(impact) == "shields_degraded":
+				var sev: Variant = d.severity if d is ShipDamageData else d.get("severity", 0.0)
+				port_damage_penalty = float(sev) * 10.0
 	
 	var max_f := base_max * (ratio_fore / 0.25)
 	var max_a := base_max * (ratio_aft / 0.25)
@@ -482,7 +484,7 @@ func _is_ship_operational() -> bool:
 func _on_ship_connection_changed(is_connected: bool) -> void:
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 
 func _on_mission_ended() -> void:

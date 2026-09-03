@@ -18,7 +18,7 @@ func add_damage(damage_data: Dictionary) -> void:
 func repair_damage(damage_id: String) -> bool:
 	for i in range(active_damages.size()):
 		if active_damages[i].get("id") == damage_id:
-			var dmg = active_damages[i]
+			var dmg: Variant = active_damages[i]
 			active_damages.remove_at(i)
 			damage_repaired.emit(dmg)
 			damages_updated.emit(active_damages)

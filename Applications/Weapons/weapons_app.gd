@@ -124,7 +124,7 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		parent_window.size = DEFAULT_WINDOW_SIZE
 		parent_window.custom_minimum_size = Vector2(620, 460)
 		parent_window.title_text = APP_TITLE
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
 
@@ -269,7 +269,7 @@ func _apply_configuration() -> void:
 func _on_ship_connection_changed(_is_conn: bool) -> void:
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_targets()
@@ -387,7 +387,7 @@ func _update_cooling_and_power(delta: float) -> void:
 		is_overheated = true
 	
 	# Raffreddamento naturale canne
-	var cooling_rate: float = float(active_config.get("cooling_rate")) * 12.0
+	var cooling_rate: float = float(active_config.get("cooling_rate", 0.75)) * 12.0
 	if is_emergency_venting:
 		cooling_rate *= 5.0
 	
@@ -399,7 +399,7 @@ func _update_cooling_and_power(delta: float) -> void:
 	
 	# Ricarica condensatori laser (dipendente dall'alimentazione Armeria Sublayer 3)
 	if armory_powered:
-		var recharge_speed: float = float(active_config.get("fire_rate")) * 14.0
+		var recharge_speed: float = float(active_config.get("fire_rate", 1.8)) * 14.0
 		laser_charge = minf(100.0, laser_charge + recharge_speed * delta)
 
 func _process_auto_pdg(delta: float) -> void:
@@ -407,20 +407,20 @@ func _process_auto_pdg(delta: float) -> void:
 		return
 	
 	pdg_auto_timer += delta
-	var pdg_interval := 1.0 / float(active_config.get("pdg_fire_rate"))
+	var pdg_interval := 1.0 / maxf(float(active_config.get("pdg_fire_rate", 8.0)), 0.1)
 	
 	if pdg_auto_timer >= pdg_interval:
 		pdg_auto_timer = 0.0
 		# Controlla se c'è un bersaglio pericolo a breve raggio (< 80m)
 		for t in detected_targets:
-			var dist: float = float(t.get("distance"))
-			var threat: String = t.get("threat_level")
+			var dist: float = float(t.get("distance", 0.0))
+			var threat: String = str(t.get("threat_level", "UNKNOWN"))
 			if (threat in ["HAZARD", "HOSTILE"] or dist < 65.0) and pdg_ammo > 0:
 				pdg_ammo -= 1
-				var heat_mult: float = float(active_config.get("heat_multiplier"))
+				var heat_mult: float = float(active_config.get("heat_multiplier", 1.0))
 				barrel_heat = minf(100.0, barrel_heat + 1.2 * heat_mult)
 				if SpaceWorldManager and SpaceWorldManager.has_method("request_fire_weapon"):
-					SpaceWorldManager.request_fire_weapon("PDG_AUTO", t.get("id"), Vector3.ZERO)
+					SpaceWorldManager.request_fire_weapon("PDG_AUTO", str(t.get("id", "")), Vector3.ZERO)
 				break
 
 # --- TARGETING, RADAR E CALCOLO LEAD INDICATOR ---
@@ -439,15 +439,15 @@ func _refresh_targets() -> void:
 		if is_target_locked and not selected_target_id.is_empty():
 			var target_data := _get_target_data(selected_target_id)
 			if not target_data.is_empty():
-				var t_dist: float = float(target_data.get("distance"))
-				var proj_vel: float = float(active_config.get("torpedo_velocity"))
+				var t_dist: float = float(target_data.get("distance", 0.0))
+				var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
 				if active_weapon_group == WeaponGroup.LASER:
 					proj_vel = 1000.0 # Laser quasi istantaneo
 				elif active_weapon_group == WeaponGroup.PDG:
 					proj_vel = 450.0
 				
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
-				var t_vel: Vector3 = target_data.get("velocity")
+				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
 				var lead_world_delta := t_vel * flight_time
 				# Proietta in 2D sul radar
 				radar_canvas.lead_offset = Vector2(lead_world_delta.x, -lead_world_delta.z) * 1.5
@@ -468,10 +468,10 @@ func _populate_target_dropdown() -> void:
 	
 	var new_idx := 0
 	for i in range(detected_targets.size()):
-		var t := detected_targets[i]
-		var item_text := "%s (%.0fm) - %s" % [t.get("name"), t.get("distance"), t.get("threat_level")]
+		var t: Dictionary = detected_targets[i]
+		var item_text := "%s (%.0fm) - %s" % [str(t.get("name", "IGNOTO")), float(t.get("distance", 0.0)), str(t.get("threat_level", "UNKNOWN"))]
 		target_option_button.add_item(item_text, i + 1)
-		if t.get("id") == prev_id:
+		if str(t.get("id", "")) == prev_id:
 			new_idx = i + 1
 	
 	if new_idx > 0:
@@ -481,7 +481,7 @@ func _populate_target_dropdown() -> void:
 
 func _get_target_data(target_id: String) -> Dictionary:
 	for t in detected_targets:
-		if t.get("id") == target_id:
+		if str(t.get("id", "")) == target_id:
 			return t
 	return {}
 
@@ -512,14 +512,14 @@ func _update_target_info() -> void:
 		if is_target_locked and not selected_target_id.is_empty():
 			var target_data := _get_target_data(selected_target_id)
 			if not target_data.is_empty():
-				var t_dist: float = float(target_data.get("distance"))
-				var proj_vel: float = float(active_config.get("torpedo_velocity"))
+				var t_dist: float = float(target_data.get("distance", 0.0))
+				var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
 				if active_weapon_group == WeaponGroup.LASER:
 					proj_vel = 1000.0
 				elif active_weapon_group == WeaponGroup.PDG:
 					proj_vel = 450.0
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
-				var t_vel: Vector3 = target_data.get("velocity")
+				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
 				var lead_world_delta := t_vel * flight_time
 				radar_canvas.lead_offset = Vector2(lead_world_delta.x, -lead_world_delta.z) * 1.5
 		else:
@@ -533,9 +533,9 @@ func _update_target_info() -> void:
 		if not selected_target_id.is_empty():
 			var t := _get_target_data(selected_target_id)
 			target_info_label.text = "BERSAGLIO: %s | DIST: %.1fm | AZIMUTH: %.1f° | STATO: %s" % [
-				t.get("name"),
-				t.get("distance"),
-				t.get("bearing_deg"),
+				str(t.get("name", "IGNOTO")),
+				float(t.get("distance", 0.0)),
+				float(t.get("bearing_deg", 0.0)),
 				"🔒 AGGANCIATO" if is_target_locked else "TRACCIATO"
 			]
 		else:
@@ -544,10 +544,10 @@ func _update_target_info() -> void:
 	if lead_calc_label:
 		if is_target_locked:
 			var t := _get_target_data(selected_target_id)
-			var proj_vel: float = float(active_config.get("torpedo_velocity"))
+			var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
 			if active_weapon_group == WeaponGroup.LASER:
 				proj_vel = 1000.0
-			var dist: float = float(t.get("distance"))
+			var dist: float = float(t.get("distance", 0.0))
 			var t_hit := dist / maxf(proj_vel, 1.0)
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_PROIETTILE: %.0f m/s | RETICOLO PRONTO" % [t_hit, proj_vel]
 		else:
@@ -580,11 +580,11 @@ func _on_aim_center_pressed() -> void:
 
 func _update_turret_camera(delta: float = 0.0) -> void:
 	# Se target locked e auto lead tracking abilitato, allinea la mira al bersaglio
-	if is_target_locked and not selected_target_id.is_empty() and bool(active_config.get("auto_lead_tracking")):
+	if is_target_locked and not selected_target_id.is_empty() and bool(active_config.get("auto_lead_tracking", true)):
 		var t := _get_target_data(selected_target_id)
 		if not t.is_empty():
-			var target_bearing: float = float(t.get("bearing_deg"))
-			var target_elev: float = float(t.get("elevation_deg"))
+			var target_bearing: float = float(t.get("bearing_deg", 0.0))
+			var target_elev: float = float(t.get("elevation_deg", 0.0))
 			if delta > 0.0:
 				manual_aim.x = clampf(lerpf(manual_aim.x, target_bearing, 8.0 * delta), -45.0, 45.0)
 				manual_aim.y = clampf(lerpf(manual_aim.y, target_elev, 8.0 * delta), -30.0, 30.0)
@@ -669,8 +669,8 @@ func _on_fire_button_pressed() -> void:
 	if fire_cooldown_timer > 0.0:
 		return
 	
-	var heat_mult: float = float(active_config.get("heat_multiplier"))
-	var fire_rate: float = float(active_config.get("fire_rate"))
+	var heat_mult: float = float(active_config.get("heat_multiplier", 1.0))
+	var fire_rate: float = float(active_config.get("fire_rate", 1.8))
 	
 	match active_weapon_group:
 		WeaponGroup.LASER:
@@ -722,14 +722,13 @@ func _on_vent_heat_button_pressed() -> void:
 	is_emergency_venting = true
 	barrel_heat = 0.0
 	is_overheated = false
-	vent_cooldown_timer = float(active_config.get("emergency_vent_cooldown"))
+	vent_cooldown_timer = float(active_config.get("emergency_vent_cooldown", 10.0))
 	_update_ui_displays()
 	_log_action("❄️ SCARICO TERMICO D'EMERGENZA COMPLETATO (VENT 0% HEAT)")
 
 func _on_reload_ammo_button_pressed() -> void:
-	torpedo_ammo = int(active_config.get("torpedo_max_ammo"))
-	pdg_ammo = int(active_config.get("pdg_ammo_max"))
-	laser_charge = 100.0
+	torpedo_ammo = int(active_config.get("torpedo_max_ammo", 12))
+	pdg_ammo = int(active_config.get("pdg_ammo_max", 500))
 	_update_ui_displays()
 	_log_action("🔄 RISERVE D'ARMAMENTO E CONDENSATORI RICARICATI AL 100%")
 

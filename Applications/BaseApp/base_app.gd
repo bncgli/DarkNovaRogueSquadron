@@ -53,7 +53,7 @@ func _setup_parent_window(title: String, size: Vector2) -> void:
 		if "title_text" in parent_window:
 			parent_window.title_text = title
 		
-		var title_label = parent_window.get_node_or_null("Top Bar/Title Text")
+		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label and "text" in title_label:
 			title_label.text = "[center]" + title
 

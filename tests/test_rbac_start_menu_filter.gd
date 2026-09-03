@@ -19,10 +19,10 @@ static func run_all_tests(node_context: Node) -> bool:
 		print("ERRORE: Impossibile caricare taskbar.tscn")
 		return false
 		
-	var taskbar = taskbar_scene.instantiate()
+	var taskbar := taskbar_scene.instantiate()
 	node_context.add_child(taskbar)
 	
-	var start_btn = taskbar.get_node_or_null("Taskbar/Start Button")
+	var start_btn := taskbar.get_node_or_null("Taskbar/Start Button")
 	if not start_btn:
 		print("ERRORE: Start Button non trovato nella taskbar!")
 		taskbar.queue_free()
@@ -39,7 +39,7 @@ static func run_all_tests(node_context: Node) -> bool:
 		net.is_connected_to_network = false
 	start_btn._refresh_ship_apps()
 	
-	var dynamic_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
+	var dynamic_apps := taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
 	assert(dynamic_apps.size() == 0, "Nello stato offline nessuna app della nave deve essere nel menu Start")
 	print("✔ Test 1 superato: Menu Start libero da app operative nave prima del decollo.")
 	
@@ -50,7 +50,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	var def_bp := ShipBlueprint.get_default_blueprint()
 	
 	# Ruolo: Pilota -> Flight Control, Cams (e System Map se configurata)
-	var pilot_apps = ssm.get_apps_for_role(net.ROLE_PILOT, false, def_bp)
+	var pilot_apps := ssm.get_apps_for_role(net.ROLE_PILOT, false, def_bp)
 	var pilot_ids: Array[String] = []
 	for a in pilot_apps:
 		pilot_ids.append(a.app_id)
@@ -62,7 +62,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not pilot_ids.has("duct_drone"), "Pilota NON deve avere duct_drone")
 	
 	# Ruolo: Ingegnere -> Power Grid, Duct Drone, Life Support, Shield Matrix
-	var eng_apps = ssm.get_apps_for_role(net.ROLE_ENGINEER, false, def_bp)
+	var eng_apps := ssm.get_apps_for_role(net.ROLE_ENGINEER, false, def_bp)
 	var eng_ids: Array[String] = []
 	for a in eng_apps:
 		eng_ids.append(a.app_id)
@@ -75,7 +75,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not eng_ids.has("weapons"), "Ingegnere NON deve avere weapons")
 	
 	# Ruolo: Soldato -> Cams, Weapons, Sensors
-	var soldier_apps = ssm.get_apps_for_role(net.ROLE_SOLDIER, false, def_bp)
+	var soldier_apps := ssm.get_apps_for_role(net.ROLE_SOLDIER, false, def_bp)
 	var soldier_ids: Array[String] = []
 	for a in soldier_apps:
 		soldier_ids.append(a.app_id)
@@ -87,7 +87,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not soldier_ids.has("power_grid"), "Soldato NON deve avere power_grid")
 	
 	# Ruolo: Hacker -> Duct Drone, Comms, Diagnostics
-	var hacker_apps = ssm.get_apps_for_role(net.ROLE_HACKER, false, def_bp)
+	var hacker_apps := ssm.get_apps_for_role(net.ROLE_HACKER, false, def_bp)
 	var hacker_ids: Array[String] = []
 	for a in hacker_apps:
 		hacker_ids.append(a.app_id)
@@ -99,14 +99,14 @@ static func run_all_tests(node_context: Node) -> bool:
 	assert(not hacker_ids.has("flight_control"), "Hacker NON deve avere flight_control")
 	
 	# Ruolo: Stagista -> Tutte le app
-	var stagista_apps = ssm.get_apps_for_role(net.ROLE_STAGISTA, false, def_bp)
+	var stagista_apps := ssm.get_apps_for_role(net.ROLE_STAGISTA, false, def_bp)
 	print("App Stagista size:", stagista_apps.size())
 	assert(stagista_apps.size() == ssm.get_installed_apps(def_bp).size(), "Lo Stagista deve avere accesso a tutte le applicazioni")
 	
 	# Ruolo: Capitano / Solo Mode -> Tutte le app
-	var cap_apps = ssm.get_apps_for_role(net.ROLE_CAPTAIN, false, def_bp)
-	var solo_apps = ssm.get_apps_for_role("Pilota", true, def_bp)
-	var all_installed = ssm.get_installed_apps(def_bp)
+	var cap_apps := ssm.get_apps_for_role(net.ROLE_CAPTAIN, false, def_bp)
+	var solo_apps := ssm.get_apps_for_role("Pilota", true, def_bp)
+	var all_installed := ssm.get_installed_apps(def_bp)
 	print("App Capitano size:", cap_apps.size(), "App Solo size:", solo_apps.size(), "Totale installate:", all_installed.size())
 	assert(cap_apps.size() == all_installed.size(), "Il Capitano deve avere accesso a tutte le applicazioni")
 	assert(solo_apps.size() == all_installed.size(), "In Solo Mode il giocatore deve avere accesso a tutte le applicazioni")
@@ -120,11 +120,10 @@ static func run_all_tests(node_context: Node) -> bool:
 	ssm.start_mission(net.ROLE_ENGINEER, false, def_bp)
 	start_btn._refresh_ship_apps()
 	
-	var eng_menu_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
-	assert(eng_menu_apps.size() >= 4, "Il menu Start deve contenere le app dell'Ingegnere")
+	var eng_menu_apps := taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
+	assert(eng_menu_apps.size() >= 1, "Il menu Start deve contenere le voci dell'Ingegnere (cartelle o app)")
 	var menu_titles: Array[String] = []
-	for opt in eng_menu_apps:
-		menu_titles.append(str(opt.get("title_text")))
+	_collect_all_titles(eng_menu_apps, menu_titles)
 	print("Titoli menu per Ingegnere:", menu_titles)
 	assert(menu_titles.has("Power Grid"), "Menu deve contenere Power Grid")
 	assert(menu_titles.has("Duct Drone"), "Menu deve contenere Duct Drone")
@@ -139,10 +138,9 @@ static func run_all_tests(node_context: Node) -> bool:
 	ssm.set_current_role(net.ROLE_PILOT)
 	start_btn._refresh_ship_apps()
 	
-	var pilot_menu_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
+	var pilot_menu_apps := taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
 	var pilot_menu_titles: Array[String] = []
-	for opt in pilot_menu_apps:
-		pilot_menu_titles.append(str(opt.get("title_text")))
+	_collect_all_titles(pilot_menu_apps, pilot_menu_titles)
 	print("Titoli menu per Pilota dopo switch:", pilot_menu_titles)
 	assert(pilot_menu_titles.has("Flight Control"), "Dopo switch a Pilota il menu deve contenere Flight Control")
 	assert(pilot_menu_titles.has("Cams"), "Dopo switch a Pilota il menu deve contenere Cams")
@@ -154,14 +152,14 @@ static func run_all_tests(node_context: Node) -> bool:
 	# =========================================================================
 	print("\n--- Test 5: Overlay Disconnessione e Fine Missione (end_mission) ---")
 	# Istanziamo una app nave con DisconnectedOverlay (es. Flight Control)
-	var fc_scene = load("res://Applications/FlightControl/flight_control_app.tscn")
+	var fc_scene: PackedScene = load("res://Applications/FlightControl/flight_control_app.tscn")
 	assert(fc_scene != null, "flight_control_app.tscn deve esistere")
-	var fc_app = fc_scene.instantiate()
+	var fc_app: Node = fc_scene.instantiate()
 	node_context.add_child(fc_app)
 	
-	var overlay = fc_app.get_node_or_null("DisconnectedOverlay")
+	var overlay: Control = fc_app.get_node_or_null("DisconnectedOverlay") as Control
 	if not overlay:
-		overlay = fc_app.get_node_or_null("%DisconnectedOverlay")
+		overlay = fc_app.get_node_or_null("%DisconnectedOverlay") as Control
 	assert(overlay != null, "FlightControl deve avere il nodo DisconnectedOverlay")
 	
 	# Poiché la missione è attiva, l'overlay deve essere nascosto
@@ -173,7 +171,7 @@ static func run_all_tests(node_context: Node) -> bool:
 	
 	# A missione terminata l'overlay deve riattivarsi e il menu Start svuotarsi
 	assert(overlay.visible == true, "A fine missione l'overlay di disconnessione deve riattivarsi")
-	var end_menu_apps = taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
+	var end_menu_apps := taskbar.get_tree().get_nodes_in_group("dynamic_ship_apps")
 	assert(end_menu_apps.size() == 0, "A fine missione le app nave devono essere rimosse dal menu Start")
 	print("✔ Test 5 superato: DisconnectedOverlay e svuotamento menu a end_mission() verificati con successo.")
 	
@@ -181,3 +179,17 @@ static func run_all_tests(node_context: Node) -> bool:
 	fc_app.queue_free()
 	taskbar.queue_free()
 	return true
+
+static func _collect_all_titles(options: Array, titles: Array[String]) -> void:
+	for opt in options:
+		titles.append(str(opt.get("title_text")))
+		var sub: Variant = opt.get("sub_tree")
+		if sub is Dictionary and not sub.is_empty():
+			_collect_sub_tree_titles(sub, titles)
+
+static func _collect_sub_tree_titles(tree: Dictionary, titles: Array[String]) -> void:
+	for app in tree.get("apps", []):
+		titles.append(str(app.get("title")))
+	for sub_folder in tree.get("subfolders", {}).values():
+		if sub_folder is Dictionary:
+			_collect_sub_tree_titles(sub_folder, titles)

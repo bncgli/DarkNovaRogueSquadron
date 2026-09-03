@@ -237,7 +237,7 @@ func disconnect_game() -> void:
 	_cached_selected_star_system = null
 	
 	if was_mission:
-		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		var ssm := get_node_or_null("/root/ShipSoftwareManager")
 		if ssm and ssm.has_method("end_mission"):
 			ssm.end_mission()
 		mission_ended.emit()
@@ -289,7 +289,7 @@ func toggle_ready() -> void:
 
 ## Verifica se il giocatore locale è pronto
 func is_local_player_ready() -> bool:
-	return players.get(local_peer_id, {}).get("ready")
+	return players.get(local_peer_id, {}).get("ready", false) == true
 
 ## Avvia la missione (solo Host)
 func start_mission() -> void:
@@ -300,7 +300,7 @@ func start_mission() -> void:
 		return
 	
 	# Assicura che SpaceWorldManager e StarSystemGridManager abbiano le risorse selezionate
-	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var space_world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	if space_world_mgr:
 		var bp := get_selected_ship_blueprint()
 		if bp and space_world_mgr.has_method("set_ship_blueprint"):
@@ -322,10 +322,14 @@ func get_local_player_data() -> Dictionary:
 
 ## Restituisce il ruolo del giocatore locale
 func get_local_player_role() -> String:
-	return crew_manager.get_player_role(multiplayer.get_unique_id())
+	return str(players.get(local_peer_id, {}).get("role", ""))
 
 func get_local_player_roles() -> Array[String]:
-	return crew_manager.get_local_player_roles()
+	var r := get_local_player_role()
+	var arr: Array[String] = []
+	if not r.is_empty():
+		arr.append(r)
+	return arr
 
 func is_active() -> bool:
 	return is_connected_to_network
@@ -371,7 +375,7 @@ func set_session_ship_blueprint(resource_or_path_or_dict) -> bool:
 	elif resource_or_path_or_dict is String:
 		selected_ship_blueprint_path = resource_or_path_or_dict
 		if ResourceLoader.exists(selected_ship_blueprint_path):
-			var res = ResourceLoader.load(selected_ship_blueprint_path)
+			var res := ResourceLoader.load(selected_ship_blueprint_path)
 			if res is ShipBlueprint:
 				bp = res
 				selected_ship_blueprint_dict = bp.to_dict()
@@ -393,7 +397,7 @@ func set_session_ship_blueprint(resource_or_path_or_dict) -> bool:
 	_cached_selected_blueprint = bp
 	
 	# Aggiorna SpaceWorldManager se presente
-	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var space_world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	if space_world_mgr and space_world_mgr.has_method("set_ship_blueprint"):
 		space_world_mgr.set_ship_blueprint(bp)
 	
@@ -418,7 +422,7 @@ func set_session_star_system(resource_or_path_or_dict) -> bool:
 	elif resource_or_path_or_dict is String:
 		selected_star_system_path = resource_or_path_or_dict
 		if ResourceLoader.exists(selected_star_system_path):
-			var res = ResourceLoader.load(selected_star_system_path)
+			var res := ResourceLoader.load(selected_star_system_path)
 			if res is StarSystemData:
 				sys = res
 				selected_star_system_dict = sys.to_dict()
@@ -445,7 +449,7 @@ func set_session_star_system(resource_or_path_or_dict) -> bool:
 	_cached_selected_star_system = sys
 	
 	# Aggiorna SpaceWorldManager se presente
-	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var space_world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	if space_world_mgr and space_world_mgr.has_method("set_star_system_data"):
 		space_world_mgr.set_star_system_data(sys)
 	
@@ -466,7 +470,7 @@ func get_selected_ship_blueprint() -> ShipBlueprint:
 		_cached_selected_blueprint = bp
 		return bp
 	if not selected_ship_blueprint_path.is_empty() and ResourceLoader.exists(selected_ship_blueprint_path):
-		var res = ResourceLoader.load(selected_ship_blueprint_path)
+		var res := ResourceLoader.load(selected_ship_blueprint_path)
 		if res is ShipBlueprint:
 			_cached_selected_blueprint = res
 			selected_ship_blueprint_dict = res.to_dict()
@@ -486,7 +490,7 @@ func get_selected_star_system() -> StarSystemData:
 		_cached_selected_star_system = sys
 		return sys
 	if not selected_star_system_path.is_empty() and ResourceLoader.exists(selected_star_system_path):
-		var res = ResourceLoader.load(selected_star_system_path)
+		var res := ResourceLoader.load(selected_star_system_path)
 		if res is StarSystemData:
 			_cached_selected_star_system = res
 			selected_star_system_dict = res.to_dict()
@@ -517,7 +521,7 @@ func get_session_star_system_info() -> Dictionary:
 	if sys:
 		var stations_count := 0
 		for b in sys.celestial_bodies:
-			if b.get("type").to_upper() == "STATION":
+			if str(b.get("type")).to_upper() == "STATION":
 				stations_count += 1
 		return {
 			"id": sys.system_id,
@@ -571,7 +575,7 @@ func _on_transport_disconnected() -> void:
 	is_mission_started = false
 	players.clear()
 	if was_mission:
-		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		var ssm := get_node_or_null("/root/ShipSoftwareManager")
 		if ssm and ssm.has_method("end_mission"):
 			ssm.end_mission()
 		mission_ended.emit()
@@ -586,7 +590,7 @@ func _on_transport_peer_connected(peer_id: int) -> void:
 func _on_transport_peer_disconnected(peer_id: int) -> void:
 	if is_host:
 		if peer_id in players:
-			var player_name: String = players[peer_id].get("name")
+			var player_name: String = players[peer_id].get("name", "Sconosciuto")
 			players.erase(peer_id)
 			player_left.emit(peer_id)
 			lobby_updated.emit(players)
@@ -633,12 +637,12 @@ func _rpc_register_player(player_name: String) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_lobby(synced_players: Dictionary) -> void:
-	var old_role: String = players.get(local_peer_id, {}).get("role")
+	var old_role: String = players.get(local_peer_id, {}).get("role", "")
 	players = synced_players
 	local_peer_id = transport.get_unique_id()
-	var new_role: String = players.get(local_peer_id, {}).get("role")
+	var new_role: String = players.get(local_peer_id, {}).get("role", "")
 	if old_role != new_role and not new_role.is_empty():
-		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		var ssm := get_node_or_null("/root/ShipSoftwareManager")
 		if ssm and ssm.has_method("set_current_role"):
 			ssm.set_current_role(new_role)
 		player_role_changed.emit(local_peer_id, new_role)
@@ -662,7 +666,7 @@ func _server_set_player_ready(peer_id: int, is_ready: bool) -> void:
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_sync_lobby.rpc(players)
 	
-	var p_name: String = players[peer_id].get("name")
+	var p_name: String = players[peer_id].get("name", "Sconosciuto")
 	var status_text: String = "è PRONTO!" if is_ready else "non è più pronto."
 	_server_broadcast_chat("[SISTEMA]", "%s %s" % [p_name, status_text], true)
 	
@@ -691,21 +695,21 @@ func _server_set_player_role(peer_id: int, role_name: String) -> void:
 	# Se il ruolo è già occupato da qualcun altro (e non è UNASSIGNED), liberiamo il vecchio possessore
 	if role_name != ROLE_UNASSIGNED:
 		for id in players:
-			if id != peer_id and players[id].get("role") == role_name:
+			if id != peer_id and players[id].get("role", "") == role_name:
 				players[id]["role"] = ROLE_UNASSIGNED
 				player_role_changed.emit(id, ROLE_UNASSIGNED)
 	
 	players[peer_id]["role"] = role_name
 	
 	if peer_id == local_peer_id:
-		var ssm = get_node_or_null("/root/ShipSoftwareManager")
+		var ssm := get_node_or_null("/root/ShipSoftwareManager")
 		if ssm and ssm.has_method("set_current_role"):
 			ssm.set_current_role(role_name)
 			
 	player_role_changed.emit(peer_id, role_name)
 	lobby_updated.emit(players)
 	
-	var p_name: String = players[peer_id].get("name")
+	var p_name: String = players[peer_id].get("name", "Sconosciuto")
 	_server_broadcast_chat("[SISTEMA]", "%s ha preso la postazione: %s" % [p_name, role_name], true)
 	if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 		_rpc_sync_lobby.rpc(players)
@@ -717,7 +721,7 @@ func _rpc_send_chat(message: String) -> void:
 	
 	var sender_id := multiplayer.get_remote_sender_id()
 	if sender_id in players:
-		var sender_name: String = players[sender_id].get("name")
+		var sender_name: String = players[sender_id].get("name", "Sconosciuto")
 		_server_broadcast_chat(sender_name, message, false)
 
 func _server_broadcast_chat(sender: String, message: String, is_system: bool) -> void:
@@ -745,7 +749,7 @@ func _check_headless_auto_start() -> void:
 		if id == 1 and players[id].get("role") == ROLE_HOST:
 			continue
 		client_count += 1
-		if not players[id].get("ready"):
+		if not players[id].get("ready", false):
 			all_ready = false
 			break
 	
@@ -816,7 +820,7 @@ func _restart_headless_server() -> void:
 	_cancel_headless_countdown()
 	
 	# Resetta lo stato fisico e i motori se SpaceWorldManager è attivo
-	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var space_world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	if space_world_mgr:
 		if space_world_mgr.has_method("reset_spaceship_position"):
 			space_world_mgr.reset_spaceship_position()
@@ -852,7 +856,7 @@ func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: D
 	if not blueprint_dict.is_empty():
 		bp.from_dict(blueprint_dict)
 	elif not blueprint_path.is_empty() and ResourceLoader.exists(blueprint_path):
-		var res = ResourceLoader.load(blueprint_path)
+		var res := ResourceLoader.load(blueprint_path)
 		if res is ShipBlueprint:
 			bp = res
 	else:
@@ -863,7 +867,7 @@ func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: D
 	if not star_system_dict.is_empty():
 		sys.from_dict(star_system_dict)
 	elif not star_system_path.is_empty() and ResourceLoader.exists(star_system_path):
-		var res = ResourceLoader.load(star_system_path)
+		var res := ResourceLoader.load(star_system_path)
 		if res is StarSystemData:
 			sys = res
 	else:
@@ -871,7 +875,7 @@ func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: D
 	_cached_selected_star_system = sys
 	
 	# Aggiorna i manager locali
-	var space_world_mgr = get_node_or_null("/root/SpaceWorldManager")
+	var space_world_mgr := get_node_or_null("/root/SpaceWorldManager")
 	if space_world_mgr:
 		if space_world_mgr.has_method("set_ship_blueprint"):
 			space_world_mgr.set_ship_blueprint(bp)
@@ -884,7 +888,7 @@ func _rpc_sync_session_resources(blueprint_dict: Dictionary, star_system_dict: D
 func _rpc_launch_game() -> void:
 	is_mission_started = true
 	
-	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
 	if ssm and ssm.has_method("start_mission"):
 		ssm.start_mission(get_local_player_role(), is_solo_mode, get_selected_ship_blueprint())
 	
@@ -922,8 +926,8 @@ func _parse_command_line() -> Dictionary:
 	
 	var i := 0
 	while i < args.size():
-		var arg := args[i].strip_edges()
-		var lower := arg.to_lower()
+		var arg: String = args[i].strip_edges()
+		var lower : String = arg.to_lower()
 		
 		if lower in ["--server", "-server", "--host", "-host", "--dedicated", "--dedicated-server"]:
 			result["server"] = true

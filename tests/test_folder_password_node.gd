@@ -12,7 +12,7 @@ func _ready() -> void:
 
 func test_folder_password_manager() -> void:
 	print("1. Testing FolderPasswordManager basic logic...")
-	var fpm = FolderPasswordManager
+	var fpm := FolderPasswordManager
 	assert(fpm != null, "FolderPasswordManager must exist")
 	
 	# Normalization
@@ -49,13 +49,13 @@ func test_folder_password_manager() -> void:
 
 func test_dialog_logic() -> void:
 	print("2. Testing Dialog Scenes instantiation and signals...")
-	var set_dlg_scene = load("res://Scenes/Window/Password Dialog/set_password_dialog.tscn")
+	var set_dlg_scene: PackedScene = load("res://Scenes/Window/Password Dialog/set_password_dialog.tscn")
 	assert(set_dlg_scene != null, "set_password_dialog.tscn should load")
-	var set_dlg = set_dlg_scene.instantiate()
+	var set_dlg: Node = set_dlg_scene.instantiate()
 	set_dlg.setup("TestFolder", "TestFolder")
 	add_child(set_dlg)
 	
-	var set_pwd_edit = set_dlg.get_node("%PasswordEdit")
+	var set_pwd_edit: LineEdit = set_dlg.get_node("%PasswordEdit")
 	set_pwd_edit.text = "test_pass"
 	set_dlg._on_ok_pressed()
 	
@@ -63,10 +63,10 @@ func test_dialog_logic() -> void:
 	assert(FolderPasswordManager.check_password("TestFolder", "test_pass"), "Password should match")
 	
 	# Test enter password dialog - wrong pass
-	var enter_dlg_scene = load("res://Scenes/Window/Password Dialog/enter_password_dialog.tscn")
+	var enter_dlg_scene: PackedScene = load("res://Scenes/Window/Password Dialog/enter_password_dialog.tscn")
 	assert(enter_dlg_scene != null, "enter_password_dialog.tscn should load")
-	var enter_dlg = enter_dlg_scene.instantiate()
-	var test_state = {
+	var enter_dlg: Node = enter_dlg_scene.instantiate()
+	var test_state := {
 		"success_called": false,
 		"removed_pass_val": false,
 		"cancel_called": false
@@ -80,7 +80,7 @@ func test_dialog_logic() -> void:
 	)
 	add_child(enter_dlg)
 	
-	var enter_pwd_edit = enter_dlg.get_node("%PasswordEdit")
+	var enter_pwd_edit: LineEdit = enter_dlg.get_node("%PasswordEdit")
 	enter_pwd_edit.text = "wrong_pass"
 	enter_dlg._on_ok_pressed()
 	assert(!test_state["success_called"], "Success callback must NOT be called on wrong pass")
@@ -94,8 +94,8 @@ func test_dialog_logic() -> void:
 	assert(FolderPasswordManager.has_password("TestFolder"), "Password should still exist after OK")
 	
 	# Test enter password dialog - OK e rimuovi password
-	var enter_dlg2 = enter_dlg_scene.instantiate()
-	var test_state2 = {
+	var enter_dlg2: Node = enter_dlg_scene.instantiate()
+	var test_state2 := {
 		"success_called": false,
 		"removed_pass_val": false
 	}
@@ -104,7 +104,7 @@ func test_dialog_logic() -> void:
 		test_state2["removed_pass_val"] = rem
 	)
 	add_child(enter_dlg2)
-	var enter_pwd_edit2 = enter_dlg2.get_node("%PasswordEdit")
+	var enter_pwd_edit2: LineEdit = enter_dlg2.get_node("%PasswordEdit")
 	enter_pwd_edit2.text = "test_pass"
 	enter_dlg2._on_ok_remove_pressed()
 	assert(test_state2["success_called"], "Success callback must be called on OK e rimuovi")
@@ -112,8 +112,8 @@ func test_dialog_logic() -> void:
 	assert(!FolderPasswordManager.has_password("TestFolder"), "Password should be removed from manager")
 	
 	# Test enter password dialog - Annulla
-	var enter_dlg3 = enter_dlg_scene.instantiate()
-	var test_state3 = {
+	var enter_dlg3: Node = enter_dlg_scene.instantiate()
+	var test_state3 := {
 		"success_called": false,
 		"cancel_called": false
 	}
@@ -131,7 +131,7 @@ func test_dialog_logic() -> void:
 
 func test_folder_node_lock_and_open() -> void:
 	print("3. Testing FakeFolder node lock icon and open...")
-	var folder_scene = load("res://Scenes/Desktop/folder.tscn")
+	var folder_scene: PackedScene = load("res://Scenes/Desktop/folder.tscn")
 	var folder_node: FakeFolder = folder_scene.instantiate()
 	folder_node.folder_name = "LockedFolder"
 	folder_node.folder_path = "LockedFolder"
@@ -157,12 +157,13 @@ func test_terminal_cd_with_password() -> void:
 	DirAccess.make_dir_absolute("user://files/TerminalTestDir")
 	FolderPasswordManager.set_password("TerminalTestDir", "term_pass")
 	
-	var terminal_scene = load("res://Applications/Terminal/src/terminal_scene.tscn")
-	var terminal = terminal_scene.instantiate()
+	var terminal_scene: PackedScene = load("res://Applications/Terminal/src/terminal_scene.tscn")
+	var terminal: Node = terminal_scene.instantiate()
 	add_child(terminal)
 	
 	# Execute cd command
-	var cd_cmd = load("res://Applications/Terminal/commands/cd_command.gd").new()
+	var cd_cmd_script: GDScript = load("res://Applications/Terminal/commands/cd_command.gd")
+	var cd_cmd = cd_cmd_script.new()
 	var args: Array[String] = ["TerminalTestDir"]
 	cd_cmd.execute(terminal, args)
 	
@@ -176,7 +177,7 @@ func test_terminal_cd_with_password() -> void:
 
 func test_restrictions_on_password_protected_folders() -> void:
 	print("5. Testing Restrictions (Cannot copy, cut, delete, or add another password)...")
-	var folder_scene = load("res://Scenes/Desktop/folder.tscn")
+	var folder_scene: PackedScene = load("res://Scenes/Desktop/folder.tscn")
 	var protected_folder: FakeFolder = folder_scene.instantiate()
 	protected_folder.folder_name = "ProtectedFolder"
 	protected_folder.folder_path = "ProtectedFolder"
@@ -203,8 +204,8 @@ func test_restrictions_on_password_protected_folders() -> void:
 	assert(DirAccess.dir_exists_absolute("user://files/ProtectedFolder"), "Protected folder must NOT be deleted")
 	
 	# Test 4: Cannot add another password
-	var set_dlg_scene = load("res://Scenes/Window/Password Dialog/set_password_dialog.tscn")
-	var set_dlg = set_dlg_scene.instantiate()
+	var set_dlg_scene: PackedScene = load("res://Scenes/Window/Password Dialog/set_password_dialog.tscn")
+	var set_dlg: Node = set_dlg_scene.instantiate()
 	set_dlg.setup("ProtectedFolder", "ProtectedFolder")
 	add_child(set_dlg)
 	set_dlg.get_node("%PasswordEdit").text = "another_password"
@@ -213,15 +214,15 @@ func test_restrictions_on_password_protected_folders() -> void:
 	assert(!FolderPasswordManager.check_password("ProtectedFolder", "another_password"), "New password must NOT be applied")
 	
 	# Test 5: Context menu options
-	var context_menu_scene = load("res://Scenes/Autoloads/Context Menu/context_menu.tscn")
-	var context_menu = context_menu_scene.instantiate()
+	var context_menu_scene: PackedScene = load("res://Scenes/Autoloads/Context Menu/context_menu.tscn")
+	var context_menu: Node = context_menu_scene.instantiate()
 	add_child(context_menu)
 	context_menu.target = protected_folder
 	context_menu.add_folder_options()
 	
 	var option_texts: Array[String] = []
 	for child in context_menu.get_node("VBoxContainer").get_children():
-		var opt_text_node = child.get_node_or_null("%Option Text")
+		var opt_text_node: Node = child.get_node_or_null("%Option Text")
 		if opt_text_node:
 			option_texts.append(opt_text_node.text)
 	

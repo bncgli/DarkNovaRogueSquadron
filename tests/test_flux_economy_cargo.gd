@@ -53,7 +53,7 @@ func _run_all_tests() -> void:
 		"reason": ""
 	}
 	
-	cargo_mgr.overload_prevented.connect(func(_item: Dictionary, _qty: int, reason: String) -> void:
+	cargo_mgr.overload_prevented.connect(func(_item: Variant, _qty: int, reason: String) -> void:
 		overload_state["received"] = true
 		overload_state["reason"] = reason
 	)
@@ -109,7 +109,7 @@ func _run_all_tests() -> void:
 	# Trasferimento con Stazione Spaziale
 	var station := SpaceStationEntity.new()
 	add_child(station)
-	station.set("warehouse_cargo", [])
+	station.warehouse_cargo.clear()
 	
 	var xfer_to_sttn := cargo_mgr.transfer_to_station("energy_cell", 3, station)
 	assert(xfer_to_sttn == true, "Trasferimento a magazzino stazione deve riuscire")

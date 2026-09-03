@@ -313,17 +313,17 @@ func calculate_planetary_occlusion(target_coords: Vector3i = current_sector_coor
 ## Verifica rapida se il settore si trova in cono d'ombra
 func is_in_planetary_shadow(coords: Vector3i = current_sector_coords) -> bool:
 	var occ := calculate_planetary_occlusion(coords)
-	return occ.get("is_occluded")
+	return occ.get("is_occluded", false)
 
 ## Verifica se c'è un blackout completo dei pannelli solari
 func is_solar_blackout(coords: Vector3i = current_sector_coords) -> bool:
 	var occ := calculate_planetary_occlusion(coords)
-	return occ.get("solar_blackout")
+	return occ.get("solar_blackout", false)
 
 ## Calcola l'energia solare effettiva al settore (0.0 - 1.3)
 func get_effective_solar_energy(coords: Vector3i = current_sector_coords) -> float:
 	var occ := calculate_planetary_occlusion(coords)
-	var factor: float = occ.get("light_energy_factor")
+	var factor: float = float(occ.get("light_energy_factor", 1.0))
 	return PRIMARY_STAR_BASE_ENERGY * factor
 
 # =============================================================================
@@ -419,7 +419,7 @@ func get_visible_system_entities(observer_coords: Vector3i = current_sector_coor
 			visible_list.append(body_dict)
 	
 	visible_list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance_sectors") < b.get("distance_sectors")
+		return float(a.get("distance_sectors", 0.0)) < float(b.get("distance_sectors", 0.0))
 	)
 	
 	return visible_list
@@ -507,7 +507,7 @@ func _update_sector_environmental_state(sec_data: SectorData) -> void:
 
 ## Sincronizzazione con SpaceWorldManager se presente nell'albero di gioco
 func _sync_with_space_world_manager(sec_data: SectorData) -> void:
-	var swm = get_node_or_null("/root/SpaceWorldManager")
+	var swm := get_node_or_null("/root/SpaceWorldManager")
 	if swm and is_instance_valid(swm):
 		# Se SpaceWorldManager ha metodi o segnali dedicati, li notifica
 		if swm.has_signal("sensors_scan_completed"):

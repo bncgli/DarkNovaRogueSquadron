@@ -139,7 +139,7 @@ func _run_tests() -> void:
 	print("SUCCESS: File delete working.")
 	
 	print("\n--- Test 3b: Ship Drive Folder Password Synchronization ---")
-	var fpm = get_node_or_null("/root/FolderPasswordManager")
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	if fpm == null:
 		print("FAIL: FolderPasswordManager not found!")
 		get_tree().quit(1)
@@ -229,7 +229,7 @@ func _run_tests() -> void:
 	print("SUCCESS: Ship Drive cleanly unmounted on disconnect.")
 	
 	print("\n--- Test 6: Multiplayer Lobby vs Mission Start ---")
-	var err = net.host_game("Capitano", 7815, "Nave Multiplayer", 4)
+	var err := net.host_game("Capitano", 7815, "Nave Multiplayer", 4)
 	if err != OK:
 		print("FAIL: Could not host game: ", err)
 		get_tree().quit(1)

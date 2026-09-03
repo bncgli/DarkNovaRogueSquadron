@@ -1,20 +1,22 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://ddck8bxpuhowe"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_j062u"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_j062u"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/duct_drone.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_j062u")
-roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista"])
-power_draw_mw = 10.0
-required_subsystems = Array[String](["drone_bay"])
+icon = ExtResource("1_icon")
 app_id = "duct_drone"
 title = "Duct Drone"
 description = "Robottino manutenzione e schema condotti 2D"
 developer = "Aether Dynamics"
 category = "Sistemi Nave"
-menu_path = "Sistemi Nave"
+menu_path = "Sistemi Nave/Enginering"
 icon_color = Color(1, 0.85, 0.2, 1)
 scene_path = "res://Applications/DuctDrone/duct_drone_app.tscn"
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista"])
+power_draw_mw = 10.0
+required_subsystems = Array[String](["drone_bay"])
 drive_folder = "Programs/DuctDrone"
 default_password = "DRONE-7815"
 default_files = Array[Dictionary]([{

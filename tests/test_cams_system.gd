@@ -15,9 +15,9 @@ func _init() -> void:
 	
 	var cam_ids := ["front", "rear", "left", "right", "top", "bottom"]
 	for cid in cam_ids:
-		var mount = ship.get_camera_mount(cid)
+		var mount := ship.get_camera_mount(cid)
 		assert(mount != null, "Mount telecamera '%s' deve esistere" % cid)
-		var trans = ship.get_camera_global_transform(cid)
+		var trans := ship.get_camera_global_transform(cid)
 		print("✔ Telecamera '%s' verificata - Transform: %s" % [cid, trans])
 	
 	# 2. Test SpaceWorldManager

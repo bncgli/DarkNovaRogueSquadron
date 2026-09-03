@@ -41,31 +41,37 @@ func to_dict() -> Dictionary:
 
 ## Deserializzazione da dizionario
 func from_dict(data: Dictionary) -> void:
-	id = data.get("id")
-	name = data.get("name")
+	id = data.get("id", id)
+	name = data.get("name", name)
 	type = data.get("type", type)
 	
 	if data.has("coords"):
-		if data["coords"] is Array and data["coords"].size() >= 3:
-			coords = Vector3i(int(data["coords"][0]), int(data["coords"][1]), int(data["coords"][2]))
-		elif data["coords"] is String:
-			# Se SectorData è disponibile globalmente, usa il suo parser
-			coords = SectorData.parse_id_to_coords(data["coords"])
+		var c: Variant = data["coords"]
+		if c is Array and c.size() >= 3:
+			coords = Vector3i(int(c[0]), int(c[1]), int(c[2]))
+		elif c is String:
+			coords = SectorData.parse_id_to_coords(c)
+		elif c is Vector3i:
+			coords = c
 	
-	radius_km = data.get("radius_km", radius_km)
-	mass_tons = data.get("mass_tons", mass_tons)
-	luminosity = data.get("luminosity", luminosity)
+	radius_km = float(data.get("radius_km", radius_km))
+	mass_tons = float(data.get("mass_tons", mass_tons))
+	luminosity = float(data.get("luminosity", luminosity))
 	
-	if data.has("color") and data["color"] is Array and data["color"].size() >= 4:
-		var c :Color = data["color"]
-		color = Color(c[0], c[1], c[2], c[3])
+	if data.has("color"):
+		var col: Variant = data["color"]
+		if col is Array and col.size() >= 3:
+			var a := float(col[3]) if col.size() > 3 else 1.0
+			color = Color(float(col[0]), float(col[1]), float(col[2]), a)
+		elif col is Color:
+			color = col
 		
-	occluding = data.get("occluding", occluding)
+	occluding = bool(data.get("occluding", occluding))
 	description = data.get("description", description)
-	temperature = data.get("temperature", temperature)
+	temperature = float(data.get("temperature", temperature))
 	atmosphere = data.get("atmosphere", atmosphere)
 	
 	if data.has("resources") and data["resources"] is Array:
 		resources.clear()
-		for r:Resource in data["resources"]:
+		for r in data["resources"]:
 			resources.append(str(r))

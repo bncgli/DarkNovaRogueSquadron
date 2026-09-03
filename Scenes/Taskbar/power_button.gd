@@ -6,7 +6,7 @@ var boot_splash_scene: PackedScene = preload("res://Scenes/Main/Boot Splash/boot
 
 func _on_pressed() -> void:
 	if OS.has_feature("web"):
-		NotificationManager.spawn_notification("You can't shut down the web version of GodotOS!")
+		NotificationManagerSingleton.spawn_notification("You can't shut down the web version of GodotOS!")
 		return
 	var boot_splash: BootSplash = boot_splash_scene.instantiate()
 	boot_splash.quit_animation = true

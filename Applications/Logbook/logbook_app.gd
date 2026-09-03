@@ -158,7 +158,7 @@ func _on_ship_connection_changed(is_connected: bool) -> void:
 		disconnected_overlay.visible = not is_connected
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 	log_event("MISSIONE AVVIATA - Sistemi logbook sincronizzati.")
 
@@ -229,19 +229,19 @@ func load_dat_configuration() -> void:
 
 func _apply_configuration(parsed_config: Dictionary, parsed_tuning: Dictionary) -> void:
 	if parsed_config.has("SYSTEM"):
-		var sys = parsed_config["SYSTEM"]
+		var sys: Dictionary = parsed_config["SYSTEM"]
 		if sys.has("app_name"): config_data["app_name"] = str(sys["app_name"])
 		if sys.has("version"): config_data["version"] = str(sys["version"])
 		if sys.has("status"): config_data["status"] = str(sys["status"])
 
 	if parsed_config.has("LOGGING"):
-		var logg = parsed_config["LOGGING"]
+		var logg: Variant = parsed_config["LOGGING"]
 		if logg.has("auto_log_events"): config_data["auto_log_events"] = bool(logg["auto_log_events"])
 		if logg.has("max_history_entries"): config_data["max_history_entries"] = int(logg["max_history_entries"])
 		if logg.has("log_telemetry_errors"): config_data["log_telemetry_errors"] = bool(logg["log_telemetry_errors"])
 
 	if parsed_tuning.has("SYNC"):
-		var sync = parsed_tuning["SYNC"]
+		var sync: Variant = parsed_tuning["SYNC"]
 		if sync.has("sync_to_ship_drive"): tuning_data["sync_to_ship_drive"] = bool(sync["sync_to_ship_drive"])
 		if sync.has("timestamp_format"): tuning_data["timestamp_format"] = str(sync["timestamp_format"])
 		if sync.has("cloud_backup"): tuning_data["cloud_backup"] = bool(sync["cloud_backup"])
@@ -332,7 +332,7 @@ func _refresh_contracts_ui() -> void:
 		if can_manage_contracts and contract["status"] == "IN_PROGRESS":
 			var complete_btn := Button.new()
 			complete_btn.text = "Completa & Riscuoti"
-			var cid = contract["id"]
+			var cid: String = contract["id"]
 			complete_btn.pressed.connect(func(): complete_contract(cid))
 			hbox.add_child(complete_btn)
 
@@ -396,12 +396,12 @@ func add_contract(contract_data: Dictionary) -> bool:
 	
 	var new_entry := {
 		"id": cid,
-		"title": contract_data.get("title"),
-		"description": contract_data.get("description"),
-		"reward_flux": contract_data.get("reward_flux"),
-		"reward_credits": contract_data.get("reward_credits"),
-		"status": contract_data.get("status"),
-		"issuer": contract_data.get("issuer")
+		"title": str(contract_data.get("title", "Contratto")),
+		"description": str(contract_data.get("description", "")),
+		"reward_flux": int(contract_data.get("reward_flux", contract_data.get("reward_credits", 0))),
+		"reward_credits": int(contract_data.get("reward_credits", 0)),
+		"status": str(contract_data.get("status", "IN_PROGRESS")),
+		"issuer": str(contract_data.get("issuer", "Stazione"))
 	}
 	active_contracts.append(new_entry)
 	log_event("NUOVO CONTRATTO ACQUISITO: %s" % new_entry["title"])

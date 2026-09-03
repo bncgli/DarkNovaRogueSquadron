@@ -886,14 +886,21 @@ rooms = Array[ExtResource("2_r4o8m")]([SubResource("Resource_room_bridge"), SubR
 ducts = Array[ExtResource("1_10483")]([SubResource("Resource_duct_1"), SubResource("Resource_duct_2"), SubResource("Resource_duct_3"), SubResource("Resource_duct_4"), SubResource("Resource_duct_5"), SubResource("Resource_duct_6"), SubResource("Resource_duct_7"), SubResource("Resource_duct_8"), SubResource("Resource_duct_9"), SubResource("Resource_duct_10"), SubResource("Resource_duct_11"), SubResource("Resource_duct_12"), SubResource("Resource_duct_13"), SubResource("Resource_duct_14"), SubResource("Resource_duct_15"), SubResource("Resource_duct_16"), SubResource("Resource_duct_17"), SubResource("Resource_hcilf"), SubResource("Resource_12irv"), SubResource("Resource_r8ubu"), SubResource("Resource_gm38s")])
 drive_files = Array[ExtResource("2_2o3qs")]([SubResource("Resource_2o3qs"), SubResource("Resource_0retm"), SubResource("Resource_5gyaf"), SubResource("Resource_6qj18"), SubResource("Resource_2vxcw"), SubResource("Resource_pv8qg"), SubResource("Resource_bkl24"), SubResource("Resource_i82pr"), SubResource("Resource_3i4yk"), SubResource("Resource_mbylt"), SubResource("Resource_gvkt0"), SubResource("Resource_tx7is"), SubResource("Resource_2wg3o"), SubResource("Resource_5uroj"), SubResource("Resource_0ttoj")])
 drive_passwords = {
+"Ship Drive/Programs/Cams": "CAMS-7815",
 "Ship Drive/Programs/CargoBay": "CARG-7815",
 "Ship Drive/Programs/Comms": "COMM-7815",
+"Ship Drive/Programs/Diagnostics": "DIAG-7815",
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
+"Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/FluxWallet": "FLUX-7815",
+"Ship Drive/Programs/LifeSupport": "LIFE-7815",
+"Ship Drive/Programs/Logbook": "LOGB-7815",
+"Ship Drive/Programs/PowerGrid": "GRID-7815",
 "Ship Drive/Programs/Sensors": "SENS-7815",
 "Ship Drive/Programs/ServiceDrone": "SERV-7815",
 "Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
 "Ship Drive/Programs/StationHub": "STTN-7815",
+"Ship Drive/Programs/SystemMap": "MAPS-7815",
 "Ship Drive/Programs/Weapons": "WEAP-7815"
 }
 installed_apps = Array[ExtResource("6_app_script")]([SubResource("Resource_app_flight"), SubResource("Resource_app_power"), SubResource("Resource_app_cams"), SubResource("Resource_app_life"), SubResource("Resource_app_diag"), SubResource("Resource_app_map"), SubResource("Resource_app_log"), SubResource("Resource_4iptn"), SubResource("Resource_bgbc1"), SubResource("Resource_dhb3i"), SubResource("Resource_d1s52"), SubResource("Resource_ac58n"), SubResource("Resource_y7fwl"), SubResource("Resource_ccqtn"), SubResource("Resource_vajca"), SubResource("Resource_kqfrg")])

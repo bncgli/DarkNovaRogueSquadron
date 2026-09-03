@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Hull Outline / Blueprint Grid -->
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M32 12 L46 36 L38 48 L26 48 L18 36 Z" fill="none" stroke="#FFFFFF" stroke-width="3" />
+  <!-- Wrench / Tool -->
+  <line x1="22" y1="22" x2="42" y2="42" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" />
+  <circle cx="22" cy="22" r="5" fill="none" stroke="#FFFFFF" stroke-width="3" />
+</svg>

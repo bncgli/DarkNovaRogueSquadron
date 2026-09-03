@@ -26,7 +26,7 @@ func _connect_system_signals() -> void:
 		if not SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 	
-	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
 	if ssm:
 		if ssm.has_signal("mission_started") and not ssm.mission_started.is_connected(_on_software_mission_started):
 			ssm.mission_started.connect(_on_software_mission_started)
@@ -37,7 +37,7 @@ func _connect_system_signals() -> void:
 		if ssm.has_signal("registry_changed") and not ssm.registry_changed.is_connected(_on_software_registry_changed):
 			ssm.registry_changed.connect(_on_software_registry_changed)
 	
-	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm := get_node_or_null("/root/TerminalSoftwareManager")
 	if tsm:
 		if tsm.has_signal("registry_changed") and not tsm.registry_changed.is_connected(_on_software_registry_changed):
 			tsm.registry_changed.connect(_on_software_registry_changed)
@@ -62,7 +62,7 @@ func _disconnect_system_signals() -> void:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 	
-	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
 	if ssm:
 		if ssm.has_signal("mission_started") and ssm.mission_started.is_connected(_on_software_mission_started):
 			ssm.mission_started.disconnect(_on_software_mission_started)
@@ -73,7 +73,7 @@ func _disconnect_system_signals() -> void:
 		if ssm.has_signal("registry_changed") and ssm.registry_changed.is_connected(_on_software_registry_changed):
 			ssm.registry_changed.disconnect(_on_software_registry_changed)
 	
-	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm := get_node_or_null("/root/TerminalSoftwareManager")
 	if tsm:
 		if tsm.has_signal("registry_changed") and tsm.registry_changed.is_connected(_on_software_registry_changed):
 			tsm.registry_changed.disconnect(_on_software_registry_changed)
@@ -111,7 +111,7 @@ func _on_software_role_changed(_new_role: String) -> void:
 func _on_software_registry_changed() -> void:
 	_refresh_ship_apps()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_refresh_ship_apps()
 
 func _on_mission_ended() -> void:
@@ -146,19 +146,20 @@ func _refresh_ship_apps() -> void:
 	# Mappa i nodi statici già presenti nel VBoxContainer per evitare duplicati
 	for child in vbox_container.get_children():
 		if child is Control and not child.is_in_group("dynamic_ship_apps"):
-			var app_path = str(child.get("application_scene"))
-			var game_path = str(child.get("game_scene"))
+			var app_path := str(child.get("application_scene"))
+			var game_path := str(child.get("game_scene"))
 			if not app_path.is_empty(): seen_paths[app_path] = true
 			if not game_path.is_empty(): seen_paths[game_path] = true
 	
 	# 1. Carica Local Terminal Apps (sempre visibili se registrate)
-	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm := get_node_or_null("/root/TerminalSoftwareManager")
 	if tsm:
-		var term_apps = tsm.get_all_registered_apps()
+		var term_apps: Array = tsm.get_all_registered_apps()
 		for app_res in term_apps:
-			var d = app_res.to_dict()
-			var app_id = d.get("id")
-			var s_path = d.get("scene_path")
+			var d: Dictionary = app_res.to_dict()
+			d["is_ship_app"] = false
+			var app_id: String = d.get("id")
+			var s_path: Variant = d.get("scene_path")
 			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
 				apps.append(d)
 				seen_ids[app_id] = true
@@ -172,7 +173,7 @@ func _refresh_ship_apps() -> void:
 	elif nm and nm.has_method("is_ship_connected"):
 		is_active = nm.is_ship_connected()
 	
-	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
 	if not is_active and ssm and ssm.get("is_mission_active"):
 		is_active = true
 	
@@ -192,44 +193,51 @@ func _refresh_ship_apps() -> void:
 			var app_resources: Array = ssm.get_apps_for_role(my_role, is_solo)
 			for r in app_resources:
 				if r is Resource and r.has_method("to_dict"):
-					ship_apps.append(r.to_dict())
+					var item: Dictionary = r.to_dict()
+					item["is_ship_app"] = true
+					ship_apps.append(item)
 				elif r is Dictionary:
-					ship_apps.append(r)
+					var item := (r as Dictionary).duplicate(true)
+					item["is_ship_app"] = true
+					ship_apps.append(item)
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_installed_apps_for_role"):
-			ship_apps = SpaceWorldManager.get_installed_apps_for_role(my_role, is_solo)
+			for a in SpaceWorldManager.get_installed_apps_for_role(my_role, is_solo):
+				var item: Dictionary = a.to_dict() if (a is Resource and a.has_method("to_dict")) else (a as Dictionary if a is Dictionary else {})
+				item["is_ship_app"] = true
+				ship_apps.append(item)
 		elif SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
-			var bp = SpaceWorldManager.get_ship_blueprint()
+			var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint()
 			if bp:
-				ship_apps = bp.get_apps_for_role(my_role, is_solo)
+				for a in bp.get_apps_for_role(my_role, is_solo):
+					var item: Dictionary = a.to_dict()
+					item["is_ship_app"] = true
+					ship_apps.append(item)
 		
 		# Fallback su default blueprint se lista vuota ma sessione attiva
 		if ship_apps.is_empty():
 			var def_bp := ShipBlueprint.get_default_blueprint()
 			if def_bp:
-				ship_apps = def_bp.get_apps_for_role(my_role, is_solo)
+				for a in def_bp.get_apps_for_role(my_role, is_solo):
+					var item: Dictionary = a.to_dict()
+					item["is_ship_app"] = true
+					ship_apps.append(item)
 		
 		for app in ship_apps:
-			var app_id = app.get("id")
-			var s_path = app.get("scene_path")
+			var app_id: String = app.get("id")
+			var s_path: Variant = app.get("scene_path")
 			if not app_id.is_empty() and not seen_ids.has(app_id) and not seen_paths.has(s_path):
 				apps.append(app)
 				seen_ids[app_id] = true
 				if not s_path.is_empty(): seen_paths[s_path] = true
 	
 	if true: # Invece di 'if is_active', ora usiamo sempre la lista apps popolata
-		var root_tree = {"subfolders": {}, "apps": []}
+		var root_tree := {"subfolders": {}, "apps": []}
 		for app in apps:
-			var path = str(app.get("menu_path")).strip_edges()
+			var path := str(app.get("menu_path")).strip_edges()
 			
-			# Fallback: se menu_path è vuoto, usa la categoria come cartella radice
-			if path.is_empty():
-				var category = str(app.get("category")).strip_edges()
-				if not category.is_empty() and category != "Applicazioni":
-					path = category
-			
-			var current = root_tree
+			var current := root_tree
 			if not path.is_empty():
-				var parts = path.split("/")
+				var parts := path.split("/")
 				for part in parts:
 					part = part.strip_edges()
 					if part.is_empty(): continue
@@ -257,7 +265,7 @@ func _update_start_menu_size() -> void:
 		if vp:
 			vp_height = vp.get_visible_rect().size.y
 	var max_allowed_height: float = maxf(vp_height - 60.0, 200.0)
-	var desired_height: float = clampf(float(visible_rows) * 61.0 + 55.0, 200.0, max_allowed_height)
+	var desired_height: float = clampf(float(visible_rows) * 49.0 + 55.0, 200.0, max_allowed_height)
 	start_menu.size.y = desired_height
 	
 	# Se il menu è già visibile, aggiorna la posizione Y per farlo crescere verso l'alto
@@ -278,21 +286,33 @@ func _count_visible_rows(container: Control) -> int:
 				count += 1
 	return count
 
-func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert_idx: int, current_menu: Control) -> int:
+func _tree_has_ship_apps(tree: Dictionary) -> bool:
+	for app in tree.get("apps", []):
+		if bool(app.get("is_ship_app", false)):
+			return true
+	for sub in tree.get("subfolders", {}).values():
+		if _tree_has_ship_apps(sub):
+			return true
+	return false
+
+func _render_menu_tree(container: Control, level: Dictionary, _depth: int, insert_idx: int, current_menu: Control) -> int:
 	var option_scene := load("res://Scenes/Taskbar/start_menu_option.tscn")
 	
 	# Subfolders first
-	var subfolder_names = level["subfolders"].keys()
+	var subfolder_names: Array = level["subfolders"].keys()
 	subfolder_names.sort()
 	for folder_name in subfolder_names:
 		var opt: Control = option_scene.instantiate() as Control
-		opt.add_to_group("dynamic_ship_apps")
+		var sub_tree: Variant = level["subfolders"][folder_name]
+		if _tree_has_ship_apps(sub_tree):
+			opt.add_to_group("dynamic_ship_apps")
+		else:
+			opt.add_to_group("dynamic_term_apps")
 		container.add_child(opt)
 		if insert_idx >= 0:
 			container.move_child(opt, insert_idx)
 			insert_idx += 1
 		
-		var sub_tree = level["subfolders"][folder_name]
 		opt.configure_option(folder_name, "Cartella", "", Color.WHITE, null, "", true, sub_tree)
 		_dynamic_ship_app_nodes.append(opt)
 		
@@ -300,6 +320,7 @@ func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert
 	
 	# Apps
 	for app in level["apps"]:
+		var is_ship := bool(app.get("is_ship_app", false))
 		var opt: Control = option_scene.instantiate() as Control
 		var opt_title: String = str(app.get("title"))
 		var opt_desc: String = str(app.get("description"))
@@ -308,9 +329,18 @@ func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert
 		var opt_color: Color = app.get("icon_color")
 		var opt_id: String = str(app.get("id"))
 		
+		var opt_icon: Texture2D = null
+		if app.has("icon"):
+			var raw_icon: Variant = app.get("icon")
+			if raw_icon is Texture2D:
+				opt_icon = raw_icon
+			elif raw_icon is String and not (raw_icon as String).is_empty():
+				if ResourceLoader.exists(raw_icon):
+					opt_icon = load(raw_icon) as Texture2D
+		
 		var is_game: bool = str(app.get("category")).contains("Giochi")
 		
-		opt.name = "ShipApp_%s" % opt_id
+		opt.name = "ShipApp_%s" % opt_id if is_ship else "TermApp_%s" % opt_id
 		opt.set("title_text", opt_title)
 		opt.set("description_text", opt_desc)
 		opt.set("developer_text", opt_dev)
@@ -322,7 +352,10 @@ func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert
 			opt.set("application_scene", opt_scene)
 			opt.set("game_scene", "")
 			opt.set("use_generic_pause_menu", false)
-		opt.add_to_group("dynamic_ship_apps")
+		if is_ship:
+			opt.add_to_group("dynamic_ship_apps")
+		else:
+			opt.add_to_group("dynamic_term_apps")
 		
 		container.add_child(opt)
 		if insert_idx >= 0:
@@ -330,7 +363,7 @@ func _render_menu_tree(container: Control, level: Dictionary, depth: int, insert
 			insert_idx += 1
 		
 		if opt.has_method("configure_option"):
-			opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, null, opt_dev)
+			opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, opt_icon, opt_dev, false, {}, is_game)
 		
 		_dynamic_ship_app_nodes.append(opt)
 	
@@ -343,8 +376,8 @@ func _on_folder_pressed(option: Control, parent_menu: Control) -> void:
 	elif parent_menu == start_menu:
 		_close_all_submenus()
 	
-	var sub_menu_scene = load("res://Scenes/Taskbar/start_sub_menu.tscn")
-	var sub_menu = sub_menu_scene.instantiate()
+	var sub_menu_scene := load("res://Scenes/Taskbar/start_sub_menu.tscn")
+	var sub_menu: Control = sub_menu_scene.instantiate()
 	sub_menu.add_to_group("start_menu_panels")
 	$"../../StartMenuAnchor".add_child(sub_menu)
 	

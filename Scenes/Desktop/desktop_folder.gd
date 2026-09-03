@@ -151,16 +151,16 @@ func spawn_window() -> void:
 
 func delete_file() -> void:
 	if folder_name == "Ship Drive" and (folder_path == "Ship Drive" or folder_path == ""):
-		NotificationManager.spawn_notification("Non e' possibile eliminare 'Ship Drive'. Disconnettersi per smontare l'unita'.")
+		NotificationManagerSingleton.spawn_notification("Non e' possibile eliminare 'Ship Drive'. Disconnettersi per smontare l'unita'.")
 		return
 	if folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
-		NotificationManager.spawn_notification("Non e' possibile eliminare 'Terminal Drive'.")
+		NotificationManagerSingleton.spawn_notification("Non e' possibile eliminare 'Terminal Drive'.")
 		return
 	
 	if file_type == GlobalValues.FileType.FOLDER:
 		var fpm := get_node_or_null("/root/FolderPasswordManager")
 		if fpm and fpm.has_password(folder_path):
-			NotificationManager.spawn_notification("Non e' possibile eliminare una cartella protetta da password.")
+			NotificationManagerSingleton.spawn_notification("Non e' possibile eliminare una cartella protetta da password.")
 			return
 	
 	var is_folder: bool = (file_type == GlobalValues.FileType.FOLDER)
@@ -202,7 +202,7 @@ func delete_file() -> void:
 			desktop_file_manager.delete_file_with_name(folder_name)
 			desktop_file_manager.sort_folders()
 	# TODO make the color file_type dependent?
-	NotificationManager.spawn_notification("Moved [color=59ea90][wave freq=7]%s[/wave][/color] to trash!" % folder_name)
+	NotificationManagerSingleton.spawn_notification("Moved [color=59ea90][wave freq=7]%s[/wave][/color] to trash!" % folder_name)
 	queue_free()
 
 func open_folder() -> void:

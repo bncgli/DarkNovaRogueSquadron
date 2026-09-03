@@ -12,7 +12,7 @@ func _run_suite() -> void:
 	var app_scene := load("res://Applications/ShipBuilder/ship_builder.tscn")
 	assert(app_scene != null, "La scena ship_builder.tscn deve essere caricata correttamente")
 	
-	var app = app_scene.instantiate()
+	var app := app_scene.instantiate()
 	add_child(app)
 	assert(app != null, "L'app deve essere istanziata")
 	await get_tree().process_frame
@@ -28,7 +28,7 @@ func _run_suite() -> void:
 
 	# TEST 3: Creazione Elemento (Stanza)
 	print("\n--- TEST 3: Creazione Elemento (Stanza) ---")
-	var initial_rooms = app.current_blueprint.rooms.size()
+	var initial_rooms := app.current_blueprint.rooms.size()
 	# Simulate finishing adding a room
 	app.canvas.selected_room_template = "ponte_comando"
 	app.canvas._finish_add_room(Vector2(100, 100), Vector2(200, 200))
@@ -49,9 +49,9 @@ func _run_suite() -> void:
 
 	# TEST 5: Registrazione Software Manager
 	print("\n--- TEST 5: Registrazione Software Manager ---")
-	var tsm = get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm := get_node_or_null("/root/TerminalSoftwareManager")
 	assert(tsm != null, "TerminalSoftwareManager deve essere presente")
-	var registered_app = tsm.get_registered_app("ship_builder")
+	var registered_app := tsm.get_registered_app("ship_builder")
 	assert(registered_app != null, "ShipBuilder deve essere registrato in TerminalSoftwareManager")
 	print("? Registrazione software verificata")
 

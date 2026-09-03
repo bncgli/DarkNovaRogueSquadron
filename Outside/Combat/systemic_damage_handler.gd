@@ -258,12 +258,12 @@ func _evaluate_alarm_level() -> void:
 
 func _sync_with_space_world_manager(systemic_events: Array[Dictionary]) -> void:
 	if not Engine.has_singleton("SpaceWorldManagerSingleton"):
-		var swm_node = get_node_or_null("/root/SpaceWorldManager")
+		var swm_node := get_node_or_null("/root/SpaceWorldManager")
 		if swm_node and is_instance_valid(swm_node):
 			for evt in systemic_events:
 				var m_type: String = evt.get("malfunction_type")
 				if m_type == "dmg_breach" or m_type == "short_circuit":
-					var damage_type = "breach" if m_type == "dmg_breach" else "short_circuit"
+					var damage_type := "breach" if m_type == "dmg_breach" else "short_circuit"
 					if swm_node.has_method("report_ship_damage"):
 						swm_node.report_ship_damage(damage_type, evt.get("room"), Vector2.ZERO)
 

@@ -25,8 +25,8 @@ func _run_all_tests() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	var net_mgr = get_node_or_null("/root/NetworkManager")
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	
 	# =========================================================================
 	# TEST 1: OVERLAY / CICLO DI VITA (OFFLINE vs MISSIONE AVVIATA)

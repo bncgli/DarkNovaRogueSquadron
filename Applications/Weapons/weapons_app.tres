@@ -1,22 +1,24 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://dywil4hscbra7"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_4nhf5"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_4nhf5"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/weapons.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_4nhf5")
-roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Stagista"])
-power_draw_mw = 25.0
-required_subsystems = Array[String](["weapons_array", "targeting_radar"])
-is_critical = true
+icon = ExtResource("1_icon")
 app_id = "weapons"
 title = "Tactical Weapons"
 description = "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG"
 developer = "CyberDyne Orbital"
 category = "Sistemi Nave"
-menu_path = "Sistemi Nave"
+menu_path = "Sistemi Nave/Warfare"
 icon_color = Color(0.95, 0.25, 0.25, 1)
 scene_path = "res://Applications/Weapons/weapons_app.tscn"
 default_window_size = Vector2(720, 520)
+roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Stagista"])
+power_draw_mw = 25.0
+required_subsystems = Array[String](["weapons_array", "targeting_radar"])
+is_critical = true
 drive_folder = "Programs/Weapons"
 default_password = "WEAP-7815"
 default_files = Array[Dictionary]([{

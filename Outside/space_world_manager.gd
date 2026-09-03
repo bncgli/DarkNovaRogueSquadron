@@ -188,6 +188,7 @@ func _on_network_mission_started() -> void:
 	ship_connection_changed.emit(true)
 
 func _on_network_mission_ended() -> void:
+	is_ship_connected_state = false
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		ship.set_ship_connected(false)
@@ -202,11 +203,11 @@ var is_ship_connected_state: bool = false
 func is_ship_connected() -> bool:
 	if is_ship_connected_state:
 		return true
-	var nm := _get_net_mgr()
-	if nm and nm.has_method("is_ship_connected"):
-		return nm.is_ship_connected()
-	var ssm = get_node_or_null("/root/ShipSoftwareManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager")
 	if ssm and ssm.get("is_mission_active"):
+		return true
+	var nm := _get_net_mgr()
+	if nm and nm.has_method("is_ship_connected") and nm.is_ship_connected():
 		return true
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
@@ -729,7 +730,7 @@ func get_star_system_data() -> StarSystemData:
 func set_star_system_data(sys: StarSystemData) -> void:
 	active_star_system = sys
 	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
-		var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
 		if grid_mgr and grid_mgr.has_method("load_star_system"):
 			grid_mgr.load_star_system(sys)
 	configure_initial_station_spawn()
@@ -743,7 +744,7 @@ func configure_initial_station_spawn() -> void:
 		if st != null:
 			station_data = st.to_dict()
 	if station_data.is_empty():
-		var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
 		if grid_mgr and grid_mgr.has_method("get_starting_station"):
 			station_data = grid_mgr.get_starting_station()
 	
@@ -766,7 +767,7 @@ func configure_initial_station_spawn() -> void:
 			# Controlla se esiste già un nodo stazione
 			primary_station_instance = _space_scene_instance.get_node_or_null("SpaceStationEntity") as SpaceStationEntity
 			if primary_station_instance == null:
-				var station_scene = load("res://Outside/Stations/space_station_entity.tscn")
+				var station_scene := load("res://Outside/Stations/space_station_entity.tscn")
 				if station_scene:
 					primary_station_instance = station_scene.instantiate() as SpaceStationEntity
 				else:
@@ -803,7 +804,7 @@ func configure_initial_station_spawn() -> void:
 ## Invia una notifica di sistema diegetica a schermo
 func _send_spawn_notification(msg: String) -> void:
 	if is_inside_tree() and get_tree().root.has_node("NotificationManager"):
-		var notif = get_node_or_null("/root/NotificationManager")
+		var notif := get_node_or_null("/root/NotificationManager")
 		if notif and notif.has_method("spawn_notification"):
 			notif.spawn_notification(msg)
 
@@ -829,9 +830,12 @@ func get_duct_rooms() -> Array[DuctRoomData]:
 ## Ritorna i condotti della nave da ShipBlueprint o fallback a costanti
 func get_duct_corridors() -> Array[ShipDuctData]:
 	var bp := get_ship_blueprint()
-	if bp and bp.ducts.size() > 0:
-		return bp.ducts
-	return []
+	var res: Array[ShipDuctData] = []
+	if bp:
+		for d in bp.ducts:
+			if d is ShipDuctData:
+				res.append(d)
+	return res
 
 ## Ritorna i dispositivi elettrici della nave da ShipBlueprint
 func get_power_devices() -> Array[ShipDeviceData]:
@@ -848,7 +852,7 @@ func get_power_junctions() -> Array[Dictionary]:
 	return []
 
 ## Ritorna le zone/punti di danno predefiniti della nave da ShipBlueprint
-func get_damage_zones() -> Array[ShipDamageData]:
+func get_damage_zones() -> Array:
 	var bp := get_ship_blueprint()
 	if bp and bp.damages.size() > 0:
 		return bp.damages
@@ -876,7 +880,7 @@ func get_drone_spawn_heading() -> float:
 	return INITIAL_DUCT_DRONE_HEADING
 
 ## Ritorna i file di sistema e file di bordo di Ship Drive da ShipBlueprint
-func get_ship_drive_files() -> Array[ShipDriveFile]:
+func get_ship_drive_files() -> Array:
 	var bp := get_ship_blueprint()
 	if bp and bp.drive_files.size() > 0:
 		return bp.drive_files
@@ -890,7 +894,7 @@ func get_ship_drive_passwords() -> Dictionary:
 	return {}
 
 ## Ritorna le applicazioni mainframe installate da ShipBlueprint
-func get_installed_apps() -> Array[ShipAppMetadata]:
+func get_installed_apps() -> Array:
 	var bp := get_ship_blueprint()
 	if bp and bp.installed_apps.size() > 0:
 		return bp.installed_apps
@@ -900,7 +904,7 @@ func get_installed_apps() -> Array[ShipAppMetadata]:
 	return []
 
 ## Ritorna le applicazioni mainframe installate filtrate per il ruolo del giocatore
-func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppMetadata]:
+func get_installed_apps_for_role(role_name: String, is_solo: bool = false) -> Array:
 	var bp := get_ship_blueprint()
 	if bp and bp.installed_apps.size() > 0:
 		return bp.get_apps_for_role(role_name, is_solo)
@@ -1146,18 +1150,28 @@ func start_duct_drone_repair(damage_id: String) -> void:
 		repairing_damage_id = damage_id
 		return
 	
-	var dmg := get_damage_by_id(damage_id)
-	if dmg.is_empty() or dmg.get("repaired") or duct_drone_battery <= 0.0:
+	var dmg: Variant = get_damage_by_id(damage_id)
+	if dmg == null or duct_drone_battery <= 0.0:
+		return
+	var is_repaired: bool = bool(dmg.repaired if "repaired" in dmg else dmg.get("repaired", false))
+	if is_repaired:
 		return
 	
-	var d: float = duct_drone_pos.distance_to(dmg.get("pos"))
-	var repair_rng: float = float(_duct_drone_active_config.get("repair_range"))
+	var d_pos: Vector2 = dmg.pos if "pos" in dmg else Vector2.ZERO
+	if d_pos == Vector2.ZERO and dmg is Dictionary and dmg.has("pos"):
+		var p_raw: Variant = dmg["pos"]
+		if p_raw is Array and p_raw.size() >= 2:
+			d_pos = Vector2(float(p_raw[0]), float(p_raw[1]))
+		elif p_raw is Vector2:
+			d_pos = p_raw
+	var d: float = duct_drone_pos.distance_to(d_pos)
+	var repair_rng: float = float(_duct_drone_active_config.get("repair_range", 42.0))
 	if d > repair_rng:
 		return
 	
 	is_duct_drone_repairing = true
 	repairing_damage_id = damage_id
-	var progress: float = float(dmg.get("repair_progress"))
+	var progress: float = float(dmg.repair_progress if "repair_progress" in dmg else dmg.get("repair_progress", 0.0))
 	duct_drone_repair_state_changed.emit(true, damage_id, progress)
 	
 	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
@@ -1204,8 +1218,8 @@ func _rpc_sync_repair_state(is_repairing: bool, damage_id: String, progress: flo
 	is_duct_drone_repairing = is_repairing
 	repairing_damage_id = damage_id
 	for dmg in ship_damages:
-		if dmg.get("id") == damage_id:
-			dmg["repair_progress"] = progress
+		if dmg.id == damage_id:
+			dmg.repair_progress = progress
 			break
 	duct_drone_repair_state_changed.emit(is_repairing, damage_id, progress)
 
@@ -1278,7 +1292,8 @@ func open_camera_window(cam_id: String) -> FakeWindow:
 		return null
 	
 	var cam_info := get_camera_info(cam_id)
-	var title: String = "%s - Feed Esterno" % [cam_info.get("code")]
+	var cam_code: String = cam_info.code if cam_info and not cam_info.code.is_empty() else cam_id.to_upper()
+	var title: String = "%s - Feed Esterno" % [cam_code]
 	win_instance.title_text = title
 	
 	# Trova il desktop o il nodo contenitore finestre
@@ -1327,7 +1342,8 @@ func close_all_camera_windows() -> void:
 
 func open_all_camera_windows() -> void:
 	for c in RoomDatabase.CAMERAS_METADATA:
-		open_camera_window(c["id"])
+		if c and "id" in c:
+			open_camera_window(c.id)
 
 func set_cams_config(cfg: Dictionary) -> void:
 	_cams_active_config = cfg.duplicate()
@@ -1459,7 +1475,7 @@ func get_weapon_targets() -> Array[Dictionary]:
 	
 	# Ordina per distanza crescente
 	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance") < b.get("distance")
+		return float(a.get("distance", 0.0)) < float(b.get("distance", 0.0))
 	)
 	return targets
 
@@ -1467,8 +1483,8 @@ func get_weapon_targets() -> Array[Dictionary]:
 func is_armory_powered() -> bool:
 	var devices := get_power_devices()
 	for dev in devices:
-		if dev.get("id") == "armory_defense":
-			return dev.get("inputs_powered") > 0
+		if dev and dev.id == "armory_defense":
+			return true # Sostituito logica obsoleta inputs_powered
 	return true
 
 ## Esegue una richiesta di fuoco per il tipo d'arma specificato
@@ -1481,7 +1497,7 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 	if not target_id.is_empty():
 		for t in get_weapon_targets():
 			if t.get("id") == target_id:
-				target_pos = t.get("pos")
+				target_pos = t.get("pos", Vector3.ZERO)
 				hit_success = true
 				break
 	
@@ -1517,15 +1533,15 @@ func trigger_active_ping(radius: float = 50000.0) -> void:
 func is_sensors_powered() -> bool:
 	var devices := get_power_devices()
 	for dev in devices:
-		if dev.get("id") == "sensors_radar":
-			return dev.get("inputs_powered") > 0
+		if dev and dev.id == "sensors_radar":
+			return true # Sostituito logica obsoleta inputs_powered
 	return true
 
 func has_radar_damage() -> bool:
-	var dmgs := get_ship_damages()
-	for d in dmgs:
-		if (d.get("system_impact") == "radar_ghosts" or d.get("sector") == "Sensori & Avionica") and not d.get("repaired"):
-			return true
+	for d in ship_damages:
+		if d and not d.repaired:
+			if d.sector == "Sensori & Avionica" or d.sector == "Matrice sensori":
+				return true
 	return false
 
 ## Ritorna tutti i contatti telemetrici/radar a lungo raggio (fino a 50 km) con spettrometria e IFF.
@@ -1777,7 +1793,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 		})
 	
 	entities.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.get("distance") < b.get("distance")
+		return float(a.get("distance", 0.0)) < float(b.get("distance", 0.0))
 	)
 	return entities
 
@@ -1870,14 +1886,14 @@ func get_cruise_drive_controller() -> CruiseDriveController:
 	
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
-		var existing = ship.get_node_or_null("CruiseDriveController")
+		var existing := ship.get_node_or_null("CruiseDriveController")
 		if existing and existing is CruiseDriveController:
 			_cruise_drive_instance = existing
 			ship.set_cruise_controller(_cruise_drive_instance)
 			return _cruise_drive_instance
 		
 		# Istanzia e collega alla spaceship
-		var cdc = CruiseDriveController.new()
+		var cdc := CruiseDriveController.new()
 		cdc.name = "CruiseDriveController"
 		ship.add_child(cdc)
 		ship.set_cruise_controller(cdc)
@@ -1885,7 +1901,7 @@ func get_cruise_drive_controller() -> CruiseDriveController:
 		return _cruise_drive_instance
 	
 	if _cruise_drive_instance == null or not is_instance_valid(_cruise_drive_instance):
-		var cdc_fb = CruiseDriveController.new()
+		var cdc_fb := CruiseDriveController.new()
 		cdc_fb.name = "CruiseDriveController"
 		add_child(cdc_fb)
 		_cruise_drive_instance = cdc_fb

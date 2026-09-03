@@ -6,7 +6,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	await get_tree().process_frame
-	var success = TestRBACStartMenuFilter.run_all_tests(self)
+	var success := TestRBACStartMenuFilter.run_all_tests(self)
 	await get_tree().process_frame
 	if success:
 		print("\n=======================================================")

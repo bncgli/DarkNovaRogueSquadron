@@ -11,6 +11,11 @@ extends Resource
 @export var repair_cost: float = 0.0
 @export var desc: String = ""
 @export var system_impact: String = ""
+@export var repaired: bool = false
+@export var revealed: bool = false
+@export var revealed_by: String = ""
+@export var repair_progress: float = 0.0
+@export var repair_duration: float = 5.0
 
 func _init(p_id: String = "", p_name: String = "", p_pos: Vector2 = Vector2.ZERO) -> void:
 	id = p_id
@@ -27,21 +32,31 @@ func to_dict() -> Dictionary:
 		"severity": severity,
 		"repair_cost": repair_cost,
 		"desc": desc,
-		"system_impact": system_impact
+		"system_impact": system_impact,
+		"repaired": repaired,
+		"revealed": revealed,
+		"revealed_by": revealed_by,
+		"repair_progress": repair_progress,
+		"repair_duration": repair_duration
 	}
 
 func from_dict(data: Dictionary) -> void:
-	id = data.get("id", id)
-	type = data.get("type", type)
-	name = data.get("name", name)
+	id = str(data.get("id", id))
+	type = str(data.get("type", type))
+	name = str(data.get("name", name))
 	if data.has("pos"):
-		var p = data["pos"]
+		var p: Variant = data["pos"]
 		if p is Array and p.size() == 2:
-			pos = Vector2(p[0], p[1])
+			pos = Vector2(float(p[0]), float(p[1]))
 		elif p is Vector2:
 			pos = p
-	sector = data.get("sector", sector)
+	sector = str(data.get("sector", sector))
 	severity = float(data.get("severity", severity))
 	repair_cost = float(data.get("repair_cost", repair_cost))
-	desc = data.get("desc", desc)
-	system_impact = data.get("system_impact", system_impact)
+	desc = str(data.get("desc", desc))
+	system_impact = str(data.get("system_impact", system_impact))
+	repaired = bool(data.get("repaired", repaired))
+	revealed = bool(data.get("revealed", revealed))
+	revealed_by = str(data.get("revealed_by", revealed_by))
+	repair_progress = float(data.get("repair_progress", repair_progress))
+	repair_duration = float(data.get("repair_duration", repair_duration))

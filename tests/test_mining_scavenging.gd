@@ -74,7 +74,7 @@ func test_asteroid_damage_and_fragment_generation() -> void:
 	assert(initial_state["health"] == 100.0, "Salute dopo danno deve essere 100")
 	
 	# Verifica proprietà del primo frammento generato
-	var first_frag = fragments[0]
+	var first_frag: Variant = fragments[0]
 	assert(first_frag != null, "Il frammento deve essere un MineralDepositEntity valido")
 	assert(first_frag.mass_kg > 0.0, "Il frammento deve avere una massa valida")
 	assert(first_frag.resource_type == initial_state["resource_type"], "Tipo risorsa frammento coerente con asteroide")

@@ -8,7 +8,7 @@ func _init() -> void:
 
 func execute(terminal: Terminal, _args: Array[String]) -> void:
 	# Recupera il manager dei software tramite l'autoload
-	var tsm = terminal.get_node_or_null("/root/TerminalSoftwareManager")
+	var tsm := terminal.get_node_or_null("/root/TerminalSoftwareManager")
 	if tsm:
 		if tsm.has_method("launch_app"):
 			tsm.launch_app("pod_info")

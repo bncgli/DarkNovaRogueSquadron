@@ -14,10 +14,10 @@ func open_camera_window(cam_id: String, window_scene_path: String, parent_node: 
 	if active_camera_windows.has(cam_id):
 		return active_camera_windows[cam_id]
 	
-	var scene = load(window_scene_path)
+	var scene := load(window_scene_path)
 	if not scene: return null
 	
-	var win = scene.instantiate() as FakeWindow
+	var win := scene.instantiate() as FakeWindow
 	parent_node.add_child(win)
 	
 	active_camera_windows[cam_id] = win

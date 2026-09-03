@@ -1,6 +1,6 @@
 extends Panel
 
-## A start menu option. Currently only used to spawn game windows and nothing else.
+## A start menu option. Used to display and spawn applications and games.
 
 ## Path to the game scene (if it's a game)
 @export var game_scene: String
@@ -18,11 +18,13 @@ extends Panel
 @export var developer_text: String
 
 ## Whether or not the scene should be instantiated inside a game window or outside one.
-## (You probably want this on, but it's great if you want to make your own custom window or behavior)
 @export var spawn_inside_window: bool = true
 
 ## Whether to use a simple pause menu or not (spawned by pressing ESC or P)
 @export var use_generic_pause_menu: bool
+
+const DEFAULT_APP_ICON: Texture2D = preload("res://Art/Icons/Apps/standard_app.svg")
+const FOLDER_ICON: Texture2D = preload("res://Art/Folder Icons/folder.png")
 
 var is_folder: bool = false
 var sub_tree: Dictionary = {}
@@ -38,16 +40,29 @@ func _ready() -> void:
 		%"Menu Description".text = "[center]%s" % description_text
 	if has_node("%Menu Developer"):
 		%"Menu Developer".text = "[center][color=gray]%s[/color]" % developer_text
+	
+	tooltip_text = description_text if not is_folder else ""
+	
+	var tex_rect: TextureRect = get_node_or_null("HBoxContainer/MarginContainer/TextureRect")
+	if tex_rect and tex_rect.texture == null:
+		tex_rect.texture = DEFAULT_APP_ICON
 
-func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "", p_is_folder: bool = false, p_sub_tree: Dictionary = {}) -> void:
+func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "", p_is_folder: bool = false, p_sub_tree: Dictionary = {}, p_is_game: bool = false) -> void:
 	title_text = p_title
 	description_text = p_description
 	developer_text = p_developer
-	application_scene = p_app_scene
-	game_scene = ""
-	use_generic_pause_menu = false
 	is_folder = p_is_folder
 	sub_tree = p_sub_tree
+	if p_is_game:
+		game_scene = p_app_scene
+		application_scene = ""
+		use_generic_pause_menu = true
+	else:
+		application_scene = p_app_scene
+		game_scene = ""
+		use_generic_pause_menu = false
+	
+	tooltip_text = description_text if not is_folder else ""
 	
 	if has_node("%Menu Title"):
 		%"Menu Title".text = "[center]%s" % title_text
@@ -58,11 +73,15 @@ func configure_option(p_title: String, p_description: String, p_app_scene: Strin
 	
 	var tex_rect: TextureRect = get_node_or_null("HBoxContainer/MarginContainer/TextureRect")
 	if tex_rect:
-		tex_rect.modulate = p_color
-		if p_texture:
+		if is_folder:
+			tex_rect.texture = FOLDER_ICON
+			tex_rect.modulate = Color(0.95, 0.75, 0.2)
+		elif p_texture != null and p_texture is Texture2D:
 			tex_rect.texture = p_texture
-		elif is_folder:
-			tex_rect.texture = load("res://Art/Folder Icons/folder.png")
+			tex_rect.modulate = p_color
+		else:
+			tex_rect.texture = DEFAULT_APP_ICON
+			tex_rect.modulate = p_color
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == 1 and event.is_pressed():
@@ -76,7 +95,7 @@ func _gui_input(event: InputEvent) -> void:
 		else:
 			spawn_outside_window()
 		
-		var start_button = get_tree().get_first_node_in_group("start_button_controller")
+		var start_button := get_tree().get_first_node_in_group("start_button_controller")
 		if start_button and start_button.has_method("hide_start_menu"):
 			start_button.hide_start_menu()
 
@@ -115,7 +134,10 @@ func spawn_window() -> void:
 	
 	var taskbar_button: Control = load("res://Scenes/Taskbar/taskbar_button.tscn").instantiate()
 	taskbar_button.target_window = window
-	taskbar_button.get_node("TextureMargin/TextureRect").texture = $"HBoxContainer/MarginContainer/TextureRect".texture
+	var tex: Texture2D = $"HBoxContainer/MarginContainer/TextureRect".texture
+	if tex == null:
+		tex = DEFAULT_APP_ICON
+	taskbar_button.get_node("TextureMargin/TextureRect").texture = tex
 	taskbar_button.active_color = $"HBoxContainer/MarginContainer/TextureRect".modulate
 	get_tree().get_first_node_in_group("taskbar_buttons").add_child(taskbar_button)
 

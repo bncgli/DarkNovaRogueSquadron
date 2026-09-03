@@ -60,6 +60,7 @@ func _run_all_tests() -> void:
 	assert(hub.is_station_docked == false, "StationHub deve essere inizialmente disconnesso")
 	
 	if comms:
+		comms.can_control_comms = true
 		comms.current_frequency = station.comms_frequency
 		var comms_req := comms.request_station_docking(station, station_mgr)
 		assert(comms_req == true, "Richiesta di attracco da Comms deve avere successo")
@@ -115,7 +116,7 @@ func _run_all_tests() -> void:
 	if hub.sell_quantity_spin_box:
 		hub.sell_quantity_spin_box.value = 1.0
 	
-	var sell_item := ship_items[0]
+	var sell_item: Variant = ship_items[0]
 	var sell_payout := int(hub._get_effective_price(sell_item.get("unit_base_value"), false))
 	
 	hub._on_btn_sell_cargo_pressed()
@@ -131,7 +132,7 @@ func _run_all_tests() -> void:
 	assert(hub.active_contracts.size() > 0, "La bacheca contratti deve contenere missioni")
 	
 	hub._on_contract_item_selected(0)
-	var selected_cnt = hub.active_contracts[0]
+	var selected_cnt := hub.active_contracts[0]
 	var target_cnt_id: String = selected_cnt.get("id")
 	
 	hub._on_accept_contract_pressed()

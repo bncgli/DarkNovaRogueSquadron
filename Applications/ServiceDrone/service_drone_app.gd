@@ -259,7 +259,7 @@ func _on_ship_connection_changed(_connected: bool) -> void:
 	_update_permissions()
 	_refresh_ui()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_ui()
@@ -275,7 +275,7 @@ func _on_player_role_changed(_peer_id: int, _new_role: String) -> void:
 	_update_permissions()
 
 func _update_permissions() -> void:
-	var nm = get_node_or_null("/root/NetworkManager")
+	var nm := get_node_or_null("/root/NetworkManager")
 	var my_role := ""
 	var is_solo := true
 	

@@ -10,12 +10,12 @@ var players: Dictionary = {} # peer_id -> Dictionary
 
 func set_player_role(peer_id: int, role: String) -> void:
 	if peer_id in players:
-		var old_role = players[peer_id].get("role")
+		var old_role: Variant = players[peer_id].get("role")
 		players[peer_id]["role"] = role
 		player_role_changed.emit(peer_id, old_role, role)
 
 func get_player_role(peer_id: int) -> String:
-	return players.get(peer_id, {}).get("role")
+	return players.get(peer_id, {}).get("role", "")
 
 func get_local_player_roles() -> Array[String]:
 	return [get_player_role(multiplayer.get_unique_id())]

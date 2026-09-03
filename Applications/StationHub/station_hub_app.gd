@@ -131,7 +131,7 @@ func _connect_signals() -> void:
 			SpaceWorldManager.ship_damages_updated.connect(_on_ship_damages_updated)
 	
 	# NetworkManager (RBAC)
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr:
 		if net_mgr.has_signal("role_changed") and not net_mgr.role_changed.is_connected(_on_role_changed):
 			net_mgr.role_changed.connect(_on_role_changed)
@@ -139,7 +139,7 @@ func _connect_signals() -> void:
 			net_mgr.session_mode_changed.connect(_on_session_mode_changed)
 			
 	# ShipDrive hot-reload
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_signal("file_synced") and not sdm.file_synced.is_connected(_on_drive_file_synced):
 		sdm.file_synced.connect(_on_drive_file_synced)
 		
@@ -226,9 +226,9 @@ func _on_docking_completed(station_id: String, bay_id: int, station_data: Dictio
 		undocked_overlay.visible = false
 		
 	if station_title_label:
-		station_title_label.text = "⚓ %s" % station_data.get("name")
+		station_title_label.text = "⚓ %s" % str(station_data.get("name", "Stazione Ignota"))
 	if station_sub_label:
-		station_sub_label.text = "Settore Operativo | Connesso a Bay 0%d | Fazione: %s" % [bay_id + 1, station_data.get("iff")]
+		station_sub_label.text = "Settore Operativo | Connesso a Bay 0%d | Fazione: %s" % [bay_id + 1, str(station_data.get("iff", "Neutrale"))]
 		
 	_populate_hub_data(station_data)
 
@@ -296,18 +296,18 @@ func _refresh_cargo_market_view() -> void:
 				{"id": "ammo_railgun", "name": "Munizioni Sabot Railgun", "category": "AMMO", "unit_mass_kg": 15.0, "unit_volume_m3": 0.2, "unit_base_value": 220.0, "quantity": 40, "description": "Proiettili cinetici al tungsteno-uranio per torrette pesanti."},
 				{"id": "energy_cell", "name": "Celle Energetiche al Plasma", "category": "ENERGY_CELL", "unit_mass_kg": 10.0, "unit_volume_m3": 0.3, "unit_base_value": 180.0, "quantity": 30, "description": "Condensatori al plasma ad alta densità per ricarica sublayer e scudi."}
 			]
-		for item in station_market_goods:
-			var price: int = int(_get_effective_price(item.get("unit_base_value"), true))
-			var line := "[%s] %s | Qnt: %d | %d CR" % [item.get("category"), item.get("name"), int(item.get("quantity")), price]
+		for item: Dictionary in station_market_goods:
+			var price: int = int(_get_effective_price(float(item.get("unit_base_value", 0.0)), true))
+			var line := "[%s] %s | Qnt: %d | %d CR" % [str(item.get("category", "Cargo")), str(item.get("name", "Merce")), int(item.get("quantity", 0)), price]
 			station_market_list.add_item(line)
 			
 	# Popola stiva nave
 	if ship_cargo_list and cargo_mgr:
 		ship_cargo_list.clear()
-		var ship_items := cargo_mgr.get_cargo_list()
-		for item in ship_items:
-			var val: int = int(_get_effective_price(item.get("unit_base_value"), false))
-			var line := "[%s] %s | Qnt: %d | Val: %d CR" % [item.get("category"), item.get("name"), int(item.get("quantity")), val]
+		var ship_items: Array[CargoItemData] = cargo_mgr.get_cargo_list()
+		for item: CargoItemData in ship_items:
+			var val: int = int(_get_effective_price(item.unit_base_value, false))
+			var line := "[%s] %s | Qnt: %d | Val: %d CR" % [item.category, item.name, item.quantity, val]
 			ship_cargo_list.add_item(line)
 
 func _get_effective_price(base_price: float, is_buying: bool) -> float:
@@ -321,20 +321,20 @@ func _get_effective_price(base_price: float, is_buying: bool) -> float:
 func _on_station_market_selected(index: int) -> void:
 	selected_station_cargo_idx = index
 	if index >= 0 and index < station_market_goods.size():
-		var item = station_market_goods[index]
-		var price: int = int(_get_effective_price(item.get("unit_base_value"), true))
+		var item: Dictionary = station_market_goods[index]
+		var price: int = int(_get_effective_price(float(item.get("unit_base_value", 0.0)), true))
 		if station_market_desc_label:
 			station_market_desc_label.text = "[b]%s[/b] (Categoria: %s)\nMassa: %.1f kg/u | Volume: %.1f m³/u | Prezzo FLUX: %d CR\nDisponibilità Porto: %d unità\n%s" % [
-				item.get("name"),
-				item.get("category"),
-				float(item.get("unit_mass_kg")),
-				float(item.get("unit_volume_m3")),
+				str(item.get("name", "Merce")),
+				str(item.get("category", "Cargo")),
+				float(item.get("unit_mass_kg", 0.0)),
+				float(item.get("unit_volume_m3", 0.0)),
 				price,
-				int(item.get("quantity")),
-				item.get("description")
+				int(item.get("quantity", 0)),
+				str(item.get("description", ""))
 			]
 		if buy_quantity_spin_box:
-			buy_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity")))
+			buy_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity", 0.0)))
 		if btn_buy_cargo:
 			btn_buy_cargo.disabled = not can_manage_services or not is_station_docked or credits < price
 
@@ -342,22 +342,22 @@ func _on_ship_cargo_selected(index: int) -> void:
 	selected_ship_cargo_idx = index
 	if not cargo_mgr:
 		return
-	var ship_items := cargo_mgr.get_cargo_list()
+	var ship_items: Array[CargoItemData] = cargo_mgr.get_cargo_list()
 	if index >= 0 and index < ship_items.size():
-		var item = ship_items[index]
-		var payout: int = int(_get_effective_price(item.get("unit_base_value"), false))
+		var item: CargoItemData = ship_items[index]
+		var payout: int = int(_get_effective_price(item.unit_base_value, false))
 		if ship_cargo_desc_label:
 			ship_cargo_desc_label.text = "[b]%s[/b] (Categoria: %s)\nMassa: %.1f kg/u | Volume: %.1f m³/u | Valore di Rivendita: %d CR\nIn Stiva: %d unità\n%s" % [
-				item.get("name"),
-				item.get("category"),
-				float(item.get("unit_mass_kg")),
-				float(item.get("unit_volume_m3")),
+				item.name,
+				item.category,
+				item.unit_mass_kg,
+				item.unit_volume_m3,
 				payout,
-				int(item.get("quantity")),
-				item.get("description")
+				item.quantity,
+				item.description
 			]
 		if sell_quantity_spin_box:
-			sell_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity", 1)))
+			sell_quantity_spin_box.max_value = maxf(1.0, float(item.quantity))
 		if btn_sell_cargo:
 			btn_sell_cargo.disabled = not can_manage_services or not is_station_docked
 
@@ -366,14 +366,16 @@ func _on_btn_buy_cargo_pressed() -> void:
 		return
 	if selected_station_cargo_idx < 0 or selected_station_cargo_idx >= station_market_goods.size():
 		return
-	var item = station_market_goods[selected_station_cargo_idx]
+	var item: Dictionary = station_market_goods[selected_station_cargo_idx]
 	var qty: int = int(buy_quantity_spin_box.value) if buy_quantity_spin_box else 1
-	qty = mini(qty, int(item.get("quantity", 1)))
+	var item_qty: int = int(item.get("quantity", 1))
+	qty = mini(qty, item_qty)
 	if qty <= 0:
 		return
 		
-	var unit_price: int = int(_get_effective_price(item.get("unit_base_value", 100.0), true))
-	var total_cost := unit_price * qty
+	var base_val: float = float(item.get("unit_base_value", 100.0))
+	var unit_price: int = int(_get_effective_price(base_val, true))
+	var total_cost: int = unit_price * qty
 	
 	if credits < total_cost:
 		_notify("Mercato Portuale", "Crediti insufficienti per completare l'acquisto (%d CR richiesti)." % total_cost)
@@ -382,8 +384,9 @@ func _on_btn_buy_cargo_pressed() -> void:
 	if not cargo_mgr:
 		return
 		
-	var u_mass := float(item.get("unit_mass_kg", 1.0))
-	var u_vol := float(item.get("unit_volume_m3", 0.1))
+	var u_mass: float = float(item.get("unit_mass_kg", 1.0))
+	var u_vol: float = float(item.get("unit_volume_m3", 0.1))
+		
 	if not cargo_mgr.can_fit(u_mass, u_vol, qty):
 		_notify("Stiva Sovraccarica", "Spazio o massa insufficienti nella stiva della corvetta.")
 		return
@@ -392,36 +395,43 @@ func _on_btn_buy_cargo_pressed() -> void:
 	credits -= total_cost
 	_update_credits_display()
 	
-	cargo_mgr.add_item_by_id(item.get("id", ""), qty)
+	var item_id: String = str(item.get("id", ""))
+	cargo_mgr.add_item_by_id(item_id, qty)
 	item["quantity"] = int(item.get("quantity", 0)) - qty
 	
+	var item_name: String = str(item.get("name", "Merce"))
 	if flux_mgr:
 		if flux_mgr.has_method("add_transaction"):
-			flux_mgr.add_transaction(float(total_cost), false, true, "Acquisto porto %s x%d" % [item.get("name", ""), qty])
+			flux_mgr.add_transaction(float(total_cost), false, true, "Acquisto porto %s x%d" % [item_name, qty])
 		elif flux_mgr.has_method("record_transaction"):
-			flux_mgr.record_transaction("Acquisto porto %s x%d" % [item.get("name", ""), qty], float(total_cost), true)
+			flux_mgr.record_transaction("Acquisto porto %s x%d" % [item_name, qty], float(total_cost), true)
 		_update_flux_display()
 		
-	_notify("Transazione Eseguita", "Acquistato %dx %s per %d CR. Stiva aggiornata." % [qty, item.get("name", ""), total_cost])
+	_notify("Transazione Eseguita", "Acquistato %dx %s per %d CR. Stiva aggiornata." % [qty, item_name, total_cost])
 	_refresh_cargo_market_view()
 
 func _on_btn_sell_cargo_pressed() -> void:
 	if not can_manage_services or not is_station_docked or not cargo_mgr:
 		return
-	var ship_items := cargo_mgr.get_cargo_list()
+	var ship_items: Array[CargoItemData] = cargo_mgr.get_cargo_list()
 	if selected_ship_cargo_idx < 0 or selected_ship_cargo_idx >= ship_items.size():
 		return
-	var item = ship_items[selected_ship_cargo_idx]
+	var item: CargoItemData = ship_items[selected_ship_cargo_idx]
 	var qty: int = int(sell_quantity_spin_box.value) if sell_quantity_spin_box else 1
-	qty = mini(qty, int(item.get("quantity", 1)))
+	var item_qty: int = item.quantity
+	qty = mini(qty, item_qty)
 	if qty <= 0:
 		return
 		
-	var unit_payout: int = int(_get_effective_price(item.get("unit_base_value", 100.0), false))
-	var total_payout := unit_payout * qty
+	var base_val: float = item.unit_base_value
+	var unit_payout: int = int(_get_effective_price(base_val, false))
+	var total_payout: int = unit_payout * qty
 	
-	var removed := cargo_mgr.remove_item(item.get("id", ""), qty)
-	if removed.is_empty():
+	var item_id: String = item.id
+	var item_name: String = item.name
+	
+	var removed: CargoItemData = cargo_mgr.remove_item(item_id, qty)
+	if removed == null:
 		return
 		
 	credits += total_payout
@@ -429,15 +439,15 @@ func _on_btn_sell_cargo_pressed() -> void:
 	
 	if flux_mgr:
 		if flux_mgr.has_method("add_transaction"):
-			flux_mgr.add_transaction(float(total_payout), true, true, "Vendita merci porto %s x%d" % [item.get("name", ""), qty])
+			flux_mgr.add_transaction(float(total_payout), true, true, "Vendita merci porto %s x%d" % [item_name, qty])
 		elif flux_mgr.has_method("record_transaction"):
-			flux_mgr.record_transaction("Vendita merci porto %s x%d" % [item.get("name", ""), qty], float(total_payout), true)
+			flux_mgr.record_transaction("Vendita merci porto %s x%d" % [item_name, qty], float(total_payout), true)
 		_update_flux_display()
 		
-	_notify("Vendita Eseguita", "Venduto %dx %s per +%d CR. Stiva liberata." % [qty, item.get("name", ""), total_payout])
+	_notify("Vendita Eseguita", "Venduto %dx %s per +%d CR. Stiva liberata." % [qty, item_name, total_payout])
 	_refresh_cargo_market_view()
 
-func _on_cargo_state_updated(_items: Array[Dictionary], _total_m: float, _total_v: float) -> void:
+func _on_cargo_state_updated(_items: Array, _total_m: float, _total_v: float) -> void:
 	_refresh_cargo_market_view()
 
 func _on_flux_score_changed(_score: float, _rating: String, _delta: float, _reason: String) -> void:
@@ -498,7 +508,7 @@ func _refresh_contracts_view() -> void:
 func _on_contract_item_selected(index: int) -> void:
 	selected_contract_idx = index
 	if index >= 0 and index < active_contracts.size():
-		var cnt = active_contracts[index]
+		var cnt: Variant = active_contracts[index]
 		if contract_detail_label:
 			var status_str := "[color=#00ff88]ACCETTATO (ATTIVO)[/color]" if cnt.get("is_accepted", false) else "[color=#ffcc00]DISPONIBILE PER L'ACCETTAZIONE[/color]"
 			contract_detail_label.text = "[b]%s[/b]\nEmittente: %s | Settore: %s\nRicompensa: %d CR | Bonus FLUX: +%d\nStato: %s\n\n%s" % [
@@ -516,7 +526,7 @@ func _on_contract_item_selected(index: int) -> void:
 func _on_accept_contract_pressed() -> void:
 	if not can_manage_services or not is_station_docked or selected_contract_idx < 0 or selected_contract_idx >= active_contracts.size():
 		return
-	var cnt = active_contracts[selected_contract_idx]
+	var cnt: Variant = active_contracts[selected_contract_idx]
 	cnt["is_accepted"] = true
 	cnt["status"] = "IN_PROGRESS"
 	
@@ -530,8 +540,8 @@ func _on_accept_contract_pressed() -> void:
 				break
 				
 	if not logbook_found and is_inside_tree():
-		var root = get_tree().root
-		var lb = root.find_child("LogbookApp", true, false)
+		var root := get_tree().root
+		var lb := root.find_child("LogbookApp", true, false)
 		if lb is LogbookApp:
 			lb.add_contract(cnt)
 			logbook_found = true
@@ -613,7 +623,7 @@ func _refresh_software_view() -> void:
 func _on_software_item_selected(index: int) -> void:
 	selected_software_idx = index
 	if index >= 0 and index < active_software_items.size():
-		var item = active_software_items[index]
+		var item: Variant = active_software_items[index]
 		if market_desc_label:
 			market_desc_label.text = "[b]%s[/b] (Categoria: %s)\nProduttore: %s\nPrezzo di Scaricamento: %d CR\nDestinazione: Ship Drive/Programs/%s/%s\n\n%s" % [
 				item.get("name", ""),
@@ -630,7 +640,7 @@ func _on_software_item_selected(index: int) -> void:
 func _on_buy_software_item_pressed() -> void:
 	if not can_manage_services or not is_station_docked or selected_software_idx < 0 or selected_software_idx >= active_software_items.size():
 		return
-	var item = active_software_items[selected_software_idx]
+	var item: Variant = active_software_items[selected_software_idx]
 	var price: int = item.get("price", 0)
 	if credits < price:
 		_notify("Software Repository", "Crediti insufficienti per acquistare il modulo software.")
@@ -655,7 +665,7 @@ func _on_buy_software_item_pressed() -> void:
 		f.store_string(content)
 		f.close()
 		
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_method("sync_file"):
 		sdm.sync_file(rel_path, content)
 	elif sdm and sdm.has_method("create_file"):
@@ -770,7 +780,7 @@ func _refresh_tavern_view() -> void:
 func _on_rumor_item_selected(index: int) -> void:
 	selected_rumor_idx = index
 	if index >= 0 and index < active_rumors.size():
-		var rum = active_rumors[index]
+		var rum: Variant = active_rumors[index]
 		if rumor_detail_label:
 			rumor_detail_label.text = "[b]Fonte: %s[/b]\nCoordinate: %s\n\n\"%s\"" % [
 				rum.get("source", ""),
@@ -783,7 +793,7 @@ func _on_rumor_item_selected(index: int) -> void:
 func _on_record_coordinates_pressed() -> void:
 	if selected_rumor_idx < 0 or selected_rumor_idx >= active_rumors.size():
 		return
-	var rum = active_rumors[selected_rumor_idx]
+	var rum: Variant = active_rumors[selected_rumor_idx]
 	_notify("Taverna Spaziale", "Coordinate di '%s' inviate ai Sensori e Logbook." % rum.get("discovered_poi", "POI"))
 
 # =============================================================================
@@ -821,7 +831,7 @@ func _on_session_mode_changed(_mode: int) -> void:
 	_evaluate_rbac()
 
 func _evaluate_rbac() -> void:
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	var role: String = "Capitano"
 	if net_mgr and "player_role" in net_mgr:
 		role = net_mgr.player_role
@@ -840,8 +850,8 @@ func _evaluate_rbac() -> void:
 	if btn_buy_market_item: btn_buy_market_item.disabled = not can_manage_services
 
 func _init_runtime_files() -> void:
-	var sdm = get_node_or_null("/root/ShipDriveManager")
-	var fpm = get_node_or_null("/root/FolderPasswordManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
 	
 	if fpm and fpm.has_method("set_password"):
 		fpm.set_password("Ship Drive/Programs/StationHub", "STTN-7815")
@@ -891,8 +901,8 @@ func _parse_config_text(txt: String) -> void:
 			continue
 		var parts := l.split("=", false, 2)
 		if parts.size() == 2:
-			var k := parts[0].strip_edges()
-			var v := parts[1].strip_edges()
+			var k: Variant = parts[0].strip_edges()
+			var v: Variant = parts[1].strip_edges()
 			if k == "default_credits" and v.is_valid_int():
 				credits = v.to_int()
 				_update_credits_display()
@@ -902,7 +912,7 @@ func _on_drive_file_synced(rel_path: String) -> void:
 		_load_config()
 
 func _notify(title: String, msg: String) -> void:
-	var nm = get_node_or_null("/root/NotificationManager")
+	var nm := get_node_or_null("/root/NotificationManager")
 	if nm and nm.has_method("send_notification"):
 		nm.send_notification(title, msg)
 	elif nm and nm.has_method("spawn_notification"):

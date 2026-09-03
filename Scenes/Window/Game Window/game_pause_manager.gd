@@ -25,7 +25,7 @@ func _input(event: InputEvent) -> void:
 ## The reason for this is so the pause screen scales with the viewport.
 func toggle_pause() -> void:
 	if %"Game Window".get_child_count() == 0:
-		NotificationManager.spawn_notification("Error: No game scene to pause???")
+		NotificationManagerSingleton.spawn_notification("Error: No game scene to pause???")
 		return
 	
 	var game_scene: Node = %"Game Window".get_child(0)

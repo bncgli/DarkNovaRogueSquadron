@@ -88,7 +88,7 @@ func _process(delta: float) -> void:
 func _is_ship_operational() -> bool:
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
 		return SpaceWorldManager.is_ship_connected()
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr and "is_mission_active" in net_mgr:
 		return bool(net_mgr.is_mission_active)
 	return true
@@ -104,12 +104,12 @@ func _connect_system_signals() -> void:
 		if not SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
 			SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
 	
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr and net_mgr.has_signal("player_role_changed"):
 		if not net_mgr.player_role_changed.is_connected(_on_player_role_changed):
 			net_mgr.player_role_changed.connect(_on_player_role_changed)
 	
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
 		if sdm.has_signal("file_modified") and not sdm.file_modified.is_connected(_on_drive_file_modified):
 			sdm.file_modified.connect(_on_drive_file_modified)
@@ -125,12 +125,12 @@ func _disconnect_system_signals() -> void:
 		if SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
 			SpaceWorldManager.ship_system_power_changed.disconnect(_on_system_power_changed)
 	
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr and net_mgr.has_signal("player_role_changed"):
 		if net_mgr.player_role_changed.is_connected(_on_player_role_changed):
 			net_mgr.player_role_changed.disconnect(_on_player_role_changed)
 	
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
 		if sdm.has_signal("file_modified") and sdm.file_modified.is_connected(_on_drive_file_modified):
 			sdm.file_modified.disconnect(_on_drive_file_modified)
@@ -188,7 +188,7 @@ func _on_player_role_changed(_peer_id: int, _new_role: String) -> void:
 	_update_permissions()
 
 func _update_permissions() -> void:
-	var nm = get_node_or_null("/root/NetworkManager")
+	var nm := get_node_or_null("/root/NetworkManager")
 	var my_role := ""
 	var is_solo := true
 	
@@ -235,9 +235,19 @@ func _update_controls_interactivity() -> void:
 
 func _init_rooms_state() -> void:
 	rooms_state.clear()
-	var rooms_list: Array[Dictionary] = []
+	var rooms_list: Array = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_duct_rooms"):
-		rooms_list = SpaceWorldManager.get_duct_rooms()
+		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
+		for r in mgr_rooms:
+			if r is DuctRoomData:
+				rooms_list.append({
+					"id": r.id,
+					"name": r.name,
+					"rect": r.rect,
+					"category": "Habitation" # Fallback per compatibilità
+				})
+			else:
+				rooms_list.append(r)
 	
 	if rooms_list.is_empty():
 		rooms_list = [
@@ -252,12 +262,13 @@ func _init_rooms_state() -> void:
 		]
 	
 	for r in rooms_list:
-		var r_id: String = str(r.get("id"))
+		var r_id: String = str(r.get("id", ""))
+		if r_id.is_empty(): continue
 		rooms_state[r_id] = {
 			"id": r_id,
-			"name": str(r.get("name")),
-			"category": str(r.get("category")),
-			"rect": r.get("rect"),
+			"name": str(r.get("name", "Stanza Ignota")),
+			"category": str(r.get("category", "General")),
+			"rect": r.get("rect", Rect2()),
 			"o2_pct": 21.0,
 			"co2_pct": 0.04,
 			"pressure_kpa": 101.3,
@@ -303,26 +314,35 @@ func _build_room_cards_ui() -> void:
 # --- SIMULAZIONE DINAMICA ATMOSFERICA ---
 
 func _simulate_atmosphere_step(delta: float) -> void:
-	var o2_gen_rate: float = float(active_config.get("o2_generation_rate"))
-	var decomp_rate: float = float(active_config.get("decompression_rate"))
-	var auto_fire_suppress: bool = bool(active_config.get("auto_fire_suppress"))
-	var scrubber_eff: float = float(active_config.get("scrubber_efficiency"))
-	var fire_supp_co2: float = float(active_config.get("fire_suppression_co2_level"))
+	var o2_gen_rate: float = float(active_config.get("o2_generation_rate", 1.2))
+	var decomp_rate: float = float(active_config.get("decompression_rate", 1.8))
+	var auto_fire_suppress: bool = bool(active_config.get("auto_fire_suppress", false))
+	var scrubber_eff: float = float(active_config.get("scrubber_efficiency", 0.98))
+	var fire_supp_co2: float = float(active_config.get("fire_suppression_co2_level", 0.45))
 	
 	# Verifica danni breccia da SpaceWorldManager
-	var active_damages: Array[Dictionary] = []
+	var active_damages: Array = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_damage_zones"):
-		active_damages = SpaceWorldManager.get_damage_zones()
+		var mgr_damages := SpaceWorldManager.get_damage_zones()
+		for d in mgr_damages:
+			if d is ShipDamageData:
+				active_damages.append({
+					"pos": d.local_pos,
+					"type": d.type,
+					"id": d.id
+				})
+			else:
+				active_damages.append(d)
 	
 	for r_id in rooms_state:
 		var state: Dictionary = rooms_state[r_id]
-		var r_rect: Rect2 = state.get("rect")
+		var r_rect: Rect2 = state.get("rect", Rect2())
 		
 		# Verifica se c'è un danno/breccia in questa stanza
 		var breach_present := false
 		for dmg in active_damages:
-			var d_pos: Vector2 = dmg.get("pos")
-			var d_type: String = str(dmg.get("type"))
+			var d_pos: Vector2 = dmg.get("pos", Vector2.ZERO)
+			var d_type: String = str(dmg.get("type", ""))
 			if (d_type.begins_with("dmg_breach") or d_type == "STRUCTURAL") and r_rect.has_point(d_pos):
 				breach_present = true
 				break

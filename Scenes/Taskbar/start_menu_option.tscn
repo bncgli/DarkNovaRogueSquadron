@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://da4oly47yx3ja"]
 
 [ext_resource type="Script" uid="uid://b4pjauo2jicy2" path="res://Scenes/Taskbar/start_menu_option.gd" id="1_2fneu"]
-[ext_resource type="Texture2D" uid="uid://2sqrvihn1cjq" path="res://Art/Folder Icons/game.png" id="2_4g113"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/standard_app.svg" id="2_std_icon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0gkon"]
 bg_color = Color(0, 0.792157, 0.952941, 0.72549)
@@ -13,7 +13,7 @@ border_color = Color(0, 1, 0.952941, 1)
 
 [node name="Start Menu Option" type="Panel"]
 clip_contents = true
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 48)
 script = ExtResource("1_2fneu")
 use_generic_pause_menu = true
 
@@ -38,20 +38,21 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
 [node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer"]
 modulate = Color(0.811765, 0.329412, 0.960784, 1)
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("2_4g113")
+texture = ExtResource("2_std_icon")
 expand_mode = 2
+stretch_mode = 5
 
 [node name="Control" type="Control" parent="HBoxContainer"]
 layout_mode = 2
@@ -61,48 +62,19 @@ mouse_filter = 2
 [node name="Menu Title" type="RichTextLabel" parent="HBoxContainer/Control"]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 25.0
+anchor_bottom = 1.0
+offset_top = 13.0
 grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 bbcode_enabled = true
 text = "[center]Game Title"
-
-[node name="Menu Description" type="RichTextLabel" parent="HBoxContainer/Control"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -38.0
-offset_bottom = -14.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_font_sizes/normal_font_size = 13
-bbcode_enabled = true
-text = "[center]Your very cool game description"
-
-[node name="Menu Developer" type="RichTextLabel" parent="HBoxContainer/Control"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -18.0
-offset_bottom = 2.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_font_sizes/normal_font_size = 11
-bbcode_enabled = true
-text = "[center][color=gray]Developer Name"
+fit_content = false
+scroll_active = false
+autowrap_mode = 0
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

@@ -95,7 +95,7 @@ func _connect_signals() -> void:
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 	
 	# NetworkManager (RBAC)
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr:
 		if net_mgr.has_signal("role_changed"):
 			net_mgr.role_changed.connect(_on_role_changed)
@@ -103,7 +103,7 @@ func _connect_signals() -> void:
 			net_mgr.session_mode_changed.connect(_on_session_mode_changed)
 			
 	# ShipDrive hot-reload
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_signal("file_synced"):
 		sdm.file_synced.connect(_on_drive_file_synced)
 	
@@ -176,7 +176,7 @@ func _on_session_mode_changed(_mode: int) -> void:
 	_update_rbac()
 
 func _update_rbac() -> void:
-	var net_mgr = get_node_or_null("/root/NetworkManager")
+	var net_mgr := get_node_or_null("/root/NetworkManager")
 	if net_mgr:
 		var role: String = str(net_mgr.get("player_role") if "player_role" in net_mgr else "Solo")
 		can_hack = (role in ["Hacker", "Captain", "Capitano", "Stagista", "Solo", ""])
@@ -191,7 +191,7 @@ func _update_rbac() -> void:
 # ==============================================================================
 
 func _init_runtime_files() -> void:
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_method("create_file"):
 		if not sdm.has_file(CONFIG_PATH_PRIMARY):
 			var default_content := "[SYSTEM]\napp_name=CargoBayApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[LIMITS]\nmax_mass_kg=2000.0\nmax_volume_m3=100.0\n\n[ECONOMY]\ndefault_flux_score=720.0\nimpound_warning_sec=120.0\n"
@@ -275,15 +275,15 @@ func _update_cargo_tab() -> void:
 		cargo_item_list.clear()
 		var items := cargo_mgr.get_cargo_list()
 		for item in items:
-			var item_name := str(item.get("name"))
-			var qty := int(item.get("quantity"))
-			var mass := float(item.get("unit_mass_kg")) * qty
-			var cat := str(item.get("category"))
+			var item_name := item.name if item else "N/D"
+			var qty := item.quantity if item else 0
+			var mass := (item.unit_mass_kg if item else 0.0) * qty
+			var cat := item.category if item else "GENERAL"
 			var flags := ""
-			if bool(item.get("is_contraband")):
+			if item and item.is_contraband:
 				flags += " [ILLEGALE]"
-			if bool(item.get("is_snet_disk")):
-				var meta: Dictionary = item.get("metadata")
+			if item and item.is_snet_disk:
+				var meta: Dictionary = item.metadata if item else {}
 				if bool(meta.get("ice_broken")):
 					flags += " [S-NET: DECRIPTATO]"
 				else:
@@ -305,19 +305,30 @@ func _update_cargo_tab() -> void:
 				if item_details_label:
 					item_details_label.text = "[color=#888888]Stiva vuota. Nessun carico a bordo.[/color]"
 
-func _display_cargo_details(item: Dictionary) -> void:
-	if not item_details_label:
+func _display_cargo_details(item: Variant) -> void:
+	if not item_details_label or item == null:
 		return
-	var text := "[b]%s[/b]\n" % str(item.get("name"))
-	text += "Categoria: [color=#88ddff]%s[/color]\n" % str(item.get("category"))
-	text += "Quantità: %d unità\n" % int(item.get("quantity"))
-	text += "Massa unitaria: %.1f kg | Volume unitario: %.2f m³\n" % [float(item.get("unit_mass_kg")), float(item.get("unit_volume_m3"))]
-	text += "Valore stimato: %d CR / unità\n" % int(item.get("unit_base_value"))
-	if bool(item.get("is_contraband")):
+	
+	var i_name: String = item.name if item is CargoItemData else item.get("name", "Unknown")
+	var i_cat: String = item.category if item is CargoItemData else item.get("category", "GENERAL")
+	var i_qty: int = item.quantity if item is CargoItemData else item.get("quantity", 0)
+	var i_mass: float = item.unit_mass_kg if item is CargoItemData else item.get("unit_mass_kg", 0.0)
+	var i_vol: float = item.unit_volume_m3 if item is CargoItemData else item.get("unit_volume_m3", 0.0)
+	var i_val: float = item.unit_base_value if item is CargoItemData else item.get("unit_base_value", 0.0)
+	var i_contraband: bool = item.is_contraband if item is CargoItemData else bool(item.get("is_contraband", false))
+	var i_snet: bool = item.is_snet_disk if item is CargoItemData else bool(item.get("is_snet_disk", false))
+	var i_desc: String = item.description if item is CargoItemData else item.get("description", "")
+
+	var text := "[b]%s[/b]\n" % str(i_name)
+	text += "Categoria: [color=#88ddff]%s[/color]\n" % str(i_cat)
+	text += "Quantità: %d unità\n" % int(i_qty)
+	text += "Massa unitaria: %.1f kg | Volume unitario: %.2f m³\n" % [float(i_mass), float(i_vol)]
+	text += "Valore stimato: %d CR / unità\n" % int(i_val)
+	if i_contraband:
 		text += "[color=#ff5555]⚠ CARICO DI CONTRABBANDO - Rischio sequestro se scannerizzato da autorità SOL-NAV.[/color]\n"
-	if bool(item.get("is_snet_disk")):
+	if i_snet:
 		text += "[color=#55ffff]💾 DISCO SNAPSHOT S-NET: Contiene archivi finanziari di settore.[/color]\n"
-	text += "\nDescrizione:\n%s" % str(item.get("description"))
+	text += "\nDescrizione:\n%s" % str(i_desc)
 	item_details_label.text = text
 
 func _update_transfer_tab() -> void:
@@ -327,9 +338,9 @@ func _update_transfer_tab() -> void:
 		transfer_item_list.clear()
 		var items := cargo_mgr.get_cargo_list()
 		for item in items:
-			var id := str(item.get("id"))
-			var name := str(item.get("name"))
-			var qty := int(item.get("quantity"))
+			var id := item.id if item else ""
+			var name := item.name if item else "N/D"
+			var qty := item.quantity if item else 0
 			transfer_item_list.add_item("%s (Disp: %d)" % [name, qty])
 	
 	if target_option_btn and target_option_btn.item_count == 0:
@@ -385,9 +396,9 @@ func _update_flux_tab() -> void:
 	if subscriptions_item_list:
 		subscriptions_item_list.clear()
 		for sub in flux_mgr.subscriptions:
-			var s_name := str(sub.get("name"))
-			var cost := int(sub.get("cost"))
-			var time_left := float(sub.get("time_left"))
+			var s_name: String = sub.name if sub and "name" in sub else "Abbonamento"
+			var cost: int = sub.cost if sub and "cost" in sub else 0
+			var time_left: float = sub.time_left if sub and "time_left" in sub else 0.0
 			var is_od := bool(sub.get("is_overdue"))
 			var status_str := "[SCADUTO - DEBITO]" if is_od else "Scade tra %.0fs" % time_left
 			var item_text := "%s - %d CR (%s)" % [s_name, cost, status_str]
@@ -407,16 +418,16 @@ func _update_snet_tab() -> void:
 	if not cargo_mgr:
 		return
 	
-	var snet_disks: Array[Dictionary] = []
-	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
+	var snet_disks: Array[CargoItemData] = []
+	for item: CargoItemData in cargo_mgr.get_cargo_list():
+		if item and (item.is_snet_disk or item.category == "SNET_DISK"):
 			snet_disks.append(item)
 	
 	if snet_disk_list:
 		snet_disk_list.clear()
 		for disk in snet_disks:
-			var d_name := str(disk.get("name"))
-			var meta: Dictionary = disk.get("metadata")
+			var d_name := disk.name if disk else "Disco S-Net"
+			var meta: Dictionary = disk.metadata if disk else {}
 			var status := "DECRIPTATO" if bool(meta.get("ice_broken")) else "ICE Liv. %d" % int(meta.get("ice_strength"))
 			snet_disk_list.add_item("%s [%s]" % [d_name, status])
 		
@@ -435,14 +446,14 @@ func _update_snet_tab() -> void:
 				if btn_hack_ice:
 					btn_hack_ice.disabled = true
 
-func _display_snet_details(disk: Dictionary) -> void:
+func _display_snet_details(disk: Variant) -> void:
 	if not snet_disk_info_label:
 		return
-	var meta: Dictionary = disk.get("metadata")
+	var meta: Dictionary = disk.metadata if disk is CargoItemData else disk.get("metadata", {})
 	var is_broken := bool(meta.get("ice_broken"))
 	var ice_str := int(meta.get("ice_strength"))
 	
-	var text := "[b]%s[/b]\n" % str(disk.get("name"))
+	var text := "[b]%s[/b]\n" % (disk.name if disk else "Sconosciuto")
 	text += "Settore Origine: [color=#88ddff]%s[/color]\n" % str(meta.get("sector"))
 	text += "Stato Crittografia ICE: %s\n" % ("[color=#55ff55]VIOLATO / ACCESSO COMPLETO[/color]" if is_broken else "[color=#ff5555]ATTIVO (Difficoltà Livello %d)[/color]" % ice_str)
 	text += "Valore Stimato Snapshot: %d CR\n" % int(meta.get("financial_snapshot"))
@@ -467,13 +478,13 @@ func _on_btn_jettison_pressed() -> void:
 		return
 	var items := cargo_mgr.get_cargo_list()
 	if selected_cargo_idx < items.size():
-		var item_id := str(items[selected_cargo_idx].get("id"))
+		var item_id := items[selected_cargo_idx].id if items[selected_cargo_idx] else ""
 		cargo_mgr.remove_item(item_id, 1)
 
 func _on_transfer_item_selected(index: int) -> void:
 	var items := cargo_mgr.get_cargo_list()
 	if index >= 0 and index < items.size():
-		selected_transfer_item_id = str(items[index].get("id"))
+		selected_transfer_item_id = items[index].id if items[index] else ""
 
 func _on_btn_execute_transfer_pressed() -> void:
 	if not cargo_mgr or selected_transfer_item_id.is_empty():
@@ -515,7 +526,7 @@ func _on_btn_pay_sub_pressed() -> void:
 	if not flux_mgr or selected_sub_idx < 0:
 		return
 	if selected_sub_idx < flux_mgr.subscriptions.size():
-		var sub_id := str(flux_mgr.subscriptions[selected_sub_idx].get("id"))
+		var sub_id: String = flux_mgr.subscriptions[selected_sub_idx].id if flux_mgr.subscriptions[selected_sub_idx] and "id" in flux_mgr.subscriptions[selected_sub_idx] else ""
 		flux_mgr.pay_subscription_manually(sub_id)
 
 func _on_btn_pay_all_debt_pressed() -> void:
@@ -524,9 +535,9 @@ func _on_btn_pay_all_debt_pressed() -> void:
 
 func _on_snet_disk_selected(index: int) -> void:
 	selected_snet_idx = index
-	var snet_disks: Array[Dictionary] = []
-	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
+	var snet_disks: Array[CargoItemData] = []
+	for item: CargoItemData in cargo_mgr.get_cargo_list():
+		if item and (item.is_snet_disk or item.category == "SNET_DISK"):
 			snet_disks.append(item)
 	if index >= 0 and index < snet_disks.size():
 		_display_snet_details(snet_disks[index])
@@ -535,13 +546,13 @@ func _on_btn_hack_ice_pressed() -> void:
 	if not flux_mgr or not cargo_mgr or selected_snet_idx < 0:
 		return
 	
-	var snet_disks: Array[Dictionary] = []
-	for item in cargo_mgr.get_cargo_list():
-		if bool(item.get("is_snet_disk")) or item.get("category") == "SNET_DISK":
+	var snet_disks: Array[CargoItemData] = []
+	for item: CargoItemData in cargo_mgr.get_cargo_list():
+		if item and (item.is_snet_disk or item.category == "SNET_DISK"):
 			snet_disks.append(item)
 	
 	if selected_snet_idx < snet_disks.size():
-		var disk := snet_disks[selected_snet_idx]
+		var disk: Variant = snet_disks[selected_snet_idx]
 		var result := flux_mgr.hack_snet_disk(disk, 2.5) # Hacker skill standard
 		if result.get("success"):
 			if hack_status_label:

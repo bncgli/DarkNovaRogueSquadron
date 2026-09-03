@@ -750,22 +750,26 @@ func _show_sector_props(coords: Vector3i) -> void:
 	var sec_id := SectorData.format_coords_to_id(coords)
 	lbl_selected_title.text = "Settore: %s" % sec_id
 	
-	var sector = current_system.sectors.get(sec_id)
+	var sector: SectorData = null
+	for s in current_system.custom_sectors:
+		if s.sector_id == sec_id:
+			sector = s
+			break
+
 	if not sector:
 		var btn_create := Button.new()
 		btn_create.text = "Personalizza Settore"
-		btn_create.pressed.connect(func():
-			var new_sec = SectorData.new()
-			new_sec.id = sec_id
-			new_sec.coords = coords
-			current_system.sectors[sec_id] = new_sec
+		btn_create.pressed.connect(func() -> void:
+			var new_sec := SectorData.new()
+			new_sec.sector_id = sec_id
+			new_sec.coordinates = coords
+			current_system.custom_sectors.append(new_sec)
 			_show_sector_props(coords)
 		)
 		prop_editor_vbox.add_child(btn_create)
 		return
 
 	_add_text_field("Nome Locale:", sector.sector_name, func(v): sector.sector_name = v)
-	_add_bool_field("Nebulosa presente:", sector.has_nebula, func(v): sector.has_nebula = v)
 	
 	_add_separator()
 	_add_heading("Pericoli Ambientali")
@@ -773,8 +777,8 @@ func _show_sector_props(coords: Vector3i) -> void:
 	var hazards_vbox := VBoxContainer.new()
 	prop_editor_vbox.add_child(hazards_vbox)
 	
-	for i in range(sector.hazards.size()):
-		var h_data := sector.hazards[i]
+	for i in range(sector.environmental_hazards.size()):
+		var h_data: EnvironmentalHazardData = sector.environmental_hazards[i]
 		var frame := PanelContainer.new()
 		var inner_vbox := VBoxContainer.new()
 		frame.add_child(inner_vbox)
@@ -786,8 +790,8 @@ func _show_sector_props(coords: Vector3i) -> void:
 	var btn_add_h := Button.new()
 	btn_add_h.text = "+ Aggiungi Pericolo"
 	btn_add_h.pressed.connect(func():
-		var new_h := EnvironmentalHazardData.new("new_hazard", "Tempesta Ionica", "ion_storm", 5.0)
-		sector.hazards.append(new_h)
+		var new_h := EnvironmentalHazardData.new("new_hazard", "RAD", 0.5)
+		sector.environmental_hazards.append(new_h)
 		_show_sector_props(coords)
 	)
 	prop_editor_vbox.add_child(btn_add_h)
@@ -812,7 +816,7 @@ func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData
 	btn_del.text = "X"
 	btn_del.modulate = Color.CRIMSON
 	btn_del.pressed.connect(func():
-		sector.hazards.remove_at(index)
+		sector.environmental_hazards.remove_at(index)
 		_show_sector_props(coords)
 	)
 	h_type_hbox.add_child(btn_del)
@@ -860,7 +864,7 @@ func _on_outliner_item_selected() -> void:
 	var it := outliner_tree.get_selected()
 	if it == null:
 		return
-	var meta = it.get_metadata(0)
+	var meta: Variant = it.get_metadata(0)
 	if meta is Dictionary:
 		var type: String = meta.get("type")
 		if type == "SYSTEM":

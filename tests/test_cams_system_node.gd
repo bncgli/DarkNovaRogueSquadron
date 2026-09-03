@@ -66,7 +66,7 @@ func _run_suite() -> void:
 	print("✔ Valori iniziali .dat caricati con successo")
 	
 	# Apri finestra feed frontale per verificare sincronizzazione con le finestre
-	var feed_win = SpaceWorldManager.open_camera_window("front")
+	var feed_win := SpaceWorldManager.open_camera_window("front")
 	assert(feed_win != null, "Finestra feed deve aprirsi correttamente")
 	assert(feed_win.default_fov == 75.0, "Finestra feed riceve default_fov da active_config")
 	assert(feed_win.zoom_step == 10.0, "Finestra feed riceve zoom_step da active_config")
@@ -138,7 +138,7 @@ func _run_suite() -> void:
 	# Test Reset Ottiche
 	cams_app._on_reset_optics_pressed()
 	for cid in cam_ids:
-		var w = SpaceWorldManager.get_camera_window(cid)
+		var w := SpaceWorldManager.get_camera_window(cid)
 		assert(w != null and w.current_fov == 60.0, "Reset ottiche reimposta FOV al valore configurato in .dat")
 	print("✔ Reset ottiche applicato su tutte le finestre aperte")
 	
@@ -159,7 +159,8 @@ func _run_suite() -> void:
 		add_child(term)
 		await get_tree().process_frame
 		
-		var cat_cmd = load("res://Applications/Terminal/commands/cat_command.gd").new()
+		var cat_script: GDScript = load("res://Applications/Terminal/commands/cat_command.gd")
+		var cat_cmd = cat_script.new()
 		term.virtual_path_manager.set_path("Ship Drive/Programs/Cams")
 		var args: Array[String] = ["cams_config.dat"]
 		cat_cmd.execute(term, args)

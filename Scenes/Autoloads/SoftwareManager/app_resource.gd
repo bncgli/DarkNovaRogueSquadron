@@ -141,6 +141,7 @@ func to_dict() -> Dictionary:
 		"description": description,
 		"developer": developer,
 		"scene_path": scene_path,
+		"icon": icon,
 		"icon_color": icon_color,
 		"category": category,
 		"menu_path": menu_path,
@@ -159,11 +160,11 @@ func to_dict() -> Dictionary:
 
 ## Verifica se un determinato ruolo (o stato di gioco) ha i permessi per visualizzare/avviare l'app
 func is_role_allowed(role_name: String, is_solo: bool = false) -> bool:
+	if is_solo:
+		return true
 	var clean_role := role_name.strip_edges()
 	var is_super := clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Stagista" or clean_role == "Captain" or clean_role == "HOST"
 	if is_super:
-		return true
-	if is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato"):
 		return true
 	
 	if roles.is_empty():

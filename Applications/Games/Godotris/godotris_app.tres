@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://cblrpvy60rxe2"]
 
 [ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_godotris"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/godotris.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_godotris")
+icon = ExtResource("1_icon")
 app_id = "godotris"
 title = "Godotris"
 description = "Classico gioco di blocchi a incastro stile Tetris per terminali di bordo"

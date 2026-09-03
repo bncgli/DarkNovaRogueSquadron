@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 
 func _configure_window() -> void:
 	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win = get_parent()
+	var parent_win := get_parent()
 	while parent_win:
 		if "window_title" in parent_win:
 			parent_win.window_title = APP_TITLE

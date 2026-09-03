@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="AppResource" format=3]
 
 [ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_bitboy"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/super_bit_boy.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_bitboy")
+icon = ExtResource("1_icon")
 is_system_app = false
 terminal_command = "superbitboy"
 is_pinned_to_taskbar = false

@@ -1,21 +1,23 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://cfhq8nuipsrr1"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_sysmap"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_sysmap"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/system_map.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_sysmap")
-roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista"])
-power_draw_mw = 15.0
-required_subsystems = Array[String](["navigation_computer", "astrometrics_array"])
+icon = ExtResource("1_icon")
 app_id = "system_map"
 title = "System Map & Hyperdrive"
 description = "Mappa olografica del sistema stellare e pianificazione rotte di transito Hyperdrive"
 developer = "AstroForge"
 category = "Navigazione"
-menu_path = "Strumenti"
-icon_color = Color(0.2, 0.6, 1.0, 1)
+menu_path = "Sistemi Nave/Navigazione"
+icon_color = Color(0.2, 0.6, 1, 1)
 scene_path = "res://Applications/SystemMap/system_map_app.tscn"
 default_window_size = Vector2(720, 520)
+roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista"])
+power_draw_mw = 15.0
+required_subsystems = Array[String](["navigation_computer", "astrometrics_array"])
 drive_folder = "Programs/SystemMap"
 default_password = "MAPS-7815"
 default_files = Array[Dictionary]([{

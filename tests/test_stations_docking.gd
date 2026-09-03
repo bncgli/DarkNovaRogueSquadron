@@ -35,10 +35,10 @@ func _run_all_tests() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	var net_mgr = get_node_or_null("/root/NetworkManager")
-	var sdm = get_node_or_null("/root/ShipDriveManager")
-	var fpm = get_node_or_null("/root/FolderPasswordManager")
-	var ssm = get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
+	var net_mgr := get_node_or_null("/root/NetworkManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
 	
 	# =========================================================================
 	# TEST 1: RICHIESTA E CONCESSIONE SLOT DI DOCKING TRAMITE MESSAGGISTICA RADIO
@@ -132,7 +132,7 @@ func _run_all_tests() -> void:
 	
 	# Verifica password cartella
 	if fpm:
-		var pwd = fpm.get_password("Ship Drive/Programs/StationHub")
+		var pwd: String = str(fpm.get_password("Ship Drive/Programs/StationHub"))
 		assert(pwd == "STTN-7815", "La password di sicurezza deve essere STTN-7815")
 		print("✔ Password di sicurezza verificata (STTN-7815)")
 		

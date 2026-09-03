@@ -333,7 +333,7 @@ func _is_ship_operational() -> bool:
 func _on_ship_connection_changed(_is_connected: bool) -> void:
 	_update_connection_state()
 
-func _on_mission_started() -> void:
+func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 	_update_connection_state()
 	_update_permissions()
 	load_dat_configuration()
@@ -372,7 +372,11 @@ func _update_permissions() -> void:
 		is_solo = nm.is_solo_mode
 	
 	# Hacker, Ingegnere, Capitano, Stagista e Solo Mode hanno pieno controllo
-	can_control_diagnostics = (is_solo or my_role == "Hacker" or my_role == "Ingegnere" or my_role == "Capitano" or my_role == "Stagista" or my_role.is_empty())
+	var role_lower := my_role.to_lower()
+	if not my_role.is_empty():
+		can_control_diagnostics = role_lower in ["hacker", "ingegnere", "engineer", "capitano", "captain", "stagista", "admin", "host"]
+	else:
+		can_control_diagnostics = is_solo
 	
 	if role_badge:
 		var display_role := my_role if not my_role.is_empty() else ("SOLO" if is_solo else "SPETTATORE")

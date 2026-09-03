@@ -1,3 +1,4 @@
+class_name RoomPowerEntry
 extends PanelContainer
 
 signal power_toggled(room_id, is_on)
@@ -12,15 +13,18 @@ var room_id: String = ""
 var current_power: float = 0.0
 
 func setup(data: Dictionary) -> void:
-	room_id = data.get("id")
-	room_name_label.text = data.get("name")
-	category_label.text = data.get("category").to_upper()
+	room_id = str(data.get("id", ""))
+	if room_name_label:
+		room_name_label.text = str(data.get("name", "Stanza"))
+	if category_label:
+		category_label.text = str(data.get("category", "")).to_upper()
 	
-	var is_on = data.get("is_on")
-	power_switch.button_pressed = is_on
+	var is_on: bool = bool(data.get("is_on", false))
+	if power_switch:
+		power_switch.button_pressed = is_on
 	_update_visuals(is_on)
 	
-	update_power(data.get("power_mw"))
+	update_power(float(data.get("power_mw", 0.0)))
 
 func update_power(power_mw: float) -> void:
 	current_power = power_mw

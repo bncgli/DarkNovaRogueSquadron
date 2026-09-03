@@ -65,7 +65,7 @@ func _ready() -> void:
 	_find_or_attach_spaceship()
 
 func _connect_system_signals() -> void:
-	var sdm = get_node_or_null("/root/ShipDriveManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm and sdm.has_signal("file_synced"):
 		if not sdm.file_synced.is_connected(_on_file_synced):
 			sdm.file_synced.connect(_on_file_synced)
@@ -105,8 +105,8 @@ func load_tuning_configuration() -> void:
 			continue
 		var parts := line.split("=", false, 1)
 		if parts.size() == 2:
-			var key := parts[0].strip_edges().to_lower()
-			var val_str := parts[1].strip_edges()
+			var key: String = parts[0].strip_edges().to_lower()
+			var val_str: Variant = parts[1].strip_edges()
 			match key:
 				"cruise_multiplier":
 					cruise_multiplier = val_str.to_float()
@@ -133,13 +133,13 @@ func get_spaceship() -> Spaceship:
 
 func _find_or_attach_spaceship() -> void:
 	if SpaceWorldManager:
-		var ship = SpaceWorldManager.get_spaceship()
+		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
 			spaceship_ref = ship
 			return
 	
 	# Cerca nel tree o nei parent
-	var p = get_parent()
+	var p := get_parent()
 	while p != null:
 		if p is Spaceship:
 			spaceship_ref = p
@@ -412,7 +412,7 @@ func _check_proximity_hazards() -> void:
 	
 	# Controllo asteroidi diretti nella space_scene se presente
 	if ship.is_inside_tree():
-		var asteroids_group = get_tree().get_nodes_in_group("asteroids")
+		var asteroids_group := get_tree().get_nodes_in_group("asteroids")
 		for ast in asteroids_group:
 			if ast is Node3D and is_instance_valid(ast) and ast != ship:
 				var dist: float = ship_pos.distance_to(ast.global_position)

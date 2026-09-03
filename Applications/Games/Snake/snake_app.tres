@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="AppResource" format=3]
 
 [ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_snake"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/snake.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_snake")
+icon = ExtResource("1_icon")
 is_system_app = false
 terminal_command = "snake"
 is_pinned_to_taskbar = false

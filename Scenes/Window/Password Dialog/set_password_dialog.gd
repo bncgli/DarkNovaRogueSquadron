@@ -37,7 +37,7 @@ func _on_ok_pressed() -> void:
 			error_label.text = "La cartella ha gia' una password!"
 			return
 		fpm.set_password(folder_path, new_pass)
-	NotificationManager.spawn_notification("Password impostata per [color=59ea90]%s[/color]!" % folder_name)
+	NotificationManagerSingleton.spawn_notification("Password impostata per [color=59ea90]%s[/color]!" % folder_name)
 	_on_close_button_pressed()
 
 func _on_cancel_pressed() -> void:

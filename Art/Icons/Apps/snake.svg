@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-width="2" />
+  <!-- Snake segments -->
+  <rect x="36" y="16" width="10" height="10" rx="2" fill="#FFFFFF" />
+  <rect x="24" y="16" width="10" height="10" rx="2" fill="#FFFFFF" />
+  <rect x="16" y="16" width="10" height="10" rx="2" fill="#FFFFFF" />
+  <rect x="16" y="28" width="10" height="10" rx="2" fill="#FFFFFF" fill-opacity="0.7" />
+  <rect x="16" y="40" width="10" height="10" rx="2" fill="#FFFFFF" fill-opacity="0.5" />
+  <!-- Eyes on head -->
+  <circle cx="43" cy="19" r="1.5" fill="#000000" />
+  <!-- Apple/Food -->
+  <circle cx="44" cy="44" r="4" fill="#FFFFFF" />
+</svg>

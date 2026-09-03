@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="AppResource" format=3]
 
 [ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_eoua1"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/sensors.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_eoua1")
+icon = ExtResource("1_icon")
 roles = Array[String](["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Stagista", "Soldier", "Captain"])
 power_draw_mw = 18.0
 required_subsystems = Array[String](["sensors_array", "tactical_radar"])

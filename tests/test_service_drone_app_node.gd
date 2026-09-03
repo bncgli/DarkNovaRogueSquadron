@@ -21,10 +21,10 @@ func _run_all_tests() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	var net_mgr = get_node_or_null("/root/NetworkManager")
-	var sdm = get_node_or_null("/root/ShipDriveManager")
-	var fpm = get_node_or_null("/root/FolderPasswordManager")
-	var ssm = get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
+	var net_mgr := get_node_or_null("/root/NetworkManager")
+	var sdm := get_node_or_null("/root/ShipDriveManager")
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	var ssm := get_node_or_null("/root/ShipSoftwareManager") as ShipSoftwareManagerSingleton
 	
 	# =========================================================================
 	# TEST 1: OVERLAY E CICLO DI VITA (OFFLINE vs MISSIONE AVVIATA)

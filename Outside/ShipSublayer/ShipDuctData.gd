@@ -41,5 +41,5 @@ func from_dict(data: Dictionary) -> void:
 		elif data["to"] is Vector2:
 			to = data["to"]
 			
-	width = data.get("width")
-	is_blocked = data.get("is_blocked")
+	width = float(data.get("width", width))
+	is_blocked = bool(data.get("is_blocked", is_blocked))

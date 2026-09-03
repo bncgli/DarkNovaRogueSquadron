@@ -141,7 +141,7 @@ func apply_mining_damage_to_asteroid(asteroid: Node, damage_amount: float, hit_p
 
 ## Genera un frammento minerario fisico (MineralDepositEntity)
 func _spawn_mineral_fragment(asteroid: Node, state: Dictionary, hit_position: Vector3) -> Node:
-	var fragment = mineral_deposit_scene.instantiate()
+	var fragment := mineral_deposit_scene.instantiate()
 	var type_key: String = state["resource_type"]
 	var type_info: Dictionary = MINERAL_TYPES.get(type_key, MINERAL_TYPES["heavy_metals"])
 	
@@ -205,7 +205,7 @@ func capture_deposit(fragment: Node, collector: Node, cargo_bay: Node = null) ->
 	return true
 
 func _replenish_life_support_water(amount: float) -> void:
-	var life_support_nodes = get_tree().get_nodes_in_group("life_support")
+	var life_support_nodes := get_tree().get_nodes_in_group("life_support")
 	for ls in life_support_nodes:
 		if ls.has_method("add_water_supply"):
 			ls.add_water_supply(amount)

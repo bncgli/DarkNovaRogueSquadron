@@ -52,9 +52,9 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 		flux = val
 		emit_changed()
 
-@export var flux_modifiers: Array[ShipFluxModifier] = []:
+@export var flux_modifiers: Array = []:
 	set(val):
-		flux_modifiers = val
+		flux_modifiers = _ensure_objects(val, ShipFluxModifier)
 		emit_changed()
 
 
@@ -66,30 +66,30 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 
 # --- SUBLAYER 1: STANZE E SETTORI (Rooms / Hull Layout) ---
 # ogni elemento: ShipRoomData
-@export var rooms: Array[ShipRoomData] = []:
+@export var rooms: Array = []:
 	set(val):
-		rooms = val
+		rooms = _ensure_objects(val, ShipRoomData)
 		emit_changed()
 
 # --- SUBLAYER 2: CONDOTTI DI MANUTENZIONE (Ducts System) ---
 # Ogni elemento: ShipDuctData
-@export var ducts: Array[ShipDuctData] = []:
+@export var ducts: Array = []:
 	set(val):
-		ducts = val
+		ducts = _ensure_objects(val, ShipDuctData)
 		emit_changed()
 
 # --- SUBLAYER 4: ZONE E PUNTI DI DANNO (Damage Zones) ---
 # Ogni elemento: ShipDamageData
-@export var damages: Array[ShipDamageData] = []:
+@export var damages: Array = []:
 	set(val):
-		damages = val
+		damages = _ensure_objects(val, ShipDamageData)
 		emit_changed()
 
 # --- SUBLAYER 5 / SEZIONE SHIP DRIVE: FILE SYSTEM & PASSWORD ---
 # Ogni elemento in drive_files: ShipDriveFile
-@export var drive_files: Array[ShipDriveFile] = []:
+@export var drive_files: Array = []:
 	set(val):
-		drive_files = val
+		drive_files = _ensure_objects(val, ShipDriveFile)
 		emit_changed()
 
 # Mappa percorsi cartella -> password (es. "Ship Drive/Programs/FlightControls": "FLIGHT-7815")
@@ -100,10 +100,22 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 
 # --- SUBLAYER 6 / SEZIONE APPLICAZIONI MAINFRAME INSTALLATE ---
 # Ogni elemento in installed_apps: ShipAppMetadata
-@export var installed_apps: Array[ShipAppMetadata] = []:
+@export var installed_apps: Array = []:
 	set(val):
-		installed_apps = val
+		installed_apps = _ensure_objects(val, ShipAppMetadata)
 		emit_changed()
+
+func _ensure_objects(list: Array, type: GDScript) -> Array:
+	var new_list := []
+	for item in list:
+		if item is Dictionary:
+			var obj = type.new()
+			if obj.has_method("from_dict"):
+				obj.from_dict(item)
+			new_list.append(obj)
+		else:
+			new_list.append(item)
+	return new_list
 
 ## Ricalcola la potenza totale di una stanza sommando i power_mw dei suoi dispositivi.
 func update_room_power(room_id: String) -> void:
@@ -145,7 +157,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 	drive_passwords.clear()
 	recharge_room_id = ""
 	
-	var rng = RandomNumberGenerator.new()
+	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	
 	var bounds: Rect2 = get_ship_bounds()
@@ -216,8 +228,8 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 	
 	# 2. Connetti stanze con condotti (L-shape)
 	for i in range(rooms.size() - 1):
-		var r1 = rooms[i]
-		var r2 = rooms[i+1]
+		var r1: Variant = rooms[i]
+		var r2: Variant = rooms[i+1]
 		var p1: Vector2 = r1.rect.get_center()
 		var p2: Vector2 = r2.rect.get_center()
 		p1 = (p1 / grid_size).round() * grid_size
@@ -229,7 +241,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 		ducts.append(ShipDuctData.new("duct_" + str(i) + "_b", "Duct " + str(i) + " B", mid, p2))
 
 	if not rooms.is_empty():
-		var r0 = rooms[0]
+		var r0: Variant = rooms[0]
 		drone_spawn_pos = r0.rect.position - Vector2(grid_size, grid_size)
 		recharge_room_id = r0.id
 		
@@ -238,7 +250,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 	for app_name in base_apps:
 		var res_path := "res://Applications/%s/%s_app.tres" % [app_name, app_name.to_snake_case()]
 		if ResourceLoader.exists(res_path):
-			var res = load(res_path)
+			var res := load(res_path)
 			if res is AppResource:
 				install_app_resource(res)
 				
@@ -388,7 +400,7 @@ func remove_installed_app(app_id: String) -> bool:
 func get_apps_for_role(role_name: String, is_solo: bool = false) -> Array[ShipAppMetadata]:
 	var result: Array[ShipAppMetadata] = []
 	var clean_role := role_name.strip_edges()
-	var is_super := (is_solo and (clean_role.is_empty() or clean_role == "Non Assegnato")) or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Stagista" or clean_role == "HOST"
+	var is_super := is_solo or clean_role.is_empty() or clean_role == "Capitano" or clean_role == "Captain" or clean_role == "Stagista" or clean_role == "HOST"
 	
 	for app in installed_apps:
 		if is_super:
@@ -458,7 +470,7 @@ func uninstall_app_resource(res: AppResource) -> bool:
 		var prefix := full_folder + "/"
 		var i := drive_files.size() - 1
 		while i >= 0:
-			var f_path: String = drive_files[i].get("path")
+			var f_path: String = drive_files[i].path if drive_files[i] is ShipDriveFile else drive_files[i].get("path", "")
 			if f_path.begins_with(prefix) or f_path == full_folder:
 				drive_files.remove_at(i)
 				emit_changed()
@@ -470,7 +482,7 @@ func uninstall_app_resource(res: AppResource) -> bool:
 func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 	var res := app_res
 	if not res:
-		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
+		var ssm := Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
 		if ssm and ssm.has_method("get_registered_app"):
 			res = ssm.get_registered_app(app_id)
 	if not res:
@@ -484,8 +496,8 @@ func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 	# Fallback basato sui metadati presenti in installed_apps
 	var app_dict := get_installed_app_by_id(app_id)
 	var removed := remove_installed_app(app_id)
-	if not app_dict.is_empty():
-		var folder: String = str(app_dict.get("drive_folder"))
+	if app_dict != null:
+		var folder: String = str(app_dict.drive_folder)
 		if not folder.is_empty():
 			var folder_rel := folder.trim_prefix("/").trim_suffix("/")
 			var full_folder := "Ship Drive/%s" % folder_rel if not folder_rel.begins_with("Ship Drive/") else folder_rel
@@ -493,7 +505,7 @@ func uninstall_app_by_id(app_id: String, app_res: AppResource = null) -> bool:
 			var prefix := full_folder + "/"
 			var i := drive_files.size() - 1
 			while i >= 0:
-				var f_path: String = drive_files[i].get("path")
+				var f_path: String = drive_files[i].path if drive_files[i] is ShipDriveFile else str(drive_files[i].get("path", ""))
 				if f_path.begins_with(prefix) or f_path == full_folder:
 					drive_files.remove_at(i)
 					emit_changed()
@@ -505,7 +517,7 @@ func get_installed_app_resources() -> Array[AppResource]:
 	var result: Array[AppResource] = []
 	for app_dict in installed_apps:
 		var app_id: String = str(app_dict.get("id"))
-		var ssm = Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
+		var ssm := Engine.get_singleton("ShipSoftwareManager") if Engine.has_singleton("ShipSoftwareManager") else null
 		var res: AppResource = null
 		if ssm and ssm.has_method("get_registered_app"):
 			res = ssm.get_registered_app(app_id)
@@ -520,7 +532,7 @@ func get_installed_app_resources() -> Array[AppResource]:
 			res.description = str(app_dict.get("description"))
 			res.scene_path = str(app_dict.get("scene_path"))
 			res.icon_color = app_dict.get("icon_color")
-			var raw_roles = app_dict.get("roles")
+			var raw_roles : Array= app_dict.get("roles")
 			if raw_roles is Array:
 				for r in raw_roles:
 					res.roles.append(str(r))
@@ -593,89 +605,52 @@ func from_dict(data: Dictionary) -> void:
 		ship_mesh_path = str(data["ship_mesh_path"])
 		
 	if data.has("ship_bounds"):
-		var b = data["ship_bounds"]
+		var b: Variant = data["ship_bounds"]
 		if b is Array and b.size() == 4:
 			ship_bounds = Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3]))
 		elif b is Rect2:
 			ship_bounds = b
 			
 	if data.has("drone_spawn_pos"):
-		var p = data["drone_spawn_pos"]
+		var p: Variant = data["drone_spawn_pos"]
 		if p is Array and p.size() == 2:
 			drone_spawn_pos = Vector2(float(p[0]), float(p[1]))
 		elif p is Vector2:
 			drone_spawn_pos = p
 			
 	if data.has("drone_spawn_heading"):
-		drone_spawn_heading = float(data["drone_spawn_heading"])
+		var dsh: Variant = data["drone_spawn_heading"]
+		if dsh != null:
+			drone_spawn_heading = float(dsh)
 	
 	if data.has("flux"):
-		flux = int(data["flux"])
+		var f: Variant = data["flux"]
+		if f != null:
+			flux = int(f)
+
 	if data.has("flux_modifiers") and data["flux_modifiers"] is Array:
-		flux_modifiers.clear()
-		for fm in data["flux_modifiers"]:
-			if fm is Dictionary:
-				var mod := ShipFluxModifier.new()
-				mod.from_dict(fm)
-				flux_modifiers.append(mod)
-			elif fm is ShipFluxModifier:
-				flux_modifiers.append(fm)
+		flux_modifiers = data["flux_modifiers"]
 		
 	if data.has("recharge_room_id"):
 		recharge_room_id = str(data["recharge_room_id"])
 		
 	if data.has("rooms") and data["rooms"] is Array:
-		rooms.clear()
-		for r in data["rooms"]:
-			if r is Dictionary:
-				var body := ShipRoomData.new()
-				body.from_dict(r)
-				rooms.append(body)
-			elif r is ShipRoomData:
-				rooms.append(r)
+		rooms = data["rooms"]
 		
 	if data.has("ducts") and data["ducts"] is Array:
-		ducts.clear()
-		for d in data["ducts"]:
-			if d is Dictionary:
-				var body := ShipDuctData.new()
-				body.from_dict(d)
-				ducts.append(body)
-			elif d is ShipDuctData:
-				ducts.append(d)
+		ducts = data["ducts"]
 
 	if data.has("damages") and data["damages"] is Array:
-		damages.clear()
-		for dmg in data["damages"]:
-			if dmg is Dictionary:
-				var body := ShipDamageData.new()
-				body.from_dict(dmg)
-				damages.append(body)
-			elif dmg is ShipDamageData:
-				damages.append(dmg)
+		damages = data["damages"]
 
 	if data.has("drive_files") and data["drive_files"] is Array:
-		drive_files.clear()
-		for item in data["drive_files"]:
-			if item is Dictionary:
-				var body := ShipDriveFile.new()
-				body.from_dict(item)
-				drive_files.append(body)
-			elif item is ShipDriveFile:
-				drive_files.append(item)
+		drive_files = data["drive_files"]
 
 	if data.has("drive_passwords") and data["drive_passwords"] is Dictionary:
 		drive_passwords = (data["drive_passwords"] as Dictionary).duplicate(true)
 
 	if data.has("installed_apps") and data["installed_apps"] is Array:
-		installed_apps.clear()
-		for app in data["installed_apps"]:
-			if app is Dictionary:
-				var body := ShipAppMetadata.new()
-				body.from_dict(app)
-				installed_apps.append(body)
-			elif app is ShipAppMetadata:
-				installed_apps.append(app)
+		installed_apps = data["installed_apps"]
 
 	emit_changed()
 
@@ -715,10 +690,112 @@ func clone() -> ShipBlueprint:
 	copy.from_dict(to_dict())
 	return copy
 
+func create_default_ship() -> void:
+	const PATH := "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+	if ResourceLoader.exists(PATH):
+		var res := ResourceLoader.load(PATH)
+		if res is ShipBlueprint and res != self:
+			from_dict(res.to_dict())
+	if damages.is_empty():
+		_init_default_damages()
+	emit_changed()
+
+func _init_default_damages() -> void:
+	damages = [
+		{
+			"id": "dmg_1",
+			"type": "breach",
+			"name": "Falla Strutturale Prua",
+			"pos": Vector2(260, 65),
+			"sector": "Ponte di Comando",
+			"severity": 4.5,
+			"repair_cost": 10.0,
+			"desc": "Micrometeorite ha perforato la blindatura anteriore della cabina di pilotaggio.",
+			"system_impact": "nav_instability"
+		},
+		{
+			"id": "dmg_2",
+			"type": "short_circuit",
+			"name": "Cortocircuito Scanner EM",
+			"pos": Vector2(140, 135),
+			"sector": "Sensori & Avionica",
+			"severity": 6.0,
+			"repair_cost": 12.0,
+			"desc": "Sovratensione nei banchi di condensatori dei sensori a lungo raggio.",
+			"system_impact": "radar_ghosts"
+		},
+		{
+			"id": "dmg_3",
+			"type": "short_circuit",
+			"name": "Guasto Emettitore Scudo Babordo",
+			"pos": Vector2(210, 160),
+			"sector": "Scudi Deflettori",
+			"severity": 7.5,
+			"repair_cost": 15.0,
+			"desc": "Arco voltaico negli anelli di collimazione deflettore sinistro.",
+			"system_impact": "shields_degraded"
+		},
+		{
+			"id": "dmg_4",
+			"type": "breach",
+			"name": "Infiltrazione Refrigerante Nucleo",
+			"pos": Vector2(275, 245),
+			"sector": "Nucleo Reattore & Fusione",
+			"severity": 8.0,
+			"repair_cost": 18.0,
+			"desc": "Perdita di fluido criogenico ad alta pressione dal circuito di confinamento.",
+			"system_impact": "overheating"
+		},
+		{
+			"id": "dmg_5",
+			"type": "short_circuit",
+			"name": "Malfunzionamento Compressore Atmosfera",
+			"pos": Vector2(130, 225),
+			"sector": "Supporto Vitale",
+			"severity": 5.0,
+			"repair_cost": 8.0,
+			"desc": "Blocco meccanico con surriscaldamento delle valvole di ricircolo O2.",
+			"system_impact": "o2_leak"
+		},
+		{
+			"id": "dmg_6",
+			"type": "breach",
+			"name": "Fessurazione Camera di Spinta",
+			"pos": Vector2(320, 350),
+			"sector": "Sala Motori Principale",
+			"severity": 6.5,
+			"repair_cost": 14.0,
+			"desc": "Stress termico elevato ha causato microfratture nell'ugello di scarico destro.",
+			"system_impact": "engine_thrust_loss"
+		},
+		{
+			"id": "dmg_7",
+			"type": "short_circuit",
+			"name": "Attuatore Ugello RCS Babordo Bloccato",
+			"pos": Vector2(260, 290),
+			"sector": "Pod Manovra RCS",
+			"severity": 4.0,
+			"repair_cost": 7.0,
+			"desc": "Relè di potenza bruciato sull'elettrovalvola dei propulsori di rotazione SX.",
+			"system_impact": "turn_speed_reduced"
+		},
+		{
+			"id": "dmg_8",
+			"type": "breach",
+			"name": "Compromissione Portellone Cargo Esterno",
+			"pos": Vector2(460, 215),
+			"sector": "Baia di Carico Principale",
+			"severity": 5.5,
+			"repair_cost": 11.0,
+			"desc": "Guarnizione magnetica della rampa di carico danneggiata da detriti.",
+			"system_impact": "cargo_depressurization"
+		}
+	]
+
 static func get_default_blueprint() -> ShipBlueprint:
 	const PATH := "res://Outside/ShipSublayer/default_ship_blueprint.tres"
 	if ResourceLoader.exists(PATH):
-		var res = ResourceLoader.load(PATH)
+		var res := ResourceLoader.load(PATH)
 		if res is ShipBlueprint:
 			return res as ShipBlueprint
 	var bp := ShipBlueprint.new()

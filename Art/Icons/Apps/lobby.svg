@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Central User -->
+  <circle cx="32" cy="22" r="7" fill="#FFFFFF" />
+  <path d="M20 44 C20 36 25 33 32 33 C39 33 44 36 44 44 Z" fill="#FFFFFF" />
+  <!-- Left User -->
+  <circle cx="16" cy="26" r="5" fill="#FFFFFF" fill-opacity="0.6" />
+  <path d="M6 46 C6 40 10 37 16 37 C20 37 23 39 24 43 Z" fill="#FFFFFF" fill-opacity="0.6" />
+  <!-- Right User -->
+  <circle cx="48" cy="26" r="5" fill="#FFFFFF" fill-opacity="0.6" />
+  <path d="M58 46 C58 40 54 37 48 37 C44 37 41 39 40 43 Z" fill="#FFFFFF" fill-opacity="0.6" />
+  <circle cx="32" cy="54" r="3" fill="#FFFFFF" fill-opacity="0.8" />
+</svg>
