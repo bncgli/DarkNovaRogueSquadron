@@ -182,8 +182,9 @@ func _run_all_tests() -> void:
 	assert(skybox.celestial_container.get_child_count() > 0, "Il contenitore celestiale deve avere nodi impostori istanziati")
 	
 	# Verifica proiezione sul raggio SKY_SPHERE_RADIUS (400 m)
-	var first_impostor: Marker3D = skybox.celestial_container.get_child(0) as Marker3D
-	assert(first_impostor != null, "L'impostore deve essere un Marker3D")
+	var first_impostor: Node3D = skybox.celestial_container.get_child(0) as Node3D
+	assert(first_impostor != null, "L'impostore deve essere un Node3D / MeshInstance3D")
+	assert(first_impostor is MeshInstance3D, "L'impostore deve essere una MeshInstance3D visibile")
 	assert(is_equal_approx(first_impostor.position.length(), DynamicSpaceSkybox.SKY_SPHERE_RADIUS), "L'impostore deve essere posizionato sulla sfera celeste dello skybox (400m)")
 	
 	skybox.queue_free()

@@ -56,6 +56,7 @@ func _run_suite() -> void:
 	var weap_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Weapons/weapons_config.dat")
 	assert(weap_cfg != null, "get_drive_file_by_path deve trovare weapons_config.dat")
 	assert(weap_cfg.is_protected == true, "weapons_config.dat deve essere protetto")
+	assert("decryption_key=WEAP-CFG-7815" in weap_cfg.content, "weapons_config.dat deve contenere decryption_key")
 
 	var weap_pwd := bp.get_drive_password("Ship Drive/Programs/Weapons")
 	assert(weap_pwd == "WEAP-7815", "Password Weapons deve essere WEAP-7815")
@@ -63,6 +64,7 @@ func _run_suite() -> void:
 	var shld_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/ShieldMatrix/shields_config.dat")
 	assert(shld_cfg != null, "get_drive_file_by_path deve trovare shields_config.dat")
 	assert(shld_cfg.is_protected == true, "shields_config.dat deve essere protetto")
+	assert("decryption_key=SHLD-CFG-7815" in shld_cfg.content, "shields_config.dat deve contenere decryption_key")
 
 	var shld_pwd := bp.get_drive_password("Ship Drive/Programs/ShieldMatrix")
 	assert(shld_pwd == "SHLD-7815", "Password ShieldMatrix deve essere SHLD-7815")
@@ -70,6 +72,7 @@ func _run_suite() -> void:
 	var comm_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Comms/comms_config.dat")
 	assert(comm_cfg != null, "get_drive_file_by_path deve trovare comms_config.dat")
 	assert(comm_cfg.is_protected == true, "comms_config.dat deve essere protetto")
+	assert("decryption_key=COMM-CFG-7815" in comm_cfg.content, "comms_config.dat deve contenere decryption_key")
 
 	var comm_pwd := bp.get_drive_password("Ship Drive/Programs/Comms")
 	assert(comm_pwd == "COMM-7815", "Password Comms deve essere COMM-7815")
@@ -77,9 +80,30 @@ func _run_suite() -> void:
 	var sens_cfg := bp.get_drive_file_by_path("Ship Drive/Programs/Sensors/sensors_config.dat")
 	assert(sens_cfg != null, "get_drive_file_by_path deve trovare sensors_config.dat")
 	assert(sens_cfg.is_protected == true, "sensors_config.dat deve essere protetto")
+	assert("decryption_key=SENS-CFG-7815" in sens_cfg.content, "sensors_config.dat deve contenere decryption_key")
 
 	var sens_pwd := bp.get_drive_password("Ship Drive/Programs/Sensors")
 	assert(sens_pwd == "SENS-7815", "Password Sensors deve essere SENS-7815")
+
+	# Verifica decryption keys nella risorsa default_ship_blueprint.tres
+	var default_bp_res: ShipBlueprint = load("res://Outside/ShipSublayer/default_ship_blueprint.tres") as ShipBlueprint
+	assert(default_bp_res != null, "Caricamento default_ship_blueprint.tres fallito")
+	var default_expected_keys: Dictionary = {
+		"Ship Drive/Programs/Weapons/weapons_config.dat": "WEAP-CFG-7815",
+		"Ship Drive/Programs/Weapons/ammo_tuning.dat": "AMMO-TUN-7815",
+		"Ship Drive/Programs/Sensors/sensors_config.dat": "SENS-CFG-7815",
+		"Ship Drive/Programs/Sensors/radar_tuning.dat": "RADR-TUN-7815",
+		"Ship Drive/Programs/Comms/comms_config.dat": "COMM-CFG-7815",
+		"Ship Drive/Programs/Comms/crypto_tuning.dat": "CRYP-TUN-7815",
+		"Ship Drive/Programs/DuctDrone/duct_drone_config.dat": "DUCT-CFG-7815",
+		"Ship Drive/Programs/DuctDrone/drone_tuning.dat": "DRONE-TUN-7815",
+		"Ship Drive/Programs/ShieldMatrix/shields_config.dat": "SHLD-CFG-7815",
+		"Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat": "DEFL-TUN-7815"
+	}
+	for f_p in default_expected_keys:
+		var f_obj := default_bp_res.get_drive_file_by_path(f_p)
+		assert(f_obj != null, "File non trovato nella blueprint: " + f_p)
+		assert(("decryption_key=" + default_expected_keys[f_p]) in f_obj.content, "Decryption key mancante in " + f_p)
 
 	# Test aggiunta e rimozione file dinamico
 	bp.set_drive_file("Ship Drive/test_note.txt", "Note test", false, "Descrizione")

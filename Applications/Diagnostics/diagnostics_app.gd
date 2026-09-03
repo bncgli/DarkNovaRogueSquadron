@@ -104,64 +104,64 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 	"FlightControls": {
 		"folder": "Ship Drive/Programs/FlightControls",
 		"files": {
-			"Ship Drive/Programs/FlightControls/flight_config.dat": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING\n[SYSTEM]\napp_name=FlightControls\nversion=1.0.4\nstatus=OPERATIONAL\nrcs_subsystem=ACTIVE\n\n[FLIGHT_DYNAMICS]\nmax_linear_speed=20.0\nlinear_acceleration=35.0\nlinear_deceleration=20.0\nmax_angular_speed=2.5\nangular_acceleration=8.0\nangular_deceleration=6.0\n\n[SPEED_MODES]\nturbo_multiplier=2.0\nprecision_multiplier=0.4\n",
-			"Ship Drive/Programs/FlightControls/thrusters_tuning.dat": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\nrcs_power_rate=1.0\npitch_thrust_mult=1.0\nyaw_thrust_mult=1.0\nroll_thrust_mult=1.0\nvertical_thrust_mult=1.0\noverclock_limit=1.5\n"
+			"Ship Drive/Programs/FlightControls/flight_config.dat": "# DARK NOVA FLIGHT CONTROLS RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - ACTIVE FLIGHT TUNING\n[SYSTEM]\napp_name=FlightControls\nversion=1.0.4\nstatus=OPERATIONAL\nrcs_subsystem=ACTIVE\ndecryption_key=FLIGHT-CFG-7815\n\n[FLIGHT_DYNAMICS]\nmax_linear_speed=20.0\nlinear_acceleration=35.0\nlinear_deceleration=20.0\nmax_angular_speed=2.5\nangular_acceleration=8.0\nangular_deceleration=6.0\n\n[SPEED_MODES]\nturbo_multiplier=2.0\nprecision_multiplier=0.4\n",
+			"Ship Drive/Programs/FlightControls/thrusters_tuning.dat": "# RCS & MAIN THRUSTERS TUNING MATRIX\n[THRUSTERS]\ndecryption_key=THRUST-TUN-7815\nrcs_power_rate=1.0\npitch_thrust_mult=1.0\nyaw_thrust_mult=1.0\nroll_thrust_mult=1.0\nvertical_thrust_mult=1.0\noverclock_limit=1.5\n"
 		}
 	},
 	"Cams": {
 		"folder": "Ship Drive/Programs/Cams",
 		"files": {
-			"Ship Drive/Programs/Cams/cams_config.dat": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION\n# WARNING: SENSORS & OPTICS CONFIGURATION FILE\n[SYSTEM]\napp_name=Cams\nversion=1.0.4\nstatus=OPERATIONAL\nsensor_array=CCTV_6CH\n\n[OPTICS]\ndefault_fov=75.0\nmin_fov=30.0\nmax_fov=100.0\nzoom_step=10.0\nnight_vision_intensity=0.18\ntactical_hud_contrast=0.18\nthermal_intensity=0.22\n",
-			"Ship Drive/Programs/Cams/optics_tuning.dat": "# OPTICS & SENSOR CALIBRATION MATRIX\n[SENSORS]\nsignal_boost=1.0\nnoise_reduction=1.0\nrefresh_rate_hz=60.0\ncrosshair_style=STANDARD\noverclock_gain=1.0\n"
+			"Ship Drive/Programs/Cams/cams_config.dat": "# DARK NOVA CAMS ARRAY RUNTIME CONFIGURATION\n# WARNING: SENSORS & OPTICS CONFIGURATION FILE\n[SYSTEM]\napp_name=Cams\nversion=1.0.4\nstatus=OPERATIONAL\nsensor_array=CCTV_6CH\ndecryption_key=CAMS-CFG-7815\n\n[OPTICS]\ndefault_fov=75.0\nmin_fov=30.0\nmax_fov=100.0\nzoom_step=10.0\nnight_vision_intensity=0.18\ntactical_hud_contrast=0.18\nthermal_intensity=0.22\n",
+			"Ship Drive/Programs/Cams/optics_tuning.dat": "# OPTICS & SENSOR CALIBRATION MATRIX\n[SENSORS]\ndecryption_key=OPTIC-TUN-7815\nsignal_boost=1.0\nnoise_reduction=1.0\nrefresh_rate_hz=60.0\ncrosshair_style=STANDARD\noverclock_gain=1.0\n"
 		}
 	},
 	"DuctDrone": {
 		"folder": "Ship Drive/Programs/DuctDrone",
 		"files": {
-			"Ship Drive/Programs/DuctDrone/duct_drone_config.dat": "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT\n[SYSTEM]\napp_name=DuctDrone\nversion=1.0.4\nstatus=OPERATIONAL\nmaintenance_subsystem=ACTIVE\n\n[DRONE_DYNAMICS]\nlinear_speed=175.0\nlinear_acceleration=650.0\nlinear_deceleration=750.0\nrotate_speed=3.0\n\n[BATTERY_MANAGEMENT]\nbattery_max=100.0\nbattery_drain_move=0.35\nbattery_drain_lights=0.75\nbattery_drain_radar=3.5\nbattery_drain_repair=6.0\n\n[MAINTENANCE]\nradar_scan_radius_max=160.0\nrepair_range=42.0\nrepair_speed_multiplier=1.0\n",
-			"Ship Drive/Programs/DuctDrone/drone_tuning.dat": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX\n[TUNING]\nturbo_multiplier=2.0\nprecision_multiplier=0.5\nrepair_efficiency=1.0\nradar_intensity=1.0\noverclock_speed_gain=1.0\n"
+			"Ship Drive/Programs/DuctDrone/duct_drone_config.dat": "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT\n[SYSTEM]\napp_name=DuctDrone\nversion=1.0.4\nstatus=OPERATIONAL\nmaintenance_subsystem=ACTIVE\ndecryption_key=DUCT-CFG-7815\n\n[DRONE_DYNAMICS]\nlinear_speed=175.0\nlinear_acceleration=650.0\nlinear_deceleration=750.0\nrotate_speed=3.0\n\n[BATTERY_MANAGEMENT]\nbattery_max=100.0\nbattery_drain_move=0.35\nbattery_drain_lights=0.75\nbattery_drain_radar=3.5\nbattery_drain_repair=6.0\n\n[MAINTENANCE]\nradar_scan_radius_max=160.0\nrepair_range=42.0\nrepair_speed_multiplier=1.0\n",
+			"Ship Drive/Programs/DuctDrone/drone_tuning.dat": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX\n[TUNING]\ndecryption_key=DRONE-TUN-7815\nturbo_multiplier=2.0\nprecision_multiplier=0.5\nrepair_efficiency=1.0\nradar_intensity=1.0\noverclock_speed_gain=1.0\n"
 		}
 	},
 	"PowerGrid": {
 		"folder": "Ship Drive/Programs/PowerGrid",
 		"files": {
-			"Ship Drive/Programs/PowerGrid/power_grid_config.dat": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION\n# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX\n[SYSTEM]\napp_name=PowerGrid\nversion=1.0.4\nstatus=OPERATIONAL\nmode=AUTOMATIC_BALANCING\n\n[GRID_SETTINGS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\njunction_switch_delay=0.25\noverload_threshold_pct=110.0\nreroute_efficiency_loss=0.05\n\n[CIRCUIT_PROTECTION]\nbreaker_trip_threshold=1.4\nshort_circuit_damping=0.85\nauto_reroute_on_short=false\n",
-			"Ship Drive/Programs/PowerGrid/grid_tuning.dat": "# POWER GRID CALIBRATION & TUNING MATRIX\n[TUNING]\npower_efficiency_mult=1.0\nbackup_line_conductivity=0.95\nswitch_rate_hz=10.0\nregime_boost=1.0\noverclock_tolerance=1.2\n"
+			"Ship Drive/Programs/PowerGrid/power_grid_config.dat": "# DARK NOVA POWER GRID RUNTIME CONFIGURATION\n# WARNING: ELECTRICAL GRID AND POWER DISTRIBUTION MATRIX\n[SYSTEM]\napp_name=PowerGrid\nversion=1.0.4\nstatus=OPERATIONAL\nmode=AUTOMATIC_BALANCING\ndecryption_key=GRID-CFG-7815\n\n[GRID_SETTINGS]\nreactor_output_mw=1200.0\naux_generator_mw=450.0\njunction_switch_delay=0.25\noverload_threshold_pct=110.0\nreroute_efficiency_loss=0.05\n\n[CIRCUIT_PROTECTION]\nbreaker_trip_threshold=1.4\nshort_circuit_damping=0.85\nauto_reroute_on_short=false\n",
+			"Ship Drive/Programs/PowerGrid/grid_tuning.dat": "# POWER GRID CALIBRATION & TUNING MATRIX\n[TUNING]\ndecryption_key=GRID-TUN-7815\npower_efficiency_mult=1.0\nbackup_line_conductivity=0.95\nswitch_rate_hz=10.0\nregime_boost=1.0\noverclock_tolerance=1.2\n"
 		}
 	},
 	"Weapons": {
 		"folder": "Ship Drive/Programs/Weapons",
 		"files": {
-			"Ship Drive/Programs/Weapons/weapons_config.dat": "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION\n# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE\n[SYSTEM]\napp_name=Weapons\nversion=1.0.4\nstatus=OPERATIONAL\nweapons_subsystem=ACTIVE\n\n[WEAPONS]\nmax_range=4500.0\nfire_rate=1.8\ncooling_rate=0.75\nauto_pdg_enabled=true\nlaser_power_draw=250.0\ntorpedo_max_ammo=12\npdg_ammo_max=500\npdg_fire_rate=8.0\nemergency_vent_cooldown=10.0\n",
-			"Ship Drive/Programs/Weapons/ammo_tuning.dat": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n"
+			"Ship Drive/Programs/Weapons/weapons_config.dat": "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION\n# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE\n[SYSTEM]\napp_name=Weapons\nversion=1.0.4\nstatus=OPERATIONAL\nweapons_subsystem=ACTIVE\ndecryption_key=WEAP-CFG-7815\n\n[WEAPONS]\nmax_range=4500.0\nfire_rate=1.8\ncooling_rate=0.75\nauto_pdg_enabled=true\nlaser_power_draw=250.0\ntorpedo_max_ammo=12\npdg_ammo_max=500\npdg_fire_rate=8.0\nemergency_vent_cooldown=10.0\n",
+			"Ship Drive/Programs/Weapons/ammo_tuning.dat": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX\n[BALLISTICS]\ndecryption_key=AMMO-TUN-7815\ntorpedo_velocity=85.0\nauto_lead_tracking=true\noverclock_damage_mult=1.0\nheat_multiplier=1.0\npdg_range=1200.0\nlaser_beam_intensity=1.0\n"
 		}
 	},
 	"ShieldMatrix": {
 		"folder": "Ship Drive/Programs/ShieldMatrix",
 		"files": {
-			"Ship Drive/Programs/ShieldMatrix/shields_config.dat": "# DARK NOVA SHIELD MATRIX RUNTIME CONFIGURATION\n# WARNING: SHIELD DEFLECTOR AND HULL PROTECTION MATRIX\n[SYSTEM]\napp_name=ShieldMatrix\nversion=1.0.4\nstatus=OPERATIONAL\nshield_subsystem=ACTIVE\n\n[SHIELD_SETTINGS]\nmax_capacity_per_quadrant=250.0\nrecharge_rate_per_sec=15.0\noverload_limit=1.3\nbase_power_draw_mw=90.0\nemergency_boost_power_mw=120.0\nemergency_boost_amount=75.0\nemergency_boost_cooldown=8.0\ndecay_rate_unpowered=25.0\n",
-			"Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat": "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX\n[HARMONICS]\nharmonic_frequency=440.0\nemergency_boost_multiplier=2.5\noverclock_absorption=1.0\nphase_sync_stability=0.98\ndispersion_damping=0.88\n"
+			"Ship Drive/Programs/ShieldMatrix/shields_config.dat": "# DARK NOVA SHIELD MATRIX RUNTIME CONFIGURATION\n# WARNING: SHIELD DEFLECTOR AND HULL PROTECTION MATRIX\n[SYSTEM]\napp_name=ShieldMatrix\nversion=1.0.4\nstatus=OPERATIONAL\nshield_subsystem=ACTIVE\ndecryption_key=SHLD-CFG-7815\n\n[SHIELD_SETTINGS]\nmax_capacity_per_quadrant=250.0\nrecharge_rate_per_sec=15.0\noverload_limit=1.3\nbase_power_draw_mw=90.0\nemergency_boost_power_mw=120.0\nemergency_boost_amount=75.0\nemergency_boost_cooldown=8.0\ndecay_rate_unpowered=25.0\n",
+			"Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat": "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX\n[HARMONICS]\ndecryption_key=DEFL-TUN-7815\nharmonic_frequency=440.0\nemergency_boost_multiplier=2.5\noverclock_absorption=1.0\nphase_sync_stability=0.98\ndispersion_damping=0.88\n"
 		}
 	},
 	"Comms": {
 		"folder": "Ship Drive/Programs/Comms",
 		"files": {
-			"Ship Drive/Programs/Comms/comms_config.dat": "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION\n# WARNING: SUBSPACE RELAY AND CRYPTOGRAPHY MATRIX\n[SYSTEM]\napp_name=Comms\nversion=1.0.4\nstatus=OPERATIONAL\ncomms_subsystem=ACTIVE\n\n[COMMS_SETTINGS]\nbandwidth_hz=1420.0\ndecryption_speed_multiplier=1.0\nsubspace_relay_active=true\nauto_tune_sos=true\nsignal_amplification=1.2\n",
-			"Ship Drive/Programs/Comms/crypto_tuning.dat": "# EW COUNTERMEASURES & CRYPTO TUNING MATRIX\n[ELECTRONIC_WARFARE]\njamming_power_mw=120.0\nsignal_noise_ratio=0.85\nspoofing_signature=CORVETTE_CIVILIAN\njamming_radius=15000.0\noverclock_ew_boost=1.0\ncrypto_crack_speed=1.0\n"
+			"Ship Drive/Programs/Comms/comms_config.dat": "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION\n# WARNING: SUBSPACE RELAY AND CRYPTOGRAPHY MATRIX\n[SYSTEM]\napp_name=Comms\nversion=1.0.4\nstatus=OPERATIONAL\ncomms_subsystem=ACTIVE\ndecryption_key=COMM-CFG-7815\n\n[COMMS_SETTINGS]\nbandwidth_hz=1420.0\ndecryption_speed_multiplier=1.0\nsubspace_relay_active=true\nauto_tune_sos=true\nsignal_amplification=1.2\n",
+			"Ship Drive/Programs/Comms/crypto_tuning.dat": "# EW COUNTERMEASURES & CRYPTO TUNING MATRIX\n[ELECTRONIC_WARFARE]\ndecryption_key=CRYP-TUN-7815\njamming_power_mw=120.0\nsignal_noise_ratio=0.85\nspoofing_signature=CORVETTE_CIVILIAN\njamming_radius=15000.0\noverclock_ew_boost=1.0\ncrypto_crack_speed=1.0\n"
 		}
 	},
 	"Diagnostics": {
 		"folder": "Ship Drive/Programs/Diagnostics",
 		"files": {
-			"Ship Drive/Programs/Diagnostics/diagnostics_config.dat": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n",
-			"Ship Drive/Programs/Diagnostics/security_tuning.dat": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n"
+			"Ship Drive/Programs/Diagnostics/diagnostics_config.dat": "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\ndecryption_key=DIAG-CFG-7815\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n",
+			"Ship Drive/Programs/Diagnostics/security_tuning.dat": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\ndecryption_key=SECU-TUN-7815\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n"
 		}
 	},
 	"Sensors": {
 		"folder": "Ship Drive/Programs/Sensors",
 		"files": {
-			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
-			"Ship Drive/Programs/Sensors/radar_tuning.dat": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n"
+			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\ndecryption_key=SENS-CFG-7815\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
+			"Ship Drive/Programs/Sensors/radar_tuning.dat": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\ndecryption_key=RADR-TUN-7815\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n"
 		}
 	},
 	"LifeSupport": {

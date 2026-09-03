@@ -144,13 +144,68 @@ func _on_system_entities_updated(entities: Array[Dictionary]) -> void:
 		if celestial_container and is_instance_valid(celestial_container):
 			_create_celestial_impostor_node(render_info)
 
+func _process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
+	var cam := get_viewport().get_camera_3d() if get_viewport() else null
+	if cam and is_instance_valid(cam):
+		global_position = cam.global_position
+
 func _create_celestial_impostor_node(info: Dictionary) -> void:
-	var marker := Marker3D.new()
-	marker.name = "Impostor_%s" % info.get("id")
-	marker.position = info.get("projected_pos")
-	marker.scale = Vector3.ONE * info.get("apparent_scale")
-	marker.set_meta("entity_data", info)
-	celestial_container.add_child(marker)
+	var mesh_inst := MeshInstance3D.new()
+	mesh_inst.name = "Impostor_%s" % str(info.get("id"))
+	mesh_inst.position = info.get("projected_pos", Vector3.ZERO)
+	
+	var apparent_scale: float = float(info.get("apparent_scale", 1.0))
+	var sphere := SphereMesh.new()
+	sphere.radius = 2.0
+	sphere.height = 4.0
+	mesh_inst.mesh = sphere
+	mesh_inst.scale = Vector3.ONE * maxf(apparent_scale, 0.05)
+	
+	var ent_type: String = str(info.get("type", "")).to_upper()
+	var brightness: float = float(info.get("brightness", 1.0))
+	
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	
+	var base_col := Color.WHITE
+	match ent_type:
+		"STAR":
+			base_col = Color(1.0, 0.9, 0.4)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.95, 0.6)
+			mat.emission_energy_multiplier = 2.5 * brightness
+		"GAS_GIANT":
+			base_col = Color(0.85, 0.55, 0.3)
+			mat.emission_enabled = true
+			mat.emission = Color(0.85, 0.55, 0.3)
+			mat.emission_energy_multiplier = 0.6 * brightness
+		"PLANET":
+			base_col = Color(0.25, 0.55, 0.85)
+			mat.emission_enabled = true
+			mat.emission = Color(0.25, 0.55, 0.85)
+			mat.emission_energy_multiplier = 0.4 * brightness
+		"MOON":
+			base_col = Color(0.75, 0.75, 0.8)
+			mat.emission_enabled = true
+			mat.emission = Color(0.75, 0.75, 0.8)
+			mat.emission_energy_multiplier = 0.25 * brightness
+		"STATION":
+			base_col = Color(0.4, 0.9, 1.0)
+			mat.emission_enabled = true
+			mat.emission = Color(0.4, 0.9, 1.0)
+			mat.emission_energy_multiplier = 1.0 * brightness
+		_:
+			base_col = Color(0.8, 0.8, 0.8)
+			mat.emission_enabled = true
+			mat.emission = Color(0.8, 0.8, 0.8)
+			mat.emission_energy_multiplier = 0.3 * brightness
+	
+	mat.albedo_color = base_col
+	mesh_inst.material_override = mat
+	mesh_inst.set_meta("entity_data", info)
+	celestial_container.add_child(mesh_inst)
 
 func _on_sector_changed(_old_coords: Vector3i, _new_coords: Vector3i, _sec_data: SectorData) -> void:
 	update_skybox()

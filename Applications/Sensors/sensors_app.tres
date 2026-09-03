@@ -27,6 +27,7 @@ default_files = Array[Dictionary]([{
 app_name=SensorsApp
 version=1.0.0
 status=OPERATIONAL
+decryption_key=SENS-CFG-7815
 
 [SWEEP]
 sweep_frequency_hz=12.0
@@ -39,6 +40,7 @@ noise_filter=0.92
 }, {
 "content": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX
 [TUNING]
+decryption_key=RADR-TUN-7815
 spectrum_sensitivity=1.0
 iff_auto_tag=true
 stealth_detection_threshold=0.35

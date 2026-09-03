@@ -10,7 +10,7 @@ class_name DuctDroneApp
 ## - A / Freccia Sinistra: Rotazione a Sinistra (antioraria)
 ## - D / Freccia Destra: Rotazione a Destra (oraria)
 ## - Spazio / X: Freno / Stop immediato
-## - R: Reset robottino alla stazione di ricarica
+## - R: Impulso radar / scansione
 
 const APP_TITLE: String = "Duct Drone - Schema Nave & Condotti"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(880, 580)
@@ -59,6 +59,8 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/DuctDrone/tuning.dat"
 @onready var btn_scan_pulse: Button = get_node_or_null("%BtnScanPulse")
 
 var can_control: bool = true
+var emergency_recovery_time_left: float = 0.0
+var is_in_emergency_recovery: bool = false
 
 # Parametri runtime configurati dai file .dat protetti
 var active_config: Dictionary = {
@@ -240,6 +242,12 @@ const MAX_TRAIL_LENGTH: int = 35
 
 func _ready() -> void:
 	if SpaceWorldManager:
+		var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint()
+		if bp:
+			initial_drone_pos = bp.get_drone_spawn_pos()
+			drone_pos = initial_drone_pos
+			drone_heading = bp.drone_spawn_heading
+		
 		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
 		if mgr_rooms.size() > 0:
 			rooms.clear()
@@ -614,7 +622,7 @@ func _clear_button_highlights() -> void:
 			b.modulate = Color(1.0, 1.0, 1.0)
 
 func _input(event: InputEvent) -> void:
-	if not is_control_active():
+	if not is_control_active() or is_in_emergency_recovery:
 		return
 	
 	if event is InputEventKey and not event.is_echo():
@@ -627,9 +635,9 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		
-		# Tasto rapido Reset (R)
+		# Tasto rapido Radar (R)
 		if event.pressed and (event.keycode == KEY_R or event.physical_keycode == KEY_R):
-			_on_reset_pressed()
+			_on_scan_pulse_pressed()
 			get_viewport().set_input_as_handled()
 			return
 		
@@ -645,7 +653,87 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+## Ritorna true se il drone si trova all'interno del rettangolo della stanza di ricarica
+func is_in_recharge_room() -> bool:
+	var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
+	var recharge_room: Variant = null
+	if bp and bp.recharge_room_id != "":
+		recharge_room = bp.get_room_by_id(bp.recharge_room_id)
+	if recharge_room and "rect" in recharge_room:
+		return (recharge_room.rect as Rect2).has_point(drone_pos)
+	
+	var target_id: String = bp.recharge_room_id if (bp and bp.recharge_room_id != "") else "cargo"
+	for r in rooms:
+		if r.get("id") == target_id:
+			var rect: Rect2 = r.get("rect", Rect2())
+			return rect.has_point(drone_pos)
+	return false
+
 func _process(delta: float) -> void:
+	var in_recharge := is_in_recharge_room()
+	
+	if in_recharge:
+		var max_bat: float = float(active_config.get("battery_max", 100.0))
+		drone_battery = minf(max_bat, drone_battery + 8.0 * delta)
+		if is_in_emergency_recovery:
+			is_in_emergency_recovery = false
+			emergency_recovery_time_left = 0.0
+	else:
+		if drone_battery <= 0.0:
+			if not is_in_emergency_recovery:
+				is_in_emergency_recovery = true
+				emergency_recovery_time_left = 60.0
+				drone_current_speed = 0.0
+				_linear_input = 0.0
+				_angular_input = 0.0
+				_ui_linear_input = 0.0
+				_ui_angular_input = 0.0
+				if is_repairing:
+					is_repairing = false
+					current_repair_target_id = ""
+					if SpaceWorldManager:
+						SpaceWorldManager.stop_duct_drone_repair()
+				if SpaceWorldManager:
+					SpaceWorldManager.stop_duct_drone()
+				if status_summary_label:
+					status_summary_label.text = "RECUPERO EMERGENZA IN: %d s" % int(ceilf(emergency_recovery_time_left))
+			else:
+				emergency_recovery_time_left = maxf(0.0, emergency_recovery_time_left - delta)
+				if status_summary_label:
+					status_summary_label.text = "RECUPERO EMERGENZA IN: %d s" % int(ceilf(emergency_recovery_time_left))
+				
+				if emergency_recovery_time_left <= 0.0:
+					var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
+					var spawn_p := initial_drone_pos
+					var spawn_h := -PI * 0.5
+					if bp:
+						spawn_p = bp.get_drone_spawn_pos()
+						spawn_h = bp.drone_spawn_heading
+					elif SpaceWorldManager:
+						spawn_p = SpaceWorldManager.get_drone_spawn_pos()
+						spawn_h = SpaceWorldManager.get_drone_spawn_heading()
+					
+					drone_pos = spawn_p
+					drone_heading = spawn_h
+					drone_battery = 25.0
+					drone_current_speed = 0.0
+					drone_trail.clear()
+					is_in_emergency_recovery = false
+					emergency_recovery_time_left = 0.0
+					
+					if SpaceWorldManager:
+						SpaceWorldManager.duct_drone_pos = spawn_p
+						SpaceWorldManager.duct_drone_heading = spawn_h
+						SpaceWorldManager.duct_drone_battery = 25.0
+						SpaceWorldManager.duct_drone_speed = 0.0
+						SpaceWorldManager.stop_duct_drone()
+					
+					var notif := get_node_or_null("/root/NotificationManager")
+					if notif and notif.has_method("spawn_notification"):
+						notif.spawn_notification("Duct Drone: Recupero di emergenza completato. Batteria al 25%.")
+					if status_summary_label:
+						status_summary_label.text = "Recupero di emergenza completato. Batteria ripristinata al 25%."
+	
 	_handle_movement(delta)
 	
 	if not SpaceWorldManager:
@@ -901,8 +989,11 @@ func _on_repair_state_changed(rep: bool, dmg_id: String, progress: float) -> voi
 	current_repair_progress = progress
 
 func _handle_movement(delta: float) -> void:
-	if not is_control_active():
+	if not is_control_active() or drone_battery <= 0.0 or is_in_emergency_recovery:
 		_clear_button_highlights()
+		_linear_input = 0.0
+		_angular_input = 0.0
+		drone_current_speed = 0.0
 		if SpaceWorldManager:
 			SpaceWorldManager.set_duct_drone_inputs(0.0, 0.0, _speed_multiplier)
 		return
@@ -940,6 +1031,10 @@ func _handle_movement(delta: float) -> void:
 		_local_simulate_movement(delta)
 
 func _local_simulate_movement(delta: float) -> void:
+	if drone_battery <= 0.0 or is_in_emergency_recovery:
+		drone_current_speed = 0.0
+		return
+
 	# 1. Rotazione Tank (Gira sul posto a sinistra o destra)
 	if absf(_angular_input) > 0.01:
 		var rot_step := _angular_input * BASE_ROTATE_SPEED * _speed_multiplier * delta
@@ -952,7 +1047,7 @@ func _local_simulate_movement(delta: float) -> void:
 	drone_current_speed = target_speed
 	if absf(_linear_input) > 0.01:
 		# Consumo batteria dinamico
-		drone_battery = maxf(5.0, drone_battery - 0.25 * delta * _speed_multiplier)
+		drone_battery = maxf(0.0, drone_battery - 0.25 * delta * _speed_multiplier)
 	
 	if absf(drone_current_speed) > 0.1:
 		var forward_dir := Vector2.from_angle(drone_heading)
@@ -963,10 +1058,6 @@ func _local_simulate_movement(delta: float) -> void:
 		new_pos = _constrain_drone_movement(drone_pos, new_pos)
 		drone_pos = new_pos
 		_update_trail(drone_pos)
-	else:
-		# Lenta ricarica se vicino al punto iniziale (dock di ricarica)
-		if drone_pos.distance_to(initial_drone_pos) < 30.0:
-			drone_battery = minf(100.0, drone_battery + 8.0 * delta)
 
 func _constrain_drone_movement(old_pos: Vector2, new_pos: Vector2) -> Vector2:
 	# Controlla se la nuova posizione è valida all'interno di una stanza o condotto
@@ -1099,8 +1190,13 @@ func _on_reset_pressed() -> void:
 	if SpaceWorldManager:
 		SpaceWorldManager.reset_duct_drone()
 	else:
-		drone_pos = initial_drone_pos
-		drone_heading = -PI * 0.5
+		var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
+		if bp:
+			drone_pos = bp.get_drone_spawn_pos()
+			drone_heading = bp.drone_spawn_heading
+		else:
+			drone_pos = initial_drone_pos
+			drone_heading = -PI * 0.5
 		drone_battery = 100.0
 
 func _on_speed_mode_toggle() -> void:

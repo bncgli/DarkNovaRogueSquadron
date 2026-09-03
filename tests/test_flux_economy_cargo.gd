@@ -237,11 +237,23 @@ func _run_all_tests() -> void:
 	
 	assert(cargo_app.mass_progress_bar != null, "mass_progress_bar presente")
 	assert(cargo_app.vol_progress_bar != null, "vol_progress_bar presente")
+	assert(cargo_app.mass_status_label != null, "mass_status_label presente")
+	assert(cargo_app.vol_status_label != null, "vol_status_label presente")
 	assert(cargo_app.cargo_item_list != null, "cargo_item_list presente")
-	assert(cargo_app.flux_score_bar != null, "flux_score_bar presente")
-	assert(cargo_app.subscriptions_item_list != null, "subscriptions_item_list presente")
-	assert(cargo_app.snet_disk_list != null, "snet_disk_list presente")
-	assert(cargo_app.btn_hack_ice != null, "btn_hack_ice presente")
+	assert(cargo_app.item_details_label != null, "item_details_label presente")
+	assert(cargo_app.btn_jettison != null, "btn_jettison presente")
+	
+	# Test interazione: selezione elemento ed espulsione
+	assert(cargo_app.cargo_item_list.item_count > 0, "La lista deve contenere elementi di stiva")
+	cargo_app._on_cargo_item_selected(0)
+	assert(not cargo_app.item_details_label.text.is_empty(), "I dettagli dell'elemento devono essere mostrati")
+	
+	var initial_item_count: int = cargo_app.cargo_mgr.get_cargo_list().size()
+	var initial_qty: int = cargo_app.cargo_mgr.get_cargo_list()[0].quantity
+	cargo_app._on_jettison_pressed()
+	
+	var post_qty: int = cargo_app.cargo_mgr.get_item_quantity(cargo_app.cargo_mgr.get_cargo_list()[0].id) if cargo_app.cargo_mgr.get_cargo_list().size() > 0 else 0
+	assert(post_qty == initial_qty - 1 or cargo_app.cargo_mgr.get_cargo_list().size() == initial_item_count - 1, "L'espulsione deve decrementare la quantità dell'oggetto selezionato")
 	
 	# Verifica risorsa AppResource
 	var app_tres := load("res://Applications/CargoBay/cargo_bay_app.tres") as AppResource

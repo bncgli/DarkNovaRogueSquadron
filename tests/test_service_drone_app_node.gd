@@ -162,9 +162,20 @@ func _run_all_tests() -> void:
 	# =========================================================================
 	# TEST 5: SIMULAZIONE FISICA 3D, AZIONI BRACCIO E DOCKING
 	# =========================================================================
-	print("\n--- TEST 5: Simulazione 3D, Azioni Manipolatore e Docking ---")
+	print("\n--- TEST 5: Simulazione 3D, Collisioni, Controlli Rotazione e Docking ---")
 	var drone := SpaceWorldManager.get_service_drone()
 	assert(drone != null, "SpaceWorldManager deve istanziare o restituire il ServiceDroneEntity")
+	assert(drone is CharacterBody3D, "ServiceDroneEntity deve estendere CharacterBody3D")
+	
+	# Verifica Collider e Layer/Mask
+	var col_shape := drone.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	assert(col_shape != null, "ServiceDroneEntity deve possedere un nodo CollisionShape3D")
+	assert(col_shape.shape is BoxShape3D, "CollisionShape3D deve usare una risorsa BoxShape3D")
+	var box := col_shape.shape as BoxShape3D
+	assert(box.size == Vector3(0.7, 0.35, 0.9), "BoxShape3D deve avere dimensioni Vector3(0.7, 0.35, 0.9)")
+	assert(drone.collision_layer == 2, "collision_layer del drone deve essere 2")
+	assert(drone.collision_mask == 7, "collision_mask del drone deve essere 7")
+	print("✔ Collider 3D, BoxShape3D e layer/mask di collisione convalidati")
 	
 	# Decollo
 	SpaceWorldManager.launch_service_drone()
@@ -172,11 +183,53 @@ func _run_all_tests() -> void:
 	assert(drone.is_docked == false, "Il drone deve essere in stato non-docked dopo il decollo")
 	print("✔ Decollo drone EVA completato")
 	
-	# Test spinta e movimento
+	# Test spinta e movimento lineare
 	SpaceWorldManager.set_service_drone_inputs(Vector3(0, 0, -1), Vector3.ZERO, false)
 	drone._physics_process(0.1)
 	assert(drone.current_linear_velocity.length() > 0.0, "I thruster devono impartire velocità lineare al drone")
-	print("✔ Propulsione thruster RCS verificata")
+	print("✔ Propulsione thruster RCS e fisica move_and_slide verificata")
+	
+	# Test Controlli di Rotazione con Tasti Freccia (KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT)
+	var evt_up := InputEventKey.new()
+	evt_up.keycode = KEY_UP
+	evt_up.pressed = true
+	app._input(evt_up)
+	assert(app._manual_angular_input.x == 1.0, "KEY_UP deve impostare _manual_angular_input.x a 1.0 (Pitch positivo)")
+	drone._physics_process(0.1)
+	assert(drone.current_angular_velocity.x > 0.0, "KEY_UP deve impartire velocità angolare di pitch positiva")
+	
+	evt_up.pressed = false
+	app._input(evt_up)
+	assert(app._manual_angular_input.x == 0.0, "Rilascio KEY_UP deve resettare _manual_angular_input.x a 0.0")
+	
+	var evt_down := InputEventKey.new()
+	evt_down.keycode = KEY_DOWN
+	evt_down.pressed = true
+	app._input(evt_down)
+	assert(app._manual_angular_input.x == -1.0, "KEY_DOWN deve impostare _manual_angular_input.x a -1.0 (Pitch negativo)")
+	evt_down.pressed = false
+	app._input(evt_down)
+	
+	var evt_left := InputEventKey.new()
+	evt_left.keycode = KEY_LEFT
+	evt_left.pressed = true
+	app._input(evt_left)
+	assert(app._manual_angular_input.y == 1.0, "KEY_LEFT deve impostare _manual_angular_input.y a 1.0 (Yaw antiorario)")
+	drone._physics_process(0.1)
+	assert(drone.current_angular_velocity.y > 0.0, "KEY_LEFT deve impartire velocità angolare di yaw positiva")
+	
+	evt_left.pressed = false
+	app._input(evt_left)
+	assert(app._manual_angular_input.y == 0.0, "Rilascio KEY_LEFT deve resettare _manual_angular_input.y a 0.0")
+	
+	var evt_right := InputEventKey.new()
+	evt_right.keycode = KEY_RIGHT
+	evt_right.pressed = true
+	app._input(evt_right)
+	assert(app._manual_angular_input.y == -1.0, "KEY_RIGHT deve impostare _manual_angular_input.y a -1.0 (Yaw orario)")
+	evt_right.pressed = false
+	app._input(evt_right)
+	print("✔ Mappatura tasti freccia (Pitch & Yaw) e rotazione angolare diegetica validate")
 	
 	# Test selezione e attivazione strumento saldatura su breccia
 	var test_dmg := SpaceWorldManager.spawn_ship_damage(SpaceWorldManager.DAMAGE_TYPE_BREACH, Vector2(100, 100), "Scafo Esterno", 2.0)

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://test_window_management_scene_001"]
+
+[ext_resource type="Script" path="res://tests/test_window_management.gd" id="1_test_script"]
+
+[node name="TestWindowManagement" type="Node"]
+script = ExtResource("1_test_script")

@@ -29,6 +29,7 @@ app_name=Weapons
 version=1.0.4
 status=OPERATIONAL
 weapons_subsystem=ACTIVE
+decryption_key=WEAP-CFG-7815
 
 [WEAPONS]
 max_range=4500.0
@@ -47,6 +48,7 @@ emergency_vent_cooldown=10.0
 }, {
 "content": "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX
 [BALLISTICS]
+decryption_key=AMMO-TUN-7815
 torpedo_velocity=85.0
 auto_lead_tracking=true
 overclock_damage_mult=1.0

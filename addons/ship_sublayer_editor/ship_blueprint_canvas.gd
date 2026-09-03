@@ -588,7 +588,7 @@ func _finish_add_room(p1: Vector2, p2: Vector2) -> void:
 	blueprint.emit_changed()
 	selected_type = "room"
 	selected_id = new_id
-	element_selected.emit(selected_type, selected_id, new_room)
+	element_selected.emit(selected_type, selected_id, new_room.to_dict())
 	current_tool = ToolMode.SELECT
 	tool_changed.emit(ToolMode.SELECT)
 

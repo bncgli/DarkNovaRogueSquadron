@@ -58,6 +58,80 @@ func _run_tests() -> void:
 	
 	print("SUCCESS: Ship Drive mounted with default ship files.")
 	
+	print("\n--- Test 2b: Decryption Keys in Default .DAT Files & BaseApp Parser ---")
+	var expected_keys: Dictionary = {
+		"Ship Drive/Programs/FlightControls/flight_config.dat": "FLIGHT-CFG-7815",
+		"Ship Drive/Programs/FlightControls/thrusters_tuning.dat": "THRUST-TUN-7815",
+		"Ship Drive/Programs/Cams/cams_config.dat": "CAMS-CFG-7815",
+		"Ship Drive/Programs/Cams/optics_tuning.dat": "OPTIC-TUN-7815",
+		"Ship Drive/Programs/DuctDrone/duct_drone_config.dat": "DUCT-CFG-7815",
+		"Ship Drive/Programs/DuctDrone/drone_tuning.dat": "DRONE-TUN-7815",
+		"Ship Drive/Programs/PowerGrid/power_grid_config.dat": "GRID-CFG-7815",
+		"Ship Drive/Programs/PowerGrid/grid_tuning.dat": "GRID-TUN-7815",
+		"Ship Drive/Programs/Weapons/weapons_config.dat": "WEAP-CFG-7815",
+		"Ship Drive/Programs/Weapons/ammo_tuning.dat": "AMMO-TUN-7815",
+		"Ship Drive/Programs/ShieldMatrix/shields_config.dat": "SHLD-CFG-7815",
+		"Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat": "DEFL-TUN-7815",
+		"Ship Drive/Programs/Comms/comms_config.dat": "COMM-CFG-7815",
+		"Ship Drive/Programs/Comms/crypto_tuning.dat": "CRYP-TUN-7815",
+		"Ship Drive/Programs/Diagnostics/diagnostics_config.dat": "DIAG-CFG-7815",
+		"Ship Drive/Programs/Diagnostics/security_tuning.dat": "SECU-TUN-7815",
+		"Ship Drive/Programs/Sensors/sensors_config.dat": "SENS-CFG-7815",
+		"Ship Drive/Programs/Sensors/radar_tuning.dat": "RADR-TUN-7815",
+		"Ship Drive/systems/ship_blueprint.dat": "BLUP-SYS-7815",
+		"Ship Drive/systems/hull_specs.dat": "HULL-SYS-7815"
+	}
+	
+	var base_app_instance := BaseApp.new()
+	add_child(base_app_instance)
+	
+	for file_path in expected_keys:
+		var expected_key: String = expected_keys[file_path]
+		var file_content := FileAccess.get_file_as_string("user://files/" + file_path)
+		if file_content.is_empty():
+			print("FAIL: File not found or empty: ", file_path)
+			get_tree().quit(1)
+			return
+		if not ("decryption_key=" + expected_key) in file_content:
+			print("FAIL: File ", file_path, " missing expected decryption_key=", expected_key)
+			get_tree().quit(1)
+			return
+		
+		# Test BaseApp parsing
+		var parsed: Dictionary = base_app_instance._parse_dat_file(file_path)
+		if not parsed.has("decryption_key"):
+			print("FAIL: Parsed dictionary missing decryption_key for ", file_path)
+			get_tree().quit(1)
+			return
+		if typeof(parsed["decryption_key"]) != TYPE_STRING or parsed["decryption_key"] != expected_key:
+			print("FAIL: decryption_key is not String or mismatch for ", file_path, ". Got: ", parsed["decryption_key"])
+			get_tree().quit(1)
+			return
+	
+	# Verify BaseApp preserves typed parameters (float, int, bool, string)
+	var fc_parsed: Dictionary = base_app_instance._parse_dat_file("Ship Drive/Programs/FlightControls/flight_config.dat")
+	if typeof(fc_parsed.get("max_linear_speed")) != TYPE_FLOAT or fc_parsed.get("max_linear_speed") != 20.0:
+		print("FAIL: Float parameter corrupted in BaseApp._parse_dat_file!")
+		get_tree().quit(1)
+		return
+	if typeof(fc_parsed.get("app_name")) != TYPE_STRING or fc_parsed.get("app_name") != "FlightControls":
+		print("FAIL: String parameter corrupted in BaseApp._parse_dat_file!")
+		get_tree().quit(1)
+		return
+	
+	var wp_parsed: Dictionary = base_app_instance._parse_dat_file("Ship Drive/Programs/Weapons/weapons_config.dat")
+	if typeof(wp_parsed.get("auto_pdg_enabled")) != TYPE_BOOL or wp_parsed.get("auto_pdg_enabled") != true:
+		print("FAIL: Bool parameter corrupted in BaseApp._parse_dat_file!")
+		get_tree().quit(1)
+		return
+	if typeof(wp_parsed.get("torpedo_max_ammo")) != TYPE_INT or wp_parsed.get("torpedo_max_ammo") != 12:
+		print("FAIL: Int parameter corrupted in BaseApp._parse_dat_file!")
+		get_tree().quit(1)
+		return
+	
+	base_app_instance.queue_free()
+	print("SUCCESS: All 20 .dat files have valid decryption keys and BaseApp parser preserves all types.")
+	
 	print("\n--- Test 3: Create, Modify, Rename & Delete inside Ship Drive ---")
 	# Create file via BaseFileManager.new_file
 	var dummy_file_mgr := BaseFileManager.new()

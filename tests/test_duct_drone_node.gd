@@ -232,6 +232,77 @@ func _run_suite() -> void:
 		print("✔ File .dat protetto dalla visualizzazione di testo standard")
 		term.queue_free()
 	
+	# =========================================================================
+	# FASE 8: TASK-028 - BLUEPRINT ALIGNMENT, RADAR KEY 'R' & EMERGENCY RECOVERY
+	# =========================================================================
+	print("\n--- TEST 8: TASK-028 - Blueprint Alignment, Radar Key 'R', Recharge Room & Emergency Recovery ---")
+	
+	# 1. Verifica rimozione pulsante %BtnReset
+	assert(app.get_node_or_null("%BtnReset") == null, "Il pulsante %BtnReset deve essere rimosso dal layout visivo")
+	print("✔ %BtnReset rimosso correttamente dal layout")
+	
+	# 2. Verifica inizializzazione posizione e heading da ShipBlueprint
+	var bp := SpaceWorldManager.get_ship_blueprint()
+	assert(bp != null, "ShipBlueprint attiva disponibile")
+	assert(app.initial_drone_pos == bp.get_drone_spawn_pos(), "initial_drone_pos allineata a bp.drone_spawn_pos")
+	assert(app.drone_heading == bp.drone_spawn_heading, "drone_heading allineato a bp.drone_spawn_heading")
+	print("✔ Spawn position e heading allineati alla ShipBlueprint (%v, %.2f rad)" % [app.drone_pos, app.drone_heading])
+	
+	# 3. Verifica rimappatura tasto 'R' a scan sonar/radar
+	app.scan_pulse_active = false
+	var key_event := InputEventKey.new()
+	key_event.pressed = true
+	key_event.keycode = KEY_R
+	key_event.physical_keycode = KEY_R
+	app._input(key_event)
+	assert(app.scan_pulse_active == true, "La pressione del tasto 'R' deve attivare l'impulso radar/sonar")
+	print("✔ Tasto 'R' rimappato con successo all'impulso radar")
+	
+	# 4. Verifica vincolo di ricarica stanza (recharge_room_id)
+	var recharge_room = bp.get_room_by_id(bp.recharge_room_id)
+	assert(recharge_room != null, "Stanza di ricarica definita nella blueprint")
+	
+	# Fuori dalla stanza di ricarica -> NESSUNA ricarica
+	app.drone_pos = Vector2(160, 80) # Nel condotto sensori (fuori dalla stanza di ricarica)
+	app.drone_battery = 50.0
+	app._process(1.0)
+	assert(app.drone_battery <= 50.0, "Fuori dalla stanza di ricarica non deve esserci ricarica passiva")
+	
+	# Dentro la stanza di ricarica -> Ricarica attiva
+	app.drone_pos = recharge_room.rect.position + Vector2(10, 10) # Dentro la stanza di ricarica
+	var bat_before := app.drone_battery
+	app._process(1.0)
+	assert(app.drone_battery > bat_before, "All'interno della stanza di ricarica la batteria deve ricaricarsi")
+	print("✔ Ricarica batteria vincolata correttamente alla stanza designata (%s)" % bp.recharge_room_id)
+	
+	# 5. Verifica Timer Recupero Emergenza (60s) a batteria 0% fuori dalla stanza
+	app.drone_pos = Vector2(160, 80) # Fuori dalla stanza di ricarica
+	app.drone_battery = 0.0
+	app.is_in_emergency_recovery = false
+	app.emergency_recovery_time_left = 0.0
+	
+	# Frame 1: Attivazione emergenza
+	app._process(0.1)
+	assert(app.is_in_emergency_recovery == true, "Stato di recupero di emergenza attivato a batteria 0%")
+	assert(app.emergency_recovery_time_left <= 60.0 and app.emergency_recovery_time_left >= 59.0, "Timer emergenza avviato a 60s")
+	assert(app.status_summary_label.text.contains("RECUPERO EMERGENZA IN:"), "Countdown visibile nell'HUD")
+	
+	# Blocco controlli di movimento
+	app._ui_linear_input = 1.0
+	app._ui_angular_input = 1.0
+	var pos_frozen := app.drone_pos
+	var heading_frozen := app.drone_heading
+	app._process(0.5)
+	assert(app.drone_pos == pos_frozen, "Movimento lineare bloccato durante il recupero")
+	assert(app.drone_heading == heading_frozen, "Rotazione angolare bloccata durante il recupero")
+	
+	# Avanzamento timer fino a scadenza (60 secondi)
+	app._process(60.0)
+	assert(app.is_in_emergency_recovery == false, "Stato di recupero di emergenza terminato allo scadere dei 60s")
+	assert(app.drone_pos == bp.get_drone_spawn_pos(), "Drone riposizionato alla posizione di spawn")
+	assert(app.drone_battery == 25.0, "Batteria ripristinata al 25% dopo il recupero di emergenza")
+	print("✔ Timer di emergenza (60s), blocco comandi e riposizionamento al 25% verificati con successo")
+	
 	app.queue_free()
 	print("\n=== TUTTI I TEST DELLO STANDARD ARCHITETTURALE E DUCT DRONE COMPLETATI CON SUCCESSO! ===")
 	get_tree().quit(0)

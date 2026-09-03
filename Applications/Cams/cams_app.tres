@@ -28,6 +28,7 @@ app_name=Cams
 version=1.0.4
 status=OPERATIONAL
 sensor_array=CCTV_6CH
+decryption_key=CAMS-CFG-7815
 
 [OPTICS]
 default_fov=75.0
@@ -44,6 +45,7 @@ thermal_intensity=0.22
 }, {
 "content": "# OPTICS & SENSOR CALIBRATION MATRIX
 [SENSORS]
+decryption_key=OPTIC-TUN-7815
 signal_boost=1.0
 noise_reduction=1.0
 refresh_rate_hz=60.0

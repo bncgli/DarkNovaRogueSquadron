@@ -114,6 +114,45 @@ func _run_suite() -> void:
 	print("✔ Monitoraggio potenza energetica validato")
 	
 	# =========================================================================
+	# FASE 7: TASK-026 - COLORI STATO PRODUTTORI/CONSUMATORI (RoomPowerEntry)
+	# =========================================================================
+	print("\n--- TEST 7: TASK-026 Colori Stato Stanze (RoomPowerEntry) ---")
+	var entry_scene: PackedScene = load("res://Applications/PowerGrid/Components/room_power_entry.tscn")
+	var test_entry: RoomPowerEntry = entry_scene.instantiate() as RoomPowerEntry
+	add_child(test_entry)
+	await get_tree().process_frame
+	
+	# Caso 1: Generatore (power_mw > 0)
+	test_entry.update_power(500.0)
+	assert(test_entry.power_status_label.modulate.is_equal_approx(Color(0.2, 1.0, 0.4, 1.0)), "Produttore deve avere colore verde brillante Color(0.2, 1.0, 0.4)")
+	assert(test_entry.power_bar.modulate.is_equal_approx(Color(0.2, 1.0, 0.4, 1.0)), "PowerBar produttore deve essere verde")
+	
+	# Caso 2: Consumatore (power_mw < 0)
+	test_entry.update_power(-150.0)
+	assert(test_entry.power_status_label.modulate.is_equal_approx(Color(1.0, 0.25, 0.25, 1.0)), "Consumatore deve avere colore rosso chiaro Color(1.0, 0.25, 0.25)")
+	assert(test_entry.power_bar.modulate.is_equal_approx(Color(1.0, 0.25, 0.25, 1.0)), "PowerBar consumatore deve essere rossa")
+	
+	# Caso 3: Neutro / Spento (power_mw == 0)
+	test_entry.update_power(0.0)
+	assert(test_entry.power_status_label.modulate.is_equal_approx(Color(0.65, 0.65, 0.65, 1.0)), "Neutro deve avere colore grigio Color(0.65, 0.65, 0.65)")
+	assert(test_entry.power_bar.modulate.is_equal_approx(Color(0.65, 0.65, 0.65, 1.0)), "PowerBar neutra deve essere grigia")
+	
+	remove_child(test_entry)
+	test_entry.queue_free()
+	print("✔ TASK-026: Colori RoomPowerEntry verificati con successo")
+	
+	# =========================================================================
+	# FASE 8: TASK-026 - ISPETTORE DI STANZA & FORMATTAZIONE
+	# =========================================================================
+	print("\n--- TEST 8: TASK-026 Ispettore di Stanza ---")
+	if not app.rooms_data.is_empty():
+		var first_rid: String = str(app.rooms_data[0].get("id", ""))
+		app._on_room_selected(first_rid)
+		assert(app.inspector_title_label != null and not app.inspector_title_label.text.is_empty(), "Inspector title popolato")
+		assert(app.inspector_inputs_label != null, "Inspector inputs label presente")
+	print("✔ TASK-026: Ispettore di stanza verificato con successo")
+	
+	# =========================================================================
 	# FASE 9: MINI-TERMINALE COMANDI
 	# =========================================================================
 	print("\n--- TEST 9: Esecuzione Comandi Mini-Terminale ---")

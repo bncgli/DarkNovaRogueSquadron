@@ -27,6 +27,7 @@ app_name=DuctDrone
 version=1.0.4
 status=OPERATIONAL
 maintenance_subsystem=ACTIVE
+decryption_key=DUCT-CFG-7815
 
 [DRONE_DYNAMICS]
 linear_speed=175.0
@@ -52,6 +53,7 @@ repair_speed_multiplier=1.0
 }, {
 "content": "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX
 [TUNING]
+decryption_key=DRONE-TUN-7815
 turbo_multiplier=2.0
 precision_multiplier=0.5
 repair_efficiency=1.0

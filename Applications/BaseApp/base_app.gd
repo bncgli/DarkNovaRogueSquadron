@@ -28,7 +28,12 @@ func _parse_dat_file(rel_path: String) -> Dictionary:
 		if eq_pos != -1:
 			var key := line.substr(0, eq_pos).strip_edges()
 			var val_str := line.substr(eq_pos + 1).strip_edges()
-			if val_str.is_valid_float() and "." in val_str:
+			if (val_str.begins_with("\"") and val_str.ends_with("\"") and val_str.length() >= 2) or (val_str.begins_with("'") and val_str.ends_with("'") and val_str.length() >= 2):
+				val_str = val_str.substr(1, val_str.length() - 2).strip_edges()
+			
+			if key == "decryption_key":
+				result[key] = val_str
+			elif val_str.is_valid_float() and "." in val_str:
 				result[key] = float(val_str)
 			elif val_str.is_valid_int():
 				result[key] = int(val_str)

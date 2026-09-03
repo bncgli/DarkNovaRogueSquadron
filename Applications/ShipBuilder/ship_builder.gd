@@ -96,7 +96,7 @@ func _on_tool_selected(index: int) -> void:
 	canvas.current_tool = mode
 
 func _on_room_template_selected(index: int) -> void:
-	var room_id := room_list.get_item_metadata(index)
+	var room_id: String = str(room_list.get_item_metadata(index))
 	canvas.selected_room_template = room_id
 
 func _on_canvas_tool_changed(new_tool: int) -> void:
@@ -228,7 +228,7 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 			btn_del.pressed.connect(func():
 				devs.remove_at(i)
 				current_blueprint.update_room_power(id)
-				_rebuild_inspector(type, id, room)
+				_rebuild_inspector(type, id, room.to_dict())
 			)
 			dev_hbx.add_child(btn_del)
 			inspector_container.add_child(dev_hbx)
@@ -243,7 +243,7 @@ func _rebuild_inspector(type: String, id: String, data: Dictionary) -> void:
 				"category": "utility"
 			})
 			current_blueprint.update_room_power(id)
-			_rebuild_inspector(type, id, room)
+			_rebuild_inspector(type, id, room.to_dict())
 		)
 		inspector_container.add_child(btn_add)
 
@@ -442,7 +442,7 @@ func _on_software_pressed() -> void:
 	btn_add.pressed.connect(func() -> void:
 		var sel := market_list.get_selected_items()
 		if sel.size() > 0:
-			var app_id := market_list.get_item_metadata(sel[0])
+			var app_id: String = str(market_list.get_item_metadata(sel[0]))
 			var app_res: Resource = null
 			if get_node_or_null("/root/ShipSoftwareManager"):
 				app_res = (get_node("/root/ShipSoftwareManager") as Node).get("registered_apps").get(app_id)
@@ -454,7 +454,7 @@ func _on_software_pressed() -> void:
 	btn_rem.pressed.connect(func() -> void:
 		var sel := inst_list.get_selected_items()
 		if sel.size() > 0:
-			var app_id := inst_list.get_item_metadata(sel[0])
+			var app_id: String = str(inst_list.get_item_metadata(sel[0]))
 			current_blueprint.uninstall_app_by_id(app_id)
 			refresh_lists.call()
 	)

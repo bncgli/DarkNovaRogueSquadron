@@ -316,7 +316,19 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
 text = "1x"
 
-[node name="FilterCycleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="4"]
+[node name="BtnHeadlights" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 20)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+text = "Fari: OFF"
+
+[node name="FilterCycleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="5"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(85, 20)
 layout_mode = 2
@@ -328,7 +340,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
 text = "Filtro: Normale"
 
-[node name="GridToggleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="5"]
+[node name="GridToggleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="6"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 20)
 layout_mode = 2

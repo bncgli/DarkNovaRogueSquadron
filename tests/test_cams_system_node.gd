@@ -174,6 +174,62 @@ func _run_suite() -> void:
 		print("✔ File .dat protetto dalla visualizzazione di testo standard")
 		term.queue_free()
 	
+	# =========================================================================
+	# FASE 8: VERIFICA FILTRI (NORMALE, TERMICO, LIDAR) E FARI TELECAMERA
+	# =========================================================================
+	print("\n--- TEST 8: Controllo Fari Esterni e Ciclo Filtri (Normale, Termico, Lidar) ---")
+	var test_feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert(test_feed_win != null, "La finestra feed frontale deve aprirsi con successo")
+	assert(test_feed_win.btn_headlights != null, "Il pulsante %BtnHeadlights deve essere presente nella finestra feed")
+	assert(test_feed_win.filter_cycle_btn != null, "Il pulsante %FilterCycleBtn deve essere presente nella finestra feed")
+	
+	# 1. Test Fari (Headlights)
+	assert(not SpaceWorldManager.is_camera_headlight_on("front"), "I fari devono essere spenti all'avvio")
+	assert(test_feed_win.btn_headlights.text == "Fari: OFF", "Testo pulsante fari deve essere 'Fari: OFF'")
+	
+	test_feed_win.btn_headlights.emit_signal("pressed")
+	await get_tree().process_frame
+	assert(SpaceWorldManager.is_camera_headlight_on("front"), "Dopo toggle, i fari devono risultare accesi")
+	assert(test_feed_win.btn_headlights.text == "Fari: ON", "Testo pulsante fari deve diventare 'Fari: ON'")
+	
+	var ship := SpaceWorldManager.get_spaceship()
+	if ship:
+		assert(ship.is_headlight_on("front"), "Il faretto sulla nave fisica deve essere visibile/acceso")
+	
+	test_feed_win.btn_headlights.emit_signal("pressed")
+	await get_tree().process_frame
+	assert(not SpaceWorldManager.is_camera_headlight_on("front"), "Dopo secondo toggle, i fari devono risultare spenti")
+	assert(test_feed_win.btn_headlights.text == "Fari: OFF", "Testo pulsante fari deve tornare 'Fari: OFF'")
+	print("✔ Funzionalità fari esterni (toggle, sincronizzazione e stato UI) verificata")
+	
+	# 2. Test Ciclo Filtri (0: Normale -> 1: Termico -> 2: Lidar -> 0: Normale)
+	assert(test_feed_win._filter_mode == 0, "Modalità iniziale deve essere 0 (Normale)")
+	assert(not test_feed_win.filter_rect.visible, "FilterColorRect deve essere nascosto in modalità Normale")
+	assert(test_feed_win.filter_cycle_btn.text == "Filtro: Normale", "Pulsante filtro indica 'Filtro: Normale'")
+	
+	# Passaggio a Termico
+	test_feed_win.filter_cycle_btn.emit_signal("pressed")
+	assert(test_feed_win._filter_mode == 1, "Modalità deve essere 1 (Termico)")
+	assert(test_feed_win.filter_rect.visible, "FilterColorRect deve essere visibile in modalità Termico")
+	assert(test_feed_win.filter_rect.material != null, "FilterColorRect deve avere uno ShaderMaterial assegnato")
+	assert(test_feed_win.filter_cycle_btn.text == "Filtro: Termico", "Pulsante filtro indica 'Filtro: Termico'")
+	
+	# Passaggio a Lidar
+	test_feed_win.filter_cycle_btn.emit_signal("pressed")
+	assert(test_feed_win._filter_mode == 2, "Modalità deve essere 2 (Lidar)")
+	assert(test_feed_win.filter_rect.visible, "FilterColorRect deve essere visibile in modalità Lidar")
+	assert(test_feed_win.filter_rect.material != null, "FilterColorRect deve avere lo ShaderMaterial Lidar")
+	assert(test_feed_win.filter_cycle_btn.text == "Filtro: Lidar", "Pulsante filtro indica 'Filtro: Lidar'")
+	
+	# Ritorno a Normale
+	test_feed_win.filter_cycle_btn.emit_signal("pressed")
+	assert(test_feed_win._filter_mode == 0, "Modalità deve tornare a 0 (Normale)")
+	assert(not test_feed_win.filter_rect.visible, "FilterColorRect deve tornare nascosto")
+	assert(test_feed_win.filter_cycle_btn.text == "Filtro: Normale", "Pulsante filtro torna 'Filtro: Normale'")
+	print("✔ Ciclo esclusivo filtri (Normale -> Termico -> Lidar) e shader post-processing convalidati")
+	
+	SpaceWorldManager.close_camera_window("front")
+	
 	cams_app.queue_free()
 	print("\n=== TUTTI I TEST DELLO STANDARD ARCHITETTURALE E CAMS COMPLETATI CON SUCCESSO! ===")
 	get_tree().quit(0)

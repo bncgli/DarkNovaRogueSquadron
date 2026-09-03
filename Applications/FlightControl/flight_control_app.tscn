@@ -446,42 +446,23 @@ text = "File: Ship Drive/Programs/FlightControls/flight_config.dat | VMax: 20 m/
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="SpeedModeButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow"]
+[node name="InertiaToggleButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
+theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "⚡ VELOCITÀ: NORMALE (1x)"
-
-[node name="StopButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "⏹ STOP MOTORI"
-
-[node name="ResetButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "🔄 RESET POS"
+text = "INERZIA: ON"
 
 [node name="StatusSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.65, 0.8, 0.8)
 theme_override_font_sizes/font_size = 10
-text = "Usa WASD per traslazione, Q/E per roll, Spazio/Ctrl per quota, Frecce per orientamento."
+text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
 horizontal_alignment = 1
 
 [node name="CruiseControlPanel" parent="ScrollContainer/Margin/VBox" instance=ExtResource("2_cruise_panel")]

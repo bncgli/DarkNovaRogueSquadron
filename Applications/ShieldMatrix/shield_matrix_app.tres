@@ -29,6 +29,7 @@ app_name=ShieldMatrix
 version=1.0.4
 status=OPERATIONAL
 shield_subsystem=ACTIVE
+decryption_key=SHLD-CFG-7815
 
 [SHIELD_SETTINGS]
 max_capacity_per_quadrant=250.0
@@ -46,6 +47,7 @@ decay_rate_unpowered=25.0
 }, {
 "content": "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX
 [HARMONICS]
+decryption_key=DEFL-TUN-7815
 harmonic_frequency=440.0
 emergency_boost_multiplier=2.5
 overclock_absorption=1.0

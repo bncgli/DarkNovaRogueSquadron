@@ -10,8 +10,8 @@ roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", 
 power_draw_mw = 35.0
 required_subsystems = Array[String](["cargo", "comms"])
 app_id = "cargo_bay"
-title = "Stiva Cargo & FLUX"
-description = "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net."
+title = "Stiva Cargo"
+description = "Gestione inventario stiva, monitoraggio capacità massa/volume ed espulsione carichi."
 developer = "NovaTech Systems"
 category = "Sistemi Nave"
 menu_path = "Sistemi Nave"
@@ -29,12 +29,8 @@ status=OPERATIONAL
 [LIMITS]
 max_mass_kg=2000.0
 max_volume_m3=100.0
-
-[ECONOMY]
-default_flux_score=720.0
-impound_warning_sec=120.0
 ",
-"desc": "Configurazione stiva cargo, capacità volumetrica/massa e rating creditizio FLUX.",
+"desc": "Configurazione stiva cargo, capacità volumetrica e massa.",
 "is_protected": true,
 "path": "Ship Drive/Programs/CargoBay/cargo_bay_config.dat"
 }])

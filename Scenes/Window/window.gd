@@ -63,6 +63,33 @@ func _process(_delta: float) -> void:
 		global_position = start_drag_position + (get_global_mouse_position() - mouse_start_drag_position)
 		clamp_window_inside_viewport()
 
+func _input(event: InputEvent) -> void:
+	if is_external or is_selected or is_minimized or not is_visible_in_tree():
+		return
+	if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT) and event.is_pressed():
+		if get_global_rect().has_point(event.global_position):
+			var is_covered: bool = false
+			for window in get_tree().get_nodes_in_group("window"):
+				if window == self:
+					continue
+				if not is_instance_valid(window) or window.is_queued_for_deletion():
+					continue
+				if window.is_external or window.is_minimized or not window.is_visible_in_tree():
+					continue
+				
+				var is_above: bool = false
+				if window.z_index > z_index:
+					is_above = true
+				elif window.z_index == z_index and window.get_parent() == get_parent() and window.get_index() > get_index():
+					is_above = true
+				
+				if is_above and window.get_global_rect().has_point(event.global_position):
+					is_covered = true
+					break
+			
+			if not is_covered:
+				select_window(true)
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and (event.button_index == 1 or event.button_index == 2) and event.is_pressed():
 		select_window(true)
@@ -277,7 +304,7 @@ func show_window() -> void:
 	tween.tween_property(self, "modulate:a", 1, 0.25)
 
 ## Actually "focuses" the window and brings it to the front
-func select_window(play_fade_animation: bool) -> void:
+func select_window(_play_fade_animation: bool = false) -> void:
 	if is_selected:
 		return
 	
@@ -290,8 +317,6 @@ func select_window(play_fade_animation: bool) -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property($"Top Bar/Title Text", "modulate", Color("3cffff"), 0.25)
 	tween.tween_property(self["theme_override_styles/panel"], "shadow_size", 20, 0.25)
-	if play_fade_animation:
-		tween.tween_property(self, "modulate:a", 1, 0.1)
 	
 	# Move in front of all other windows (+2 to ignore wallpaper and bg color)
 	if !is_external and get_parent():
@@ -309,7 +334,6 @@ func deselect_window() -> void:
 	var tween: Tween = create_tween()
 	tween.set_parallel(true)
 	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(self, "modulate:a", 0.75, 0.25)
 	tween.tween_property($"Top Bar/Title Text", "modulate", Color.WHITE, 0.25)
 	tween.tween_property(self["theme_override_styles/panel"], "shadow_size", 0, 0.25)
 

@@ -63,6 +63,7 @@ func _ready() -> void:
 	load_tuning_configuration()
 	_connect_system_signals()
 	_find_or_attach_spaceship()
+	update_power_from_blueprint()
 
 func _connect_system_signals() -> void:
 	var sdm := get_node_or_null("/root/ShipDriveManager")
@@ -74,6 +75,13 @@ func _connect_system_signals() -> void:
 		if SpaceWorldManager.has_signal("waypoint_updated"):
 			if not SpaceWorldManager.waypoint_updated.is_connected(_on_waypoint_updated):
 				SpaceWorldManager.waypoint_updated.connect(_on_waypoint_updated)
+		if SpaceWorldManager.has_signal("ship_system_power_changed"):
+			if not SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
+				SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
+
+func _on_system_power_changed(category: String, _is_powered: bool) -> void:
+	if category in ["propulsion", "reactor", "engineering"]:
+		update_power_from_blueprint()
 
 func _on_waypoint_updated(wp_data: Dictionary) -> void:
 	if not wp_data.is_empty() and wp_data.has("pos"):
@@ -220,6 +228,61 @@ func check_vector_alignment() -> Dictionary:
 		"max_allowed_deg": max_alignment_deg,
 		"target_direction": target_dir
 	}
+
+## Calcola e assegna la potenza per le bobine di crociera leggendo le stanze e dispositivi
+## attivi di categoria 'propulsion' e 'reactor' / 'engineering' in ShipBlueprint.
+func update_power_from_blueprint() -> void:
+	if not SpaceWorldManager or not SpaceWorldManager.has_method("get_ship_blueprint"):
+		return
+	var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint()
+	if not bp or not ("rooms" in bp):
+		return
+	
+	var reactor_gen_mw: float = 0.0
+	var has_active_propulsion: bool = false
+	var total_prop_rooms: int = 0
+	var active_prop_rooms: int = 0
+	
+	for room in bp.rooms:
+		var is_on: bool = bool(room.get("is_on") if room is Dictionary else room.is_on)
+		var cat: String = str(room.get("category") if room is Dictionary else room.category).to_lower()
+		var r_id: String = str(room.get("id") if room is Dictionary else room.id).to_lower()
+		var r_name: String = str(room.get("name") if room is Dictionary else room.name).to_lower()
+		
+		var is_reactor_room: bool = cat in ["reactor", "engineering"] or r_id.contains("reactor") or r_id.contains("reattore") or r_name.contains("reattore") or r_name.contains("reactor")
+		var is_prop_room: bool = cat == "propulsion" or r_id.contains("engine") or r_id.contains("motori") or r_name.contains("motori") or r_name.contains("propuls")
+		
+		if is_prop_room:
+			total_prop_rooms += 1
+			if is_on:
+				active_prop_rooms += 1
+				has_active_propulsion = true
+		
+		var devices: Array = room.get("devices") if room is Dictionary else room.devices
+		for dev in devices:
+			var dev_p: float = float(dev.get("power_mw") if dev is Dictionary else dev.power_mw)
+			var dev_cat: String = str(dev.get("category") if dev is Dictionary else dev.category).to_lower()
+			var dev_name: String = str(dev.get("name") if dev is Dictionary else dev.name).to_lower()
+			var dev_id: String = str(dev.get("id") if dev is Dictionary else dev.id).to_lower()
+			
+			if is_on:
+				if is_reactor_room or dev_cat in ["reactor", "engineering"] or dev_name.contains("reattore") or dev_id.contains("reactor"):
+					if dev_p > 0.0:
+						reactor_gen_mw += dev_p
+				if dev_cat == "propulsion" or dev_name.contains("motore") or dev_id.contains("engine"):
+					has_active_propulsion = true
+	
+	if total_prop_rooms == 0:
+		if has_active_propulsion:
+			active_prop_rooms = 1
+			total_prop_rooms = 1
+	
+	var power_mw: float = 0.0
+	if reactor_gen_mw >= required_power_mw and has_active_propulsion:
+		var prop_ratio: float = float(active_prop_rooms) / float(max(1, total_prop_rooms))
+		power_mw = required_power_mw * prop_ratio
+	
+	set_cruise_coils_power(power_mw)
 
 func check_power_state() -> Dictionary:
 	var is_powered := cruise_coils_power_mw >= required_power_mw

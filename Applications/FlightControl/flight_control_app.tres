@@ -29,6 +29,7 @@ app_name=FlightControls
 version=1.0.4
 status=OPERATIONAL
 rcs_subsystem=ACTIVE
+decryption_key=FLIGHT-CFG-7815
 
 [FLIGHT_DYNAMICS]
 max_linear_speed=20.0
@@ -48,6 +49,7 @@ precision_multiplier=0.4
 }, {
 "content": "# RCS & MAIN THRUSTERS TUNING MATRIX
 [THRUSTERS]
+decryption_key=THRUST-TUN-7815
 rcs_power_rate=1.0
 pitch_thrust_mult=1.0
 yaw_thrust_mult=1.0

@@ -1,5 +1,5 @@
 class_name ServiceDroneEntity
-extends Node3D
+extends CharacterBody3D
 
 ## Entità 3D simulata nello spazio per il Drone di Servizio EVA (Extra-Vehicular Activity).
 ## Gestisce spinta RCS, batteria, raggio tether dalla nave, fari, e braccio manipolatore multi-funzione
@@ -13,6 +13,8 @@ signal cargo_dropped(item: Dictionary)
 
 # Parametri operativi configurabili via .DAT
 @export var max_thrust: float = 35.0
+@export var max_rot_speed: float = 2.5
+@export var angular_accel: float = 8.0
 @export var battery_capacity_sec: float = 240.0
 @export var tether_range: float = 1500.0
 @export var auto_dock_speed: float = 12.0
@@ -70,6 +72,8 @@ func _ready() -> void:
 
 func apply_config(cfg: Dictionary) -> void:
 	if cfg.has("max_thrust"): max_thrust = float(cfg["max_thrust"])
+	if cfg.has("max_rot_speed"): max_rot_speed = float(cfg["max_rot_speed"])
+	if cfg.has("angular_accel"): angular_accel = float(cfg["angular_accel"])
 	if cfg.has("battery_capacity_sec"): battery_capacity_sec = float(cfg["battery_capacity_sec"])
 	if cfg.has("tether_range"): tether_range = float(cfg["tether_range"])
 	if cfg.has("auto_dock_speed"): auto_dock_speed = float(cfg["auto_dock_speed"])
@@ -113,6 +117,7 @@ func dock() -> void:
 	is_auto_docking = false
 	current_linear_velocity = Vector3.ZERO
 	current_angular_velocity = Vector3.ZERO
+	velocity = Vector3.ZERO
 	is_tool_active = false
 	if laser_mesh:
 		laser_mesh.visible = false
@@ -148,6 +153,7 @@ func _physics_process(delta: float) -> void:
 		# Quando agganciato, segue fedelmente la posizione della baia droni della corvetta
 		if ship and is_instance_valid(ship):
 			global_transform = ship_trans * Transform3D(Basis.IDENTITY, DOCK_OFFSET_LOCAL)
+		velocity = Vector3.ZERO
 		# Ricarica rapida della batteria in baia
 		if battery < 100.0:
 			var charge_rate: float = (100.0 / 30.0) # ricarica completa in 30 secondi
@@ -187,7 +193,9 @@ func _physics_process(delta: float) -> void:
 			current_linear_velocity = dock_dir * auto_dock_speed
 			# Allinea gradualmente la rotazione a quella della nave
 			global_basis = global_basis.slerp(ship_trans.basis, minf(1.0, 4.0 * delta))
-			global_position += current_linear_velocity * delta
+			velocity = current_linear_velocity
+			move_and_slide()
+			current_linear_velocity = velocity
 	else:
 		# Controllo manuale thruster RCS
 		var thrust_power: float = max_thrust
@@ -199,15 +207,23 @@ func _physics_process(delta: float) -> void:
 		var target_vel := (global_basis * local_move) * thrust_power
 		current_linear_velocity = current_linear_velocity.move_toward(target_vel, 25.0 * delta)
 		
-		# Rotazione
-		var rot_target := input_rot * 2.5
-		current_angular_velocity = current_angular_velocity.move_toward(rot_target, 8.0 * delta)
+		# Rotazione angolare con smorzamento diegetico
+		var target_rot_y := input_rot.y * max_rot_speed
+		var target_rot_x := input_rot.x * max_rot_speed
+		var target_rot_z := input_rot.z * max_rot_speed
+		
+		current_angular_velocity.y = lerpf(current_angular_velocity.y, target_rot_y, minf(1.0, angular_accel * delta))
+		current_angular_velocity.x = lerpf(current_angular_velocity.x, target_rot_x, minf(1.0, angular_accel * delta))
+		current_angular_velocity.z = lerpf(current_angular_velocity.z, target_rot_z, minf(1.0, angular_accel * delta))
 		
 		rotate_object_local(Vector3.UP, current_angular_velocity.y * delta)
 		rotate_object_local(Vector3.RIGHT, current_angular_velocity.x * delta)
-		rotate_object_local(Vector3.FORWARD, current_angular_velocity.z * delta)
+		if absf(current_angular_velocity.z) > 0.0001:
+			rotate_object_local(Vector3.FORWARD, current_angular_velocity.z * delta)
 		
-		global_position += current_linear_velocity * delta
+		velocity = current_linear_velocity
+		move_and_slide()
+		current_linear_velocity = velocity
 	
 	# Verifica limite Tether Range
 	var dist_from_ship := global_position.distance_to(ship_pos)
@@ -217,6 +233,7 @@ func _physics_process(delta: float) -> void:
 		# Smorza la velocità che allontana ulteriormente
 		if current_linear_velocity.dot(-to_center) > 0:
 			current_linear_velocity = current_linear_velocity.slide(to_center)
+			velocity = current_linear_velocity
 	
 	# Esecuzione strumenti attivi
 	if is_tool_active and battery > 0.0:

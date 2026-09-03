@@ -201,6 +201,18 @@ func _input(event: InputEvent) -> void:
 			KEY_E:
 				_manual_linear_input.y = -1.0 if pressed else 0.0
 				handled = true
+			KEY_UP:
+				_manual_angular_input.x = 1.0 if pressed else 0.0
+				handled = true
+			KEY_DOWN:
+				_manual_angular_input.x = -1.0 if pressed else 0.0
+				handled = true
+			KEY_LEFT:
+				_manual_angular_input.y = 1.0 if pressed else 0.0
+				handled = true
+			KEY_RIGHT:
+				_manual_angular_input.y = -1.0 if pressed else 0.0
+				handled = true
 			KEY_SPACE:
 				if pressed:
 					_manual_linear_input = Vector3.ZERO

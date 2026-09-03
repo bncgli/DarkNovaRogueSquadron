@@ -28,6 +28,7 @@ app_name=Diagnostics
 version=1.0.4
 status=OPERATIONAL
 diagnostics_subsystem=ACTIVE
+decryption_key=DIAG-CFG-7815
 
 [SCANNER_SETTINGS]
 scan_depth=DEEP
@@ -43,6 +44,7 @@ log_telemetry_integrity=true
 }, {
 "content": "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX
 [ICE_DEFENSE]
+decryption_key=SECU-TUN-7815
 ice_firewall_strength=100.0
 factory_reset_delay_sec=3.0
 tamper_detection_level=HIGH

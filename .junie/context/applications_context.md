@@ -11,7 +11,7 @@ This directory contains the suite of applications for the GodotOS interface, rep
 | `Comms/` | Radio communications and frequency tuning. | `NetworkManager` |
 | `DuctDrone/` | Internal repair drone control. | `ship_blueprint.gd` |
 | `ServiceDrone/` | External EVA and mining drone control. | `ServiceDroneEntity` |
-| `CargoBay/` | Inventory management, refining, and cargo storage. | `CargoManager`, `FluxEconomyManager` |
+| `CargoBay/` | Inventory management and cargo storage. | `CargoManager` |
 | `Diagnostics/` | Subsystem health and hull integrity monitoring. | `spaceship.gd` |
 | `Sensors/` | Radar and spectrometry tracking. | `spaceship.gd` |
 | `LifeSupport/` | O2/CO2, temperature, and biosensor management. | `spaceship.gd` |

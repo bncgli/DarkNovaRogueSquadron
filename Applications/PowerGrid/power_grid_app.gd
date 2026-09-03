@@ -59,6 +59,7 @@ var active_config: Dictionary = {
 var rooms_data: Array[Dictionary] = []
 var room_widgets: Dictionary = {}
 var system_states: Dictionary = {} # category -> bool
+var selected_room_id: String = ""
 
 # Terminal History
 var terminal_history: Array[String] = []
@@ -122,14 +123,34 @@ func _init_room_list() -> void:
 		room_list_container.add_child(entry)
 		entry.setup(room)
 		entry.power_toggled.connect(_on_room_power_toggled)
+		if entry.has_signal("room_selected"):
+			entry.room_selected.connect(_on_room_selected)
 		room_widgets[rid] = entry
 		entry.set_enabled(can_control)
+	
+	if selected_room_id.is_empty() and not rooms_data.is_empty():
+		selected_room_id = str(rooms_data[0].get("id", ""))
+	
+	_update_selected_room_visuals()
+	_update_inspector()
+
+func _on_room_selected(room_id: String) -> void:
+	selected_room_id = room_id
+	_update_selected_room_visuals()
+	_update_inspector()
+
+func _update_selected_room_visuals() -> void:
+	for rid in room_widgets:
+		var w = room_widgets[rid]
+		if w and w.has_method("set_selected_visual"):
+			w.set_selected_visual(rid == selected_room_id)
 
 func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 	var room := _get_room_by_id(room_id)
 	if not room.is_empty():
 		room["is_on"] = is_on
-		_print_terminal("[color=#ffffaa]Stanza %s: %s[/color]" % [str(room.get("name", "Ignota")), "ACCESA" if is_on else "SPENTA"])
+		var st_col := "#33ff66" if is_on else "#ff4040"
+		_print_terminal("[color=#ffffaa]Stanza %s: [color=%s]%s[/color][/color]" % [str(room.get("name", "Ignota")), st_col, "ACCESA" if is_on else "SPENTA"])
 		_refresh_power_logic()
 		
 		# Sync with blueprint if possible
@@ -169,6 +190,7 @@ func _refresh_power_logic() -> void:
 	
 	_update_ui_telemetry()
 	_update_system_effects(categories_present)
+	_update_inspector()
 
 func _update_ui_telemetry() -> void:
 	if total_power_label:
@@ -178,9 +200,9 @@ func _update_ui_telemetry() -> void:
 		var net_text := "BILANCIO: %.0f MW" % net_power_mw
 		efficiency_label.text = net_text
 		if net_power_mw >= 0:
-			efficiency_label.modulate = Color(0.2, 1.0, 0.5)
+			efficiency_label.modulate = Color(0.2, 1.0, 0.4, 1.0) # #33ff66
 		else:
-			efficiency_label.modulate = Color(1.0, 0.3, 0.2)
+			efficiency_label.modulate = Color(1.0, 0.25, 0.25, 1.0) # #ff4040
 	
 	# Update room widgets power display
 	for room_id in room_widgets:
@@ -189,7 +211,79 @@ func _update_ui_telemetry() -> void:
 			var room_p := 0.0
 			for dev in room.get("devices", []):
 				room_p += float(dev.get("power_mw", 0.0))
+			if room_p == 0.0 and room.has("power_mw"):
+				room_p = float(room.get("power_mw", 0.0))
 			room_widgets[room_id].update_power(room_p)
+
+func _update_inspector() -> void:
+	if selected_room_id.is_empty() and not rooms_data.is_empty():
+		selected_room_id = str(rooms_data[0].get("id", ""))
+	
+	var room := _get_room_by_id(selected_room_id)
+	if room.is_empty():
+		if inspector_title_label:
+			inspector_title_label.text = "Seleziona Stanza / Dispositivo"
+		if inspector_desc_label:
+			inspector_desc_label.text = "Seleziona una stanza per visualizzare i dettagli energetici."
+		if inspector_inputs_label:
+			inspector_inputs_label.text = "Input: --"
+			inspector_inputs_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		if inspector_regime_label:
+			inspector_regime_label.text = "Regime: --"
+			inspector_regime_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		if inspector_regime_bar:
+			inspector_regime_bar.value = 0
+			inspector_regime_bar.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		return
+	
+	var r_name: String = str(room.get("name", "Stanza"))
+	var r_cat: String = str(room.get("category", "")).to_upper()
+	var is_on: bool = bool(room.get("is_on", false))
+	var devices: Array = room.get("devices", [])
+	
+	var room_p: float = 0.0
+	for dev in devices:
+		room_p += float(dev.get("power_mw", 0.0))
+	if room_p == 0.0 and room.has("power_mw"):
+		room_p = float(room.get("power_mw", 0.0))
+	
+	if inspector_title_label:
+		inspector_title_label.text = "%s [%s]" % [r_name, r_cat]
+	
+	if inspector_desc_label:
+		var status_str := "ALIMENTATA (ON)" if is_on else "OFFLINE (OFF)"
+		inspector_desc_label.text = "Stato: %s | Dispositivi installati: %d" % [status_str, devices.size()]
+	
+	if inspector_inputs_label:
+		if room_p > 0.0:
+			inspector_inputs_label.text = "Produzione: +%.1f MW" % room_p
+			inspector_inputs_label.modulate = Color(0.2, 1.0, 0.4, 1.0) # #33ff66
+		elif room_p < 0.0:
+			inspector_inputs_label.text = "Consumo: %.1f MW" % room_p
+			inspector_inputs_label.modulate = Color(1.0, 0.25, 0.25, 1.0) # #ff4040
+		else:
+			inspector_inputs_label.text = "Carico: 0.0 MW"
+			inspector_inputs_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+	
+	if inspector_regime_label:
+		if room_p > 0.0:
+			inspector_regime_label.text = "GENERAZIONE ATTIVA"
+			inspector_regime_label.modulate = Color(0.2, 1.0, 0.4, 1.0)
+		elif room_p < 0.0:
+			inspector_regime_label.text = "CARICO ATTIVO"
+			inspector_regime_label.modulate = Color(1.0, 0.25, 0.25, 1.0)
+		else:
+			inspector_regime_label.text = "STANDBY"
+			inspector_regime_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+	
+	if inspector_regime_bar:
+		inspector_regime_bar.value = abs(room_p)
+		if room_p > 0.0:
+			inspector_regime_bar.modulate = Color(0.2, 1.0, 0.4, 1.0)
+		elif room_p < 0.0:
+			inspector_regime_bar.modulate = Color(1.0, 0.25, 0.25, 1.0)
+		else:
+			inspector_regime_bar.modulate = Color(0.65, 0.65, 0.65, 1.0)
 
 func _update_system_effects(active_categories: Dictionary) -> void:
 	var categories := [
@@ -347,9 +441,9 @@ func execute_terminal_command(raw_cmd: String) -> void:
 		
 		"status", "stat":
 			_print_terminal("[color=#ffffaa]=== BILANCIO ENERGETICO ===[/color]")
-			_print_terminal("Produzione: %.0f MW" % total_gen_mw)
-			_print_terminal("Consumo: %.0f MW" % total_cons_mw)
-			var col := "#00ff88" if net_power_mw >= 0 else "#ff4444"
+			_print_terminal("Produzione: [color=#33ff66]%.0f MW[/color]" % total_gen_mw)
+			_print_terminal("Consumo: [color=#ff4040]%.0f MW[/color]" % total_cons_mw)
+			var col := "#33ff66" if net_power_mw >= 0 else "#ff4040"
 			_print_terminal("Netto: [color=%s]%.0f MW[/color]" % [col, net_power_mw])
 		
 		"rooms", "list":
@@ -357,9 +451,14 @@ func execute_terminal_command(raw_cmd: String) -> void:
 			for r in rooms_data:
 				var is_on: bool = bool(r.get("is_on", false))
 				var st := "ON" if is_on else "OFF"
-				var col := "#00ff88" if is_on else "#ff4444"
-				var p_mw: float = float(r.get("power_mw", 0.0))
-				_print_terminal(" • %s: [color=%s]%s[/color] (%.0f MW)" % [str(r.get("name", "Ignota")), col, st, p_mw])
+				var st_col := "#33ff66" if is_on else "#ff4040"
+				var p_mw: float = 0.0
+				for dev in r.get("devices", []):
+					p_mw += float(dev.get("power_mw", 0.0))
+				if p_mw == 0.0 and r.has("power_mw"):
+					p_mw = float(r.get("power_mw", 0.0))
+				var p_col := "#33ff66" if p_mw > 0.0 else ("#ff4040" if p_mw < 0.0 else "#a6a6a6")
+				_print_terminal(" • %s: [color=%s]%s[/color] ([color=%s]%.0f MW[/color])" % [str(r.get("name", "Ignota")), st_col, st, p_col, p_mw])
 		
 		"set":
 			if parts.size() < 3:
@@ -384,10 +483,10 @@ func execute_terminal_command(raw_cmd: String) -> void:
 func _run_diagnostics() -> void:
 	_print_terminal("[color=#ffffaa]=== DIAGNOSTICA ENERGETICA ===[/color]")
 	if net_power_mw < 0:
-		_print_terminal("[color=#ff4444]⚠ DEFICIT ENERGETICO RILEVATO: %.0f MW[/color]" % abs(net_power_mw))
+		_print_terminal("[color=#ff4040]⚠ DEFICIT ENERGETICO RILEVATO: %.0f MW[/color]" % abs(net_power_mw))
 		_print_terminal("Disattivare stanze non critiche per ripristinare i sistemi.")
 	else:
-		_print_terminal("[color=#00ff88]✔ Rete stabile. Margine operativo: %.0f MW[/color]" % net_power_mw)
+		_print_terminal("[color=#33ff66]✔ Rete stabile. Margine operativo: %.0f MW[/color]" % net_power_mw)
 
 # --- GESTIONE CLICK E INTERAZIONE ---
 # Rimosso perché la mappa 2D non è più presente.
@@ -440,7 +539,7 @@ func _apply_configuration() -> void:
 	if dat_status_badge:
 		if active_config.get("is_dat_loaded"):
 			dat_status_badge.text = "DAT: ATTIVO"
-			dat_status_badge.modulate = Color(0.2, 1.0, 0.5)
+			dat_status_badge.modulate = Color(0.2, 1.0, 0.4, 1.0)
 		else:
 			dat_status_badge.text = "DAT: DEFAULT"
 			dat_status_badge.modulate = Color(0.7, 0.8, 0.9)
@@ -466,7 +565,7 @@ func _update_connection_state() -> void:
 	
 	if status_badge:
 		status_badge.text = "ONLINE" if connected else "OFFLINE"
-		status_badge.modulate = Color(0.2, 1.0, 0.5) if connected else Color(1.0, 0.3, 0.2)
+		status_badge.modulate = Color(0.2, 1.0, 0.4, 1.0) if connected else Color(1.0, 0.25, 0.25, 1.0)
 	
 	set_process(connected)
 

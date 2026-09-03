@@ -19,8 +19,15 @@ extends FakeWindow
 @onready var zoom_in_btn: Button = %ZoomInBtn
 @onready var zoom_out_btn: Button = %ZoomOutBtn
 @onready var zoom_reset_btn: Button = %ZoomResetBtn
+@onready var btn_headlights: Button = %BtnHeadlights
 @onready var filter_cycle_btn: Button = %FilterCycleBtn
 @onready var grid_toggle_btn: Button = %GridToggleBtn
+
+const THERMAL_SHADER: Shader = preload("res://Applications/Cams/CameraFeed/Shaders/thermal.gdshader")
+const LIDAR_SHADER: Shader = preload("res://Applications/Cams/CameraFeed/Shaders/lidar.gdshader")
+
+var _thermal_mat: ShaderMaterial = null
+var _lidar_mat: ShaderMaterial = null
 
 var camera_id: String = "front"
 var camera_metadata: CameraMetadata = null
@@ -39,7 +46,7 @@ var noise_reduction: float = 1.0
 var overclock_gain: float = 1.0
 
 var _time_passed: float = 0.0
-var _filter_mode: int = 0 # 0 = Normal, 1 = Night Vision (Green), 2 = Tactical Cyan, 3 = High Contrast / Thermal
+var _filter_mode: int = 0 # 0 = Normal, 1 = Thermal, 2 = Lidar
 
 func _ready() -> void:
 	super._ready()
@@ -112,10 +119,15 @@ func _connect_hud_controls() -> void:
 		zoom_out_btn.pressed.connect(_on_zoom_out_pressed)
 	if zoom_reset_btn:
 		zoom_reset_btn.pressed.connect(_on_zoom_reset_pressed)
+	if btn_headlights:
+		btn_headlights.pressed.connect(_on_headlights_toggled)
 	if filter_cycle_btn:
 		filter_cycle_btn.pressed.connect(_on_filter_cycle_pressed)
 	if grid_toggle_btn:
 		grid_toggle_btn.pressed.connect(_on_grid_toggle_pressed)
+	
+	if SpaceWorldManager and not SpaceWorldManager.camera_headlight_toggled.is_connected(_on_global_headlight_changed):
+		SpaceWorldManager.camera_headlight_toggled.connect(_on_global_headlight_changed)
 
 func _process(delta: float) -> void:
 	super._process(delta)
@@ -136,6 +148,7 @@ func _update_hud_display() -> void:
 		cam_code_label.text = "● %s  [%s]" % [code_str, dir_str]
 	
 	_apply_filter_mode()
+	_update_headlights_btn_state()
 
 func _update_telemetry(_delta: float) -> void:
 	if telemetry_label:
@@ -168,7 +181,7 @@ func _on_zoom_reset_pressed() -> void:
 	camera_3d.fov = current_fov
 
 func _on_filter_cycle_pressed() -> void:
-	_filter_mode = (_filter_mode + 1) % 4
+	_filter_mode = (_filter_mode + 1) % 3
 	_apply_filter_mode()
 
 func _apply_filter_mode() -> void:
@@ -178,23 +191,43 @@ func _apply_filter_mode() -> void:
 	match _filter_mode:
 		0: # Ottica Normale
 			filter_rect.visible = false
+			filter_rect.material = null
 			if filter_cycle_btn:
 				filter_cycle_btn.text = "Filtro: Normale"
-		1: # Notturno / NVG Verde
+		1: # Termico (Ironbow / FLIR)
 			filter_rect.visible = true
-			filter_rect.color = Color(0.1, 0.8, 0.2, clampf(night_vision_intensity, 0.05, 0.8))
-			if filter_cycle_btn:
-				filter_cycle_btn.text = "Filtro: Notturno"
-		2: # Tattico Cyan / HUD
-			filter_rect.visible = true
-			filter_rect.color = Color(0.1, 0.6, 0.9, clampf(tactical_hud_contrast, 0.05, 0.8))
-			if filter_cycle_btn:
-				filter_cycle_btn.text = "Filtro: Tattico"
-		3: # Termico / Ambra
-			filter_rect.visible = true
-			filter_rect.color = Color(0.9, 0.4, 0.1, clampf(thermal_intensity, 0.05, 0.8))
+			if _thermal_mat == null:
+				_thermal_mat = ShaderMaterial.new()
+				_thermal_mat.shader = THERMAL_SHADER
+			_thermal_mat.set_shader_parameter("thermal_intensity", clampf(thermal_intensity * 4.0, 0.5, 3.0) if thermal_intensity > 0.0 else 1.0)
+			filter_rect.material = _thermal_mat
 			if filter_cycle_btn:
 				filter_cycle_btn.text = "Filtro: Termico"
+		2: # Lidar (Scansione Raycast / Matrice Punti & Profondità)
+			filter_rect.visible = true
+			if _lidar_mat == null:
+				_lidar_mat = ShaderMaterial.new()
+				_lidar_mat.shader = LIDAR_SHADER
+			filter_rect.material = _lidar_mat
+			if filter_cycle_btn:
+				filter_cycle_btn.text = "Filtro: Lidar"
+
+func _on_headlights_toggled() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("toggle_camera_headlight"):
+		SpaceWorldManager.toggle_camera_headlight(camera_id)
+	_update_headlights_btn_state()
+
+func _update_headlights_btn_state() -> void:
+	if not btn_headlights:
+		return
+	var is_on := false
+	if SpaceWorldManager and SpaceWorldManager.has_method("is_camera_headlight_on"):
+		is_on = SpaceWorldManager.is_camera_headlight_on(camera_id)
+	btn_headlights.text = "Fari: ON" if is_on else "Fari: OFF"
+
+func _on_global_headlight_changed(cam_id: String, _enabled: bool) -> void:
+	if cam_id == camera_id:
+		_update_headlights_btn_state()
 
 func _on_grid_toggle_pressed() -> void:
 	if crosshair_overlay:

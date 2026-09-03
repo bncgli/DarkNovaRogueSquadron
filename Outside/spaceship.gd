@@ -13,6 +13,8 @@ signal flight_telemetry_updated(speed: float, position: Vector3, velocity: Vecto
 @export var angular_acceleration: float = 8.0
 @export var angular_deceleration: float = 6.0
 
+@export var inertia_dampening: bool = true
+
 @onready var cam_front: Marker3D = get_node_or_null("CameraMounts/CamFront")
 @onready var cam_rear: Marker3D = get_node_or_null("CameraMounts/CamRear")
 @onready var cam_left: Marker3D = get_node_or_null("CameraMounts/CamLeft")
@@ -24,6 +26,7 @@ signal flight_telemetry_updated(speed: float, position: Vector3, velocity: Vecto
 
 var _time_elapsed: float = 0.0
 var _camera_mounts: Dictionary = {}
+var _headlights: Dictionary = {}
 
 # Input attuali (in coordinate locali nave)
 # linear_input: Vector3(X: strife sx/dx [-1..1], Y: strife giu/su [-1..1], Z: avanti/indietro [-1..1, -1 = avanti / +1 = indietro])
@@ -57,15 +60,15 @@ func _init_camera_mounts() -> void:
 		add_child(mounts_parent)
 	
 	_camera_mounts = {
-		"front": _ensure_mount(mounts_parent, "CamFront", Vector3(0.0, 0.25, -2.1), Vector3(0.0, 0.0, 0.0)),
-		"rear": _ensure_mount(mounts_parent, "CamRear", Vector3(0.0, 0.6, 2.2), Vector3(0.0, 180.0, 0.0)),
-		"left": _ensure_mount(mounts_parent, "CamLeft", Vector3(-2.0, 0.1, 0.0), Vector3(0.0, 90.0, 0.0)),
-		"right": _ensure_mount(mounts_parent, "CamRight", Vector3(2.0, 0.1, 0.0), Vector3(0.0, -90.0, 0.0)),
-		"top": _ensure_mount(mounts_parent, "CamTop", Vector3(0.0, 1.2, -0.2), Vector3(90.0, 0.0, 0.0)),
-		"bottom": _ensure_mount(mounts_parent, "CamBottom", Vector3(0.0, -0.8, -0.2), Vector3(-90.0, 0.0, 0.0))
+		"front": _ensure_mount(mounts_parent, "CamFront", Vector3(0.0, 0.25, -2.1), Vector3(0.0, 0.0, 0.0), "front"),
+		"rear": _ensure_mount(mounts_parent, "CamRear", Vector3(0.0, 0.6, 2.2), Vector3(0.0, 180.0, 0.0), "rear"),
+		"left": _ensure_mount(mounts_parent, "CamLeft", Vector3(-2.0, 0.1, 0.0), Vector3(0.0, 90.0, 0.0), "left"),
+		"right": _ensure_mount(mounts_parent, "CamRight", Vector3(2.0, 0.1, 0.0), Vector3(0.0, -90.0, 0.0), "right"),
+		"top": _ensure_mount(mounts_parent, "CamTop", Vector3(0.0, 1.2, -0.2), Vector3(90.0, 0.0, 0.0), "top"),
+		"bottom": _ensure_mount(mounts_parent, "CamBottom", Vector3(0.0, -0.8, -0.2), Vector3(-90.0, 0.0, 0.0), "bottom")
 	}
 
-func _ensure_mount(parent: Node, node_name: String, local_pos: Vector3, local_rot_deg: Vector3) -> Marker3D:
+func _ensure_mount(parent: Node, node_name: String, local_pos: Vector3, local_rot_deg: Vector3, cam_id: String = "") -> Marker3D:
 	var marker: Marker3D = parent.get_node_or_null(node_name)
 	if marker == null:
 		marker = Marker3D.new()
@@ -76,7 +79,56 @@ func _ensure_mount(parent: Node, node_name: String, local_pos: Vector3, local_ro
 	else:
 		marker.position = local_pos
 		marker.rotation_degrees = local_rot_deg
+	
+	# Assicura il faretto (SpotLight3D) associato alla telecamera
+	var headlight: SpotLight3D = marker.get_node_or_null("Headlight")
+	if headlight == null:
+		headlight = SpotLight3D.new()
+		headlight.name = "Headlight"
+		headlight.visible = false
+		headlight.light_energy = 3.5
+		headlight.spot_range = 80.0
+		headlight.spot_angle = 45.0
+		headlight.light_color = Color(0.9, 0.95, 1.0)
+		marker.add_child(headlight)
+	
+	if not cam_id.is_empty():
+		_headlights[cam_id] = headlight
+	
 	return marker
+
+func set_headlight(cam_id: String, enabled: bool) -> void:
+	if _headlights.is_empty():
+		_init_camera_mounts()
+	var light: SpotLight3D = _headlights.get(cam_id, null)
+	if light and is_instance_valid(light):
+		light.visible = enabled
+
+func is_headlight_on(cam_id: String) -> bool:
+	if _headlights.is_empty():
+		_init_camera_mounts()
+	var light: SpotLight3D = _headlights.get(cam_id, null)
+	if light and is_instance_valid(light):
+		return light.visible
+	return false
+
+func toggle_headlight(cam_id: String) -> bool:
+	var new_state := not is_headlight_on(cam_id)
+	set_headlight(cam_id, new_state)
+	return new_state
+
+func get_headlight(cam_id: String) -> SpotLight3D:
+	if _headlights.is_empty():
+		_init_camera_mounts()
+	return _headlights.get(cam_id, null)
+
+func set_all_headlights(enabled: bool) -> void:
+	if _headlights.is_empty():
+		_init_camera_mounts()
+	for cid in _headlights:
+		var light: SpotLight3D = _headlights[cid]
+		if light and is_instance_valid(light):
+			light.visible = enabled
 
 func get_camera_mount(cam_id: String) -> Marker3D:
 	if _camera_mounts.is_empty():
@@ -213,7 +265,7 @@ func _apply_flight_physics(delta: float) -> void:
 	
 	if linear_input.length_squared() > 0.001:
 		linear_velocity = linear_velocity.move_toward(target_global_vel, linear_acceleration * delta)
-	else:
+	elif inertia_dampening:
 		linear_velocity = linear_velocity.move_toward(Vector3.ZERO, linear_deceleration * delta)
 	
 	# Rotazioni angolari
@@ -231,6 +283,12 @@ func _apply_flight_physics(delta: float) -> void:
 		angular_velocity = angular_velocity.move_toward(target_global_ang, angular_acceleration * delta)
 	else:
 		angular_velocity = angular_velocity.move_toward(Vector3.ZERO, angular_deceleration * delta)
+
+func set_inertia_dampening(enabled: bool) -> void:
+	inertia_dampening = enabled
+
+func get_inertia_dampening() -> bool:
+	return inertia_dampening
 
 func set_linear_input(input_vec: Vector3) -> void:
 	linear_input = input_vec.clamp(Vector3(-2, -2, -2), Vector3(2, 2, 2))

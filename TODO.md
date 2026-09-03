@@ -113,3 +113,57 @@
   - **Descrizione**: Aggiornamento di CHANGELOG.md, .junie/context e docs/architecture per riflettere il passaggio da Dictionary a Resource.
   - **Criteri di accettazione**: Tutti i file di contesto aggiornati con le nuove classi Resource e relazioni di sistema.
   - **Stato**: Completato (2026-09-02).
+
+- [x] **TASK-022**: GodotOS Window Management & Z-Order Fixes
+  - **Descrizione**: Correzione z-order barra del titolo, focus click su intera superficie finestra e rimozione semi-trasparenza finestre in background.
+  - **Criteri di accettazione**: Titoli finestre non sovrapposti a finestre superiori, focus su click interno e finestre in background completamente opache.
+  - **File Task**: `task_queue/010_godotos_window_management.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-023**: Overhaul Flight Control & Propulsione di Crociera
+  - **Descrizione**: Nuovi comandi velocità R/F, rimozione reset position, toggle inerzia (on default/off deriva), potenza da ShipBlueprint e fix rotazione/attivazione Hyperdrive.
+  - **Criteri di accettazione**: Tasti R/F funzionanti, inerzia disattivabile, lettura potenza MW da blueprint, orientamento nave e transito settore iperdrive funzionanti.
+  - **File Task**: `task_queue/011_flight_control_overhaul.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-024**: Filtri Cams, Fari & Fix Dynamic Skybox
+  - **Descrizione**: Ripristino visualizzazione corpi celesti nello skybox 3D, riduzione filtri telecamere a Normale (con tasto fari), Termico (shader scie) e Lidar (shader raycast).
+  - **Criteri di accettazione**: Skybox 3D funzionante con corpi celesti, fari commutabili e shader termico e lidar attivi.
+  - **File Task**: `task_queue/012_cams_filters_and_lighting.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-025**: Miglioramenti System Map, Calcolo Rotta & Ombre Planetarie
+  - **Descrizione**: Estensione livello di zoom, sequenza calcolo rotta di 3-5s con feedback testuali e visualizzazione 2D delle zone d'ombra proiettate dai pianeti.
+  - **Criteri di accettazione**: Zoom massimo aumentato, calcolo rotta con delay e feedback diegetici, rendering coni d'ombra planetari rispetto alla stella.
+  - **File Task**: `task_queue/013_system_map_improvements.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-026**: Differenziazione Cromatica Stanze PowerGrid
+  - **Descrizione**: Evidenziazione visiva delle stanze consumatrici in colore rosso e stanze generatrici in colore verde in tutta la UI di PowerGrid.
+  - **Criteri di accettazione**: Stanze con consumo negativo in rosso evidente, stanze produttrici in verde, stanze spente in grigio neutro.
+  - **File Task**: `task_queue/014_powergrid_status_colors.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-027**: Service Drone Collider 3D & Controlli Rotazione
+  - **Descrizione**: Aggiunta di collider solido e logica di collisione 3D al drone di servizio, con controlli di rotazione su se stesso mappati sui tasti freccia.
+  - **Criteri di accettazione**: Drone con collisioni attive su scafo/ostacoli e rotazione tramite tasti freccia (pitch/yaw).
+  - **File Task**: `task_queue/015_service_drone_controls_collision.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-028**: Meccaniche Duct Drone, Tasto Radar & Recupero Emergenza
+  - **Descrizione**: Allineamento spawn e ricarica a ShipBlueprint, tasto R per radar, rimozione pulsante reset e timer 1m per ritorno automatico a batteria esaurita.
+  - **Criteri di accettazione**: Spawn e ricarica vincolati alla stanza blueprint, tasto R per radar, pulsante reset rimosso e auto-ritorno dopo 60s senza carica.
+  - **File Task**: `task_queue/016_duct_drone_mechanics.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-029**: Semplificazione CargoBay & Vista Inventario Pura
+  - **Descrizione**: Rimozione schede trasferimenti, rating FLUX e hack S-Net da CargoBay, mantenendo un'interfaccia inventario stiva pulita ed essenziale.
+  - **Criteri di accettazione**: Applicazione limitata a inventario stiva (lista oggetti, dettagli, peso/volume, espulsione merci).
+  - **File Task**: `task_queue/017_cargobay_inventory_cleanup.md`
+  - **Stato**: Completato (2026-09-03).
+
+- [x] **TASK-030**: Integrazione Chiavi di Decriptazione File .DAT
+  - **Descrizione**: Inserimento di una chiave di decriptazione standardizzata in tutti i file .dat di configurazione diegetici per futuri minigiochi di hacking.
+  - **Criteri di accettazione**: Tutti i file .dat in ShipDriveManager e nella blueprint contengono chiavi di decriptazione univoche compatibili con BaseApp.
+  - **File Task**: `task_queue/018_dat_files_encryption.md`
+  - **Stato**: Completato (2026-09-03).

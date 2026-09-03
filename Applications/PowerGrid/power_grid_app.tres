@@ -28,6 +28,7 @@ app_name=PowerGrid
 version=1.0.4
 status=OPERATIONAL
 mode=AUTOMATIC_BALANCING
+decryption_key=GRID-CFG-7815
 
 [GRID_SETTINGS]
 reactor_output_mw=1200.0
@@ -47,6 +48,7 @@ auto_reroute_on_short=false
 }, {
 "content": "# POWER GRID CALIBRATION & TUNING MATRIX
 [TUNING]
+decryption_key=GRID-TUN-7815
 power_efficiency_mult=1.0
 backup_line_conductivity=0.95
 switch_rate_hz=10.0

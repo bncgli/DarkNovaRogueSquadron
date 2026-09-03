@@ -40,8 +40,12 @@ func emit_state_changed() -> void:
 	state_changed.emit(pos, heading, speed, battery, lights, scan_active, scan_radius)
 
 func reset_drone() -> void:
-	pos = INITIAL_POS
-	heading = INITIAL_HEADING
+	if SpaceWorldManager:
+		pos = SpaceWorldManager.get_drone_spawn_pos()
+		heading = SpaceWorldManager.get_drone_spawn_heading()
+	else:
+		pos = INITIAL_POS
+		heading = INITIAL_HEADING
 	speed = 0.0
 	battery = 100.0
 	is_repairing = false

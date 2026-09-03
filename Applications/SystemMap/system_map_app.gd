@@ -44,12 +44,13 @@ var calculated_route: Dictionary = {}
 # Parametri griglia / rendering
 var zoom_level: float = 1.0
 const MIN_ZOOM: float = 0.4
-const MAX_ZOOM: float = 2.5
+const MAX_ZOOM: float = 6.0
 var pan_offset: Vector2 = Vector2.ZERO
 var is_dragging: bool = false
 var drag_start_pos: Vector2 = Vector2.ZERO
 var drag_start_pan: Vector2 = Vector2.ZERO
 const CELL_BASE_SIZE: float = 48.0 # pixel per settore a zoom 1.0
+var is_plotting_route: bool = false
 
 # Dati di configurazione
 var app_config: Dictionary = {
@@ -140,9 +141,9 @@ func _update_permissions() -> void:
 		can_control_map = true
 
 	if btn_plot_route:
-		btn_plot_route.disabled = not can_control_map
+		btn_plot_route.disabled = not can_control_map or is_plotting_route
 	if btn_send_route:
-		btn_send_route.disabled = not can_control_map or calculated_route.is_empty()
+		btn_send_route.disabled = not can_control_map or calculated_route.is_empty() or is_plotting_route
 
 func _on_file_synced(path: String) -> void:
 	if "system_map_config.dat" in path:
@@ -250,10 +251,12 @@ func _update_route_info() -> void:
 		btn_send_route.disabled = not can_control_map or calculated_route.is_empty()
 
 func select_sector(coords: Vector3i) -> void:
+	is_plotting_route = false
 	selected_sector_coords = coords
 	has_selected_sector = true
 	_calculate_route_to_selected()
 	_update_route_info()
+	_update_permissions()
 	if grid_display:
 		grid_display.queue_redraw()
 
@@ -284,10 +287,40 @@ func _calculate_route_to_selected() -> void:
 	}
 
 func _on_plot_route_pressed() -> void:
-	if not has_selected_sector:
+	if not has_selected_sector or is_plotting_route:
 		return
+	_start_async_route_plot()
+
+func _start_async_route_plot() -> void:
+	is_plotting_route = true
+	_update_permissions()
+	
+	# Step 1: Scansione corpi neri e parametri gravitazionali
+	if sector_info_text:
+		sector_info_text.text = "[color=#ffaa00]Scansione corpi neri e parametri gravitazionali...[/color]"
+	await get_tree().create_timer(1.2).timeout
+	if not is_inside_tree() or not is_plotting_route:
+		return
+	
+	# Step 2: Check traiettoria ed interferenze orbitali
+	if sector_info_text:
+		sector_info_text.text = "[color=#ffaa00]Check traiettoria ed interferenze orbitali...[/color]"
+	await get_tree().create_timer(1.4).timeout
+	if not is_inside_tree() or not is_plotting_route:
+		return
+	
+	# Step 3: Calcolo vettore e corridoio iperdrive
+	if sector_info_text:
+		sector_info_text.text = "[color=#ffaa00]Calcolo vettore e corridoio iperdrive...[/color]"
+	await get_tree().create_timer(1.2).timeout
+	if not is_inside_tree() or not is_plotting_route:
+		return
+	
+	# Step 4: Conclusione calcolo, riattivazione controlli e completamento rotta
+	is_plotting_route = false
 	_calculate_route_to_selected()
 	_update_route_info()
+	_update_permissions()
 	if grid_display:
 		grid_display.queue_redraw()
 
@@ -326,10 +359,12 @@ func send_route_to_flight_control() -> Dictionary:
 	return calculated_route
 
 func _on_clear_route_pressed() -> void:
+	is_plotting_route = false
 	calculated_route.clear()
 	if StarSystemGridManager:
 		StarSystemGridManager.clear_plotted_route()
 	_update_route_info()
+	_update_permissions()
 	if grid_display:
 		grid_display.queue_redraw()
 
@@ -350,13 +385,27 @@ func _center_on_sector(coords: Vector3i) -> void:
 		grid_display.queue_redraw()
 
 func _on_zoom_in_pressed() -> void:
-	zoom_level = clampf(zoom_level * 1.25, MIN_ZOOM, MAX_ZOOM)
-	if grid_display:
+	if grid_display == null:
+		return
+	var center_pos := grid_display.size * 0.5
+	var old_zoom := zoom_level
+	var new_zoom := clampf(zoom_level * 1.25, MIN_ZOOM, MAX_ZOOM)
+	if new_zoom != old_zoom:
+		var factor := new_zoom / old_zoom
+		pan_offset = center_pos - (center_pos - pan_offset) * factor
+		zoom_level = new_zoom
 		grid_display.queue_redraw()
 
 func _on_zoom_out_pressed() -> void:
-	zoom_level = clampf(zoom_level / 1.25, MIN_ZOOM, MAX_ZOOM)
-	if grid_display:
+	if grid_display == null:
+		return
+	var center_pos := grid_display.size * 0.5
+	var old_zoom := zoom_level
+	var new_zoom := clampf(zoom_level / 1.25, MIN_ZOOM, MAX_ZOOM)
+	if new_zoom != old_zoom:
+		var factor := new_zoom / old_zoom
+		pan_offset = center_pos - (center_pos - pan_offset) * factor
+		zoom_level = new_zoom
 		grid_display.queue_redraw()
 
 func _on_zoom_reset_pressed() -> void:
@@ -417,11 +466,23 @@ func _on_grid_gui_input(event: InputEvent) -> void:
 						_handle_sector_click(mb.position)
 				is_dragging = false
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
-			zoom_level = clampf(zoom_level * 1.15, MIN_ZOOM, MAX_ZOOM)
-			grid_display.queue_redraw()
+			var old_zoom := zoom_level
+			var new_zoom := clampf(zoom_level * 1.15, MIN_ZOOM, MAX_ZOOM)
+			if new_zoom != old_zoom:
+				var mouse_pos := mb.position
+				var factor := new_zoom / old_zoom
+				pan_offset = mouse_pos - (mouse_pos - pan_offset) * factor
+				zoom_level = new_zoom
+				grid_display.queue_redraw()
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
-			zoom_level = clampf(zoom_level / 1.15, MIN_ZOOM, MAX_ZOOM)
-			grid_display.queue_redraw()
+			var old_zoom := zoom_level
+			var new_zoom := clampf(zoom_level / 1.15, MIN_ZOOM, MAX_ZOOM)
+			if new_zoom != old_zoom:
+				var mouse_pos := mb.position
+				var factor := new_zoom / old_zoom
+				pan_offset = mouse_pos - (mouse_pos - pan_offset) * factor
+				zoom_level = new_zoom
+				grid_display.queue_redraw()
 
 	elif event is InputEventMouseMotion:
 		var mm := event as InputEventMouseMotion
@@ -492,6 +553,51 @@ func _on_grid_display_draw() -> void:
 				})
 			else:
 				celestial_bodies.append(b)
+
+	# Individuazione posizione a schermo della Stella centrale
+	var star_screen_pos := Vector2.ZERO
+	var has_star := false
+	for b in celestial_bodies:
+		if str(b.get("type", "")).to_upper() == "STAR":
+			var sc: Vector3i = b.get("coords", Vector3i.ZERO)
+			star_screen_pos = pan_offset + Vector2(sc.x * cell_size, sc.y * cell_size)
+			has_star = true
+			break
+	if not has_star:
+		var star_coords := StarSystemGridManagerSingleton.PRIMARY_STAR_COORDS if StarSystemGridManager else Vector3i(0, 0, 0)
+		star_screen_pos = pan_offset + Vector2(star_coords.x * cell_size, star_coords.y * cell_size)
+		has_star = true
+
+	# Rendering 2D delle zone d'ombra proiettate dai corpi celesti planetari
+	for body in celestial_bodies:
+		var b_type: String = str(body.get("type", "")).to_upper()
+		if b_type in ["PLANET", "GAS_GIANT", "MOON"]:
+			var b_coords: Vector3i = body.get("coords", Vector3i.ZERO)
+			var b_pos := pan_offset + Vector2(b_coords.x * cell_size, b_coords.y * cell_size)
+			var diff := b_pos - star_screen_pos
+			if diff.length_squared() > 0.001:
+				var dir_from_star := diff.normalized()
+				var perp := Vector2(-dir_from_star.y, dir_from_star.x)
+				
+				var icon_radius := 6.0 * zoom_level
+				match b_type:
+					"PLANET":
+						icon_radius = 8.0 * zoom_level
+					"GAS_GIANT":
+						icon_radius = 10.0 * zoom_level
+					"MOON":
+						icon_radius = 4.5 * zoom_level
+				
+				var shadow_length := maxf(cell_size * 8.0, icon_radius * 25.0)
+				var end_radius := icon_radius * 1.6
+				
+				var p1 := b_pos + perp * icon_radius
+				var p2 := b_pos + dir_from_star * shadow_length + perp * end_radius
+				var p3 := b_pos + dir_from_star * shadow_length - perp * end_radius
+				var p4 := b_pos - perp * icon_radius
+				
+				var shadow_points := PackedVector2Array([p1, p2, p3, p4])
+				canvas.draw_polygon(shadow_points, PackedColorArray([Color(0.0, 0.0, 0.0, 0.45)]))
 
 	for body in celestial_bodies:
 		var b_coords: Vector3i = body.get("coords")

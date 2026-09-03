@@ -46,9 +46,7 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 @onready var reload_config_button: Button = %ReloadConfigButton
 
 # Azioni
-@onready var stop_button: Button = %StopButton
-@onready var reset_button: Button = %ResetButton
-@onready var speed_mode_button: Button = %SpeedModeButton
+@onready var inertia_toggle_button: Button = %InertiaToggleButton
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 @onready var cruise_control_panel: CruiseControlPanel = get_node_or_null("%CruiseControlPanel")
 
@@ -66,14 +64,11 @@ var active_hyperdrive_route: Dictionary = {}
 var _ui_linear_input := Vector3.ZERO
 var _ui_angular_input := Vector3.ZERO
 
-# Modalità velocità (1.0 = Normale, 2.0 = Turbo, 0.4 = Precisione)
+# Moltiplicatore velocità (regolabile da 0.5x a 2.0x con tasti R / F)
 var _speed_multiplier: float = 1.0
-var _speed_mode_index: int = 0
-var speed_modes: Array[Dictionary] = [
-	{"name": "NORMALE (1x)", "mult": 1.0, "color": Color(0.3, 0.85, 1.0)},
-	{"name": "TURBO (2x)", "mult": 2.0, "color": Color(1.0, 0.5, 0.2)},
-	{"name": "PRECISIONE (0.4x)", "mult": 0.4, "color": Color(0.4, 1.0, 0.6)}
-]
+
+# Smorzamento inerziale attivo di default
+var is_inertia_enabled: bool = true
 
 # Configurazione attiva di volo estratta dai file .dat o da valori di calibrazione di fabbrica
 var active_config: Dictionary = {
@@ -97,7 +92,7 @@ func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
-	_update_speed_mode_button()
+	_update_inertia_button()
 	_connect_system_signals()
 	_update_connection_state()
 	_update_permissions()
@@ -228,7 +223,7 @@ func _update_permissions() -> void:
 	var btns := [
 		btn_q, btn_w, btn_e, btn_s, btn_a, btn_d, btn_space, btn_ctrl,
 		btn_pitch_up, btn_pitch_down, btn_yaw_left, btn_yaw_right,
-		stop_button, reset_button, speed_mode_button, reload_config_button
+		inertia_toggle_button, reload_config_button
 	]
 	for b in btns:
 		if b:
@@ -249,16 +244,12 @@ func _update_permissions() -> void:
 			thrusters_badge.text = "PROPULSORI PRONTI"
 			thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
 		if status_summary_label:
-			status_summary_label.text = "Tutti i sistemi RCS e propulsione operativi. Controllo attivo."
+			status_summary_label.text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
 
 func _setup_ui_events() -> void:
 	# Pulsanti ausiliari
-	if stop_button:
-		stop_button.pressed.connect(_on_stop_button_pressed)
-	if reset_button:
-		reset_button.pressed.connect(_on_reset_button_pressed)
-	if speed_mode_button:
-		speed_mode_button.pressed.connect(_on_speed_mode_toggle)
+	if inertia_toggle_button:
+		inertia_toggle_button.pressed.connect(_on_inertia_toggle_pressed)
 	if reload_config_button:
 		reload_config_button.pressed.connect(func() -> void:
 			load_dat_configuration()
@@ -347,14 +338,9 @@ func load_dat_configuration() -> Dictionary:
 	else:
 		active_config["is_dat_loaded"] = false
 	
-	# Aggiorna moltiplicatori delle modalità di velocità
-	speed_modes[1]["mult"] = active_config["turbo_multiplier"]
-	speed_modes[2]["mult"] = active_config["precision_multiplier"]
-	_speed_multiplier = speed_modes[_speed_mode_index]["mult"]
-	
+	# Aggiorna configurazione attiva
 	_apply_configuration_to_ship()
 	_update_config_ui()
-	_update_speed_mode_button()
 	
 	return active_config
 
@@ -411,6 +397,18 @@ func is_control_active() -> bool:
 		if parent_window.is_minimized or not parent_window.visible:
 			return false
 	return true
+
+func _input(event: InputEvent) -> void:
+	if not is_control_active():
+		return
+	
+	if event is InputEventKey and event.pressed and not event.is_echo():
+		if event.keycode == KEY_R or event.physical_keycode == KEY_R:
+			_speed_multiplier = snappedf(clampf(_speed_multiplier + 0.1, 0.5, 2.0), 0.1)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F or event.physical_keycode == KEY_F:
+			_speed_multiplier = snappedf(clampf(_speed_multiplier - 0.1, 0.5, 2.0), 0.1)
+			get_viewport().set_input_as_handled()
 
 func _process(_delta: float) -> void:
 	var move_vec := Vector3.ZERO
@@ -484,7 +482,7 @@ func _physics_process(_delta: float) -> void:
 
 func _update_telemetry_display(speed: float, pos: Vector3, rot: Vector3) -> void:
 	if speed_value_label:
-		speed_value_label.text = "%.1f m/s" % speed
+		speed_value_label.text = "%.1f m/s (%.1fx)" % [speed, _speed_multiplier]
 	if speed_progress_bar:
 		var max_s: float = active_config.get("max_linear_speed") * active_config.get("rcs_power_rate") * _speed_multiplier
 		speed_progress_bar.max_value = max_s
@@ -531,34 +529,22 @@ func _clear_all_highlights() -> void:
 		if b:
 			b.modulate = Color(1.0, 1.0, 1.0)
 
-func _on_stop_button_pressed() -> void:
+func _on_inertia_toggle_pressed() -> void:
 	if not can_control_flight:
 		return
-	_ui_linear_input = Vector3.ZERO
-	_ui_angular_input = Vector3.ZERO
-	if SpaceWorldManager:
-		SpaceWorldManager.stop_spaceship_engines()
+	is_inertia_enabled = not is_inertia_enabled
+	_update_inertia_button()
+	if SpaceWorldManager and SpaceWorldManager.has_method("set_inertia_dampening"):
+		SpaceWorldManager.set_inertia_dampening(is_inertia_enabled)
 
-func _on_reset_button_pressed() -> void:
-	if not can_control_flight:
-		return
-	_ui_linear_input = Vector3.ZERO
-	_ui_angular_input = Vector3.ZERO
-	if SpaceWorldManager:
-		SpaceWorldManager.reset_ship_position()
-
-func _on_speed_mode_toggle() -> void:
-	if not can_control_flight:
-		return
-	_speed_mode_index = (_speed_mode_index + 1) % speed_modes.size()
-	_speed_multiplier = speed_modes[_speed_mode_index]["mult"]
-	_update_speed_mode_button()
-
-func _update_speed_mode_button() -> void:
-	if speed_mode_button:
-		var mode: Dictionary = speed_modes[_speed_mode_index]
-		speed_mode_button.text = "⚡ VELOCITÀ: %s" % mode["name"]
-		speed_mode_button.modulate = mode["color"]
+func _update_inertia_button() -> void:
+	if inertia_toggle_button:
+		if is_inertia_enabled:
+			inertia_toggle_button.text = "INERZIA: ON"
+			inertia_toggle_button.modulate = Color(0.2, 1.0, 0.5)
+		else:
+			inertia_toggle_button.text = "INERZIA: OFF"
+			inertia_toggle_button.modulate = Color(1.0, 0.4, 0.2)
 
 # ==============================================================================
 # INTEGRAZIONE ROTTA SYSTEM MAP & INGAGGI HYPERDRIVE
@@ -654,18 +640,17 @@ func align_to_hyperdrive_vector() -> void:
 	
 	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.ZERO)
 	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
+	if route_dir_2d.length_squared() < 0.001:
+		return
 	
 	# Calcola angolo yaw desiderato
-	# (0, 1) = sud (+90 deg), (0, -1) = nord (-90 deg), (1, 0) = est (0 deg)
 	var target_angle_rad := atan2(route_dir_2d.y, route_dir_2d.x)
-	var target_yaw_deg := -rad_to_deg(target_angle_rad) + 90.0
+	var target_yaw_deg := fposmod(rad_to_deg(target_angle_rad) - 90.0, 360.0)
 
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
 		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
-			ship.rotation_degrees.y = fposmod(target_yaw_deg, 360.0)
-			ship.rotation_degrees.x = 0.0
-			ship.rotation_degrees.z = 0.0
+			ship.rotation_degrees = Vector3(0.0, target_yaw_deg, 0.0)
 			if "angular_velocity" in ship:
 				ship.angular_velocity = Vector3.ZERO
 	
@@ -683,13 +668,24 @@ func engage_hyperdrive() -> Dictionary:
 	if active_hyperdrive_route.is_empty():
 		return {"success": false, "reason": "Nessuna rotta pianificata"}
 
+	if not is_hyperdrive_aligned():
+		return {"success": false, "reason": "Astronave non allineata al vettore rotta"}
+
 	var target_coords: Vector3i = active_hyperdrive_route.get("target_coords", Vector3i.ZERO)
 	
 	if StarSystemGridManager:
 		var res := StarSystemGridManager.engage_hyperdrive_transit(target_coords)
 		if res.get("success"):
+			var new_sec_id: String = res.get("new_sector_id", "")
+			if SpaceWorldManager and SpaceWorldManager.has_method("stop_spaceship_engines"):
+				SpaceWorldManager.stop_spaceship_engines()
+			
 			active_hyperdrive_route.clear()
 			_update_hyperdrive_ui()
+			
+			var notif := get_node_or_null("/root/NotificationManager")
+			if notif and notif.has_method("spawn_notification"):
+				notif.spawn_notification("🌌 Transito Hyperdrive completato: Arrivo a %s" % new_sec_id)
 		return res
 
 	return {"success": false, "reason": "StarSystemGridManager non disponibile"}

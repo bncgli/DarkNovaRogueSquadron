@@ -6,6 +6,7 @@ extends Node
 signal camera_window_opened(cam_id: String, window: FakeWindow)
 signal camera_window_closed(cam_id: String)
 signal camera_status_changed(cam_id: String, is_open: bool)
+signal camera_headlight_toggled(cam_id: String, enabled: bool)
 signal ship_connection_changed(is_connected: bool)
 signal duct_drone_state_changed(pos: Vector2, heading: float, speed: float, battery: float, lights: bool, scan_active: bool, scan_radius: float)
 signal duct_drone_reset_performed()
@@ -54,6 +55,7 @@ func _connect_submanagers() -> void:
 	camera_manager.window_opened.connect(func(ci, w): camera_window_opened.emit(ci, w))
 	camera_manager.window_closed.connect(func(ci): camera_window_closed.emit(ci))
 	camera_manager.status_changed.connect(func(ci, io): camera_status_changed.emit(ci, io))
+	camera_manager.headlight_toggled.connect(func(ci, en): camera_headlight_toggled.emit(ci, en))
 
 # --- DUCT DRONE METADATA & CONSTANTS ---
 const INITIAL_DUCT_DRONE_POS := Vector2(300, 80)
@@ -360,6 +362,23 @@ func stop_spaceship_engines() -> void:
 	if ship and is_instance_valid(ship):
 		ship.stop_engines()
 
+func set_inertia_dampening(enabled: bool) -> void:
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and not nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer():
+			_rpc_client_set_inertia_dampening.rpc_id(1, enabled)
+		return
+	
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.inertia_dampening = enabled
+
+func get_inertia_dampening() -> bool:
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		return ship.inertia_dampening
+	return true
+
 func reset_spaceship_position() -> void:
 	if not is_ship_connected():
 		return
@@ -422,6 +441,15 @@ func _rpc_client_stop_engines() -> void:
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		ship.stop_engines()
+
+@rpc("any_peer", "call_remote", "reliable")
+func _rpc_client_set_inertia_dampening(enabled: bool) -> void:
+	var nm := _get_net_mgr()
+	if nm == null or not nm.get("is_host"):
+		return
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.inertia_dampening = enabled
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_client_reset_ship() -> void:
@@ -503,8 +531,8 @@ func reset_duct_drone() -> void:
 			_rpc_client_reset_duct_drone.rpc_id(1)
 		return
 	
-	duct_drone_pos = INITIAL_DUCT_DRONE_POS
-	duct_drone_heading = INITIAL_DUCT_DRONE_HEADING
+	duct_drone_pos = get_drone_spawn_pos()
+	duct_drone_heading = get_drone_spawn_heading()
 	duct_drone_speed = 0.0
 	duct_drone_linear_input = 0.0
 	duct_drone_angular_input = 0.0
@@ -570,7 +598,7 @@ func _update_duct_drone_physics(delta: float) -> void:
 	var repair_mult: float = float(_duct_drone_active_config.get("repair_speed_multiplier", 1.0)) * float(_duct_drone_active_config.get("repair_efficiency", 1.0))
 
 	# 1. Rotazione Tank (gira sul posto)
-	if absf(duct_drone_angular_input) > 0.01:
+	if absf(duct_drone_angular_input) > 0.01 and duct_drone_battery > 0.0:
 		var rot_step := duct_drone_angular_input * base_rot_speed * duct_drone_speed_mult * delta
 		duct_drone_heading += rot_step
 		duct_drone_heading = wrapf(duct_drone_heading, -PI, PI)
@@ -605,8 +633,12 @@ func _update_duct_drone_physics(delta: float) -> void:
 		var new_pos := duct_drone_pos + movement
 		duct_drone_pos = _constrain_duct_drone_movement(duct_drone_pos, new_pos)
 	else:
-		# Ricarica al dock station se il robottino è fermo alla base
-		if duct_drone_pos.distance_to(INITIAL_DUCT_DRONE_POS) < 30.0:
+		# Ricarica se il robottino è all'interno della stanza di ricarica
+		var bp := get_ship_blueprint()
+		var recharge_room: Variant = null
+		if bp and bp.recharge_room_id != "":
+			recharge_room = bp.get_room_by_id(bp.recharge_room_id)
+		if recharge_room and recharge_room.rect.has_point(duct_drone_pos):
 			var max_bat: float = float(_duct_drone_active_config.get("battery_max"))
 			duct_drone_battery = minf(max_bat, duct_drone_battery + 15.0 * delta)
 	
@@ -950,8 +982,8 @@ func _rpc_sync_duct_drone_initial_state(pos: Vector2, heading: float, speed: flo
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_sync_duct_drone_reset() -> void:
-	duct_drone_pos = INITIAL_DUCT_DRONE_POS
-	duct_drone_heading = INITIAL_DUCT_DRONE_HEADING
+	duct_drone_pos = get_drone_spawn_pos()
+	duct_drone_heading = get_drone_spawn_heading()
 	duct_drone_speed = 0.0
 	duct_drone_linear_input = 0.0
 	duct_drone_angular_input = 0.0
@@ -1358,6 +1390,28 @@ func apply_cams_config_to_open_windows(cfg: Dictionary) -> void:
 		var win: FakeWindow = _active_camera_windows[cam_id]
 		if win and is_instance_valid(win) and win.has_method("apply_optics_config"):
 			win.apply_optics_config(cfg)
+
+func set_camera_headlight(cam_id: String, enabled: bool) -> void:
+	camera_manager.set_headlight(cam_id, enabled)
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship) and ship.has_method("set_headlight"):
+		ship.set_headlight(cam_id, enabled)
+
+func is_camera_headlight_on(cam_id: String) -> bool:
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship) and ship.has_method("is_headlight_on"):
+		return ship.is_headlight_on(cam_id)
+	return camera_manager.is_headlight_on(cam_id)
+
+func toggle_camera_headlight(cam_id: String) -> bool:
+	var new_state := not is_camera_headlight_on(cam_id)
+	set_camera_headlight(cam_id, new_state)
+	return new_state
+
+func set_all_camera_headlights(enabled: bool) -> void:
+	for c in RoomDatabase.CAMERAS_METADATA:
+		if c and "id" in c:
+			set_camera_headlight(c.id, enabled)
 
 func _on_camera_window_closed(cam_id: String) -> void:
 	if _active_camera_windows.has(cam_id):
