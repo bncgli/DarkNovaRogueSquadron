@@ -167,3 +167,63 @@
   - **Criteri di accettazione**: Tutti i file .dat in ShipDriveManager e nella blueprint contengono chiavi di decriptazione univoche compatibili con BaseApp.
   - **File Task**: `task_queue/018_dat_files_encryption.md`
   - **Stato**: Completato (2026-09-03).
+
+- [ ] **TASK-031**: Overhaul Torretta Weapons, Puntatore Mouse & Classi Munizioni
+  - **Descrizione**: Conversione di Weapons in torretta con puntamento mouse, cattura puntatore con Spazio, selettore munizioni 1..4 (Mitragliatrice, Cannone, Missili con lock, Probe) e HUD traiettoria/lead indicator.
+  - **Criteri di accettazione**: Puntamento mouse fluido con Spazio per cattura, tasti 1-4 per cambio classe proiettile, lock missile a tempo/radar, HUD con lead indicator diegetico.
+  - **File Task**: `task_queue/019_weapons_turret_mouse_aim_ammo_types.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-032**: Ricostruzione ShieldMatrix & Dispositivi Difensivi Direzionali
+  - **Descrizione**: Layout bipartito (ologramma 4 settori a sinistra, dispositivi difensivi a destra), gestione dinamica di Gatling Auto e Flack Angel-Hair con assegnazione a singolo settore protetto.
+  - **Criteri di accettazione**: UI split sinistra/destra, lista estensibile dispositivi di difesa, assegnazione per settore, intercettazione automatica specifica per tipologia di minaccia.
+  - **File Task**: `task_queue/020_shield_matrix_directional_defense_systems.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-033**: Telemetria LifeSupport, Pressione/Temperatura & Dinamica Brecce/Fuoco
+  - **Descrizione**: Estensione del monitoraggio a Pressione e Temperatura per stanza, decompressione da brecce, azzeramento termico automatico nel vuoto, corti caldaia e ustioni letali da incendio.
+  - **Criteri di accettazione**: Telemetria 4 parametri per stanza, svuotamento pressione da brecce con caduta termica a zero, blocco riscaldamento su corto circuito, danni fisiologici da fuoco/asfissia.
+  - **File Task**: `task_queue/021_lifesupport_pressure_temp_fire_breaches.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-034**: DuctDrone: Danno Incendio, Barriere Stanze Sigillate & Fix Spawn/Luci
+  - **Descrizione**: Aggiunta danno Incendio, barriere invalicabili per il drone in caso di stanze sigillate dal LifeSupport, fix spawn su coordinate blueprint e avvio con luce spenta di default.
+  - **Criteri di accettazione**: Tipo danno FIRE riconosciuto e riparabile, paratie sigillate impediscono entrata/uscita al drone, spawn rigoroso da blueprint e luci spente all'avvio.
+  - **File Task**: `task_queue/022_duct_drone_fire_hazard_room_sealing_fixes.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-035**: Realismo Sensors: Ombre Ostacoli, Sweep 1km, Feed Probe & Ping Energetico
+  - **Descrizione**: Portata standard ridotta a 1km, ombre radar dietro asteroidi (Line of Sight), blip anonimi non identificati, rimozione dropdown bersagli, radar della probe integrato e ping 2km gated dall'energia.
+  - **Criteri di accettazione**: Raggio radar 1km, occlusione da ostacoli, blip diegetici puri, rimozione menu tendina, feed radar della sonda a schermo e ping subordinato ai MW disponibili.
+  - **File Task**: `task_queue/023_sensors_los_radar_probe_feed_energy_ping.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-036**: Overhaul Comms: Antenna Direzionale, Interazione Stazioni & Link EW
+  - **Descrizione**: Rimozione vecchio jamming/decripting, parte inferiore divisa in 2 (antenna direzionale con sweep manuale/auto/lock a sinistra, opzioni frequenza/stazioni a destra) e pulsante Connect per segnali EW stabili.
+  - **Criteri di accettazione**: Rimozione controlli obsoleti, antenna direzionale con ricezione ad angolo e auto-lock, menu attracco stazioni, abilitazione connessione Drive su segnale potente.
+  - **File Task**: `task_queue/024_comms_directional_antenna_station_docking_ew.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-037**: Nuova Applicazione 'Hack Exploits' & Suite Sottoprogrammi Drive Remoto
+  - **Descrizione**: Nuova app GodotOS per violazione informatica, montaggio icona "Target Drive" sul Desktop al Connect, sottoprogrammi con prerequisiti password/chiavi (spammer, blind_eye, 8loops, gout) e file sentinella di disattivazione.
+  - **Criteri di accettazione**: Montaggio Target Drive, validazione prerequisiti diegetici (.dat/password), esecuzione attacchi su OS bersaglio (popup, cams kill, loop G, rotazione sbloccata) e cessazione su eliminazione file.
+  - **File Task**: `task_queue/025_hack_exploits_subprograms_remote_drive.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-038**: Comandi Terminale: 'worm', 'decript' & 'datread'
+  - **Descrizione**: Introduzione minigioco Mastermind `worm` per password cartelle, cifrario interattivo `decript` per chiavi file .dat con frase pangramma e visualizzatore/editor `datread` per file di configurazione protetti.
+  - **Criteri di accettazione**: Comando `worm` con turni di indizio, `decript` con rivelazione graduale del testo in chiaro, `datread` integrato con il Text Editor per modifica controllata dei file .dat.
+  - **File Task**: `task_queue/026_terminal_commands_worm_decript_datread.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-039**: PodInfo: Telemetria Vitale, Microfono Virtuale Plancia & Stati Fisiologici
+  - **Descrizione**: Monitoraggio 4 parametri vitali reali (O2, Pressione, Temperatura, G), audio diegetico spazializzato/ovattato per eventi di bordo, suoni personaggio (asfissia, ustione, ipotermia) ed effetti visivi Blackout/Redout con GameOver.
+  - **Criteri di accettazione**: Parametri vitali sincronizzati con la nave, microfono virtuale con attenuazione diegetica per distanza, vocali/rantoli fisiologici, overlay e collasso vitale da G/anomalie.
+  - **File Task**: `task_queue/027_podinfo_vitals_spatial_audio_crew_effects.md`
+  - **Stato**: Pianificato.
+
+- [ ] **TASK-040**: GodotOS: Impilamento Notifiche in Coda & Riconoscimento Periferiche
+  - **Descrizione**: Layout dinamico per impilare verticalmente le notifiche simultanee senza sovrapposizioni visive e rilevamento automatico della connessione/disconnessione di controller/gamepad con notifica diegetica.
+  - **Criteri di accettazione**: Notifiche multiple separate e ordinate in stack verticale con transizioni fluide, rilevamento automatico connessione joystick/gamepad con nome periferica.
+  - **File Task**: `task_queue/028_godotos_notification_stacking_peripheral_detect.md`
+  - **Stato**: Pianificato.

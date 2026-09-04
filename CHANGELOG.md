@@ -28,3 +28,4 @@ Tutti i cambiamenti significativi a questo progetto saranno documentati in quest
 - Creazione programma terminale `PodInfo` per il monitoraggio dei parametri vitali e gestione flussi audio (TASK-007).
 - Standardizzazione della creazione stanze tramite `RoomDatabase` nell'editor, con auto-configurazione di dimensioni e dispositivi (TASK-012).
 - Sviluppo dell'applicazione `ShipBuilder`, un editor di navi completo integrato nel sistema operativo GodotOS (TASK-013).
+- Definizione e strutturazione completa dei task di sviluppo per le feature diegetiche di bordo (TASK-031 a TASK-040): Weapons Turret, ShieldMatrix Difesa Direzionale, LifeSupport Termobarico & Danni, DuctDrone Fire & Barriere Sigillate, Sensors LOS/Probe, Comms Antenna Direzionale & EW Link, Nuova App Hack Exploits con Drive Remoto, Comandi Terminale (`worm`, `decript`, `datread`), PodInfo Microfono Plancia & Stati Fisiologici, GodotOS Stack Notifiche & Rilevamento Periferiche.
