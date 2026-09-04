@@ -48,6 +48,11 @@ func trigger_rename() -> void:
 		NotificationManagerSingleton.spawn_notification("Non e' possibile rinominare 'Terminal Drive'.")
 		cancel_rename()
 		return
+
+	if folder.folder_name == "Target Drive" and (folder.folder_path == "Target Drive" or folder.folder_path == ""):
+		NotificationManagerSingleton.spawn_notification("Non e' possibile rinominare 'Target Drive'.")
+		cancel_rename()
+		return
 	
 	if folder.file_type != GlobalValues.FileType.FOLDER:
 		var old_folder_name: String = folder.folder_name

@@ -8,13 +8,16 @@ This directory contains the suite of applications for the GodotOS interface, rep
 | `FlightControl/` | Pilot interface for navigation, thrusters, and warp. | `spaceship.gd`, `StarSystemGridManager` |
 | `PowerGrid/` | Engineer interface for room-based power distribution and grid balancing. | `ship_blueprint.gd` (Centralized room-based logic) |
 | `ShieldMatrix/` | Deflector shield modulation and frequency management. | `spaceship.gd` |
-| `Comms/` | Radio communications and frequency tuning. | `NetworkManager` |
+| `Comms/` | Radio communications, directional antenna array, station docking contact, and EW drive link. | `NetworkManager`, `SpaceWorldManager`, `DockingManager` |
+| `HackExploits/` | Electronic warfare offensive exploits suite (Spammer, Blind Eye, 8Loops, GOUT) and remote target drive injection. | `RemoteDriveManager`, `ShipSoftwareManager`, `FolderPasswordManager` |
 | `DuctDrone/` | Internal repair drone control. | `ship_blueprint.gd` |
 | `ServiceDrone/` | External EVA and mining drone control. | `ServiceDroneEntity` |
 | `CargoBay/` | Inventory management and cargo storage. | `CargoManager` |
 | `Diagnostics/` | Subsystem health and hull integrity monitoring. | `spaceship.gd` |
 | `Sensors/` | Radar and spectrometry tracking. | `spaceship.gd` |
+| `Weapons/` | Tactical weapons, turret mouse aiming, 4 ammo types, missile lock, and lead prediction HUD. | `SpaceWorldManager`, `spaceship.gd` |
 | `LifeSupport/` | O2/CO2, temperature, and biosensor management. | `spaceship.gd` |
+| `PodInfo/` | Biometrics monitor (O2, Temp, Pressure, G-force), virtual bridge microphone with spatial attenuation, and crew physiological state effects (Blackout/Redout/GameOver). | `SpaceWorldManager`, `spaceship.gd`, `LifeSupportApp` |
 | `Logbook/` | Mission logs and historical communications. | N/A |
 | `StationHub/` | Station services (repairs, trading, missions). | `DockingManager`, `FluxEconomyManager` |
 | `Terminal/` | Command line interface with GDScript shell commands. | `TerminalDriveManager`, `ShipDriveManager` |

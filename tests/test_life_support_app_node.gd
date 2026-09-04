@@ -197,9 +197,193 @@ func _run_all_tests() -> void:
 	print("✔ Pulsante 'Soppressione Incendi Globale' verificato")
 	
 	# =========================================================================
-	# TEST 6: PULIZIA SEGNALI SU _EXIT_TREE()
+	# TEST 6: STRUTTURA DATI STANZA, TELEMETRIA A 4 PARAMETRI E METODI PUBBLICI
 	# =========================================================================
-	print("\n--- TEST 6: Pulizia Segnali e Disconnessione ---")
+	print("\n--- TEST 6: Struttura Dati Stanza e Metodi Pubblici ---")
+	var atmo_state: Dictionary = app.get_room_atmo_state(test_room_id)
+	assert(not atmo_state.is_empty(), "get_room_atmo_state deve restituire i dati della stanza")
+	assert(atmo_state.has("pressure_kpa"), "Lo stato della stanza deve contenere 'pressure_kpa'")
+	assert(atmo_state.has("temperature_c"), "Lo stato della stanza deve contenere 'temperature_c'")
+	assert(atmo_state.has("o2_pct"), "Lo stato della stanza deve contenere 'o2_pct'")
+	assert(atmo_state.has("co2_pct"), "Lo stato della stanza deve contenere 'co2_pct'")
+	assert(atmo_state.has("has_breach"), "Lo stato della stanza deve contenere 'has_breach'")
+	assert(atmo_state.has("has_short_circuit"), "Lo stato della stanza deve contenere 'has_short_circuit'")
+	assert(atmo_state.has("heater_online"), "Lo stato della stanza deve contenere 'heater_online'")
+	assert(atmo_state.has("is_fire_active"), "Lo stato della stanza deve contenere 'is_fire_active'")
+	assert(atmo_state.has("is_sealed"), "Lo stato della stanza deve contenere 'is_sealed'")
+	
+	var all_atmo := app.get_all_rooms_atmo_state()
+	assert(all_atmo.size() == app.rooms_state.size(), "get_all_rooms_atmo_state deve restituire tutte le stanze")
+	
+	if SpaceWorldManager:
+		var bridge_st := SpaceWorldManager.get_bridge_atmo_state()
+		assert(bridge_st.has("pressure_kpa") and bridge_st.has("temperature_c"), "get_bridge_atmo_state deve restituire telemetria plancia")
+	print("✔ Struttura dati ed export telemetria validati con successo")
+
+	# =========================================================================
+	# TEST 7: DINAMICA BRECCIA E DECOMPRESSIONE RAPIDA
+	# =========================================================================
+	print("\n--- TEST 7: Dinamica Breccia e Decompressione Rapida ---")
+	app.normalize_room_atmosphere(test_room_id)
+	app.set_room_breach(test_room_id, true)
+	app.rooms_state[test_room_id]["is_fire_active"] = true
+	await get_tree().process_frame
+	
+	# Simula steps di decompressione
+	for i in range(10):
+		app._simulate_atmosphere_step(0.5)
+	
+	var breached_state: Dictionary = app.get_room_atmo_state(test_room_id)
+	assert(breached_state["pressure_kpa"] < 10.0, "La pressione deve crollare rapidamente su breccia (attuale: %f)" % breached_state["pressure_kpa"])
+	assert(breached_state["o2_pct"] < 5.0, "L'ossigeno deve crollare su breccia (attuale: %f)" % breached_state["o2_pct"])
+	assert(breached_state["is_fire_active"] == false, "L'incendio deve estinguersi per mancanza di pressione/ossigeno")
+	print("✔ Decompressione da breccia ed estinzione automatica fuoco verificate")
+
+	# =========================================================================
+	# TEST 8: AZZERAMENTO TERMICO NEL VUOTO (PRESSIONE <= 1.0 kPa)
+	# =========================================================================
+	print("\n--- TEST 8: Azzeramento Termico nel Vuoto ---")
+	app.rooms_state[test_room_id]["pressure_kpa"] = 0.0
+	app.rooms_state[test_room_id]["temperature_c"] = 21.5
+	app.rooms_state[test_room_id]["heater_online"] = true
+	
+	for i in range(5):
+		app._simulate_atmosphere_step(0.5)
+	
+	var vacuum_state: Dictionary = app.get_room_atmo_state(test_room_id)
+	assert(vacuum_state["temperature_c"] < 1.0, "Nel vuoto la temperatura deve decadere verso 0.0 °C (attuale: %f)" % vacuum_state["temperature_c"])
+	print("✔ Decadimento termico nel vuoto spaziale verificato")
+
+	# =========================================================================
+	# TEST 9: CORTOCIRCUITO, SPEGNIMENTO CALDAIA E RAFFREDDAMENTO
+	# =========================================================================
+	print("\n--- TEST 9: Cortocircuito e Disattivazione Caldaia ---")
+	app.normalize_room_atmosphere(test_room_id)
+	assert(app.rooms_state[test_room_id]["heater_online"] == true, "La caldaia deve essere online inizialmente")
+	
+	# Provoca corto circuito
+	app.set_room_short_circuit(test_room_id, true)
+	app._simulate_atmosphere_step(0.1)
+	assert(app.rooms_state[test_room_id]["heater_online"] == false, "La caldaia deve spegnersi con corto circuito")
+	
+	# Simula raffreddamento progressivo in stanza pressurizzata
+	var prev_temp: float = app.rooms_state[test_room_id]["temperature_c"]
+	for i in range(10):
+		app._simulate_atmosphere_step(0.5)
+	var cooled_temp: float = app.rooms_state[test_room_id]["temperature_c"]
+	assert(cooled_temp < prev_temp, "La temperatura deve diminuire progressivamente a caldaia spenta")
+	
+	# Ripristina corto circuito
+	app.set_room_short_circuit(test_room_id, false)
+	app._simulate_atmosphere_step(0.1)
+	assert(app.rooms_state[test_room_id]["heater_online"] == true, "La caldaia deve tornare online a riparazione effettuata")
+	
+	# Simula riscaldamento normale
+	for i in range(10):
+		app._simulate_atmosphere_step(0.5)
+	assert(app.rooms_state[test_room_id]["temperature_c"] > cooled_temp, "La temperatura deve risalire verso 21.5°C")
+	print("✔ Spegnimento caldaia da corto circuito e ciclo termico verificati")
+
+	# =========================================================================
+	# TEST 10: DINAMICA INCENDIO E PICCO TERMICO CRITICO
+	# =========================================================================
+	print("\n--- TEST 10: Incendio e Picco Termico a 420°C ---")
+	app.normalize_room_atmosphere(test_room_id)
+	app.set_room_fire(test_room_id, true)
+	
+	for i in range(10):
+		app._simulate_atmosphere_step(0.5)
+	
+	var fire_state: Dictionary = app.get_room_atmo_state(test_room_id)
+	assert(fire_state["temperature_c"] > 100.0, "L'incendio deve elevare la temperatura a picchi critici (attuale: %f)" % fire_state["temperature_c"])
+	assert(fire_state["o2_pct"] < 21.0, "L'incendio deve consumare ossigeno (attuale: %f)" % fire_state["o2_pct"])
+	print("✔ Picco termico critico da fuoco e consumo ossigeno verificati")
+
+	# =========================================================================
+	# TEST 11: EMISSIONE SEGNALE ANOMALIE ATMOSFERICHE
+	# =========================================================================
+	print("\n--- TEST 11: Segnale atmosphere_anomaly_detected ---")
+	var detected_anomalies: Array[String] = []
+	var anomaly_callable := func(r_id: String, a_type: String) -> void:
+		if r_id == test_room_id:
+			detected_anomalies.append(a_type)
+	
+	app.atmosphere_anomaly_detected.connect(anomaly_callable)
+	app.normalize_room_atmosphere(test_room_id)
+	app._room_anomalies.clear()
+	
+	# Trigger Fire anomaly
+	app.set_room_fire(test_room_id, true)
+	app._simulate_atmosphere_step(0.1)
+	assert(detected_anomalies.has("FIRE"), "Il segnale deve notificare l'anomalia FIRE")
+	
+	# Trigger Breach anomaly
+	app.set_room_breach(test_room_id, true)
+	app._simulate_atmosphere_step(0.1)
+	assert(detected_anomalies.has("BREACH"), "Il segnale deve notificare l'anomalia BREACH")
+	
+	# Trigger Short Circuit anomaly
+	app.set_room_short_circuit(test_room_id, true)
+	app._simulate_atmosphere_step(0.1)
+	assert(detected_anomalies.has("SHORT_CIRCUIT"), "Il segnale deve notificare l'anomalia SHORT_CIRCUIT")
+	
+	app.atmosphere_anomaly_detected.disconnect(anomaly_callable)
+	print("✔ Segnale atmosphere_anomaly_detected verificato per tutte le anomalie")
+
+	# =========================================================================
+	# TEST 12: WIDGET ROOMATMOCARD A 4 PARAMETRI E BADGE ALLARME
+	# =========================================================================
+	print("\n--- TEST 12: Widget RoomAtmoCard Telemetria e Badge Allarmi ---")
+	var card: RoomAtmoCard = app.room_card_widgets[test_room_id] as RoomAtmoCard
+	assert(card != null, "La scheda stanza per test_room_id deve esistere")
+	assert(card.pressure_label != null, "pressure_label deve essere presente nel widget")
+	assert(card.temp_label != null, "temp_label deve essere presente nel widget")
+	assert(card.heater_label != null, "heater_label deve essere presente nel widget")
+	assert(card.status_badge != null, "status_badge deve essere presente nel widget")
+	
+	# 12.1 Normale
+	card.update_telemetry({
+		"id": test_room_id, "name": "Plancia", "pressure_kpa": 101.3,
+		"temperature_c": 21.5, "o2_pct": 21.0, "co2_pct": 0.04,
+		"heater_online": true, "has_breach": false, "has_short_circuit": false,
+		"is_fire_active": false, "is_sealed": false, "is_suppression_active": false
+	})
+	assert(card.status_badge.text == "● NORMALE", "Badge deve essere ● NORMALE")
+	assert(card.heater_label.text == "Caldaia: ON", "Heater label deve essere Caldaia: ON")
+	
+	# 12.2 Incendio
+	card.update_telemetry({
+		"id": test_room_id, "name": "Plancia", "pressure_kpa": 101.3,
+		"temperature_c": 21.5, "o2_pct": 21.0, "co2_pct": 0.04,
+		"heater_online": true, "has_breach": false, "has_short_circuit": false,
+		"is_fire_active": true, "is_sealed": false, "is_suppression_active": false
+	})
+	assert("INCENDIO" in card.status_badge.text, "Badge deve indicare INCENDIO")
+	
+	# 12.3 Breccia
+	card.update_telemetry({
+		"id": test_room_id, "name": "Plancia", "pressure_kpa": 101.3,
+		"temperature_c": 21.5, "o2_pct": 21.0, "co2_pct": 0.04,
+		"heater_online": true, "has_breach": true, "has_short_circuit": false,
+		"is_fire_active": false, "is_sealed": false, "is_suppression_active": false
+	})
+	assert("BRECCIA" in card.status_badge.text, "Badge deve indicare BRECCIA")
+	
+	# 12.4 Corto circuito
+	card.update_telemetry({
+		"id": test_room_id, "name": "Plancia", "pressure_kpa": 101.3,
+		"temperature_c": 21.5, "o2_pct": 21.0, "co2_pct": 0.04,
+		"heater_online": false, "has_breach": false, "has_short_circuit": true,
+		"is_fire_active": false, "is_sealed": false, "is_suppression_active": false
+	})
+	assert("CORTO" in card.status_badge.text, "Badge deve indicare CORTO CALDAIA")
+	assert("CORTO" in card.heater_label.text, "Heater label deve indicare CORTO")
+	print("✔ Widget RoomAtmoCard telemetria a 4 parametri e badge allarmi validati")
+	
+	# =========================================================================
+	# TEST 13: PULIZIA SEGNALI SU _EXIT_TREE()
+	# =========================================================================
+	print("\n--- TEST 13: Pulizia Segnali e Disconnessione ---")
 	app.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame

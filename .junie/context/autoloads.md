@@ -4,7 +4,7 @@
 |------|------|----------------|
 | **HotkeyManager** | `Scenes/Autoloads/Hotkey Manager/hotkey_manager.tscn` | Handles global keyboard shortcuts. |
 | **ContextMenu** | `Scenes/Autoloads/Context Menu/context_menu.tscn` | Global right-click menu system. |
-| **NotificationManager** | `Scenes/Autoloads/Notification Manager/notification_manager.tscn` | OS-style notifications. |
+| **NotificationManager** | `Scenes/Autoloads/Notification Manager/notification_manager.tscn` | OS-style notification stacking queue & peripheral detection. |
 | **CopyPasteManager** | `Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.tscn` | Clipboard for file operations. |
 | **GlobalValues** | `Scenes/Autoloads/GlobalValues/global_values.tscn` | Tracks current active window. |
 | **DefaultValues** | `Scenes/Autoloads/Default Values/default_values.tscn` | Handles user preferences (wallpaper, zoom, etc.). |

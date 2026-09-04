@@ -103,6 +103,10 @@ func _on_window_focus() -> void:
 			var sdm := get_node_or_null("/root/ShipDriveManager")
 			if not sdm or not sdm.get("is_drive_mounted") or not sdm.is_ship_connected():
 				continue
+		elif folder_name == "Target Drive":
+			var rdm := get_node_or_null("/root/RemoteDriveManager")
+			if not rdm or not rdm.get("is_target_drive_mounted"):
+				continue
 		new_file_names.append(folder_name)
 	
 	if current_file_names.size() != new_file_names.size():

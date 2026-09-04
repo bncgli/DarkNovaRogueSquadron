@@ -104,7 +104,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 13
-text = "📡 ARRAY SENSORI & MAPPA TATTICA (50 KM)"
+text = "📡 ARRAY SENSORI & MAPPA TATTICA (1 KM)"
 
 [node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
 unique_name_in_owner = true
@@ -174,39 +174,14 @@ popup/item_1/id = 1
 popup/item_2/text = "Elevazione Spaziale 3D"
 popup/item_2/id = 2
 
-[node name="OptionRange" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+[node name="RangeIndicatorLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
-selected = 3
-item_count = 4
-popup/item_0/text = "Portata: 5 KM"
-popup/item_0/id = 0
-popup/item_1/text = "Portata: 10 KM"
-popup/item_1/id = 1
-popup/item_2/text = "Portata: 25 KM"
-popup/item_2/id = 2
-popup/item_3/text = "Portata: 50 KM"
-popup/item_3/id = 3
-
-[node name="OptionFilter" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 11
-selected = 0
-item_count = 5
-popup/item_0/text = "Filtro: Tutti i Contatti"
-popup/item_0/id = 0
-popup/item_1/text = "Filtro: Minerali & Asteroidi"
-popup/item_1/id = 1
-popup/item_2/text = "Filtro: Relitti Spaziali"
-popup/item_2/id = 2
-popup/item_3/text = "Filtro: Minacce & Ostili"
-popup/item_3/id = 3
-popup/item_4/text = "Filtro: Fari & Stazioni"
-popup/item_4/id = 4
+text = "📡 SCANNER: 1000m | PING: 2000m"
+horizontal_alignment = 2
 
 [node name="RadarContainer" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
 custom_minimum_size = Vector2(380, 360)
@@ -235,7 +210,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_ping")
-text = "💥 PING ATTIVO (50km)"
+text = "💥 PING ATTIVO (2km - 120 MW)"
 
 [node name="TelemetryPanel" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox"]
 custom_minimum_size = Vector2(290, 0)
@@ -258,12 +233,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "🎯 CONTATTO / BERSAGLIO ATTIVO:"
-
-[node name="TargetOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 11
+text = "🎯 CONTATTO SELEZIONATO (RADAR):"
 
 [node name="TargetDetailsCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
 layout_mode = 2
@@ -278,7 +248,7 @@ theme_override_constants/margin_bottom = 6
 
 [node name="TargetDetailsLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard/Margin"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 95)
+custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 10
 theme_override_font_sizes/bold_font_size = 10
@@ -286,26 +256,26 @@ bbcode_enabled = true
 text = "Nessun bersaglio selezionato."
 scroll_active = false
 
-[node name="SpectrometryCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+[node name="ProbeFeedCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/SpectrometryCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard"]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="SpectrometryLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/SpectrometryCard/Margin"]
+[node name="ProbeStatusLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard/Margin"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/normal_font_size = 10
 theme_override_font_sizes/bold_font_size = 10
 bbcode_enabled = true
-text = "In attesa di scansione spettrometrica..."
+text = "[color=#557788]Nessuna sonda telemetrica attiva in volo.[/color]"
 
 [node name="TacticalActionsVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
 layout_mode = 2
@@ -377,7 +347,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 10
-text = "PING: PRONTO (50 km)"
+text = "PING: PRONTO (2 km)"
 
 [node name="RadarDamageBadge" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
 unique_name_in_owner = true

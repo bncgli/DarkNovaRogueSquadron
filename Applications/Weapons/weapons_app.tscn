@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://Applications/Weapons/weapons_app.gd" id="1_weapons_script"]
 [ext_resource type="Script" path="res://Applications/Weapons/weapons_radar_canvas.gd" id="2_radar_script"]
+[ext_resource type="Script" path="res://Applications/Weapons/weapons_trajectory_hud.gd" id="3_trajectory_hud"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.05, 0.07, 0.1, 0.85)
@@ -208,36 +209,43 @@ theme_override_constants/separation = 8
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
 theme_override_font_sizes/font_size = 11
-text = "GRUPPI D'ARMA:"
+text = "MUNIZIONI / ARMI [1-4]:"
 
-[node name="BtnGroupLaser" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+[node name="BtnAmmoMG" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 button_pressed = true
-text = "⚡ Torrette Laser Binate"
+text = "1. 💥 Mitragliatrice"
 
-[node name="BtnGroupTorpedo" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+[node name="BtnAmmoCannon" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
-text = "🚀 Siluri Pesanti"
+text = "2. ⚡ Cannone"
 
-[node name="BtnGroupPDG" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+[node name="BtnAmmoMissile" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
-text = "🛡️ PDG Difesa Prossimità"
+text = "3. 🚀 Missili"
+
+[node name="BtnAmmoProbe" type="Button" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "4. 📡 Sonde"
 
 [node name="SelectedGroupLabel" type="Label" parent="ScrollContainer/Margin/VBox/GroupSelectorCard/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "SISTEMA ATTIVO: TORRETTE LASER BINATE"
+text = "SISTEMA ATTIVO: [1] MITRAGLIATRICE PESANTE"
 
 [node name="TelemetryGaugesCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
 layout_mode = 2
@@ -332,7 +340,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
-text = "MUNIZIONI PDG GATLING:"
+text = "MUNIZIONI MITRAGLIATRICE:"
 
 [node name="AmmoPDGLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoPDGHBox"]
 unique_name_in_owner = true
@@ -340,6 +348,22 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "500 / 500"
+
+[node name="AmmoProbeHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoProbeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "SONDE TELEMETRICHE:"
+
+[node name="AmmoProbeLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryGaugesCard/Margin/Grid/AmmoProbeHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 1, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "4 / 4"
 
 [node name="OverheatWarningLabel" type="Label" parent="ScrollContainer/Margin/VBox"]
 unique_name_in_owner = true
@@ -481,6 +505,17 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="TrajectoryHUD" type="Control" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_trajectory_hud")
 
 [node name="FeedCrosshair" type="Control" parent="ScrollContainer/Margin/VBox/MainColumnsHBox/CameraFeedCard/Margin/VBox/FeedPanel"]
 unique_name_in_owner = true

@@ -108,7 +108,7 @@ decryption_key=SENS-CFG-7815
 
 [SWEEP]
 sweep_frequency_hz=12.0
-active_ping_radius=50000.0
+active_ping_radius=2000.0
 noise_filter=0.92
 "
 is_protected = true
@@ -958,6 +958,7 @@ drive_passwords = {
 "Ship Drive/Programs/DuctDrone": "DRONE-7815",
 "Ship Drive/Programs/FlightControls": "FLIGHT-7815",
 "Ship Drive/Programs/FluxWallet": "FLUX-7815",
+"Ship Drive/Programs/HackExploits": "HACK-7815",
 "Ship Drive/Programs/LifeSupport": "LIFE-7815",
 "Ship Drive/Programs/Logbook": "LOGB-7815",
 "Ship Drive/Programs/PowerGrid": "GRID-7815",

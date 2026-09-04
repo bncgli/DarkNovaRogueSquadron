@@ -38,6 +38,7 @@ const DEFAULT_SHIP_APP_PATHS: Array[String] = [
 	"res://Applications/CargoBay/cargo_bay_app.tres",
 	"res://Applications/FluxWallet/flux_wallet.tres",
 	"res://Applications/Comms/comms_app.tres",
+	"res://Applications/HackExploits/hack_exploits_app.tres",
 	"res://Applications/SystemMap/system_map_app.tres"
 ]
 

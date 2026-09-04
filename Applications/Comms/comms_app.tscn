@@ -85,7 +85,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 14
-text = "📡 COMMS, ELECTRONIC WARFARE & HACKWARFARE"
+text = "📡 COMMS & DIRECTIONAL ANTENNA ARRAY"
 
 [node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
 unique_name_in_owner = true
@@ -219,150 +219,149 @@ theme_override_font_sizes/font_size = 10
 disabled = true
 text = "📥 Registra Trascrizione"
 
-[node name="EWAndCryptoHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="BottomSplit" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="EWCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox"]
+[node name="AntennaSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="EWTitle" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox"]
+[node name="AntennaTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.4, 0.3, 1)
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "⚡ GUERRA ELETTRONICA (JAMMING & SPOOFING)"
+text = "🧭 CONTROLLI ANTENNA DIREZIONALE"
 
-[node name="JammerHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox"]
+[node name="HeadingHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="JammerSwitch" type="CheckButton" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerHBox"]
-unique_name_in_owner = true
+[node name="HeadingLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
-text = "Emettitore Jammer"
+text = "Azimut:"
 
-[node name="JammerPowerSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerHBox"]
+[node name="AntennaHeadingSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 50.0
-max_value = 180.0
-step = 5.0
-value = 120.0
+min_value = 0.0
+max_value = 360.0
+step = 1.0
+value = 0.0
 
-[node name="JammerPowerLabel" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerHBox"]
+[node name="AntennaHeadingValue" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
-text = "120 MW"
+text = "000°"
 horizontal_alignment = 2
 
-[node name="JammerOptionsGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox"]
-layout_mode = 2
-columns = 2
-
-[node name="ModeLabel" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerOptionsGrid"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = "Modo Jammer:"
-
-[node name="JammerModeOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerOptionsGrid"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 10
-
-[node name="SpoofLabel" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerOptionsGrid"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = "Spoof IFF:"
-
-[node name="SpoofSignatureOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox/JammerOptionsGrid"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 10
-
-[node name="JammerEffectLabel" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/EWCard/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 9
-text = "Efficienza Jammer: 67% | Raggio: 15000 m"
-
-[node name="CryptoCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="CryptoTitle" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.4, 0.9, 1)
-theme_override_font_sizes/font_size = 11
-text = "💻 HACKWARFARE & DECODIFICA CIFRARI"
-
-[node name="CipherPackageOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 10
-
-[node name="ProgressHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox"]
+[node name="AntennaButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="DecryptionProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox/ProgressHBox"]
+[node name="BtnAutoRotate" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 10
+toggle_mode = true
+text = "🔄 Auto-Rotate"
 
-[node name="BtnStartDecrypt" type="Button" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox/ProgressHBox"]
+[node name="BtnFreqLock" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
-text = "🔓 Decifra"
+toggle_mode = true
+text = "🔒 Freq Lock"
 
-[node name="DecryptionStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox"]
+[node name="AntennaStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "🧭 PUNTAMENTO MANUALE: 000° (Cono ±25°)"
+text_overrun_behavior = 3
+
+[node name="AntennaGainLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 9
-text = "Pronto per la decrittazione."
+text = "Guadagno antenna: 100% | Cono di focalizzazione attivo"
 
-[node name="ExtractedKeyHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="ExtractedKeyEdit" type="LineEdit" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox/ExtractedKeyHBox"]
+[node name="SignalInteractionSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 10
-editable = false
-placeholder_text = "Nessuna chiave estratta"
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="BtnSaveToShipDrive" type="Button" parent="ScrollContainer/Margin/VBox/EWAndCryptoHBox/CryptoCard/VBox/ExtractedKeyHBox"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="InteractionTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
+theme_override_font_sizes/font_size = 11
+text = "📡 RICEZIONE & INTERAZIONE FREQUENZA"
+
+[node name="SignalDetailLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 9
+bbcode_enabled = true
+text = "[color=#7799aa]Nessuna trasmissione agganciata.[/color]"
+scroll_following = true
+
+[node name="StationActionsBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnRequestDocking" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "🛬 Richiedi Attracco"
+
+[node name="BtnStationEmergency" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "🚨 Emergenza"
+
+[node name="BtnStationTrade" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "💼 Mercantile"
+
+[node name="BtnConnectDrive" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
 theme_override_font_sizes/font_size = 10
 disabled = true
-text = "💾 Salva su Drive"
+text = "🔗 CONNETTI A DRIVE BERSAGLIO"
 
 [node name="LogCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
 layout_mode = 2

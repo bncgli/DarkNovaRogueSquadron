@@ -1,11 +1,11 @@
 class_name CommsApp
 extends BaseApp
 
-## Applicazione GodotOS per le Comunicazioni Subspaziali, Guerra Elettronica (EW) e Decodifica Cifrari (Hackwarfare).
+## Applicazione GodotOS per le Comunicazioni Subspaziali, Antenna Direzionale e Intrusione EW.
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
-## Punto 5.4 del Documento di Feature Design Dark Nova.
+## Task TASK-036.
 
-const APP_TITLE: String = "Communications, Electronic Warfare & Hackwarfare"
+const APP_TITLE: String = "Communications & Directional Antenna Array"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(680, 480)
 
 signal docking_clearance_requested(station_id: String)
@@ -37,21 +37,23 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Comms/crypto_tunin
 @onready var btn_tune_pirate: Button = get_node_or_null("%BtnTunePirate")
 @onready var btn_listen_signal: Button = get_node_or_null("%BtnListenSignal")
 
-# Guerra Elettronica (EW)
-@onready var jammer_switch: CheckButton = get_node_or_null("%JammerSwitch")
-@onready var jammer_power_slider: HSlider = get_node_or_null("%JammerPowerSlider")
-@onready var jammer_power_label: Label = get_node_or_null("%JammerPowerLabel")
-@onready var jammer_mode_option: OptionButton = get_node_or_null("%JammerModeOption")
-@onready var spoof_signature_option: OptionButton = get_node_or_null("%SpoofSignatureOption")
-@onready var jammer_effect_label: Label = get_node_or_null("%JammerEffectLabel")
+# Settore Sinistro: Controlli Antenna Direzionale
+@onready var antenna_sector: PanelContainer = get_node_or_null("%AntennaSector")
+@onready var antenna_heading_slider: HSlider = get_node_or_null("%AntennaHeadingSlider")
+@onready var antenna_heading_value: Label = get_node_or_null("%AntennaHeadingValue")
+@onready var btn_auto_rotate: Button = get_node_or_null("%BtnAutoRotate")
+@onready var btn_freq_lock: Button = get_node_or_null("%BtnFreqLock")
+@onready var antenna_status_label: Label = get_node_or_null("%AntennaStatusLabel")
+@onready var antenna_gain_label: Label = get_node_or_null("%AntennaGainLabel")
 
-# Modulo Hackwarfare & Cifrari
-@onready var cipher_package_option: OptionButton = get_node_or_null("%CipherPackageOption")
-@onready var decryption_progress_bar: ProgressBar = get_node_or_null("%DecryptionProgressBar")
-@onready var decryption_status_label: Label = get_node_or_null("%DecryptionStatusLabel")
-@onready var btn_start_decrypt: Button = get_node_or_null("%BtnStartDecrypt")
-@onready var extracted_key_edit: LineEdit = get_node_or_null("%ExtractedKeyEdit")
-@onready var btn_save_to_ship_drive: Button = get_node_or_null("%BtnSaveToShipDrive")
+# Settore Destro: Ricezione & Interazione Frequenza
+@onready var signal_interaction_sector: PanelContainer = get_node_or_null("%SignalInteractionSector")
+@onready var signal_detail_label: RichTextLabel = get_node_or_null("%SignalDetailLabel")
+@onready var station_actions_box: Container = get_node_or_null("%StationActionsBox")
+@onready var btn_request_docking: Button = get_node_or_null("%BtnRequestDocking")
+@onready var btn_station_emergency: Button = get_node_or_null("%BtnStationEmergency")
+@onready var btn_station_trade: Button = get_node_or_null("%BtnStationTrade")
+@onready var btn_connect_drive: Button = get_node_or_null("%BtnConnectDrive")
 
 # Registro Comunicazioni & Log
 @onready var comms_log_text: RichTextLabel = get_node_or_null("%CommsLogText")
@@ -60,15 +62,11 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Comms/crypto_tunin
 
 # --- STATO OPERATIVO E PARAMETRI RUNTIME ---
 var current_frequency: float = 1420.0
-var is_jamming_active: bool = false
-var jamming_power_mw: float = 120.0
-var jamming_mode: int = 0 # 0: Radar Blind, 1: Full Spectrum
-var current_spoof_sig: String = "CORVETTE_CIVILIAN"
-
-var is_decrypting: bool = false
-var decryption_progress: float = 0.0
-var selected_package_index: int = 0
-var last_decrypted_text: String = ""
+var antenna_azimuth_deg: float = 0.0 # 0..360 gradi
+var is_auto_rotating: bool = false
+var auto_rotate_speed: float = 45.0 # gradi/sec
+var is_frequency_locked: bool = false
+var locked_signal_id: String = ""
 
 var can_control_comms: bool = true
 var is_comms_powered: bool = true
@@ -76,12 +74,15 @@ var is_comms_powered: bool = true
 # Parametri .DAT attivi con fallback ai valori di default
 var active_config: Dictionary = {
 	"bandwidth_hz": 1420.0,
-	"decryption_speed_multiplier": 1.0,
+	"antenna_gain": 1.0,
+	"auto_rotate_speed": 45.0,
+	"reception_cone_deg": 25.0,
 	"subspace_relay_active": true,
 	"auto_tune_sos": true,
 	"signal_amplification": 1.2,
-	"jamming_power_mw": 120.0,
 	"signal_noise_ratio": 0.85,
+	"decryption_speed_multiplier": 1.0,
+	"jamming_power_mw": 120.0,
 	"spoofing_signature": "CORVETTE_CIVILIAN",
 	"jamming_radius": 15000.0,
 	"overclock_ew_boost": 1.0,
@@ -98,6 +99,10 @@ var available_signals: Array[Dictionary] = [
 		"name": "📡 [SOS EMERGENZA] Relitto Vascello Scout",
 		"desc": "Richiesta soccorso da corvetta derelitta in avaria. Coordinate settore 4.",
 		"source": "Beacon Automatico Mayday",
+		"bearing_deg": 45.0,
+		"distance": 650.0,
+		"type": "DERELICT",
+		"target_ship_id": "SCOUT-DERELICT-04",
 		"unlocked": true
 	},
 	{
@@ -107,25 +112,36 @@ var available_signals: Array[Dictionary] = [
 		"name": "🌐 [RETE SUBSPAZIALE] Weyland-Yutani Corp Relay",
 		"desc": "Bollettino commerciale e direttive corporative di settore. Canale idrogeno attivo.",
 		"source": "Mainframe Subspazio",
+		"bearing_deg": 180.0,
+		"distance": 3200.0,
+		"type": "RELAY",
 		"unlocked": true
 	},
 	{
 		"id": "station_trading",
 		"freq": 1840.0,
-		"strength": 0.8,
+		"strength": 0.85,
 		"name": "📻 [CANALE CIVILE] Stazione Spaziale Freccia",
 		"desc": "Aggiornamento prezzi combustibile e disponibilità baia d'attracco.",
 		"source": "Torre di Controllo Freccia",
+		"bearing_deg": 270.0,
+		"distance": 1100.0,
+		"type": "STATION",
+		"station_id": "STATION-FRECCIA",
 		"unlocked": true
 	},
 	{
 		"id": "pirate_encrypted",
 		"freq": 2185.2,
-		"strength": 0.75,
+		"strength": 0.80,
 		"name": "🏴‍☠️ [BURST CRITTOGRAFATO] Canale Pirata Clandestino",
-		"desc": "Trasmissione a pacchetti cifrati. Richiede modulo Hackwarfare per estrazione dati.",
+		"desc": "Trasmissione da corvetta da guerra corsara. Intercettazione telemetria e drive bersaglio.",
 		"source": "Predoni della Cintura",
-		"unlocked": false
+		"bearing_deg": 120.0,
+		"distance": 950.0,
+		"type": "CORVETTE",
+		"target_ship_id": "PIRATE-CORVETTE-01",
+		"unlocked": true
 	},
 	{
 		"id": "deep_space_beacon",
@@ -134,70 +150,22 @@ var available_signals: Array[Dictionary] = [
 		"name": "🛰️ [RADIONAVIGAZIONE] Faro Deep Space Alpha",
 		"desc": "Sincronizzazione orologio atomico e dati gravitazionali di settore.",
 		"source": "Faro Navigazione Stella 78",
+		"bearing_deg": 315.0,
+		"distance": 4500.0,
+		"type": "BEACON",
 		"unlocked": true
-	}
-]
-
-# Pacchetti crittografati recuperati da decifrare
-var encrypted_packages: Array[Dictionary] = [
-	{
-		"id": "pkg_drone_firmware",
-		"name": "📦 Sonda Spaziale Relitto #41 - Firmware .DAT",
-		"difficulty": 1.0,
-		"extracted_key": "DRONE-7815",
-		"intel_text": "Firmware crittografato recuperato da drone manutenzione derelitto. Password di sblocco: DRONE-7815"
-	},
-	{
-		"id": "pkg_pirate_burst",
-		"name": "📦 Burst Crittografato Pirata - Credenziali Stazione",
-		"difficulty": 1.4,
-		"extracted_key": "PIRATE-BURST-882",
-		"intel_text": "Intercettazione comunicazioni pirata. Chiave d'accesso per il mercato nero: PIRATE-BURST-882"
-	},
-	{
-		"id": "pkg_corp_directive",
-		"name": "📦 Direttiva Segreta Weyland-Yutani Corp",
-		"difficulty": 1.8,
-		"extracted_key": "COMM-7815",
-		"intel_text": "Direttiva corporativa confidenziale. Password cartella di sicurezza Comms: COMM-7815"
 	}
 ]
 
 func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
-	_populate_options_ui()
 	_connect_system_signals()
 	_setup_ui_signals()
 	_update_connection_state()
 	load_dat_configuration()
 	_update_permissions()
 	_refresh_ui_display()
-	_log_comms_message("[color=#64c8ff][SISTEMA][/color] Suite Comunicazioni Subspaziali & EW inizializzata.")
-
-func _populate_options_ui() -> void:
-	# Opzioni Modalità Jammer
-	if jammer_mode_option:
-		jammer_mode_option.clear()
-		jammer_mode_option.add_item("Radar Blind (Acceca Sensori & Missili)", 0)
-		jammer_mode_option.add_item("Full Spectrum (Blackout Comms Locali)", 1)
-		jammer_mode_option.selected = 0
-	
-	# Opzioni Firme Spoofing IFF
-	if spoof_signature_option:
-		spoof_signature_option.clear()
-		spoof_signature_option.add_item("CORVETTE_CIVILIAN (Corvetta Civile)", 0)
-		spoof_signature_option.add_item("CARGO_HAULER_MINING (Cargo Minerario Pesante)", 1)
-		spoof_signature_option.add_item("DERELICT_DEBRIS (Relitto Disattivato)", 2)
-		spoof_signature_option.add_item("MILITARY_ESCORT (Scorta Militare Pesante)", 3)
-		spoof_signature_option.selected = 0
-	
-	# Opzioni Pacchetti Cifrati
-	if cipher_package_option:
-		cipher_package_option.clear()
-		for i in range(encrypted_packages.size()):
-			var pkg: Dictionary = encrypted_packages[i]
-			cipher_package_option.add_item(str(pkg.get("name", "Pacchetto Ignoto")), i)
-		cipher_package_option.selected = 0
+	_log_comms_message("[color=#64c8ff][SISTEMA][/color] Suite Ricezione Comms & Antenna Direzionale inizializzata.")
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -240,26 +208,26 @@ func _setup_ui_signals() -> void:
 	if btn_listen_signal and not btn_listen_signal.pressed.is_connected(_on_btn_listen_signal_pressed):
 		btn_listen_signal.pressed.connect(_on_btn_listen_signal_pressed)
 	
-	if jammer_switch and not jammer_switch.toggled.is_connected(_on_jammer_toggled):
-		jammer_switch.toggled.connect(_on_jammer_toggled)
+	if antenna_heading_slider and not antenna_heading_slider.value_changed.is_connected(_on_antenna_heading_changed):
+		antenna_heading_slider.value_changed.connect(_on_antenna_heading_changed)
 	
-	if jammer_power_slider and not jammer_power_slider.value_changed.is_connected(_on_jammer_power_changed):
-		jammer_power_slider.value_changed.connect(_on_jammer_power_changed)
+	if btn_auto_rotate and not btn_auto_rotate.toggled.is_connected(_on_btn_auto_rotate_toggled):
+		btn_auto_rotate.toggled.connect(_on_btn_auto_rotate_toggled)
 	
-	if jammer_mode_option and not jammer_mode_option.item_selected.is_connected(_on_jammer_mode_selected):
-		jammer_mode_option.item_selected.connect(_on_jammer_mode_selected)
+	if btn_freq_lock and not btn_freq_lock.toggled.is_connected(_on_btn_freq_lock_toggled):
+		btn_freq_lock.toggled.connect(_on_btn_freq_lock_toggled)
 	
-	if spoof_signature_option and not spoof_signature_option.item_selected.is_connected(_on_spoof_signature_selected):
-		spoof_signature_option.item_selected.connect(_on_spoof_signature_selected)
+	if btn_request_docking and not btn_request_docking.pressed.is_connected(_on_btn_request_docking_pressed):
+		btn_request_docking.pressed.connect(_on_btn_request_docking_pressed)
 	
-	if cipher_package_option and not cipher_package_option.item_selected.is_connected(_on_cipher_package_selected):
-		cipher_package_option.item_selected.connect(_on_cipher_package_selected)
+	if btn_station_emergency and not btn_station_emergency.pressed.is_connected(_on_btn_station_emergency_pressed):
+		btn_station_emergency.pressed.connect(_on_btn_station_emergency_pressed)
 	
-	if btn_start_decrypt and not btn_start_decrypt.pressed.is_connected(_on_btn_start_decrypt_pressed):
-		btn_start_decrypt.pressed.connect(_on_btn_start_decrypt_pressed)
+	if btn_station_trade and not btn_station_trade.pressed.is_connected(_on_btn_station_trade_pressed):
+		btn_station_trade.pressed.connect(_on_btn_station_trade_pressed)
 	
-	if btn_save_to_ship_drive and not btn_save_to_ship_drive.pressed.is_connected(_on_btn_save_to_ship_drive_pressed):
-		btn_save_to_ship_drive.pressed.connect(_on_btn_save_to_ship_drive_pressed)
+	if btn_connect_drive and not btn_connect_drive.pressed.is_connected(_on_connect_drive_pressed):
+		btn_connect_drive.pressed.connect(_on_connect_drive_pressed)
 	
 	if btn_clear_log and not btn_clear_log.pressed.is_connected(_on_btn_clear_log_pressed):
 		btn_clear_log.pressed.connect(_on_btn_clear_log_pressed)
@@ -289,21 +257,31 @@ func _process(delta: float) -> void:
 	if not _is_ship_operational():
 		return
 	
-	# Gestione avanzamento decrittazione mini-gioco Hackwarfare
-	if is_decrypting:
-		var current_pkg: Dictionary = encrypted_packages[selected_package_index]
-		var diff: float = float(current_pkg.get("difficulty", 1.0))
-		var speed_mult: float = float(active_config.get("decryption_speed_multiplier", 1.0)) * float(active_config.get("crypto_crack_speed", 1.0))
-		var step := (delta * 30.0 * speed_mult) / maxf(diff, 0.2)
-		
-		decryption_progress = clampf(decryption_progress + step, 0.0, 100.0)
-		if decryption_progress_bar:
-			decryption_progress_bar.value = decryption_progress
-		if decryption_status_label:
-			decryption_status_label.text = "Decrittazione in corso: %.1f%%..." % decryption_progress
-		
-		if decryption_progress >= 100.0:
-			_complete_decryption()
+	# 1. Auto-rotazione continua antenna a 360°
+	if is_auto_rotating and not is_frequency_locked:
+		antenna_azimuth_deg = fmod(antenna_azimuth_deg + auto_rotate_speed * delta, 360.0)
+		if antenna_azimuth_deg < 0.0:
+			antenna_azimuth_deg += 360.0
+		if antenna_heading_slider:
+			antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
+		if antenna_heading_value:
+			antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
+		_refresh_antenna_ui()
+		_refresh_tuner_state()
+	
+	# 2. Tracking bersaglio attivo con Frequency Lock
+	elif is_frequency_locked and not locked_signal_id.is_empty():
+		var target_bearing := _get_signal_bearing_by_id(locked_signal_id)
+		if target_bearing >= 0.0:
+			var diff := fposmod(target_bearing - antenna_azimuth_deg + 180.0, 360.0) - 180.0
+			var step := signf(diff) * minf(absf(diff), auto_rotate_speed * 2.0 * delta)
+			antenna_azimuth_deg = fposmod(antenna_azimuth_deg + step, 360.0)
+			if antenna_heading_slider:
+				antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
+			if antenna_heading_value:
+				antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
+			_refresh_antenna_ui()
+			_refresh_tuner_state()
 
 # --- GESTIONE DELLO STATO OPERATIVO / CONNESSIONE ---
 func _is_ship_operational() -> bool:
@@ -356,7 +334,7 @@ func _update_permissions() -> void:
 	else:
 		can_control_comms = is_solo
 	
-	# Disabilita/abilita comandi attivi
+	# Sintonizzatore
 	if freq_slider:
 		freq_slider.editable = can_control_comms
 	if btn_tune_sos:
@@ -368,21 +346,21 @@ func _update_permissions() -> void:
 	if btn_listen_signal:
 		btn_listen_signal.disabled = not can_control_comms
 	
-	if jammer_switch:
-		jammer_switch.disabled = not can_control_comms
-	if jammer_power_slider:
-		jammer_power_slider.editable = can_control_comms
-	if jammer_mode_option:
-		jammer_mode_option.disabled = not can_control_comms
-	if spoof_signature_option:
-		spoof_signature_option.disabled = not can_control_comms
+	# Antenna Direzionale
+	if antenna_heading_slider:
+		antenna_heading_slider.editable = can_control_comms
+	if btn_auto_rotate:
+		btn_auto_rotate.disabled = not can_control_comms
+	if btn_freq_lock:
+		btn_freq_lock.disabled = not can_control_comms
 	
-	if cipher_package_option:
-		cipher_package_option.disabled = not can_control_comms
-	if btn_start_decrypt:
-		btn_start_decrypt.disabled = not can_control_comms or is_decrypting
-	if btn_save_to_ship_drive:
-		btn_save_to_ship_drive.disabled = not can_control_comms or last_decrypted_text.is_empty()
+	# Azioni e Connessione
+	if btn_request_docking:
+		btn_request_docking.disabled = not can_control_comms
+	if btn_station_emergency:
+		btn_station_emergency.disabled = not can_control_comms
+	if btn_station_trade:
+		btn_station_trade.disabled = not can_control_comms
 
 # --- GESTIONE FILE .DAT & HOT-RELOADING ---
 func _on_drive_file_modified(rel_path: String) -> void:
@@ -415,25 +393,19 @@ func load_dat_configuration() -> void:
 	_apply_configuration()
 
 func _apply_configuration() -> void:
-	jamming_power_mw = float(active_config.get("jamming_power_mw", 120.0))
-	current_spoof_sig = str(active_config.get("spoofing_signature", "CORVETTE_CIVILIAN"))
-	
-	if jammer_power_slider:
-		jammer_power_slider.value = jamming_power_mw
-	
-	# Imposta la firma di spoofing corrispondente se presente nella lista
-	if spoof_signature_option:
-		for i in range(spoof_signature_option.item_count):
-			var item_txt := spoof_signature_option.get_item_text(i)
-			if current_spoof_sig in item_txt:
-				spoof_signature_option.selected = i
-				break
-	
+	auto_rotate_speed = float(active_config.get("auto_rotate_speed", 45.0))
 	_refresh_ui_display()
 	_update_action_log("Configurazione .DAT ricaricata con successo.")
 
+# --- SINTONIZZATORE FREQUENZE & CONTROLLI TUNER ---
 func _on_freq_slider_changed(new_val: float) -> void:
 	current_frequency = new_val
+	if is_frequency_locked:
+		var sig: Variant = _get_locked_signal()
+		if sig != null:
+			locked_signal_id = str(sig.get("id", ""))
+		else:
+			locked_signal_id = ""
 	_refresh_tuner_state()
 
 func _on_btn_tune_sos_pressed() -> void:
@@ -442,6 +414,8 @@ func _on_btn_tune_sos_pressed() -> void:
 	current_frequency = 850.5
 	if freq_slider:
 		freq_slider.value = current_frequency
+	if is_frequency_locked:
+		locked_signal_id = "sos_scout"
 	_refresh_tuner_state()
 	_update_action_log("Sintonizzato automaticamente su frequenza SOS di emergenza (850.5 MHz).")
 
@@ -451,6 +425,8 @@ func _on_btn_tune_subspace_pressed() -> void:
 	current_frequency = 1420.0
 	if freq_slider:
 		freq_slider.value = current_frequency
+	if is_frequency_locked:
+		locked_signal_id = "subspace_corp"
 	_refresh_tuner_state()
 	_update_action_log("Sintonizzato su Relay Subspaziale Principale (1420.0 MHz).")
 
@@ -460,33 +436,23 @@ func _on_btn_tune_pirate_pressed() -> void:
 	current_frequency = 2185.2
 	if freq_slider:
 		freq_slider.value = current_frequency
+	if is_frequency_locked:
+		locked_signal_id = "pirate_encrypted"
 	_refresh_tuner_state()
-	_update_action_log("Sintonizzato su Burst Cifrato Pirata (2185.2 MHz).")
+	_update_action_log("Sintonizzato su Canale Pirata Clandestino (2185.2 MHz).")
 
-func _refresh_tuner_state() -> void:
-	if freq_value_label:
-		freq_value_label.text = "%.1f MHz" % current_frequency
-	
-	var locked_sig: Variant = _get_locked_signal()
-	if locked_sig != null:
-		if signal_lock_badge:
-			signal_lock_badge.text = "🔒 AGGANCIATO: %s" % locked_sig.get("name")
-			signal_lock_badge.modulate = Color(0.2, 1.0, 0.4)
-		if signal_info_label:
-			signal_info_label.text = "%s\nSorgente: %s" % [locked_sig.get("desc"), locked_sig.get("source")]
-		if btn_listen_signal:
-			btn_listen_signal.disabled = not can_control_comms
-	else:
-		if signal_lock_badge:
-			signal_lock_badge.text = "⚪ RUMORE BIANCO / NESSUN AGGANCIO"
-			signal_lock_badge.modulate = Color(0.6, 0.7, 0.8)
-		if signal_info_label:
-			signal_info_label.text = "Scorrere il cursore per intercettare portanti RF o trasmissioni subspaziali attive."
-		if btn_listen_signal:
-			btn_listen_signal.disabled = true
-	
-	if waterfall_canvas:
-		waterfall_canvas.update_state(current_frequency, is_jamming_active, jamming_power_mw, _is_ship_operational(), available_signals)
+func _on_btn_listen_signal_pressed() -> void:
+	if not can_control_comms:
+		return
+	var sig: Variant = _get_locked_signal()
+	if sig != null:
+		var eff_strength := get_effective_signal_strength(sig)
+		if eff_strength < 0.2:
+			_log_comms_message("[color=#ff5555][RICEZIONE][/color] Segnale troppo degradato o fuori puntamento antenna per la trascrizione.")
+			_update_action_log("Trascrizione fallita: allineare l'antenna.")
+			return
+		_log_comms_message("[color=#ffdd55][RICEZIONE][/color] %s: %s (Fonte: %s, SNR: %.0f%%)" % [str(sig.get("name", "Segnale")), str(sig.get("desc", "")), str(sig.get("source", "Ignota")), eff_strength * 100.0])
+		_update_action_log("Messaggio trascritto nel registro di bordo.")
 
 func _get_locked_signal() -> Variant:
 	for sig in available_signals:
@@ -495,130 +461,192 @@ func _get_locked_signal() -> Variant:
 			return sig
 	return null
 
-func _on_btn_listen_signal_pressed() -> void:
-	if not can_control_comms:
-		return
-	var sig: Variant = _get_locked_signal()
-	if sig != null:
-		_log_comms_message("[color=#ffdd55][RICEZIONE][/color] %s: %s (Fonte: %s)" % [str(sig.get("name", "Segnale")), str(sig.get("desc", "")), str(sig.get("source", "Ignota"))])
-		_update_action_log("Messaggio trascritto nel registro di bordo.")
+# --- CALCOLI ANTENNA DIREZIONALE & MATEMATICA SEGNALE ---
+func get_angular_difference(a_deg: float, b_deg: float) -> float:
+	var diff := fposmod(a_deg - b_deg + 180.0, 360.0) - 180.0
+	return absf(diff)
 
-# --- LOGICA APPLICATIVA: GUERRA ELETTRONICA (EW) ---
-func _on_jammer_toggled(button_pressed: bool) -> void:
-	if not can_control_comms:
-		if jammer_switch:
-			jammer_switch.set_pressed_no_signal(is_jamming_active)
-		return
+func _get_signal_bearing(sig: Dictionary) -> float:
+	var sig_id: String = str(sig.get("id", ""))
+	var target_id: String = str(sig.get("target_ship_id", sig.get("station_id", sig_id)))
 	
-	is_jamming_active = button_pressed
-	if is_jamming_active:
-		_log_comms_message("[color=#ff5555][GUERRA ELETTRONICA][/color] ⚡ JAMMER ATTIVATO a %.0f MW. Raggio di disturbo: %.0f m." % [jamming_power_mw, float(active_config.get("jamming_radius"))])
-		_update_action_log("Jammer attivo: sensori nemici disturbati.")
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_sensor_entities"):
+		var entities: Array[Dictionary] = SpaceWorldManager.get_sensor_entities()
+		for e in entities:
+			var e_id: String = str(e.get("id", ""))
+			if e_id == target_id or e_id == sig_id:
+				var raw_bearing: float = float(e.get("bearing_deg", 0.0))
+				return fposmod(raw_bearing, 360.0)
+	
+	return float(sig.get("bearing_deg", 0.0))
+
+func _get_signal_distance(sig: Dictionary) -> float:
+	var sig_id: String = str(sig.get("id", ""))
+	var target_id: String = str(sig.get("target_ship_id", sig.get("station_id", sig_id)))
+	
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_sensor_entities"):
+		var entities: Array[Dictionary] = SpaceWorldManager.get_sensor_entities()
+		for e in entities:
+			var e_id: String = str(e.get("id", ""))
+			if e_id == target_id or e_id == sig_id:
+				return float(e.get("distance", 1000.0))
+	
+	return float(sig.get("distance", 1000.0))
+
+func _get_signal_bearing_by_id(sig_id: String) -> float:
+	for sig in available_signals:
+		if str(sig.get("id", "")) == sig_id:
+			return _get_signal_bearing(sig)
+	return -1.0
+
+func get_effective_signal_strength(sig: Dictionary) -> float:
+	var base_strength: float = float(sig.get("strength", 1.0))
+	var dist: float = _get_signal_distance(sig)
+	var target_bearing: float = _get_signal_bearing(sig)
+	var delta_theta: float = get_angular_difference(antenna_azimuth_deg, target_bearing)
+	var cone_deg: float = float(active_config.get("reception_cone_deg", 25.0))
+	
+	if is_auto_rotating and not is_frequency_locked:
+		# In auto-rotazione: raggio ridotto del 70% (max 800m) e rapporto SNR degradato con rumore
+		if dist > 800.0:
+			return 0.0
+		var dist_factor: float = clampf(1.0 - (dist / 800.0) * 0.5, 0.3, 0.8)
+		return clampf(base_strength * 0.35 * dist_factor, 0.0, 1.0)
+	
+	# Modalità manuale o frequency locked (focalizzata)
+	if delta_theta <= cone_deg:
+		var angle_factor: float = cos(deg_to_rad(delta_theta))
+		var dist_factor: float = clampf(1800.0 / maxf(dist, 400.0), 0.5, 1.2)
+		return clampf(base_strength * angle_factor * (dist_factor * 0.5 + 0.5), 0.0, 1.0)
 	else:
-		_log_comms_message("[color=#64c8ff][GUERRA ELETTRONICA][/color] Jammer disattivato. Emissione normale.")
-		_update_action_log("Jammer disattivato.")
-	
+		# Fuori dal cono di ±25° il segnale cala drasticamente fino a zero/rumore
+		var falloff: float = maxf(0.0, cos(deg_to_rad(delta_theta))) * 0.05
+		return clampf(base_strength * falloff, 0.0, 1.0)
+
+# --- CONTROLLI SETTORE SINISTRO: ANTENNA DIREZIONALE ---
+func _on_antenna_heading_changed(new_val: float) -> void:
+	if not can_control_comms:
+		if antenna_heading_slider:
+			antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
+		return
+	antenna_azimuth_deg = fposmod(new_val, 360.0)
+	_refresh_antenna_ui()
+	_refresh_tuner_state()
+
+func _on_btn_auto_rotate_toggled(toggled_on: bool) -> void:
+	if not can_control_comms:
+		if btn_auto_rotate:
+			btn_auto_rotate.set_pressed_no_signal(is_auto_rotating)
+		return
+	is_auto_rotating = toggled_on
+	if is_auto_rotating:
+		is_frequency_locked = false
+		if btn_freq_lock:
+			btn_freq_lock.set_pressed_no_signal(false)
+		_log_comms_message("[color=#ffdd55][ANTENNA DIREZIONALE][/color] Avviata rotazione automatica continua a 360° (%.0f°/s)." % auto_rotate_speed)
+		_update_action_log("Antenna in auto-rotazione.")
+	else:
+		_log_comms_message("[color=#64c8ff][ANTENNA DIREZIONALE][/color] Rotazione automatica arrestata. Puntamento manuale a %03d°." % int(antenna_azimuth_deg))
+		_update_action_log("Puntamento manuale ripristinato.")
 	_refresh_ui_display()
 
-func _on_jammer_power_changed(new_val: float) -> void:
-	jamming_power_mw = new_val
-	if jammer_power_label:
-		jammer_power_label.text = "%.0f MW" % jamming_power_mw
-	if jammer_effect_label:
-		var radius_calc: float = float(active_config.get("jamming_radius")) * (jamming_power_mw / 120.0)
-		jammer_effect_label.text = "Efficienza Jammer: %.0f%% | Raggio: %.0f m" % [(jamming_power_mw / 180.0) * 100.0, radius_calc]
-	
-	if waterfall_canvas:
-		waterfall_canvas.update_state(current_frequency, is_jamming_active, jamming_power_mw, _is_ship_operational(), available_signals)
+func _on_btn_freq_lock_toggled(toggled_on: bool) -> void:
+	if not can_control_comms:
+		if btn_freq_lock:
+			btn_freq_lock.set_pressed_no_signal(is_frequency_locked)
+		return
+	is_frequency_locked = toggled_on
+	if is_frequency_locked:
+		is_auto_rotating = false
+		if btn_auto_rotate:
+			btn_auto_rotate.set_pressed_no_signal(false)
+		var tuned_sig: Variant = _get_locked_signal()
+		if tuned_sig != null:
+			locked_signal_id = str(tuned_sig.get("id", ""))
+			var s_name: String = str(tuned_sig.get("name", "Segnale"))
+			_log_comms_message("[color=#00ff88][FREQUENCY LOCK][/color] Aggancio frequenza attivo su %s. Tracking angolare bersaglio avviato." % s_name)
+			_update_action_log("Frequency Lock attivo: tracking %s." % s_name)
+		else:
+			locked_signal_id = ""
+			_log_comms_message("[color=#ff9933][FREQUENCY LOCK][/color] Nessun segnale sintonizzato per il tracking.")
+			_update_action_log("Frequency Lock attivo (in attesa di segnale).")
+	else:
+		locked_signal_id = ""
+		_log_comms_message("[color=#64c8ff][FREQUENCY LOCK][/color] Disattivato tracking frequenza. Antenna in posizione %03d°." % int(antenna_azimuth_deg))
+		_update_action_log("Frequency Lock disattivato.")
 	_refresh_ui_display()
 
-func _on_jammer_mode_selected(index: int) -> void:
-	jamming_mode = index
-	var mode_name := "Radar Blind" if jamming_mode == 0 else "Full Spectrum"
-	_update_action_log("Modalità Jammer impostata su: %s" % mode_name)
-
-func _on_spoof_signature_selected(index: int) -> void:
+# --- CONTROLLI SETTORE DESTRO: INTERAZIONI, STAZIONE & EW CONNECT ---
+func _on_btn_request_docking_pressed() -> void:
 	if not can_control_comms:
 		return
-	if spoof_signature_option:
-		var raw_txt := spoof_signature_option.get_item_text(index)
-		current_spoof_sig = raw_txt.split(" ")[0]
-	_log_comms_message("[color=#ff9933][SPOOFING IFF][/color] Transponder nave falsificato con firma: %s" % current_spoof_sig)
-	_update_action_log("Transponder IFF impostato su: %s" % current_spoof_sig)
+	var cur_sig: Variant = _get_locked_signal()
+	var station_id := ""
+	if cur_sig != null and cur_sig.get("type", "").to_upper() == "STATION":
+		station_id = str(cur_sig.get("station_id", "STATION-FRECCIA"))
+	docking_clearance_requested.emit(station_id)
+	request_station_docking()
 
-# --- LOGICA APPLICATIVA: HACKWARFARE & DECODIFICA CIFRARI ---
-func _on_cipher_package_selected(index: int) -> void:
-	selected_package_index = index
-	decryption_progress = 0.0
-	is_decrypting = false
-	last_decrypted_text = ""
-	if decryption_progress_bar:
-		decryption_progress_bar.value = 0.0
-	if decryption_status_label:
-		decryption_status_label.text = "Pronto per la decrittazione."
-	if extracted_key_edit:
-		extracted_key_edit.text = ""
-	if btn_save_to_ship_drive:
-		btn_save_to_ship_drive.disabled = true
-	if btn_start_decrypt:
-		btn_start_decrypt.disabled = not can_control_comms
+func _on_btn_station_emergency_pressed() -> void:
+	if not can_control_comms:
+		return
+	var cur_sig: Variant = _get_locked_signal()
+	var s_name := str(cur_sig.get("name", "Stazione")) if cur_sig != null else "Stazione"
+	_log_comms_message("[color=#ff5555][CANALE EMERGENZA][/color] Contatto prioritario con %s stabilito. Canale di soccorso riservato." % s_name)
+	_update_action_log("Canale emergenza stazione aperto.")
 
-func _on_btn_start_decrypt_pressed() -> void:
-	if not can_control_comms or is_decrypting:
+func _on_btn_station_trade_pressed() -> void:
+	if not can_control_comms:
+		return
+	var cur_sig: Variant = _get_locked_signal()
+	var s_name := str(cur_sig.get("name", "Stazione")) if cur_sig != null else "Stazione"
+	_log_comms_message("[color=#ffdd55][CANALE MERCANTILE][/color] Ricevuto bollettino prezzi e manifesti cargo da %s. Consultare StationHub all'attracco." % s_name)
+	_update_action_log("Dati commerciali stazione ricevuti.")
+
+func _on_connect_drive_pressed() -> void:
+	if not can_control_comms:
 		return
 	
-	is_decrypting = true
-	decryption_progress = 0.0
-	if btn_start_decrypt:
-		btn_start_decrypt.disabled = true
-	if decryption_status_label:
-		decryption_status_label.text = "Inizializzazione algoritmo di violazione cifrario..."
-	_log_comms_message("[color=#ff00ff][HACKWARFARE][/color] Avviata violazione cifrario su: %s" % encrypted_packages[selected_package_index].get("name"))
-	_update_action_log("Decrittazione avviata...")
-
-func _complete_decryption() -> void:
-	is_decrypting = false
-	var current_pkg: Dictionary = encrypted_packages[selected_package_index]
-	var extracted_key: String = current_pkg.get("extracted_key")
-	var intel_text: String = current_pkg.get("intel_text")
-	last_decrypted_text = "[%s]\nCHIAVE / PASSWORD: %s\nINFO: %s" % [current_pkg.get("name"), extracted_key, intel_text]
-	
-	if extracted_key_edit:
-		extracted_key_edit.text = "🔑 CHIAVE ESTRATTA: %s" % extracted_key
-	if decryption_status_label:
-		decryption_status_label.text = "✔ DECODIFICA COMPLETATA CON SUCCESSO!"
-	if btn_start_decrypt:
-		btn_start_decrypt.disabled = false
-	if btn_save_to_ship_drive:
-		btn_save_to_ship_drive.disabled = not can_control_comms
-	
-	_log_comms_message("[color=#00ff88][DECODIFICA COMPLETATA][/color] %s -> Chiave estratta: [b]%s[/b]" % [current_pkg.get("name"), extracted_key])
-	_update_action_log("Violazione riuscita! Password estratta: %s" % extracted_key)
-	
-	var notif_mgr := get_node_or_null("/root/NotificationManager")
-	if notif_mgr and notif_mgr.has_method("send_notification"):
-		notif_mgr.send_notification("Comms Hackwarfare", "Chiave crittografica estratta: %s" % extracted_key)
-
-func _on_btn_save_to_ship_drive_pressed() -> void:
-	if not can_control_comms or last_decrypted_text.is_empty():
+	var cur_sig: Variant = _get_locked_signal()
+	if cur_sig == null:
 		return
 	
-	var export_path := "Ship Drive/intercepted_crypto_key.txt"
-	var abs_p := "user://files/%s" % export_path
-	var base_dir := abs_p.get_base_dir()
-	if not DirAccess.dir_exists_absolute(base_dir):
-		DirAccess.make_dir_recursive_absolute(base_dir)
-	var f := FileAccess.open(abs_p, FileAccess.WRITE)
-	if f:
-		f.store_string(last_decrypted_text)
-		f.close()
+	var eff_strength: float = get_effective_signal_strength(cur_sig)
+	var sig_dist: float = float(cur_sig.get("distance", 9999.0))
+	if eff_strength < 0.75 or sig_dist >= 1200.0:
+		_log_comms_message("[color=#ff5555][CONNESSIONE NEGATA][/color] Potenza segnale radio insufficiente o distanza eccessiva (Richiesto SNR >= 75%%, Dist < 1200m).")
+		_update_action_log("Connessione EW fallita: segnale instabile.")
+		return
 	
-	var sdm := get_node_or_null("/root/ShipDriveManager")
-	if sdm and sdm.has_method("sync_file"):
-		sdm.sync_file(export_path, last_decrypted_text)
+	var target_ship_id: String = str(cur_sig.get("target_ship_id", cur_sig.get("id", "TARGET-SHIP")))
+	var target_name: String = str(cur_sig.get("name", "Nave Bersaglio"))
 	
-	_log_comms_message("[color=#64c8ff][SHIP DRIVE][/color] File salvato con successo: %s" % export_path)
-	_update_action_log("Salvato su Ship Drive: %s" % export_path)
+	_log_comms_message("[color=#ff00ff][EW DRIVE INTRUSION][/color] ⚡ Link dati radio stabilito con [b]%s[/b] (ID: %s, SNR: %.0f%%, Dist: %.0fm)!" % [target_name, target_ship_id, eff_strength * 100.0, sig_dist])
+	_update_action_log("Intrusione completata: Drive bersaglio %s agganciato." % target_ship_id)
+	
+	# Monta il Drive remoto bersaglio su GodotOS filesystem
+	var rdm := get_node_or_null("/root/RemoteDriveManager")
+	if rdm and rdm.has_method("mount_target_drive"):
+		rdm.mount_target_drive(target_ship_id)
+	else:
+		var target_drive_path := "user://files/Target Drive"
+		if not DirAccess.dir_exists_absolute(target_drive_path):
+			DirAccess.make_dir_recursive_absolute(target_drive_path)
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/FlightControl")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/Cams")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/System")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/LifeSupport")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/Weapons")
+	
+	var sw_mgr := get_node_or_null("/root/ShipSoftwareManager")
+	if sw_mgr and sw_mgr.has_method("launch_app"):
+		sw_mgr.launch_app("hack_exploits")
+	
+	var nm := get_node_or_null("/root/NotificationManager")
+	if nm and nm.has_method("send_notification"):
+		nm.send_notification("Electronic Warfare", "Target Drive montato per %s. Suite Hack Exploits pronta." % target_name)
+	elif nm and nm.has_method("spawn_notification"):
+		nm.spawn_notification("Target Drive montato per %s." % target_name)
 
 func _on_btn_clear_log_pressed() -> void:
 	if comms_log_text:
@@ -636,11 +664,133 @@ func _update_action_log(msg: String) -> void:
 		action_log_label.text = "▶ %s" % msg
 
 # --- AGGIORNAMENTO COMPLETO DELL'INTERFACCIA ---
-func _refresh_ui_display() -> void:
-	# Calcolo Assorbimento Potenza (50 MW base quando online + jamming power se attivo)
-	var base_power := 50.0
-	var total_power := base_power + (jamming_power_mw if is_jamming_active else 0.0)
+func _refresh_antenna_ui() -> void:
+	if antenna_heading_value:
+		antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
 	
+	if antenna_status_label:
+		if is_frequency_locked:
+			var target_name := locked_signal_id
+			for s in available_signals:
+				if s.get("id") == locked_signal_id:
+					target_name = s.get("name")
+					break
+			antenna_status_label.text = "🔒 FREQUENCY LOCK: %s (%03d°)" % [target_name, int(antenna_azimuth_deg)]
+			antenna_status_label.modulate = Color(0.2, 1.0, 0.4)
+		elif is_auto_rotating:
+			antenna_status_label.text = "🔄 AUTO-ROTAZIONE 360° (%.0f°/s | Raggio ridotto)" % auto_rotate_speed
+			antenna_status_label.modulate = Color(1.0, 0.8, 0.2)
+		else:
+			antenna_status_label.text = "🧭 PUNTAMENTO MANUALE: %03d° (Cono ±%.0f°)" % [int(antenna_azimuth_deg), float(active_config.get("reception_cone_deg", 25.0))]
+			antenna_status_label.modulate = Color(0.4, 0.85, 1.0)
+	
+	if antenna_gain_label:
+		if is_auto_rotating and not is_frequency_locked:
+			antenna_gain_label.text = "Guadagno ridotto 35% | Raggio max 800m | Rumore SNR"
+			antenna_gain_label.modulate = Color(1.0, 0.7, 0.3)
+		elif is_frequency_locked:
+			antenna_gain_label.text = "Tracking continuo attivo | Guadagno 100% | SNR Ottimale"
+			antenna_gain_label.modulate = Color(0.3, 1.0, 0.5)
+		else:
+			antenna_gain_label.text = "Guadagno antenna: 100% | Cono di focalizzazione attivo"
+			antenna_gain_label.modulate = Color(0.7, 0.8, 0.9)
+	
+	if btn_auto_rotate:
+		btn_auto_rotate.set_pressed_no_signal(is_auto_rotating)
+	if btn_freq_lock:
+		btn_freq_lock.set_pressed_no_signal(is_frequency_locked)
+
+func _refresh_tuner_state() -> void:
+	if freq_value_label:
+		freq_value_label.text = "%.1f MHz" % current_frequency
+	
+	var tuned_sig: Variant = _get_locked_signal()
+	if tuned_sig != null:
+		var sig_id: String = str(tuned_sig.get("id", ""))
+		var sig_name: String = str(tuned_sig.get("name", "Segnale"))
+		var sig_type: String = str(tuned_sig.get("type", "UNKNOWN"))
+		var sig_desc: String = str(tuned_sig.get("desc", ""))
+		var sig_source: String = str(tuned_sig.get("source", "Ignota"))
+		var sig_bearing: float = _get_signal_bearing(tuned_sig)
+		var sig_dist: float = float(tuned_sig.get("distance", 1000.0))
+		var eff_strength: float = get_effective_signal_strength(tuned_sig)
+		var delta_theta: float = get_angular_difference(antenna_azimuth_deg, sig_bearing)
+		
+		if is_frequency_locked and locked_signal_id.is_empty():
+			locked_signal_id = sig_id
+		
+		# Badge Sintonizzatore
+		if signal_lock_badge:
+			if eff_strength >= 0.70:
+				signal_lock_badge.text = "🔒 AGGANCIATO (OTTIMO): %s [%d%%]" % [sig_name, int(eff_strength * 100)]
+				signal_lock_badge.modulate = Color(0.2, 1.0, 0.4)
+			elif eff_strength >= 0.25:
+				signal_lock_badge.text = "🟡 SEGNALE PARZIALE: %s [%d%%]" % [sig_name, int(eff_strength * 100)]
+				signal_lock_badge.modulate = Color(1.0, 0.85, 0.3)
+			else:
+				signal_lock_badge.text = "⚠️ SEGNALE DEBOLE (FUORI CONO: Δθ=%d°)" % int(delta_theta)
+				signal_lock_badge.modulate = Color(1.0, 0.4, 0.3)
+		
+		if signal_info_label:
+			signal_info_label.text = "%s | Azimut: %03d° | Dist: %.0fm" % [sig_name, int(sig_bearing), sig_dist]
+		
+		if signal_detail_label:
+			var lock_txt := "OTTIMO" if eff_strength >= 0.75 else ("DEBOLE / RUMORE" if eff_strength < 0.25 else "PARZIALE")
+			var bb := "[b]%s[/b]\n" % sig_name
+			bb += "[color=#88ccff]Info:[/color] %s\n" % sig_desc
+			bb += "[color=#88ccff]Sorgente:[/color] %s | [color=#88ccff]Tipo:[/color] %s\n" % [sig_source, sig_type]
+			bb += "[color=#88ccff]Azimut Bersaglio:[/color] %03d° (Δθ: %03d°) | [color=#88ccff]Distanza:[/color] %.0f m\n" % [int(sig_bearing), int(delta_theta), sig_dist]
+			bb += "[color=#88ccff]Qualità Segnale SNR:[/color] [color=%s]%.0f%% (%s)[/color]" % [("lime" if eff_strength >= 0.75 else ("yellow" if eff_strength >= 0.25 else "red")), eff_strength * 100.0, lock_txt]
+			signal_detail_label.text = bb
+		
+		if btn_listen_signal:
+			btn_listen_signal.disabled = not can_control_comms or eff_strength < 0.2
+		
+		# Menu Stazione Spaziale
+		var is_station := (sig_type.to_upper() == "STATION")
+		if station_actions_box:
+			station_actions_box.visible = is_station
+		if btn_request_docking:
+			btn_request_docking.disabled = not (can_control_comms and is_station and eff_strength >= 0.25)
+		if btn_station_emergency:
+			btn_station_emergency.disabled = not (can_control_comms and is_station)
+		if btn_station_trade:
+			btn_station_trade.disabled = not (can_control_comms and is_station)
+		
+		# Pulsante Connect Drive EW
+		var is_ship_target := sig_type.to_upper() in ["SHIP", "CORVETTE", "DERELICT", "SHIP_HOSTILE", "ENEMY", "VESSEL"]
+		var is_connectable := is_ship_target and eff_strength >= 0.75 and sig_dist < 1200.0
+		if btn_connect_drive:
+			btn_connect_drive.visible = not is_station
+			btn_connect_drive.disabled = not (can_control_comms and is_connectable)
+			if is_connectable:
+				btn_connect_drive.text = "🔗 CONNETTI A DRIVE BERSAGLIO (%s)" % str(tuned_sig.get("target_ship_id", sig_name))
+			elif not is_ship_target:
+				btn_connect_drive.text = "🔗 NESSUN DRIVE BERSAGLIO SINTONIZZATO"
+			else:
+				btn_connect_drive.text = "⚠️ SEGNALE INSUFFICIENTE PER INTRUSIONE EW (SNR >= 75%%, Dist < 1200m)"
+	else:
+		if signal_lock_badge:
+			signal_lock_badge.text = "⚪ RUMORE BIANCO / NESSUN AGGANCIO"
+			signal_lock_badge.modulate = Color(0.6, 0.7, 0.8)
+		if signal_info_label:
+			signal_info_label.text = "Scorrere il cursore per intercettare portanti RF o trasmissioni subspaziali attive."
+		if signal_detail_label:
+			signal_detail_label.text = "[color=#7799aa]Nessuna trasmissione agganciata sulla frequenza attuale.[/color]\n[color=#557788]Sintonizzare la frequenza e orientare l'antenna verso la sorgente per stabilire il collegamento radio.[/color]"
+		if btn_listen_signal:
+			btn_listen_signal.disabled = true
+		if station_actions_box:
+			station_actions_box.visible = false
+		if btn_connect_drive:
+			btn_connect_drive.visible = true
+			btn_connect_drive.disabled = true
+			btn_connect_drive.text = "🔗 NESSUN SEGNALE BERSAGLIO AGGANCIATO"
+	
+	if waterfall_canvas:
+		waterfall_canvas.update_state(current_frequency, is_auto_rotating, antenna_azimuth_deg, _is_ship_operational(), available_signals)
+
+func _refresh_ui_display() -> void:
+	var total_power := 50.0 + (15.0 if is_auto_rotating else 0.0)
 	if power_badge:
 		power_badge.text = "⚡ %d MW" % int(total_power)
 	
@@ -648,9 +798,12 @@ func _refresh_ui_display() -> void:
 		if not _is_ship_operational():
 			status_badge.text = "● OFFLINE"
 			status_badge.modulate = Color(0.9, 0.3, 0.3)
-		elif is_jamming_active:
-			status_badge.text = "⚡ EW JAMMING ATTIVO"
-			status_badge.modulate = Color(1.0, 0.6, 0.2)
+		elif is_frequency_locked:
+			status_badge.text = "🔒 FREQ LOCK"
+			status_badge.modulate = Color(0.2, 0.9, 0.4)
+		elif is_auto_rotating:
+			status_badge.text = "🔄 AUTO-ROTAZIONE"
+			status_badge.modulate = Color(1.0, 0.7, 0.2)
 		else:
 			status_badge.text = "● STANDBY / IN ASCOLTO"
 			status_badge.modulate = Color(0.2, 0.9, 0.4)
@@ -672,6 +825,7 @@ func _refresh_ui_display() -> void:
 			dat_status_badge.text = "⚠️ DEFAULT"
 			dat_status_badge.modulate = Color(0.9, 0.7, 0.2)
 	
+	_refresh_antenna_ui()
 	_refresh_tuner_state()
 
 # --- INTEGRAZIONE DOCKING E CONTROLLO PORTUALE STAZIONE ---
@@ -711,21 +865,25 @@ func request_station_docking(station: SpaceStationEntity = null, dm: DockingMana
 	if not target_station and target_dm.target_station:
 		target_station = target_dm.target_station
 	if not target_station:
-		if SpaceWorldManager and SpaceWorldManager.has_method("get_station_entity"):
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_primary_station_entity"):
+			target_station = SpaceWorldManager.get_primary_station_entity()
+		elif SpaceWorldManager and SpaceWorldManager.has_method("get_station_entity"):
 			target_station = SpaceWorldManager.get_station_entity()
 		elif is_inside_tree():
 			var found_st := get_tree().root.find_child("SpaceStationEntity", true, false)
 			if found_st is SpaceStationEntity:
 				target_station = found_st
 	
+	var st_id := target_station.station_id if target_station else "STATION-01"
+	docking_clearance_requested.emit(st_id)
+	
 	if not target_station:
 		_log_comms_message("[color=#ff5555][DOCKING][/color] Nessuna stazione rilevata sulla frequenza attuale o nei paraggi.")
 		docking_clearance_denied.emit("", "Nessuna stazione rilevata")
 		return false
 	
-	docking_clearance_requested.emit(target_station.station_id)
 	_log_comms_message("[color=#64c8ff][DOCKING][/color] Richiesta autorizzazione attracco inviata a %s su %.1f MHz..." % [target_station.station_name, current_frequency])
-	return target_dm.request_docking_clearance(target_station, "NOVA-ROGUE-01", current_spoof_sig)
+	return target_dm.request_docking_clearance(target_station, "NOVA-ROGUE-01", "SOL-NAV-DEFENSE")
 
 func _on_docking_clearance_granted(station_id: String, bay_id: int, message: String) -> void:
 	docking_clearance_granted.emit(station_id, bay_id)

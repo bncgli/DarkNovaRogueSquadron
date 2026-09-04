@@ -13,17 +13,17 @@ Riprogettazione e ricostruzione integrale dell'applicazione `ShieldMatrixApp`. L
 - Predisporre l'architettura per l'aggiunta dinamica di futuri moduli di difesa (es. laser point-defense, generatori EMP di settore).
 
 ## Criteri di Accettazione
-- [ ] **Interfaccia Split a 2 Sezioni**:
-  - [ ] Sezione Sinistra: Visualizzatore olografico interattivo con nave centrale e indicatori dei 4 settori (Prua, Babordo, Tribordo, Poppa) e rispettivi carichi/dispositivi assegnati.
-  - [ ] Sezione Destra: Lista dinamica di schede/slot dei dispositivi di difesa attivi con controlli di assegnazione settore, stato munizioni e modalità operativa.
-- [ ] **Gestione Dinamica Dispositivi di Difesa**:
-  - [ ] Supporto a lista dati dinamica (Resource/Array) per i dispositivi montati.
-  - [ ] Possibilità per ogni dispositivo di selezionare il quadrante protetto tramite dropdown o click sui settori dell'ologramma.
-- [ ] **Comportamento Specifico dei Dispositivi**:
-  - [ ] **Gatling Automatica**: Intercetta e neutralizza minacce cinetiche (missili, razzi, mine, asteroidi) provenienti dal settore difeso.
-  - [ ] **Flack Launcher**: Emette la nube angel hair nel settore selezionato, azzerando l'aggancio dei missili a ricerca in arrivo.
-- [ ] **Vincolo Direzionale Monosettore**:
-  - [ ] Ogni singolo dispositivo difensivo può proteggere unicamente la direzione a cui è assegnato, lasciando scoperti gli altri settori se non presidiati da ulteriori apparati.
+- [x] **Interfaccia Split a 2 Sezioni**:
+  - [x] Sezione Sinistra: Visualizzatore olografico interattivo con nave centrale e indicatori dei 4 settori (Prua, Babordo, Tribordo, Poppa) e rispettivi carichi/dispositivi assegnati.
+  - [x] Sezione Destra: Lista dinamica di schede/slot dei dispositivi di difesa attivi con controlli di assegnazione settore, stato munizioni e modalità operativa.
+- [x] **Gestione Dinamica Dispositivi di Difesa**:
+  - [x] Supporto a lista dati dinamica (Resource/Array) per i dispositivi montati.
+  - [x] Possibilità per ogni dispositivo di selezionare il quadrante protetto tramite dropdown o click sui settori dell'ologramma.
+- [x] **Comportamento Specifico dei Dispositivi**:
+  - [x] **Gatling Automatica**: Intercetta e neutralizza minacce cinetiche (missili, razzi, mine, asteroidi) provenienti dal settore difeso.
+  - [x] **Flack Launcher**: Emette la nube angel hair nel settore selezionato, azzerando l'aggancio dei missili a ricerca in arrivo.
+- [x] **Vincolo Direzionale Monosettore**:
+  - [x] Ogni singolo dispositivo difensivo può proteggere unicamente la direzione a cui è assegnato, lasciando scoperti gli altri settori se non presidiati da ulteriori apparati.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

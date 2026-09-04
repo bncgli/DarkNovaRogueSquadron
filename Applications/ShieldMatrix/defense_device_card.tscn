@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://dfncdevcard01"]
+
+[ext_resource type="Script" path="res://Applications/ShieldMatrix/defense_device_card.gd" id="1_dev_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.04, 0.07, 0.12, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.35, 0.52, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="DefenseDeviceCard" type="PanelContainer"]
+custom_minimum_size = Vector2(240, 110)
+offset_right = 240.0
+offset_bottom = 110.0
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+script = ExtResource("1_dev_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HeaderHBox" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="IconLabel" type="Label" parent="Margin/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "🔫"
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Gatling Difesa Auto-1"
+text_overrun_behavior = 3
+
+[node name="StatusBadge" type="Label" parent="Margin/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 10
+text = "● PRONTO"
+horizontal_alignment = 2
+
+[node name="DetailsHBox" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TypeLabel" type="Label" parent="Margin/VBox/DetailsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.85, 0.95, 0.9)
+theme_override_font_sizes/font_size = 10
+text = "TIPO: GATLING"
+
+[node name="AmmoLabel" type="Label" parent="Margin/VBox/DetailsHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 10
+text = "MUNIZIONI: 800 / 800"
+
+[node name="AmmoBar" type="ProgressBar" parent="Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+max_value = 800.0
+value = 800.0
+show_percentage = false
+
+[node name="CooldownBar" type="ProgressBar" parent="Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="SectorHBox" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SectorLabel" type="Label" parent="Margin/VBox/SectorHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 10
+text = "Settore:"
+
+[node name="SectorOptionButton" type="OptionButton" parent="Margin/VBox/SectorHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+selected = 0
+item_count = 4
+popup/item_0/text = "Prua (FORE)"
+popup/item_0/id = 0
+popup/item_1/text = "Babordo (PORT)"
+popup/item_1/id = 1
+popup/item_2/text = "Tribordo (STARBOARD)"
+popup/item_2/id = 2
+popup/item_3/text = "Poppa (AFT)"
+popup/item_3/id = 3

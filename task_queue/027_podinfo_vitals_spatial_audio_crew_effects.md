@@ -20,16 +20,16 @@ Ristrutturazione dell'applicazione `PodInfo` per monitorare i 4 parametri vitali
   - **G negativi (<-2G)**: Redout visivo totale (schermo velato di rosso sangue) $\rightarrow$ rottura vascolare, urla e GameOver.
 
 ## Criteri di Accettazione
-- [ ] **Lettura Reale dei 4 Parametri Vitali**:
-  - [ ] Nessuna oscillazione causale dummy slegata dalla nave: i valori rispecchiano le condizioni fisiche della sala comando e le accelerazioni di manovra.
-- [ ] **Microfono Virtuale & Audio Spazializzato**:
-  - [ ] Gli eventi distanti dalla plancia (es. corti in sala motori o urti a poppa) sono riprodotti ovattati e con volume ridotto; gli eventi vicini sono nitidi e ad alto volume.
-  - [ ] Il movimento del Duct Drone nei pressi della sala comandi emette il ronzio meccanico proporzionale alla vicinanza.
-- [ ] **Effetti di Fuori Scala Parametri**:
-  - [ ] Asfissia: Audio respiro rantolante, fade a nero progressivo, GameOver al 100% di danno asfissia.
-  - [ ] Ipertermia/Incendio: Ansito $\rightarrow$ rantolo $\rightarrow$ urla $\rightarrow$ GameOver da fuoco.
-  - [ ] Ipotermia: Suono battito denti $\rightarrow$ assideramento $\rightarrow$ GameOver.
-  - [ ] Forza G estrema: Overlay Blackout (nero) o Redout (rosso vivo) con modulazione alpha legata all'accelerazione $G_z$.
+- [x] **Lettura Reale dei 4 Parametri Vitali**:
+  - [x] Nessuna oscillazione causale dummy slegata dalla nave: i valori rispecchiano le condizioni fisiche della sala comando e le accelerazioni di manovra.
+- [x] **Microfono Virtuale & Audio Spazializzato**:
+  - [x] Gli eventi distanti dalla plancia (es. corti in sala motori o urti a poppa) sono riprodotti ovattati e con volume ridotto; gli eventi vicini sono nitidi e ad alto volume.
+  - [x] Il movimento del Duct Drone nei pressi della sala comandi emette il ronzio meccanico proporzionale alla vicinanza.
+- [x] **Effetti di Fuori Scala Parametri**:
+  - [x] Asfissia: Audio respiro rantolante, fade a nero progressivo, GameOver al 100% di danno asfissia.
+  - [x] Ipertermia/Incendio: Ansito $\rightarrow$ rantolo $\rightarrow$ urla $\rightarrow$ GameOver da fuoco.
+  - [x] Ipotermia: Suono battito denti $\rightarrow$ assideramento $\rightarrow$ GameOver.
+  - [x] Forza G estrema: Overlay Blackout (nero) o Redout (rosso vivo) con modulazione alpha legata all'accelerazione $G_z$.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

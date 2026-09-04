@@ -160,7 +160,7 @@ const SUBSYSTEM_FACTORY_DEFAULTS: Dictionary = {
 	"Sensors": {
 		"folder": "Ship Drive/Programs/Sensors",
 		"files": {
-			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\ndecryption_key=SENS-CFG-7815\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n",
+			"Ship Drive/Programs/Sensors/sensors_config.dat": "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\ndecryption_key=SENS-CFG-7815\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=2000.0\nnoise_filter=0.92\n",
 			"Ship Drive/Programs/Sensors/radar_tuning.dat": "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\ndecryption_key=RADR-TUN-7815\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n"
 		}
 	},

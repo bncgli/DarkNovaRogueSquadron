@@ -59,7 +59,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="ShieldMatrixApp" type="Control"]
-custom_minimum_size = Vector2(620, 460)
+custom_minimum_size = Vector2(800, 520)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -104,7 +104,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 14
-text = "🛡️ SHIELD MATRIX & HULL DEFLECTORS"
+text = "🛡️ SHIELD MATRIX & DIRECTIONAL DEFENSE SYSTEMS"
 
 [node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
 unique_name_in_owner = true
@@ -145,37 +145,43 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="HologramCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+[node name="LeftColumnVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.15
+theme_override_constants/separation = 6
+
+[node name="HologramCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/HologramCard"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HoloTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+[node name="HoloTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/HologramCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "VISTA OLOGRAFICA 4 QUADRANTI"
+text = "VISTA OLOGRAFICA 4 QUADRANTI & DIFESE"
 horizontal_alignment = 1
 
-[node name="HologramCanvas" type="Control" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+[node name="HologramCanvas" type="Control" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/HologramCard/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(250, 190)
 layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("2_holo_script")
 
-[node name="TotalIntegrityLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+[node name="TotalIntegrityLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/HologramCard/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "INTEGRITÀ GLOBALE: 1000 / 1000 MW (100.0%)"
 horizontal_alignment = 1
 
-[node name="TotalIntegrityBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/HologramCard/VBox"]
+[node name="TotalIntegrityBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/HologramCard/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
@@ -183,48 +189,48 @@ max_value = 1000.0
 value = 1000.0
 show_percentage = false
 
-[node name="QuadrantsAndControlCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+[node name="QuadrantsAndControlCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="GridTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+[node name="GridTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "STATO MATRICE QUADRANTI"
 horizontal_alignment = 1
 
-[node name="Grid" type="GridContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+[node name="Grid" type="GridContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox"]
 layout_mode = 2
 columns = 2
 theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 4
 
-[node name="ForeBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+[node name="ForeBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ForeHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+[node name="ForeHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
 layout_mode = 2
 
-[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "PRUA (FORE)"
 
-[node name="ForeValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
+[node name="ForeValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/ForeBox/ForeHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "250/250 MW"
 
-[node name="ForeBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+[node name="ForeBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -232,33 +238,33 @@ max_value = 250.0
 value = 250.0
 show_percentage = false
 
-[node name="BalanceForeSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
+[node name="BalanceForeSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/ForeBox"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 5.0
 max_value = 70.0
 value = 25.0
 
-[node name="AftBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+[node name="AftBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AftHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+[node name="AftHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
 layout_mode = 2
 
-[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "POPPA (AFT)"
 
-[node name="AftValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
+[node name="AftValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/AftBox/AftHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "250/250 MW"
 
-[node name="AftBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+[node name="AftBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -266,33 +272,33 @@ max_value = 250.0
 value = 250.0
 show_percentage = false
 
-[node name="BalanceAftSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
+[node name="BalanceAftSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/AftBox"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 5.0
 max_value = 70.0
 value = 25.0
 
-[node name="PortBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+[node name="PortBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PortHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+[node name="PortHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
 layout_mode = 2
 
-[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "BABORDO (PORT)"
 
-[node name="PortValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
+[node name="PortValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/PortBox/PortHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "250/250 MW"
 
-[node name="PortBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+[node name="PortBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -300,33 +306,33 @@ max_value = 250.0
 value = 250.0
 show_percentage = false
 
-[node name="BalancePortSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
+[node name="BalancePortSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/PortBox"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 5.0
 max_value = 70.0
 value = 25.0
 
-[node name="StarboardBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid"]
+[node name="StarboardBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="StarboardHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+[node name="StarboardHeader" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
 layout_mode = 2
 
-[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
+[node name="Lbl" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "TRIBORDO (STARBOARD)"
 
-[node name="StarboardValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
+[node name="StarboardValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox/StarboardHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "250/250 MW"
 
-[node name="StarboardBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+[node name="StarboardBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -334,24 +340,24 @@ max_value = 250.0
 value = 250.0
 show_percentage = false
 
-[node name="BalanceStarboardSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
+[node name="BalanceStarboardSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/Grid/StarboardBox"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 5.0
 max_value = 70.0
 value = 25.0
 
-[node name="PadAndControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox"]
+[node name="PadAndControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="VectorPad" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
+[node name="VectorPad" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 75)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_pad_bg")
 
-[node name="PadHandle" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/VectorPad"]
+[node name="PadHandle" type="Panel" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/VectorPad"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 1
@@ -368,55 +374,56 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_pad_handle")
 
-[node name="PadInfoVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
+[node name="PadInfoVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="PadLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
+[node name="PadLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Vector Pad: Trascina per concentrare energia difensiva"
 
-[node name="ResetBalanceButton" type="Button" parent="ScrollContainer/Margin/VBox/MainContentHBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
+[node name="ResetBalanceButton" type="Button" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/QuadrantsAndControlCard/VBox/PadAndControlsHBox/PadInfoVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "⚖️ Reset Bilanciamento (25% cad.)"
 
-[node name="ActionCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="ActionCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ActionCard"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/ActionCard"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="EmergencyBoostButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+[node name="EmergencyBoostButton" type="Button" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/ActionCard/HBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(170, 32)
+custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 11
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_boost")
 text = "⚡ RICARICA RAPIDA"
 
-[node name="PhaseSyncSwitch" type="CheckButton" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+[node name="PhaseSyncSwitch" type="CheckButton" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/ActionCard/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 10
 button_pressed = true
-text = "Sincronizza Armoniche"
+text = "Armoniche"
 
-[node name="PhaseStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+[node name="PhaseStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/ActionCard/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "ARMONICHE: SINCRONIZZATE (440.0 Hz)"
+clip_text = true
 
-[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/ActionCard/HBox"]
+[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/LeftColumnVBox/ActionCard/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -424,6 +431,73 @@ theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 10
 text = "[LOG] Matrice Scudi pronta."
 clip_text = true
+
+[node name="DefenseDevicesPanel" type="PanelContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.85
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DevicesHeaderVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="DevicesTitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox/DevicesHeaderVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "🛡️ DISPOSITIVI DI DIFESA ATTIVA"
+
+[node name="DevicesSubtitle" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox/DevicesHeaderVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 0.95, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "Gatling Point-Defense & Lanciatori Flack"
+
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="DevicesScrollContainer" type="ScrollContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DevicesListContainer" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox/DevicesScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="DevicesSummaryHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DevicesSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox/DevicesSummaryHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.65, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 10
+text = "Copertura: 3 apparati attivi"
+
+[node name="ReloadAllDefensesButton" type="Button" parent="ScrollContainer/Margin/VBox/MainContentHBox/DefenseDevicesPanel/Margin/VBox/DevicesSummaryHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "🔄 Ricarica Tutte"
 
 [node name="DisconnectedOverlay" type="Panel" parent="."]
 unique_name_in_owner = true

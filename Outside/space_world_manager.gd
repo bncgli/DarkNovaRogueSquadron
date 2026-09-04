@@ -21,10 +21,20 @@ signal active_ping_triggered(origin: Vector3, radius: float)
 signal sensors_scan_completed(contacts: Array)
 signal service_drone_state_changed(telemetry: Dictionary)
 signal ship_system_power_changed(category: String, is_powered: bool)
+signal projectile_spawned(projectile_data: Dictionary)
+signal projectile_intercepted(projectile_id: String, device_id: String, sector: int)
+signal projectile_deflected(projectile_id: String, device_id: String, sector: int)
+signal projectile_destroyed(projectile_id: String)
+signal ship_damage_taken(pos: Vector2, type: String)
+signal electrical_short_sparked(pos: Vector2)
+signal duct_drone_position_updated(pos: Vector2)
+signal g_force_updated(g_force: float)
+signal crew_game_over(reason: String)
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
 const DAMAGE_TYPE_SHORT_CIRCUIT: String = "short_circuit"
+const DAMAGE_TYPE_FIRE: String = "fire"
 
 const SPACE_SCENE_PATH := "res://Outside/space_scene.tscn"
 const CAMERA_FEED_WINDOW_SCENE := "res://Applications/Cams/CameraFeed/camera_feed_window.tscn"
@@ -40,16 +50,29 @@ func _ready() -> void:
 	
 	_connect_submanagers()
 	_init_space_world()
+	duct_drone_pos = get_drone_spawn_pos()
+	duct_drone_heading = get_drone_spawn_heading()
+	duct_drone_lights = false
 	generate_initial_ship_damages()
 	call_deferred("_connect_network_signals")
 
 func _connect_submanagers() -> void:
-	drone_manager.state_changed.connect(func(p, h, s, b, l, sa, sr): duct_drone_state_changed.emit(p, h, s, b, l, sa, sr))
+	drone_manager.state_changed.connect(func(p, h, s, b, l, sa, sr):
+		duct_drone_state_changed.emit(p, h, s, b, l, sa, sr)
+		duct_drone_position_updated.emit(p)
+	)
 	drone_manager.reset_performed.connect(func(): duct_drone_reset_performed.emit())
 	drone_manager.repair_state_changed.connect(func(ir, di, pr): duct_drone_repair_state_changed.emit(ir, di, pr))
 	
 	damage_manager.damages_updated.connect(func(d): ship_damages_updated.emit(d))
-	damage_manager.damage_discovered.connect(func(d): ship_damage_discovered.emit(d))
+	damage_manager.damage_discovered.connect(func(d):
+		ship_damage_discovered.emit(d)
+		var d_pos: Vector2 = d.get("position", Vector2.ZERO)
+		var d_type: String = str(d.get("damage_type", d.get("type", "breach")))
+		ship_damage_taken.emit(d_pos, d_type)
+		if d_type == "short_circuit":
+			electrical_short_sparked.emit(d_pos)
+	)
 	damage_manager.damage_repaired.connect(func(d): ship_damage_repaired.emit(d))
 	
 	camera_manager.window_opened.connect(func(ci, w): camera_window_opened.emit(ci, w))
@@ -70,7 +93,7 @@ var duct_drone_pos: Vector2 = INITIAL_DUCT_DRONE_POS
 var duct_drone_heading: float = INITIAL_DUCT_DRONE_HEADING
 var duct_drone_speed: float = 0.0
 var duct_drone_battery: float = 100.0
-var duct_drone_lights: bool = true
+var duct_drone_lights: bool = false
 var duct_drone_scan_active: bool = false
 var duct_drone_scan_radius: float = 0.0
 
@@ -291,6 +314,7 @@ func _physics_process(delta: float) -> void:
 	# Aggiorna la simulazione fisica del Duct Drone sull'Host o in modalità Solo / Standby
 	if not is_client:
 		_update_duct_drone_physics(delta)
+		_update_incoming_projectiles(delta)
 		if is_host and is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 			_rpc_sync_duct_drone_state.rpc(
 				duct_drone_pos,
@@ -302,6 +326,7 @@ func _physics_process(delta: float) -> void:
 				duct_drone_scan_radius
 			)
 	else:
+		_update_incoming_projectiles(delta)
 		if duct_drone_scan_active:
 			duct_drone_scan_radius += 180.0 * delta
 			if duct_drone_scan_radius > 160.0:
@@ -684,6 +709,28 @@ func _update_duct_drone_physics(delta: float) -> void:
 					dmg.revealed_by = "radar"
 					damages_changed = true
 					ship_damage_discovered.emit(dmg)
+			
+			elif (dmg_type == DAMAGE_TYPE_FIRE or dmg_type == "dmg_fire" or dmg_type == "FIRE" or dmg_type == "fire"):
+				var dist := duct_drone_pos.distance_to(dmg_pos)
+				if dist <= 45.0:
+					dmg.revealed = true
+					dmg.revealed_by = "thermal"
+					damages_changed = true
+					ship_damage_discovered.emit(dmg)
+				elif duct_drone_lights and dist <= 90.0:
+					var to_dmg := (dmg_pos - duct_drone_pos).normalized()
+					var forward := Vector2.from_angle(duct_drone_heading)
+					var angle_diff := absf(forward.angle_to(to_dmg))
+					if angle_diff <= 0.55:
+						dmg.revealed = true
+						dmg.revealed_by = "light"
+						damages_changed = true
+						ship_damage_discovered.emit(dmg)
+				elif duct_drone_scan_active and dist <= duct_drone_scan_radius:
+					dmg.revealed = true
+					dmg.revealed_by = "radar"
+					damages_changed = true
+					ship_damage_discovered.emit(dmg)
 	
 	# 5. Elaborazione Riparazione in corso
 	if is_duct_drone_repairing and repairing_damage_id != "":
@@ -728,16 +775,63 @@ func _update_duct_drone_physics(delta: float) -> void:
 	
 	duct_drone_state_changed.emit(duct_drone_pos, duct_drone_heading, duct_drone_speed, duct_drone_battery, duct_drone_lights, duct_drone_scan_active, duct_drone_scan_radius)
 
+var sealed_rooms: Dictionary = {}
+
+func set_room_sealed(room_id: String, sealed: bool) -> void:
+	sealed_rooms[room_id] = sealed
+	if _life_support_instance and is_instance_valid(_life_support_instance) and _life_support_instance.has_method("set_bulkhead_sealed"):
+		if _life_support_instance.rooms_state.has(room_id) and _life_support_instance.rooms_state[room_id].get("is_sealed") != sealed:
+			_life_support_instance.set_bulkhead_sealed(room_id, sealed)
+
+func is_room_sealed(room_id: String) -> bool:
+	if _life_support_instance and is_instance_valid(_life_support_instance) and _life_support_instance.has_method("is_room_sealed"):
+		return _life_support_instance.is_room_sealed(room_id)
+	return sealed_rooms.get(room_id, false)
+
+func get_sealed_rooms() -> Array:
+	if _life_support_instance and is_instance_valid(_life_support_instance) and _life_support_instance.has_method("get_sealed_rooms"):
+		var ls_sealed = _life_support_instance.get_sealed_rooms()
+		if ls_sealed.size() > 0:
+			return ls_sealed
+	var result: Array = []
+	var bp := get_ship_blueprint()
+	if bp:
+		for room in bp.rooms:
+			var r_id: String = room.id if "id" in room else room.get("id", "")
+			if sealed_rooms.get(r_id, false):
+				result.append({
+					"id": r_id,
+					"name": room.name if "name" in room else room.get("name", ""),
+					"rect": room.rect if "rect" in room else room.get("rect", Rect2()),
+					"is_sealed": true
+				})
+	return result
+
+func _can_duct_drone_move(from_pos: Vector2, to_pos: Vector2) -> bool:
+	if not _is_duct_drone_position_valid(to_pos):
+		return false
+	
+	var sealed := get_sealed_rooms()
+	for room in sealed:
+		var rect: Rect2 = room.rect if "rect" in room else room.get("rect", Rect2())
+		if rect.size == Vector2.ZERO:
+			continue
+		var was_inside := rect.has_point(from_pos)
+		var will_be_inside := rect.has_point(to_pos)
+		if was_inside != will_be_inside:
+			return false
+	return true
+
 func _constrain_duct_drone_movement(old_pos: Vector2, new_pos: Vector2) -> Vector2:
-	if _is_duct_drone_position_valid(new_pos):
+	if _can_duct_drone_move(old_pos, new_pos):
 		return new_pos
 	
 	var test_x := Vector2(new_pos.x, old_pos.y)
-	if _is_duct_drone_position_valid(test_x):
+	if _can_duct_drone_move(old_pos, test_x):
 		return test_x
 	
 	var test_y := Vector2(old_pos.x, new_pos.y)
-	if _is_duct_drone_position_valid(test_y):
+	if _can_duct_drone_move(old_pos, test_y):
 		return test_y
 	
 	return old_pos
@@ -1065,7 +1159,13 @@ func spawn_ship_damage(type: String = "", pos: Vector2 = Vector2.ZERO, sector_na
 		return null
 	
 	if type == "":
-		type = DAMAGE_TYPE_BREACH if randf() < 0.5 else DAMAGE_TYPE_SHORT_CIRCUIT
+		var r := randf()
+		if r < 0.34:
+			type = DAMAGE_TYPE_BREACH
+		elif r < 0.67:
+			type = DAMAGE_TYPE_SHORT_CIRCUIT
+		else:
+			type = DAMAGE_TYPE_FIRE
 	
 	if pos == Vector2.ZERO:
 		var bp_rooms := get_duct_rooms()
@@ -1465,6 +1565,42 @@ func _position_camera_window(win: FakeWindow, cam_id: String) -> void:
 
 # --- WEAPONS SYSTEM & TARGETING METHODS ---
 
+var active_probes: Array[Dictionary] = []
+
+## Registra e rilascia nello spazio una sonda telemetrica attiva verso la direzione specificata
+func spawn_telemetry_probe(origin: Vector3, direction: Vector3) -> Dictionary:
+	var probe_id := "PROBE-%03d" % (active_probes.size() + 1)
+	var dir_norm := direction.normalized() if direction.length_squared() > 0.01 else Vector3(0, 0, -1)
+	var probe_data: Dictionary = {
+		"id": probe_id,
+		"name": "SONDA PROBE-%02d" % (active_probes.size() + 1),
+		"pos": origin + dir_norm * 15.0,
+		"velocity": dir_norm * 35.0,
+		"type": "PROBE",
+		"threat_level": "FRIENDLY",
+		"battery": 100.0,
+		"signal_signature": 1.0,
+		"scan_radius": 1000.0,
+		"radius_m": 5.0,
+		"timestamp": Time.get_ticks_msec()
+	}
+	active_probes.append(probe_data)
+	return probe_data
+
+## Ritorna l'ultima sonda telemetrica attiva in volo (o vuota se nessuna)
+func get_active_probe() -> Dictionary:
+	if active_probes.is_empty():
+		return {}
+	return active_probes.back()
+
+## Ritorna tutte le sonde attive
+func get_active_probes() -> Array[Dictionary]:
+	return active_probes
+
+## Cancella le sonde attive
+func clear_active_probes() -> void:
+	active_probes.clear()
+
 ## Ritorna l'elenco dei bersagli rilevati nello spazio circostante (asteroidi o minacce).
 func get_weapon_targets() -> Array[Dictionary]:
 	var targets: Array[Dictionary] = []
@@ -1527,6 +1663,27 @@ func get_weapon_targets() -> Array[Dictionary]:
 				"threat_level": dt["threat"]
 			})
 	
+	# Includi le sonde attive lanciate nello spazio
+	for p in active_probes:
+		var p_pos: Vector3 = p.get("pos", Vector3.ZERO)
+		var diff: Vector3 = p_pos - ship_pos
+		var dist: float = diff.length()
+		var local_diff: Vector3 = ship_basis.inverse() * diff
+		var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+		targets.append({
+			"id": p.get("id"),
+			"name": p.get("name"),
+			"pos": p_pos,
+			"rel_pos": diff,
+			"distance": dist,
+			"velocity": p.get("velocity", Vector3.ZERO),
+			"bearing_deg": bearing_deg,
+			"elevation_deg": elevation_deg,
+			"type": "PROBE",
+			"threat_level": "FRIENDLY"
+		})
+	
 	# Ordina per distanza crescente
 	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return float(a.get("distance", 0.0)) < float(b.get("distance", 0.0))
@@ -1547,8 +1704,13 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 	var origin: Vector3 = ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
 	var target_pos: Vector3 = origin + (manual_aim_dir * 100.0 if manual_aim_dir.length_squared() > 0.01 else Vector3(0, 0, -100))
 	var hit_success: bool = false
+	var probe_info: Dictionary = {}
 	
-	if not target_id.is_empty():
+	if weapon_type == "PROBE" or weapon_type == "TELEMETRY_PROBE":
+		probe_info = spawn_telemetry_probe(origin, manual_aim_dir)
+		target_pos = probe_info.get("pos", target_pos)
+		hit_success = true
+	elif not target_id.is_empty():
 		for t in get_weapon_targets():
 			if t.get("id") == target_id:
 				target_pos = t.get("pos", Vector3.ZERO)
@@ -1561,7 +1723,8 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 		"origin": origin,
 		"target_pos": target_pos,
 		"hit_success": hit_success,
-		"target_id": target_id
+		"target_id": target_id,
+		"probe": probe_info
 	}
 
 # --- SENSORS & TACTICAL MAP METHODS ---
@@ -1591,6 +1754,18 @@ func is_sensors_powered() -> bool:
 			return true # Sostituito logica obsoleta inputs_powered
 	return true
 
+## Verifica se la nave ha potenza disponibile sufficiente (es. per ping radar)
+func can_consume_power(_amount_mw: float) -> bool:
+	return is_sensors_powered()
+
+## Alias per compatibilità con PowerGrid/Sensors
+func has_available_power(amount_mw: float) -> bool:
+	return can_consume_power(amount_mw)
+
+## Consuma potenza istantanea
+func consume_power(amount_mw: float) -> bool:
+	return can_consume_power(amount_mw)
+
 func has_radar_damage() -> bool:
 	for d in ship_damages:
 		if d and not d.repaired:
@@ -1618,6 +1793,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 					var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
 					
 					var is_hazard := dist < 60.0
+					var mass_val: float = 2400.0
 					entities.append({
 						"id": child.name,
 						"name": child.name.replace("_", " "),
@@ -1630,6 +1806,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 						"type": "ASTEROID",
 						"iff_tag": "HAZARD" if is_hazard else "NEUTRAL",
 						"stealth_level": 0.0,
+						"radius_m": 30.0,
 						"composition": {
 							"Ferro (Fe)": 45.0,
 							"Nichel (Ni)": 28.0,
@@ -1637,7 +1814,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 							"Cobalto": 9.0
 						},
 						"integrity": 100.0,
-						"mass_tons": 2400.0,
+						"mass_tons": mass_val,
 						"radiation_level": 0.05,
 						"signal_signature": 0.85,
 						"estimated_value_cr": 4500
@@ -1664,6 +1841,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "STATION",
 			"iff_tag": "FRIENDLY",
 			"stealth_level": 0.0,
+			"radius_m": 120.0,
 			"composition": {
 				"Struttura Modulare": 70.0,
 				"Reattore Fusione": 20.0,
@@ -1686,6 +1864,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "MINERAL_ASTEROID",
 			"iff_tag": "HAZARD",
 			"stealth": 0.0,
+			"radius_m": 35.0,
 			"composition": {"Titanio (Ti)": 52.0, "Platino (Pt)": 18.0, "Ferro (Fe)": 20.0, "Silicati": 10.0},
 			"integrity": 100.0,
 			"mass_tons": 3200.0,
@@ -1701,6 +1880,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "ASTEROID",
 			"iff_tag": "NEUTRAL",
 			"stealth": 0.0,
+			"radius_m": 25.0,
 			"composition": {"Ghiaccio d'Acqua": 65.0, "Silicati": 25.0, "Metano": 10.0},
 			"integrity": 95.0,
 			"mass_tons": 1800.0,
@@ -1716,6 +1896,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "WRECK",
 			"iff_tag": "NEUTRAL",
 			"stealth": 0.20,
+			"radius_m": 45.0,
 			"composition": {"Blindatura Scafo": 55.0, "Elettronica Avionica": 25.0, "Leghe Rare": 20.0},
 			"integrity": 32.0,
 			"mass_tons": 12500.0,
@@ -1731,6 +1912,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "STATION",
 			"iff_tag": "FRIENDLY",
 			"stealth": 0.0,
+			"radius_m": 120.0,
 			"composition": {"Struttura Modulare": 70.0, "Reattore Fusione": 20.0, "Serbatoi Idrogeno": 10.0},
 			"integrity": 100.0,
 			"mass_tons": 185000.0,
@@ -1746,6 +1928,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "BEACON",
 			"iff_tag": "FRIENDLY",
 			"stealth": 0.0,
+			"radius_m": 10.0,
 			"composition": {"Emettitore Subspaziale": 60.0, "Pannelli Solari": 40.0},
 			"integrity": 90.0,
 			"mass_tons": 450.0,
@@ -1761,6 +1944,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "SHIP_HOSTILE",
 			"iff_tag": "HOSTILE",
 			"stealth": 0.40,
+			"radius_m": 8.0,
 			"composition": {"Scafo Composito": 40.0, "Testata Energetica": 45.0, "Micro-Propulsore": 15.0},
 			"integrity": 80.0,
 			"mass_tons": 120.0,
@@ -1776,6 +1960,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "UNKNOWN",
 			"iff_tag": "UNKNOWN",
 			"stealth": 0.75,
+			"radius_m": 25.0,
 			"composition": {"Assorbitori Radar": 60.0, "ECM Array": 30.0, "Leghe Oscure": 10.0},
 			"integrity": 100.0,
 			"mass_tons": 4500.0,
@@ -1810,6 +1995,7 @@ func get_sensor_entities() -> Array[Dictionary]:
 				"type": lrd["type"],
 				"iff_tag": lrd["iff_tag"],
 				"stealth_level": lrd["stealth"],
+				"radius_m": float(lrd.get("radius_m", 25.0)),
 				"composition": lrd["composition"],
 				"integrity": lrd["integrity"],
 				"mass_tons": lrd["mass_tons"],
@@ -1838,12 +2024,43 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"type": "WAYPOINT",
 			"iff_tag": "WAYPOINT",
 			"stealth_level": 0.0,
+			"radius_m": 1.0,
 			"composition": {},
 			"integrity": 100.0,
 			"mass_tons": 0.0,
 			"radiation_level": 0.0,
 			"signal_signature": 1.0,
 			"estimated_value_cr": 0
+		})
+	
+	# Includi le sonde attive lanciate nello spazio
+	for p in active_probes:
+		var p_pos: Vector3 = p.get("pos", Vector3.ZERO)
+		var diff: Vector3 = p_pos - ship_pos
+		var dist: float = diff.length()
+		var local_diff: Vector3 = ship_basis.inverse() * diff
+		var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+		entities.append({
+			"id": p.get("id"),
+			"name": p.get("name"),
+			"pos": p_pos,
+			"rel_pos": diff,
+			"distance": dist,
+			"velocity": p.get("velocity", Vector3.ZERO),
+			"bearing_deg": bearing_deg,
+			"elevation_deg": elevation_deg,
+			"type": "PROBE",
+			"iff_tag": "FRIENDLY",
+			"stealth_level": 0.0,
+			"radius_m": 5.0,
+			"scan_radius": float(p.get("scan_radius", 1000.0)),
+			"composition": {"Array Sensori": 60.0, "Batteria Litio": 40.0},
+			"integrity": 100.0,
+			"mass_tons": 0.5,
+			"radiation_level": 0.01,
+			"signal_signature": 1.0,
+			"estimated_value_cr": 250
 		})
 	
 	entities.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -1972,3 +2189,176 @@ func is_cruise_drive_powered() -> bool:
 	if cdc:
 		return cdc.get_is_powered()
 	return false
+
+# --- LIFE SUPPORT & CREW VITALS INTEGRATION API ---
+var _life_support_instance: Node = null
+var _bridge_atmo_override: Dictionary = {}
+var _current_ship_g_force: float = 1.0
+
+func register_life_support_app(app: Node) -> void:
+	_life_support_instance = app
+
+func unregister_life_support_app(app: Node) -> void:
+	if _life_support_instance == app:
+		_life_support_instance = null
+
+func get_life_support_app() -> Node:
+	if _life_support_instance and is_instance_valid(_life_support_instance):
+		return _life_support_instance
+	return null
+
+func set_bridge_atmo_override(atmo: Dictionary) -> void:
+	_bridge_atmo_override = atmo
+
+func clear_bridge_atmo_override() -> void:
+	_bridge_atmo_override.clear()
+
+func get_bridge_atmo_state() -> Dictionary:
+	if not _bridge_atmo_override.is_empty():
+		return _bridge_atmo_override.duplicate()
+	if _life_support_instance and is_instance_valid(_life_support_instance) and _life_support_instance.has_method("get_room_atmo_state"):
+		var candidates: Array[String] = ["bridge", "ponte_comando", "room_1", "command"]
+		for cand in candidates:
+			var st: Dictionary = _life_support_instance.get_room_atmo_state(cand)
+			if not st.is_empty():
+				return st
+		if _life_support_instance.has_method("get_all_rooms_atmo_state"):
+			var all_st: Dictionary = _life_support_instance.get_all_rooms_atmo_state()
+			for r_id in all_st:
+				if "bridge" in r_id.to_lower() or "ponte" in r_id.to_lower() or "command" in r_id.to_lower():
+					return all_st[r_id]
+			if not all_st.is_empty():
+				return all_st.values()[0]
+	return {
+		"o2_pct": 21.0,
+		"co2_pct": 0.04,
+		"pressure_kpa": 101.3,
+		"temperature_c": 21.5,
+		"heater_online": true,
+		"has_breach": false,
+		"has_short_circuit": false,
+		"is_fire_active": false
+	}
+
+func get_bridge_position() -> Vector2:
+	var bp := get_ship_blueprint()
+	if bp:
+		for r in bp.rooms:
+			var rid := str(r.id).to_lower()
+			var rname := str(r.name).to_lower()
+			if rid == "bridge" or rid == "ponte_comando" or "bridge" in rid or "ponte" in rid or "command" in rname or "ponte" in rname:
+				return r.rect.get_center()
+		if not bp.rooms.is_empty():
+			return bp.rooms[0].rect.get_center()
+	for r in get_duct_rooms():
+		var rid := str(r.id).to_lower()
+		var rname := str(r.name).to_lower()
+		if rid == "bridge" or rid == "ponte_comando" or "bridge" in rid or "ponte" in rid or "command" in rname or "ponte" in rname:
+			return r.rect.get_center()
+	return Vector2(300, 80)
+
+func get_ship_g_force() -> float:
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		if ship.has_method("get_current_g_force"):
+			return ship.get_current_g_force()
+		elif "current_g_force" in ship:
+			return float(ship.current_g_force)
+	return _current_ship_g_force
+
+func set_ship_g_force(g: float) -> void:
+	_current_ship_g_force = g
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship) and ship.has_method("set_current_g_force"):
+		ship.set_current_g_force(g)
+	g_force_updated.emit(g)
+
+func emit_ship_damage_taken(pos: Vector2, type: String) -> void:
+	ship_damage_taken.emit(pos, type)
+
+func emit_electrical_short_sparked(pos: Vector2) -> void:
+	electrical_short_sparked.emit(pos)
+
+func emit_duct_drone_position_updated(pos: Vector2) -> void:
+	duct_drone_position_updated.emit(pos)
+
+# --- POINT DEFENSE & INCOMING PROJECTILES API ---
+
+var incoming_projectiles: Array[Dictionary] = []
+
+func get_incoming_projectiles() -> Array[Dictionary]:
+	return incoming_projectiles
+
+func spawn_incoming_projectile(
+	p_type: String,
+	origin: Vector3,
+	p_velocity: Vector3,
+	damage: float = 25.0,
+	target_pos: Vector3 = Vector3.ZERO
+) -> Dictionary:
+	var proj_id := "PROJ_%d_%d" % [Time.get_ticks_msec(), incoming_projectiles.size() + 1]
+	var upper_type := p_type.to_upper()
+	var is_hom := (upper_type in ["HOMING_MISSILE", "TORPEDO", "MISSILE_HOMING", "MISSILE"])
+	var proj_data: Dictionary = {
+		"id": proj_id,
+		"type": upper_type,
+		"position": origin,
+		"velocity": p_velocity,
+		"damage": damage,
+		"target_pos": target_pos,
+		"is_homing": is_hom,
+		"is_deflected": false,
+		"is_destroyed": false,
+		"spawn_time": Time.get_ticks_msec() / 1000.0,
+		"lifetime": 15.0
+	}
+	incoming_projectiles.append(proj_data)
+	projectile_spawned.emit(proj_data)
+	return proj_data
+
+func intercept_projectile(projectile_id: String, device_id: String = "", sector: int = 0) -> bool:
+	for i in range(incoming_projectiles.size()):
+		if incoming_projectiles[i].get("id") == projectile_id:
+			incoming_projectiles[i]["is_destroyed"] = true
+			projectile_intercepted.emit(projectile_id, device_id, sector)
+			projectile_destroyed.emit(projectile_id)
+			incoming_projectiles.remove_at(i)
+			return true
+	return false
+
+func deflect_projectile(projectile_id: String, device_id: String = "", sector: int = 0) -> bool:
+	for i in range(incoming_projectiles.size()):
+		if incoming_projectiles[i].get("id") == projectile_id:
+			incoming_projectiles[i]["is_deflected"] = true
+			incoming_projectiles[i]["is_homing"] = false
+			var cur_vel: Vector3 = incoming_projectiles[i].get("velocity", Vector3.ZERO)
+			incoming_projectiles[i]["velocity"] = cur_vel.rotated(Vector3.UP, deg_to_rad(randf_range(45.0, 90.0)))
+			projectile_deflected.emit(projectile_id, device_id, sector)
+			return true
+	return false
+
+func remove_incoming_projectile(projectile_id: String) -> void:
+	for i in range(incoming_projectiles.size()):
+		if incoming_projectiles[i].get("id") == projectile_id:
+			incoming_projectiles.remove_at(i)
+			return
+
+func clear_incoming_projectiles() -> void:
+	incoming_projectiles.clear()
+
+func _update_incoming_projectiles(delta: float) -> void:
+	if incoming_projectiles.is_empty():
+		return
+	var remaining: Array[Dictionary] = []
+	var now := Time.get_ticks_msec() / 1000.0
+	for p in incoming_projectiles:
+		if p.get("is_destroyed", false):
+			continue
+		var spawn_t: float = float(p.get("spawn_time", now))
+		var lifetime: float = float(p.get("lifetime", 15.0))
+		if (now - spawn_t) > lifetime:
+			continue
+		var vel: Vector3 = p.get("velocity", Vector3.ZERO)
+		p["position"] = p.get("position", Vector3.ZERO) + vel * delta
+		remaining.append(p)
+	incoming_projectiles = remaining

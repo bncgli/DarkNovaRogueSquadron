@@ -31,7 +31,7 @@ decryption_key=SENS-CFG-7815
 
 [SWEEP]
 sweep_frequency_hz=12.0
-active_ping_radius=50000.0
+active_ping_radius=2000.0
 noise_filter=0.92
 ",
 "desc": "Configurazione frequenza sweep, raggio ping attivo e filtri rumore sensori.",

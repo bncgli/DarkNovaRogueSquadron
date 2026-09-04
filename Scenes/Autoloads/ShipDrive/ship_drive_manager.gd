@@ -176,6 +176,30 @@ func unmount_drive() -> void:
 	
 	ship_drive_unmounted.emit()
 
+func mount_target_drive(target_ship_id: String, target_name: String = "Nave Bersaglio", custom_passwords: Dictionary = {}) -> void:
+	var rdm := get_node_or_null("/root/RemoteDriveManager")
+	if rdm and rdm.has_method("mount_target_drive"):
+		rdm.mount_target_drive(target_ship_id, target_name, custom_passwords)
+	else:
+		var target_drive_path := "user://files/Target Drive"
+		if not DirAccess.dir_exists_absolute(target_drive_path):
+			DirAccess.make_dir_recursive_absolute(target_drive_path)
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/FlightControl")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/Cams")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/System")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/LifeSupport")
+			DirAccess.make_dir_recursive_absolute(target_drive_path + "/Weapons")
+		_refresh_desktop()
+
+func unmount_target_drive() -> void:
+	var rdm := get_node_or_null("/root/RemoteDriveManager")
+	if rdm and rdm.has_method("unmount_target_drive"):
+		rdm.unmount_target_drive()
+	else:
+		if DirAccess.dir_exists_absolute("user://files/Target Drive"):
+			_delete_dir_recursive("user://files/Target Drive")
+		_refresh_desktop()
+
 func _populate_default_ship_drive_files() -> void:
 	if FileAccess.file_exists("user://files/Ship Drive/Ship Systems.txt") and FileAccess.file_exists("user://files/Ship Drive/Programs/Weapons/weapons_config.dat"):
 		return
@@ -250,7 +274,7 @@ func _populate_default_ship_drive_files() -> void:
 	_write_file_content("Ship Drive/Programs/Diagnostics/diagnostics_config.dat", "# DARK NOVA SYSTEM DIAGNOSTICS RUNTIME CONFIGURATION\n# WARNING: SYSTEM INTEGRITY & THREAT SCANNER CONFIGURATION\n[SYSTEM]\napp_name=Diagnostics\nversion=1.0.4\nstatus=OPERATIONAL\ndiagnostics_subsystem=ACTIVE\ndecryption_key=DIAG-CFG-7815\n\n[SCANNER_SETTINGS]\nscan_depth=DEEP\nauto_quarantine_malware=true\nalert_sound=true\nscan_speed_multiplier=1.0\ntamper_detection_level=HIGH\nlog_telemetry_integrity=true\n")
 	_write_file_content("Ship Drive/Programs/Diagnostics/security_tuning.dat", "# ICE DEFENSE & CYBER SECURITY TUNING MATRIX\n[ICE_DEFENSE]\ndecryption_key=SECU-TUN-7815\nice_firewall_strength=100.0\nfactory_reset_delay_sec=3.0\ntamper_detection_level=HIGH\nice_recharge_rate=5.0\nmalware_purge_efficiency=1.0\noverclock_bypass_security=false\n")
 	
-	_write_file_content("Ship Drive/Programs/Sensors/sensors_config.dat", "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\ndecryption_key=SENS-CFG-7815\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=50000.0\nnoise_filter=0.92\n")
+	_write_file_content("Ship Drive/Programs/Sensors/sensors_config.dat", "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION\n# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE\n[SYSTEM]\napp_name=SensorsApp\nversion=1.0.0\nstatus=OPERATIONAL\ndecryption_key=SENS-CFG-7815\n\n[SWEEP]\nsweep_frequency_hz=12.0\nactive_ping_radius=2000.0\nnoise_filter=0.92\n")
 	_write_file_content("Ship Drive/Programs/Sensors/radar_tuning.dat", "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX\n[TUNING]\ndecryption_key=RADR-TUN-7815\nspectrum_sensitivity=1.0\niff_auto_tag=true\nstealth_detection_threshold=0.35\n")
 	
 	_write_file_content("Ship Drive/systems/ship_blueprint.dat", "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS\n# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE\n[BLUEPRINT_METADATA]\ndecryption_key=BLUP-SYS-7815\nship_id=dark_nova_corvette\nship_name=Dark Nova Corvette\nship_class=Corvetta d'Assalto & Ricognizione Leggera\nbounds_x=60.0\nbounds_y=30.0\nbounds_width=480.0\nbounds_height=420.0\ndrone_spawn_x=300.0\ndrone_spawn_y=80.0\ndrone_spawn_heading=-1.5707963\n\n[BLUEPRINT_SUBLAYERS]\nrooms_count=10\nducts_count=14\ndamages_count=8\ndrive_files_count=23\ninstalled_apps_count=9\n")

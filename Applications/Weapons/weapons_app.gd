@@ -1,9 +1,9 @@
 class_name WeaponsApp
 extends BaseApp
 
-## Applicazione GodotOS per i Sistemi d'Arma Tattici e Difesa di Prossimità (Tactical Weapons & Point Defense).
+## Applicazione GodotOS per i Sistemi d'Arma Tattici, Torretta di Puntamento e Difesa di Prossimità.
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
-## Punto 5.1 della Roadmap Dark Nova Features Design.
+## Task TASK-031: Weapons Turret Overhaul, Mouse Aiming & Ammo Types.
 
 const APP_TITLE: String = "Tactical Weapons & Point Defense"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 520)
@@ -13,10 +13,22 @@ const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/Weapons/weapons_co
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/Weapons/ammo_tuning.dat"
 const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Weapons/ammo_tuning.dat"
 
-enum WeaponGroup {
-	LASER = 0,
-	TORPEDO = 1,
-	PDG = 2
+enum AmmoType {
+	HEAVY_MG = 1,
+	HEAVY_CANNON = 2,
+	MISSILE = 3,
+	PROBE = 4
+}
+
+# Compatibilita' retroattiva con i vecchi identificatori WeaponGroup
+const WeaponGroup = {
+	"LASER": AmmoType.HEAVY_CANNON,
+	"TORPEDO": AmmoType.MISSILE,
+	"PDG": AmmoType.HEAVY_MG,
+	"HEAVY_MG": AmmoType.HEAVY_MG,
+	"HEAVY_CANNON": AmmoType.HEAVY_CANNON,
+	"MISSILE": AmmoType.MISSILE,
+	"PROBE": AmmoType.PROBE
 }
 
 # --- RIFERIMENTI NODI UI ---
@@ -27,10 +39,14 @@ enum WeaponGroup {
 @onready var dat_status_badge: Label = get_node_or_null("%DatStatusBadge")
 @onready var reload_dat_button: Button = get_node_or_null("%ReloadDatButton")
 
-# Selettore Gruppi d'Arma
-@onready var btn_group_laser: Button = get_node_or_null("%BtnGroupLaser")
-@onready var btn_group_torpedo: Button = get_node_or_null("%BtnGroupTorpedo")
-@onready var btn_group_pdg: Button = get_node_or_null("%BtnGroupPDG")
+# Selettori Munizioni / Gruppi d'Arma [1-4]
+@onready var btn_ammo_mg: Button = get_node_or_null("%BtnAmmoMG") if get_node_or_null("%BtnAmmoMG") else get_node_or_null("%BtnGroupPDG")
+@onready var btn_ammo_cannon: Button = get_node_or_null("%BtnAmmoCannon") if get_node_or_null("%BtnAmmoCannon") else get_node_or_null("%BtnGroupLaser")
+@onready var btn_ammo_missile: Button = get_node_or_null("%BtnAmmoMissile") if get_node_or_null("%BtnAmmoMissile") else get_node_or_null("%BtnGroupTorpedo")
+@onready var btn_ammo_probe: Button = get_node_or_null("%BtnAmmoProbe")
+@onready var btn_group_laser: Button = btn_ammo_cannon
+@onready var btn_group_torpedo: Button = btn_ammo_missile
+@onready var btn_group_pdg: Button = btn_ammo_mg
 @onready var selected_group_label: Label = get_node_or_null("%SelectedGroupLabel")
 
 # Indicatori di Stato e Indicatori Termici / Energetici
@@ -39,7 +55,10 @@ enum WeaponGroup {
 @onready var heat_progress: ProgressBar = get_node_or_null("%HeatProgress")
 @onready var heat_value_label: Label = get_node_or_null("%HeatValueLabel")
 @onready var ammo_torpedo_label: Label = get_node_or_null("%AmmoTorpedoLabel")
+@onready var ammo_missile_label: Label = get_node_or_null("%AmmoMissileLabel") if get_node_or_null("%AmmoMissileLabel") else get_node_or_null("%AmmoTorpedoLabel")
 @onready var ammo_pdg_label: Label = get_node_or_null("%AmmoPDGLabel")
+@onready var ammo_mg_label: Label = get_node_or_null("%AmmoMGLabel") if get_node_or_null("%AmmoMGLabel") else get_node_or_null("%AmmoPDGLabel")
+@onready var ammo_probe_label: Label = get_node_or_null("%AmmoProbeLabel")
 @onready var overheat_warning_label: Label = get_node_or_null("%OverheatWarningLabel")
 
 # Radar Tattico & Puntamento
@@ -52,13 +71,14 @@ enum WeaponGroup {
 @onready var aim_pitch_slider: HSlider = get_node_or_null("%AimPitchSlider")
 @onready var aim_center_button: Button = get_node_or_null("%AimCenterButton")
 
-# Feed Camera Torretta & Viewport 3D
+# Feed Camera Torretta, Viewport 3D & HUD Traiettoria
 @onready var sub_viewport_container: SubViewportContainer = get_node_or_null("%SubViewportContainer")
 @onready var feed_viewport: SubViewport = get_node_or_null("%FeedViewport")
 @onready var feed_camera_3d: Camera3D = get_node_or_null("%FeedCamera3D")
 @onready var turret_feed_rect: TextureRect = get_node_or_null("%TurretFeedRect")
 @onready var turret_feed_label: Label = get_node_or_null("%TurretFeedLabel")
 @onready var feed_crosshair: Control = get_node_or_null("%FeedCrosshair")
+@onready var trajectory_hud: WeaponsTrajectoryHUD = get_node_or_null("%TrajectoryHUD")
 
 # Pulsanti d'Azione
 @onready var fire_button: Button = get_node_or_null("%FireButton")
@@ -68,10 +88,38 @@ enum WeaponGroup {
 @onready var action_log_label: Label = get_node_or_null("%ActionLogLabel")
 
 # --- PARAMETRI DI RUNTIME E STATO ---
-var active_weapon_group: int = WeaponGroup.LASER
+var active_ammo_type: int = AmmoType.HEAVY_MG
+var active_weapon_group: int:
+	get:
+		return active_ammo_type
+	set(val):
+		active_ammo_type = val
+
+var is_mouse_captured: bool = false
+var mouse_sensitivity: float = 0.15
+var missile_lock_time_required: float = 2.0
+var missile_current_aim_time: float = 0.0
+var is_missile_locked: bool = false
+
+var heavy_mg_ammo: int = 500
+var heavy_cannon_ammo: int = 30
+var missile_ammo: int = 12
+var probe_ammo: int = 4
 var laser_charge: float = 100.0 # 0..100%
-var torpedo_ammo: int = 12
-var pdg_ammo: int = 500
+
+# Alias retrocompatibili
+var torpedo_ammo: int:
+	get:
+		return missile_ammo
+	set(val):
+		missile_ammo = val
+
+var pdg_ammo: int:
+	get:
+		return heavy_mg_ammo
+	set(val):
+		heavy_mg_ammo = val
+
 var barrel_heat: float = 0.0 # 0..100%
 var is_overheated: bool = false
 var auto_pdg_enabled: bool = true
@@ -81,7 +129,7 @@ var fire_cooldown_timer: float = 0.0
 var pdg_auto_timer: float = 0.0
 var is_target_locked: bool = false
 var selected_target_id: String = ""
-var manual_aim: Vector2 = Vector2.ZERO # x = yaw (-45..+45), y = pitch (-30..+30)
+var manual_aim: Vector2 = Vector2.ZERO # x = yaw (-60..+60), y = pitch (-35..+45)
 
 var can_control_weapons: bool = true
 
@@ -92,10 +140,18 @@ var active_config: Dictionary = {
 	"cooling_rate": 0.75,
 	"auto_pdg_enabled": true,
 	"laser_power_draw": 250.0,
+	"heavy_mg_max_ammo": 500,
+	"heavy_cannon_max_ammo": 30,
+	"missile_max_ammo": 12,
+	"probe_max_ammo": 4,
 	"torpedo_max_ammo": 12,
 	"pdg_ammo_max": 500,
 	"pdg_fire_rate": 8.0,
 	"emergency_vent_cooldown": 10.0,
+	"heavy_mg_velocity": 450.0,
+	"heavy_cannon_velocity": 750.0,
+	"missile_velocity": 85.0,
+	"probe_velocity": 35.0,
 	"torpedo_velocity": 85.0,
 	"auto_lead_tracking": true,
 	"overclock_damage_mult": 1.0,
@@ -116,7 +172,9 @@ func _ready() -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_targets()
+	_update_ammo_buttons()
 	_update_ui_displays()
+	_update_turret_camera_feed()
 
 func _setup_parent_window(_title: String, _size: Vector2) -> void:
 	parent_window = _find_parent_window()
@@ -127,6 +185,19 @@ func _setup_parent_window(_title: String, _size: Vector2) -> void:
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
+		
+		if parent_window.has_signal("selected") and not parent_window.selected.is_connected(_on_parent_window_selected):
+			parent_window.selected.connect(_on_parent_window_selected)
+		if parent_window.has_signal("minimized") and not parent_window.minimized.is_connected(_on_parent_window_minimized):
+			parent_window.minimized.connect(_on_parent_window_minimized)
+
+func _on_parent_window_selected(is_sel: bool) -> void:
+	if not is_sel and is_mouse_captured:
+		_release_mouse()
+
+func _on_parent_window_minimized(is_min: bool) -> void:
+	if is_min and is_mouse_captured:
+		_release_mouse()
 
 func _find_parent_window() -> FakeWindow:
 	var cur := get_parent()
@@ -137,12 +208,14 @@ func _find_parent_window() -> FakeWindow:
 	return null
 
 func _setup_ui_signals() -> void:
-	if btn_group_laser:
-		btn_group_laser.pressed.connect(func(): _select_weapon_group(WeaponGroup.LASER))
-	if btn_group_torpedo:
-		btn_group_torpedo.pressed.connect(func(): _select_weapon_group(WeaponGroup.TORPEDO))
-	if btn_group_pdg:
-		btn_group_pdg.pressed.connect(func(): _select_weapon_group(WeaponGroup.PDG))
+	if btn_ammo_mg:
+		btn_ammo_mg.pressed.connect(func(): _select_ammo_type(AmmoType.HEAVY_MG))
+	if btn_ammo_cannon:
+		btn_ammo_cannon.pressed.connect(func(): _select_ammo_type(AmmoType.HEAVY_CANNON))
+	if btn_ammo_missile:
+		btn_ammo_missile.pressed.connect(func(): _select_ammo_type(AmmoType.MISSILE))
+	if btn_ammo_probe:
+		btn_ammo_probe.pressed.connect(func(): _select_ammo_type(AmmoType.PROBE))
 	
 	if fire_button:
 		fire_button.pressed.connect(_on_fire_button_pressed)
@@ -189,6 +262,9 @@ func _connect_system_signals() -> void:
 			sdm.drive_synced.connect(_on_drive_synced)
 
 func _exit_tree() -> void:
+	if is_mouse_captured:
+		_release_mouse()
+	
 	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_connection_changed") and SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 		SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 	
@@ -210,6 +286,56 @@ func _exit_tree() -> void:
 
 func _get_net_mgr() -> Node:
 	return get_node_or_null("/root/NetworkManager")
+
+# --- GESTIONE INPUT, CATTURA MOUSE E SELEZIONE MUNIZIONI ---
+
+func _input(event: InputEvent) -> void:
+	if not is_inside_tree() or not is_visible_in_tree():
+		return
+	
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_SPACE:
+			_toggle_mouse_capture()
+		elif event.keycode == KEY_ESCAPE:
+			if is_mouse_captured:
+				_release_mouse()
+		elif event.keycode == KEY_1:
+			_select_ammo_type(AmmoType.HEAVY_MG)
+		elif event.keycode == KEY_2:
+			_select_ammo_type(AmmoType.HEAVY_CANNON)
+		elif event.keycode == KEY_3:
+			_select_ammo_type(AmmoType.MISSILE)
+		elif event.keycode == KEY_4:
+			_select_ammo_type(AmmoType.PROBE)
+	
+	if is_mouse_captured and event is InputEventMouseMotion:
+		if can_control_weapons:
+			manual_aim.x = clampf(manual_aim.x - event.relative.x * mouse_sensitivity, -60.0, 60.0)
+			manual_aim.y = clampf(manual_aim.y - event.relative.y * mouse_sensitivity, -35.0, 45.0)
+			if aim_yaw_slider:
+				aim_yaw_slider.set_value_no_signal(manual_aim.x)
+			if aim_pitch_slider:
+				aim_pitch_slider.set_value_no_signal(manual_aim.y)
+			_update_turret_camera_feed()
+	
+	if is_mouse_captured and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_on_fire_button_pressed()
+
+func _toggle_mouse_capture() -> void:
+	is_mouse_captured = not is_mouse_captured
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if is_mouse_captured else Input.MOUSE_MODE_VISIBLE
+	if trajectory_hud:
+		trajectory_hud.is_mouse_captured = is_mouse_captured
+	_log_action("CONTROLLO TORRETTA MOUSE: %s" % ("CATTURATO (Premi Spazio/ESC per sbloccare)" if is_mouse_captured else "RILASCIATO"))
+
+func _release_mouse() -> void:
+	if is_mouse_captured:
+		is_mouse_captured = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if trajectory_hud:
+			trajectory_hud.is_mouse_captured = false
+		_log_action("PUNTATORE MOUSE RILASCIATO.")
 
 # --- GESTIONE FILE .DAT E CONFIGURAZIONE RUNTIME ---
 
@@ -261,9 +387,13 @@ func _apply_configuration() -> void:
 	if active_config.has("auto_pdg_enabled"):
 		auto_pdg_enabled = bool(active_config["auto_pdg_enabled"])
 	if active_config.has("torpedo_max_ammo"):
-		torpedo_ammo = mini(torpedo_ammo, int(active_config["torpedo_max_ammo"]))
+		missile_ammo = mini(missile_ammo, int(active_config["torpedo_max_ammo"]))
 	if active_config.has("pdg_ammo_max"):
-		pdg_ammo = mini(pdg_ammo, int(active_config["pdg_ammo_max"]))
+		heavy_mg_ammo = mini(heavy_mg_ammo, int(active_config["pdg_ammo_max"]))
+	if active_config.has("heavy_cannon_max_ammo"):
+		heavy_cannon_ammo = mini(heavy_cannon_ammo, int(active_config["heavy_cannon_max_ammo"]))
+	if active_config.has("probe_max_ammo"):
+		probe_ammo = mini(probe_ammo, int(active_config["probe_max_ammo"]))
 	_update_ui_displays()
 
 func _on_ship_connection_changed(_is_conn: bool) -> void:
@@ -356,6 +486,7 @@ func _process(delta: float) -> void:
 	_update_timers(delta)
 	_update_cooling_and_power(delta)
 	_process_auto_pdg(delta)
+	_process_missile_lock(delta)
 	_refresh_targets()
 	_update_turret_camera(delta)
 	_update_ui_displays()
@@ -411,17 +542,54 @@ func _process_auto_pdg(delta: float) -> void:
 	
 	if pdg_auto_timer >= pdg_interval:
 		pdg_auto_timer = 0.0
-		# Controlla se c'è un bersaglio pericolo a breve raggio (< 80m)
+		# Controlla se c'e' un bersaglio pericolo a breve raggio (< 80m)
 		for t in detected_targets:
 			var dist: float = float(t.get("distance", 0.0))
 			var threat: String = str(t.get("threat_level", "UNKNOWN"))
-			if (threat in ["HAZARD", "HOSTILE"] or dist < 65.0) and pdg_ammo > 0:
-				pdg_ammo -= 1
+			if (threat in ["HAZARD", "HOSTILE"] or dist < 65.0) and heavy_mg_ammo > 0:
+				heavy_mg_ammo -= 1
 				var heat_mult: float = float(active_config.get("heat_multiplier", 1.0))
 				barrel_heat = minf(100.0, barrel_heat + 1.2 * heat_mult)
 				if SpaceWorldManager and SpaceWorldManager.has_method("request_fire_weapon"):
 					SpaceWorldManager.request_fire_weapon("PDG_AUTO", str(t.get("id", "")), Vector3.ZERO)
 				break
+
+func _process_missile_lock(delta: float) -> void:
+	if active_ammo_type == AmmoType.MISSILE:
+		var has_alignment := false
+		var best_target_id := ""
+		var min_angle_diff := 999.0
+		
+		# Verifica allineamento reticolo manual_aim con i bersagli entro 5.0 gradi
+		for t in detected_targets:
+			var t_bearing: float = float(t.get("bearing_deg", 0.0))
+			var t_elev: float = float(t.get("elevation_deg", 0.0))
+			var delta_yaw := absf(t_bearing - manual_aim.x)
+			var delta_pitch := absf(t_elev - manual_aim.y)
+			var angle_diff := Vector2(delta_yaw, delta_pitch).length()
+			if angle_diff <= 5.0:
+				if angle_diff < min_angle_diff:
+					min_angle_diff = angle_diff
+					best_target_id = str(t.get("id", ""))
+				has_alignment = true
+		
+		if has_alignment and not best_target_id.is_empty():
+			if selected_target_id.is_empty() and not is_target_locked:
+				selected_target_id = best_target_id
+				_populate_target_dropdown()
+		
+		if has_alignment or (is_target_locked and not selected_target_id.is_empty()):
+			missile_current_aim_time = minf(missile_lock_time_required, missile_current_aim_time + delta)
+			if missile_current_aim_time >= missile_lock_time_required:
+				is_missile_locked = true
+		else:
+			missile_current_aim_time = maxf(0.0, missile_current_aim_time - delta * 2.0)
+			if not is_target_locked:
+				is_missile_locked = false
+	else:
+		if not is_target_locked:
+			missile_current_aim_time = 0.0
+			is_missile_locked = false
 
 # --- TARGETING, RADAR E CALCOLO LEAD INDICATOR ---
 
@@ -440,12 +608,7 @@ func _refresh_targets() -> void:
 			var target_data := _get_target_data(selected_target_id)
 			if not target_data.is_empty():
 				var t_dist: float = float(target_data.get("distance", 0.0))
-				var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
-				if active_weapon_group == WeaponGroup.LASER:
-					proj_vel = 1000.0 # Laser quasi istantaneo
-				elif active_weapon_group == WeaponGroup.PDG:
-					proj_vel = 450.0
-				
+				var proj_vel := _get_active_projectile_velocity()
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
 				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
 				var lead_world_delta := t_vel * flight_time
@@ -489,6 +652,8 @@ func _on_target_option_selected(index: int) -> void:
 	if index <= 0 or index > detected_targets.size():
 		selected_target_id = ""
 		is_target_locked = false
+		is_missile_locked = false
+		missile_current_aim_time = 0.0
 	else:
 		selected_target_id = detected_targets[index - 1].get("id")
 	_update_target_info()
@@ -501,6 +666,12 @@ func _on_lock_button_pressed() -> void:
 	
 	if not selected_target_id.is_empty():
 		is_target_locked = not is_target_locked
+		if is_target_locked:
+			is_missile_locked = true
+			missile_current_aim_time = missile_lock_time_required
+		else:
+			is_missile_locked = false
+			missile_current_aim_time = 0.0
 		_log_action("TARGET LOCK: %s [%s]" % [selected_target_id, "AGGANCIO CONFERMATO" if is_target_locked else "SBLOCCATO"])
 	
 	_update_target_info()
@@ -513,11 +684,7 @@ func _update_target_info() -> void:
 			var target_data := _get_target_data(selected_target_id)
 			if not target_data.is_empty():
 				var t_dist: float = float(target_data.get("distance", 0.0))
-				var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
-				if active_weapon_group == WeaponGroup.LASER:
-					proj_vel = 1000.0
-				elif active_weapon_group == WeaponGroup.PDG:
-					proj_vel = 450.0
+				var proj_vel := _get_active_projectile_velocity()
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
 				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
 				var lead_world_delta := t_vel * flight_time
@@ -536,22 +703,22 @@ func _update_target_info() -> void:
 				str(t.get("name", "IGNOTO")),
 				float(t.get("distance", 0.0)),
 				float(t.get("bearing_deg", 0.0)),
-				"🔒 AGGANCIATO" if is_target_locked else "TRACCIATO"
+				"🔒 AGGANCIATO" if (is_target_locked or is_missile_locked) else "TRACCIATO"
 			]
 		else:
 			target_info_label.text = "BERSAGLIO: NESSUNO SELEZIONATO"
 	
 	if lead_calc_label:
-		if is_target_locked:
+		if is_target_locked or is_missile_locked or not selected_target_id.is_empty():
 			var t := _get_target_data(selected_target_id)
-			var proj_vel: float = float(active_config.get("torpedo_velocity", 85.0))
-			if active_weapon_group == WeaponGroup.LASER:
-				proj_vel = 1000.0
+			var proj_vel := _get_active_projectile_velocity()
 			var dist: float = float(t.get("distance", 0.0))
 			var t_hit := dist / maxf(proj_vel, 1.0)
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_PROIETTILE: %.0f m/s | RETICOLO PRONTO" % [t_hit, proj_vel]
 		else:
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): STANDBY (AGGANCIARE BERSAGLIO)"
+	
+	_update_turret_camera_feed()
 
 func _setup_turret_camera() -> void:
 	if not is_inside_tree():
@@ -586,11 +753,11 @@ func _update_turret_camera(delta: float = 0.0) -> void:
 			var target_bearing: float = float(t.get("bearing_deg", 0.0))
 			var target_elev: float = float(t.get("elevation_deg", 0.0))
 			if delta > 0.0:
-				manual_aim.x = clampf(lerpf(manual_aim.x, target_bearing, 8.0 * delta), -45.0, 45.0)
-				manual_aim.y = clampf(lerpf(manual_aim.y, target_elev, 8.0 * delta), -30.0, 30.0)
+				manual_aim.x = clampf(lerpf(manual_aim.x, target_bearing, 8.0 * delta), -60.0, 60.0)
+				manual_aim.y = clampf(lerpf(manual_aim.y, target_elev, 8.0 * delta), -35.0, 45.0)
 			else:
-				manual_aim.x = clampf(target_bearing, -45.0, 45.0)
-				manual_aim.y = clampf(target_elev, -30.0, 30.0)
+				manual_aim.x = clampf(target_bearing, -60.0, 60.0)
+				manual_aim.y = clampf(target_elev, -35.0, 45.0)
 			
 			if aim_yaw_slider:
 				aim_yaw_slider.set_value_no_signal(manual_aim.x)
@@ -621,42 +788,116 @@ func _update_turret_camera_feed() -> void:
 		var rot_basis := Basis.from_euler(Vector3(pitch_rad, yaw_rad, 0.0), EulerOrder.EULER_ORDER_YXZ)
 		feed_camera_3d.global_transform = Transform3D(ship_trans.basis * rot_basis, ship_trans.origin)
 	
-	# Centratura reticolo HUD
+	# Centratura reticolo HUD standard
 	if feed_crosshair:
 		var parent_ctrl: Control = feed_crosshair.get_parent() as Control
 		var center := parent_ctrl.size * 0.5 if parent_ctrl else Vector2(160, 55)
 		var offset := Vector2(manual_aim.x * 1.5, -manual_aim.y * 1.5)
 		feed_crosshair.position = center + offset - feed_crosshair.size * 0.5
+	
+	# Aggiornamento HUD Traiettoria Diegetico e Lead Indicator
+	if trajectory_hud:
+		trajectory_hud.is_mouse_captured = is_mouse_captured
+		trajectory_hud.aim_yaw = manual_aim.x
+		trajectory_hud.aim_pitch = manual_aim.y
+		trajectory_hud.active_ammo_type = active_ammo_type
+		trajectory_hud.active_ammo_name = _get_ammo_type_name(active_ammo_type)
+		trajectory_hud.is_missile_locked = is_missile_locked
+		trajectory_hud.missile_lock_progress = clampf(missile_current_aim_time / maxf(missile_lock_time_required, 0.01), 0.0, 1.0)
+		
+		var hud_center := trajectory_hud.size * 0.5
+		var reticle_offset := Vector2(manual_aim.x * 1.5, -manual_aim.y * 1.5)
+		trajectory_hud.crosshair_pos = hud_center + reticle_offset
+		
+		if not selected_target_id.is_empty():
+			var t := _get_target_data(selected_target_id)
+			if not t.is_empty():
+				var t_dist: float = float(t.get("distance", 0.0))
+				var proj_vel := _get_active_projectile_velocity()
+				var flight_time := t_dist / maxf(proj_vel, 1.0)
+				var t_vel: Vector3 = t.get("velocity", Vector3.ZERO)
+				var lead_world_delta := t_vel * flight_time
+				
+				trajectory_hud.target_name = str(t.get("name", "BERSAGLIO"))
+				trajectory_hud.target_dist = t_dist
+				trajectory_hud.has_target_screen = true
+				
+				var target_yaw: float = float(t.get("bearing_deg", 0.0))
+				var target_pitch: float = float(t.get("elevation_deg", 0.0))
+				var t_screen_offset := Vector2((target_yaw - manual_aim.x) * 3.5, -(target_pitch - manual_aim.y) * 3.5)
+				trajectory_hud.target_screen_pos = hud_center + reticle_offset + t_screen_offset
+				
+				var lead_yaw: float = target_yaw + rad_to_deg(atan2(lead_world_delta.x, maxf(t_dist, 1.0)))
+				var lead_pitch: float = target_pitch + rad_to_deg(atan2(lead_world_delta.y, maxf(t_dist, 1.0)))
+				var lead_screen_offset := Vector2((lead_yaw - manual_aim.x) * 3.5, -(lead_pitch - manual_aim.y) * 3.5)
+				trajectory_hud.lead_pos = hud_center + reticle_offset + lead_screen_offset
+				trajectory_hud.has_lead = true
+			else:
+				trajectory_hud.has_lead = false
+				trajectory_hud.has_target_screen = false
+		else:
+			trajectory_hud.has_lead = false
+			trajectory_hud.has_target_screen = false
 
-# --- AZIONI DI FUOCO E GESTIONE GRUPPI D'ARMA ---
+func _get_active_projectile_velocity() -> float:
+	match active_ammo_type:
+		AmmoType.HEAVY_MG:
+			return float(active_config.get("heavy_mg_velocity", 450.0))
+		AmmoType.HEAVY_CANNON:
+			return float(active_config.get("heavy_cannon_velocity", 750.0))
+		AmmoType.MISSILE:
+			return float(active_config.get("missile_velocity", active_config.get("torpedo_velocity", 85.0)))
+		AmmoType.PROBE:
+			return float(active_config.get("probe_velocity", 35.0))
+		_:
+			return 500.0
+
+# --- AZIONI DI FUOCO E GESTIONE SELETTORE MUNIZIONI ---
+
+func _select_ammo_type(type: int) -> void:
+	active_ammo_type = type
+	_update_ammo_buttons()
+	_update_target_info()
+	_update_turret_camera_feed()
+	_log_action("SISTEMA SELEZIONATO: [%d] %s" % [active_ammo_type, _get_ammo_type_name(active_ammo_type)])
 
 func _select_weapon_group(group: int) -> void:
-	active_weapon_group = group
-	_update_weapon_group_buttons()
-	_update_target_info()
-	_log_action("GRUPPO D'ARMA SELEZIONATO: %s" % _get_weapon_group_name(active_weapon_group))
+	if group == 0:
+		_select_ammo_type(AmmoType.HEAVY_CANNON)
+	else:
+		_select_ammo_type(group)
 
-func _get_weapon_group_name(group: int) -> String:
-	match group:
-		WeaponGroup.LASER:
-			return "TORRETTE LASER BINATE"
-		WeaponGroup.TORPEDO:
-			return "SILURI PESANTI A GUIDA TERMICA"
-		WeaponGroup.PDG:
-			return "PDG DIFESA DI PROSSIMITÀ"
+func _get_ammo_type_name(type: int) -> String:
+	match type:
+		AmmoType.HEAVY_MG:
+			return "MITRAGLIATRICE PESANTE"
+		AmmoType.HEAVY_CANNON:
+			return "CANNONE PESANTE A IMPULSI"
+		AmmoType.MISSILE:
+			return "MISSILI A RICERCA TERMICA"
+		AmmoType.PROBE:
+			return "SONDA TELEMETRICA SPAZIALE"
 		_:
 			return "SISTEMA D'ARMA"
 
-func _update_weapon_group_buttons() -> void:
-	if btn_group_laser:
-		btn_group_laser.button_pressed = (active_weapon_group == WeaponGroup.LASER)
-	if btn_group_torpedo:
-		btn_group_torpedo.button_pressed = (active_weapon_group == WeaponGroup.TORPEDO)
-	if btn_group_pdg:
-		btn_group_pdg.button_pressed = (active_weapon_group == WeaponGroup.PDG)
+func _get_weapon_group_name(group: int) -> String:
+	return _get_ammo_type_name(group)
+
+func _update_ammo_buttons() -> void:
+	if btn_ammo_mg:
+		btn_ammo_mg.button_pressed = (active_ammo_type == AmmoType.HEAVY_MG)
+	if btn_ammo_cannon:
+		btn_ammo_cannon.button_pressed = (active_ammo_type == AmmoType.HEAVY_CANNON)
+	if btn_ammo_missile:
+		btn_ammo_missile.button_pressed = (active_ammo_type == AmmoType.MISSILE)
+	if btn_ammo_probe:
+		btn_ammo_probe.button_pressed = (active_ammo_type == AmmoType.PROBE)
 	
 	if selected_group_label:
-		selected_group_label.text = "SISTEMA ATTIVO: %s" % _get_weapon_group_name(active_weapon_group)
+		selected_group_label.text = "SISTEMA ATTIVO: [%d] %s" % [active_ammo_type, _get_ammo_type_name(active_ammo_type)]
+
+func _update_weapon_group_buttons() -> void:
+	_update_ammo_buttons()
 
 func _on_fire_button_pressed() -> void:
 	if not _is_ship_operational() or not can_control_weapons:
@@ -672,42 +913,57 @@ func _on_fire_button_pressed() -> void:
 	var heat_mult: float = float(active_config.get("heat_multiplier", 1.0))
 	var fire_rate: float = float(active_config.get("fire_rate", 1.8))
 	
-	match active_weapon_group:
-		WeaponGroup.LASER:
-			if laser_charge < 20.0:
-				_log_action("⚠️ CARICA CONDENSATORI INSUFFICIENTE (< 20%)")
+	match active_ammo_type:
+		AmmoType.HEAVY_MG:
+			if heavy_mg_ammo <= 0:
+				_log_action("⚠️ MUNIZIONI MITRAGLIATRICE PESANTE ESAURITE!")
 				return
-			laser_charge -= 20.0
-			barrel_heat = minf(100.0, barrel_heat + 14.0 * heat_mult)
-			fire_cooldown_timer = 1.0 / maxf(fire_rate, 0.5)
-			_execute_fire_event("LASER_TWIN")
-			_log_action("⚡ FUOCO LASER EMESSO (CARICA: %.0f%% | CALORE: %.0f%%)" % [laser_charge, barrel_heat])
+			heavy_mg_ammo -= 1
+			barrel_heat = minf(100.0, barrel_heat + 0.8 * heat_mult)
+			fire_cooldown_timer = 0.08
+			_execute_fire_event("HEAVY_MG")
+			_log_action("💥 MITRAGLIATRICE PESANTE: COLPO ESPLOSO (MUNIZIONI: %d | CALORE: %.0f%%)" % [heavy_mg_ammo, barrel_heat])
 			
-		WeaponGroup.TORPEDO:
-			if torpedo_ammo <= 0:
-				_log_action("⚠️ SILURI ESAURITI! RICARICARE ALL'ARMERIA")
+		AmmoType.HEAVY_CANNON:
+			if laser_charge < 20.0 and heavy_cannon_ammo <= 0:
+				_log_action("⚠️ CANNONE PESANTE: CARICA CONDENSATORI INSUFFICIENTE (< 20%)")
 				return
-			torpedo_ammo -= 1
-			barrel_heat = minf(100.0, barrel_heat + 25.0 * heat_mult)
+			laser_charge = maxf(0.0, laser_charge - 20.0)
+			heavy_cannon_ammo = maxi(0, heavy_cannon_ammo - 1)
+			barrel_heat = minf(100.0, barrel_heat + 18.0 * heat_mult)
+			fire_cooldown_timer = 1.4
+			_execute_fire_event("HEAVY_CANNON")
+			_log_action("⚡ CANNONE PESANTE: COLPO CRITICO SPARATO (COLPI: %d | CONDENSATORE: %.0f%%)" % [heavy_cannon_ammo, laser_charge])
+			
+		AmmoType.MISSILE:
+			if not is_missile_locked:
+				_log_action("⚠️ LANCIO NEGATO: LOCK IN CORSO (ALLINEARE MIRINO O RADAR LOCK)...")
+				return
+			if missile_ammo <= 0:
+				_log_action("⚠️ MISSILI / SILURI ESAURITI! RICARICARE ALL'ARMERIA")
+				return
+			missile_ammo -= 1
+			barrel_heat = minf(100.0, barrel_heat + 22.0 * heat_mult)
 			fire_cooldown_timer = 2.5
-			_execute_fire_event("TORPEDO_HEAVY")
-			_log_action("🚀 SILURO PESANTE LANCIATO (RIMANENTI: %d)" % torpedo_ammo)
+			_execute_fire_event("HOMING_MISSILE")
+			_log_action("🚀 MISSILE A RICERCA LANCIATO SU [%s] (RIMANENTI: %d)" % [selected_target_id if not selected_target_id.is_empty() else "TARGET", missile_ammo])
 			
-		WeaponGroup.PDG:
-			if pdg_ammo <= 0:
-				_log_action("⚠️ MUNIZIONI GATLING ESAURITE!")
+		AmmoType.PROBE:
+			if probe_ammo <= 0:
+				_log_action("⚠️ SONDE TELEMETRICHE ESAURITE NELLA STIVA!")
 				return
-			var burst := mini(pdg_ammo, 5)
-			pdg_ammo -= burst
-			barrel_heat = minf(100.0, barrel_heat + 4.5 * heat_mult)
-			fire_cooldown_timer = 0.2
-			_execute_fire_event("PDG_MANUAL")
-			_log_action("💥 RAFFICA PDG 5x ESPLOSA (MUNIZIONI: %d)" % pdg_ammo)
+			probe_ammo -= 1
+			barrel_heat = minf(100.0, barrel_heat + 2.0 * heat_mult)
+			fire_cooldown_timer = 1.0
+			_execute_fire_event("PROBE")
+			_log_action("📡 SONDA TELEMETRICA LANCIATA NELLO SPAZIO (DISPONIBILI: %d)" % probe_ammo)
+	
+	_update_ui_displays()
 
 func _execute_fire_event(weapon_name: String) -> void:
 	var aim_dir := Vector3(sin(deg_to_rad(manual_aim.x)), sin(deg_to_rad(manual_aim.y)), -cos(deg_to_rad(manual_aim.x)))
 	if SpaceWorldManager and SpaceWorldManager.has_method("request_fire_weapon"):
-		SpaceWorldManager.request_fire_weapon(weapon_name, selected_target_id if is_target_locked else "", aim_dir)
+		SpaceWorldManager.request_fire_weapon(weapon_name, selected_target_id if (is_target_locked or is_missile_locked) else "", aim_dir)
 
 func _on_auto_pdg_button_pressed() -> void:
 	auto_pdg_enabled = not auto_pdg_enabled
@@ -727,10 +983,13 @@ func _on_vent_heat_button_pressed() -> void:
 	_log_action("❄️ SCARICO TERMICO D'EMERGENZA COMPLETATO (VENT 0% HEAT)")
 
 func _on_reload_ammo_button_pressed() -> void:
-	torpedo_ammo = int(active_config.get("torpedo_max_ammo", 12))
-	pdg_ammo = int(active_config.get("pdg_ammo_max", 500))
+	heavy_mg_ammo = int(active_config.get("heavy_mg_max_ammo", active_config.get("pdg_ammo_max", 500)))
+	heavy_cannon_ammo = int(active_config.get("heavy_cannon_max_ammo", 30))
+	missile_ammo = int(active_config.get("missile_max_ammo", active_config.get("torpedo_max_ammo", 12)))
+	probe_ammo = int(active_config.get("probe_max_ammo", 4))
+	laser_charge = 100.0
 	_update_ui_displays()
-	_log_action("🔄 RISERVE D'ARMAMENTO E CONDENSATORI RICARICATI AL 100%")
+	_log_action("🔄 RISERVE D'ARMAMENTO, CONDENSATORI E SONDE RICARICATI AL 100%")
 
 func _update_ui_displays() -> void:
 	# Condensatori
@@ -757,14 +1016,19 @@ func _update_ui_displays() -> void:
 	
 	# Munizioni
 	if ammo_torpedo_label:
-		var max_t := int(active_config.get("torpedo_max_ammo"))
-		ammo_torpedo_label.text = "%d / %d" % [torpedo_ammo, max_t]
-		ammo_torpedo_label.modulate = Color(1.0, 0.4, 0.4) if torpedo_ammo == 0 else Color(1.0, 0.9, 0.5)
+		var max_t := int(active_config.get("missile_max_ammo", active_config.get("torpedo_max_ammo", 12)))
+		ammo_torpedo_label.text = "%d / %d" % [missile_ammo, max_t]
+		ammo_torpedo_label.modulate = Color(1.0, 0.4, 0.4) if missile_ammo == 0 else Color(1.0, 0.9, 0.5)
 	
 	if ammo_pdg_label:
-		var max_p := int(active_config.get("pdg_ammo_max"))
-		ammo_pdg_label.text = "%d / %d" % [pdg_ammo, max_p]
-		ammo_pdg_label.modulate = Color(1.0, 0.4, 0.4) if pdg_ammo == 0 else Color(0.5, 0.9, 1.0)
+		var max_p := int(active_config.get("heavy_mg_max_ammo", active_config.get("pdg_ammo_max", 500)))
+		ammo_pdg_label.text = "%d / %d" % [heavy_mg_ammo, max_p]
+		ammo_pdg_label.modulate = Color(1.0, 0.4, 0.4) if heavy_mg_ammo == 0 else Color(0.5, 0.9, 1.0)
+	
+	if ammo_probe_label:
+		var max_pr := int(active_config.get("probe_max_ammo", 4))
+		ammo_probe_label.text = "%d / %d" % [probe_ammo, max_pr]
+		ammo_probe_label.modulate = Color(1.0, 0.4, 0.4) if probe_ammo == 0 else Color(0.6, 1.0, 0.7)
 	
 	# Auto PDG button
 	if auto_pdg_button:

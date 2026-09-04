@@ -15,6 +15,7 @@ const COMMAND_OUTPUT_LABEL_SCENE: PackedScene = preload("uid://buktfxd073666")
 @onready var virtual_path_manager := VirtualPathManager.new()
 
 var parent_window: FakeWindow
+var active_interactive_command: TerminalCommand = null
 
 func _ready() -> void:
 	# updates the label that indicates the current path when virtual path changes
@@ -121,6 +122,10 @@ func _on_command_line_text_submitted(new_text: String) -> void:
 		return
 
 	input_history_manager.push_to_history(new_text)
+	
+	if active_interactive_command != null:
+		active_interactive_command.handle_interactive_input(self, new_text)
+		return
 	
 	var parser_outputs: Array[TerminalParserOutput] = input_parser.parse(new_text)
 	for output: TerminalParserOutput in parser_outputs:

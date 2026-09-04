@@ -1,18 +1,28 @@
 class_name ShieldMatrixApp
 extends BaseApp
 
-## Applicazione GodotOS per la Matrice Scudi & Deflettori Scafo (Shield Matrix & Hull Deflectors).
-## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
-## Punto 5.3 della Roadmap Dark Nova Features Design.
+## Applicazione GodotOS per la Matrice Scudi, Deflettori Scafo e Dispositivi di Difesa Direzionale.
+## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md) e TASK-032.
+## Vista bipartita Split-View:
+## - Sinistra: Visualizzatore olografico interattivo a 4 quadranti e bilanciamento energetico.
+## - Destra: Gestione dinamica dei dispositivi Point-Defense (Gatling e Lanciatori Flack Angel-Hair).
 
 const APP_TITLE: String = "Shield Matrix & Deflectors"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(620, 460)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(800, 520)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/ShieldMatrix/shields_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/shields_config.dat"
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat"
 const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/deflector_tuning.dat"
 
+const DEFENSE_DEVICE_CARD_SCENE := preload("res://Applications/ShieldMatrix/defense_device_card.tscn")
+
+enum DefenseSector {
+	FORE = 0,
+	PORT = 1,
+	STARBOARD = 2,
+	AFT = 3
+}
 
 # --- RIFERIMENTI NODI UI ---
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
@@ -54,6 +64,13 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/defle
 @onready var phase_status_label: Label = get_node_or_null("%PhaseStatusLabel")
 @onready var action_log_label: Label = get_node_or_null("%ActionLogLabel")
 
+# Pannello Dispositivi di Difesa (Sezione Destra)
+@onready var defense_devices_panel: Control = get_node_or_null("%DefenseDevicesPanel")
+@onready var devices_scroll_container: ScrollContainer = get_node_or_null("%DevicesScrollContainer")
+@onready var devices_list_container: VBoxContainer = get_node_or_null("%DevicesListContainer")
+@onready var devices_summary_label: Label = get_node_or_null("%DevicesSummaryLabel")
+@onready var reload_all_defenses_button: Button = get_node_or_null("%ReloadAllDefensesButton")
+
 # --- STATO OPERATIVO E PARAMETRI RUNTIME ---
 var shield_fore: float = 250.0
 var shield_aft: float = 250.0
@@ -71,6 +88,48 @@ var boost_cooldown_timer: float = 0.0
 var can_control_shields: bool = true
 var is_dragging_pad: bool = false
 var pad_vector: Vector2 = Vector2.ZERO
+
+# Array dinamico dei dispositivi difensivi montati
+var defense_devices: Array[Dictionary] = [
+	{
+		"id": "gatling_1",
+		"name": "Gatling Difesa Auto-1",
+		"type": "GATLING",
+		"sector": DefenseSector.FORE,
+		"ammo": 800,
+		"max_ammo": 800,
+		"status": "READY",
+		"cooldown": 0.0,
+		"cooldown_max": 0.5,
+		"range": 150.0
+	},
+	{
+		"id": "gatling_2",
+		"name": "Gatling Difesa Auto-2",
+		"type": "GATLING",
+		"sector": DefenseSector.PORT,
+		"ammo": 800,
+		"max_ammo": 800,
+		"status": "READY",
+		"cooldown": 0.0,
+		"cooldown_max": 0.5,
+		"range": 150.0
+	},
+	{
+		"id": "flack_1",
+		"name": "Lanciatore Flack Angel-Hair",
+		"type": "FLACK",
+		"sector": DefenseSector.AFT,
+		"ammo": 16,
+		"max_ammo": 16,
+		"status": "READY",
+		"cooldown": 0.0,
+		"cooldown_max": 3.0,
+		"range": 200.0
+	}
+]
+
+var _device_cards: Dictionary = {} # device_id -> DefenseDeviceCard
 
 var active_config: Dictionary = {
 	"max_capacity_per_quadrant": 250.0,
@@ -93,6 +152,7 @@ func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
 	_connect_system_signals()
 	_setup_ui_signals()
+	_rebuild_device_cards()
 	_update_connection_state()
 	load_dat_configuration()
 	_update_permissions()
@@ -127,6 +187,13 @@ func _setup_ui_signals() -> void:
 		emergency_boost_button.pressed.connect(_on_emergency_boost_pressed)
 	if phase_sync_switch:
 		phase_sync_switch.toggled.connect(_on_phase_sync_toggled)
+	
+	if reload_all_defenses_button:
+		reload_all_defenses_button.pressed.connect(reload_all_defense_devices)
+	
+	if hologram_canvas:
+		if not hologram_canvas.sector_clicked.is_connected(_on_hologram_sector_clicked):
+			hologram_canvas.sector_clicked.connect(_on_hologram_sector_clicked)
 	
 	if balance_fore_slider:
 		balance_fore_slider.value_changed.connect(func(v): _on_slider_ratio_changed(GlobalValues.Quadrant.FORE, v))
@@ -171,8 +238,229 @@ func _process(delta: float) -> void:
 				emergency_boost_button.disabled = false
 				emergency_boost_button.text = "⚡ RICARICA RAPIDA"
 	
+	_process_active_defenses(delta)
 	_simulate_shield_recharge(delta)
 	_refresh_ui_display()
+
+# --- GESTIONE DINAMICA DISPOSITIVI DI DIFESA ---
+
+func register_defense_device(device_data: Dictionary) -> void:
+	var data := device_data.duplicate(true)
+	if not data.has("id") or str(data["id"]).is_empty():
+		data["id"] = "dev_%d" % (defense_devices.size() + 1)
+	if not data.has("status"):
+		data["status"] = "READY"
+	if not data.has("cooldown"):
+		data["cooldown"] = 0.0
+	var dev_type: String = str(data.get("type", "GATLING")).to_upper()
+	if not data.has("cooldown_max"):
+		data["cooldown_max"] = 0.5 if dev_type == "GATLING" else 3.0
+	if not data.has("max_ammo"):
+		data["max_ammo"] = data.get("ammo", 800 if dev_type == "GATLING" else 16)
+	if not data.has("sector"):
+		data["sector"] = DefenseSector.FORE
+	if not data.has("range"):
+		data["range"] = 150.0 if dev_type == "GATLING" else 200.0
+	
+	var found := false
+	for i in range(defense_devices.size()):
+		if defense_devices[i].get("id") == data["id"]:
+			defense_devices[i] = data
+			found = true
+			break
+	if not found:
+		defense_devices.append(data)
+	
+	_rebuild_device_cards()
+	_refresh_ui_display()
+
+func assign_device_sector(device_id: String, sector_enum: int) -> bool:
+	for dev in defense_devices:
+		if dev.get("id") == device_id:
+			dev["sector"] = sector_enum
+			_log_action("Dispositivo '%s' riassegnato al settore %s." % [dev.get("name", device_id), _get_sector_name(sector_enum)])
+			_update_device_card_ui(device_id)
+			_refresh_ui_display()
+			return true
+	return false
+
+func _on_device_sector_changed(device_id: String, new_sector: int) -> void:
+	if not can_control_shields or not _is_ship_operational():
+		_update_device_card_ui(device_id)
+		return
+	assign_device_sector(device_id, new_sector)
+
+func get_defense_devices() -> Array[Dictionary]:
+	return defense_devices
+
+func get_devices_in_sector(sector: int) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	for dev in defense_devices:
+		if dev.get("sector") == sector:
+			res.append(dev)
+	return res
+
+func reload_all_defense_devices() -> void:
+	if not can_control_shields or not _is_ship_operational():
+		return
+	for dev in defense_devices:
+		var max_a: int = int(dev.get("max_ammo", 800 if dev.get("type") == "GATLING" else 16))
+		dev["ammo"] = max_a
+		dev["cooldown"] = 0.0
+		dev["status"] = "READY"
+		_update_device_card_ui(dev.get("id"))
+	_log_action("Munizioni di tutti i dispositivi difensivi ricaricate al 100%.")
+	_refresh_ui_display()
+
+func _rebuild_device_cards() -> void:
+	if not devices_list_container:
+		return
+	
+	for child in devices_list_container.get_children():
+		devices_list_container.remove_child(child)
+		child.queue_free()
+	_device_cards.clear()
+	
+	for dev in defense_devices:
+		var card: DefenseDeviceCard = DEFENSE_DEVICE_CARD_SCENE.instantiate() as DefenseDeviceCard
+		devices_list_container.add_child(card)
+		card.setup(dev, can_control_shields)
+		card.sector_changed.connect(_on_device_sector_changed)
+		_device_cards[dev.get("id")] = card
+	
+	_update_devices_summary()
+
+func _update_device_card_ui(device_id: String) -> void:
+	if _device_cards.has(device_id) and is_instance_valid(_device_cards[device_id]):
+		for dev in defense_devices:
+			if dev.get("id") == device_id:
+				_device_cards[device_id].update_state(dev, can_control_shields)
+				break
+	_update_devices_summary()
+
+func _update_devices_summary() -> void:
+	if devices_summary_label:
+		var active_count := 0
+		for dev in defense_devices:
+			if dev.get("ammo", 0) > 0:
+				active_count += 1
+		devices_summary_label.text = "Copertura attiva: %d/%d apparati" % [active_count, defense_devices.size()]
+
+func _on_hologram_sector_clicked(sector: int) -> void:
+	if not can_control_shields or not _is_ship_operational():
+		return
+	# Seleziona il primo dispositivo disponibile e lo sposta ciclicamente al settore cliccato
+	if not defense_devices.is_empty():
+		var target_dev: Dictionary = defense_devices[0]
+		assign_device_sector(target_dev.get("id"), sector)
+
+# --- LOGICA DI INTERCETTAZIONE AUTOMATICA PUNTO-DIFESA ---
+
+func _process_active_defenses(delta: float) -> void:
+	if not _is_ship_operational() or not is_is_shield_powered:
+		return
+	
+	# Aggiorna cooldown dei dispositivi
+	for dev in defense_devices:
+		if dev.get("cooldown", 0.0) > 0.0:
+			dev["cooldown"] = maxf(0.0, dev["cooldown"] - delta)
+			if dev["cooldown"] == 0.0 and dev.get("ammo", 0) > 0:
+				dev["status"] = "READY"
+			_update_device_card_ui(dev.get("id"))
+	
+	if not SpaceWorldManager:
+		return
+	
+	var incoming: Array[Dictionary] = []
+	if SpaceWorldManager.has_method("get_incoming_projectiles"):
+		incoming = SpaceWorldManager.get_incoming_projectiles()
+	
+	if incoming.is_empty():
+		return
+	
+	var ship := SpaceWorldManager.get_spaceship() if SpaceWorldManager.has_method("get_spaceship") else null
+	var ship_pos := ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
+	
+	# Scorre le minacce in arrivo
+	for proj in incoming.duplicate():
+		if proj.get("is_destroyed", false):
+			continue
+		
+		var proj_pos: Vector3 = proj.get("position", Vector3.ZERO)
+		var diff := proj_pos - ship_pos
+		var dist := diff.length()
+		
+		# Calcolo settore di provenienza dell'attacco relativo alla nave
+		var local_diff := ship_basis.inverse() * diff
+		var bearing_deg := rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var incoming_sector := _get_sector_from_bearing(bearing_deg)
+		
+		# Verifica se c'è un dispositivo difensivo assegnato al settore di provenienza
+		for dev in defense_devices:
+			if dev.get("sector") != incoming_sector:
+				continue # Vincolo direzionale monosettore!
+			
+			if dev.get("ammo", 0) <= 0 or dev.get("cooldown", 0.0) > 0.0:
+				continue
+			
+			var dev_type: String = str(dev.get("type", "")).to_upper()
+			var dev_range: float = float(dev.get("range", 150.0))
+			
+			if dist > dev_range:
+				continue
+			
+			var proj_type: String = str(proj.get("type", "")).to_upper()
+			var is_homing: bool = proj.get("is_homing", false) or proj_type.contains("HOMING") or proj_type == "TORPEDO"
+			
+			# GATLING: intercetta e distrugge minacce cinetiche, missili, asteroidi, mine
+			if dev_type == "GATLING":
+				if proj_type in ["MISSILE", "HOMING_MISSILE", "KINETIC", "ASTEROID", "ROCKET", "MINE", "TORPEDO", "PLASMA"]:
+					dev["ammo"] = max(0, dev.get("ammo", 1) - 1)
+					dev["cooldown"] = float(dev.get("cooldown_max", 0.5))
+					dev["status"] = "COOLDOWN" if dev["ammo"] > 0 else "EMPTY"
+					
+					SpaceWorldManager.intercept_projectile(proj.get("id"), dev.get("id"), incoming_sector)
+					_log_action("🎯 %s ha neutralizzato %s nel settore %s!" % [
+						dev.get("name", "Gatling"), proj.get("id"), _get_sector_name(incoming_sector)
+					])
+					_update_device_card_ui(dev.get("id"))
+					break
+			
+			# FLACK: cortina Angel Hair che acceca e devia i missili a guida autonoma/ricerca
+			elif dev_type == "FLACK":
+				if is_homing and not proj.get("is_deflected", false):
+					dev["ammo"] = max(0, dev.get("ammo", 1) - 1)
+					dev["cooldown"] = float(dev.get("cooldown_max", 3.0))
+					dev["status"] = "COOLDOWN" if dev["ammo"] > 0 else "EMPTY"
+					
+					SpaceWorldManager.deflect_projectile(proj.get("id"), dev.get("id"), incoming_sector)
+					_log_action("💨 %s ha steso una nube Angel-Hair nel settore %s: bersaglio %s deviato!" % [
+						dev.get("name", "Flack"), _get_sector_name(incoming_sector), proj.get("id")
+					])
+					_update_device_card_ui(dev.get("id"))
+					break
+
+func _get_sector_from_bearing(bearing_deg: float) -> int:
+	# -45°..+45° Fore, 45°..135° Starboard, 135°..-135° Aft, -135°..-45° Port
+	if bearing_deg >= -45.0 and bearing_deg <= 45.0:
+		return DefenseSector.FORE
+	elif bearing_deg > 45.0 and bearing_deg <= 135.0:
+		return DefenseSector.STARBOARD
+	elif bearing_deg < -45.0 and bearing_deg >= -135.0:
+		return DefenseSector.PORT
+	else:
+		return DefenseSector.AFT
+
+func _get_sector_name(sector: int) -> String:
+	match sector:
+		DefenseSector.FORE: return "Prua (FORE)"
+		DefenseSector.PORT: return "Babordo (PORT)"
+		DefenseSector.STARBOARD: return "Tribordo (STARBOARD)"
+		DefenseSector.AFT: return "Poppa (AFT)"
+		_: return "Sconosciuto"
+
+# --- RIGENERAZIONE ED ENERGETICA SCUDI ---
 
 func _simulate_shield_recharge(delta: float) -> void:
 	var base_max: float = float(active_config.get("max_capacity_per_quadrant", 250.0))
@@ -180,7 +468,6 @@ func _simulate_shield_recharge(delta: float) -> void:
 	var decay_rate: float = float(active_config.get("decay_rate_unpowered", 25.0))
 	var sync_mult: float = 1.15 if is_phase_synced else 0.85
 	
-	# Verifica se la nave ha danni al settore scudi che riducono la capacità
 	var port_damage_penalty: float = 0.0
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_damage_zones"):
 		var damages: Array = SpaceWorldManager.get_damage_zones()
@@ -196,13 +483,11 @@ func _simulate_shield_recharge(delta: float) -> void:
 	var max_s := base_max * (ratio_starboard / 0.25)
 	
 	if is_is_shield_powered:
-		# Rigenerazione scudi verso il massimo consentito dal bilanciamento
 		shield_fore = move_toward(shield_fore, max_f, recharge_rate * (ratio_fore / 0.25) * sync_mult * delta)
 		shield_aft = move_toward(shield_aft, max_a, recharge_rate * (ratio_aft / 0.25) * sync_mult * delta)
 		shield_port = move_toward(shield_port, max_p, recharge_rate * (ratio_port / 0.25) * sync_mult * delta)
 		shield_starboard = move_toward(shield_starboard, max_s, recharge_rate * (ratio_starboard / 0.25) * sync_mult * delta)
 	else:
-		# Decadimento rapido se disalimentati
 		shield_fore = move_toward(shield_fore, 0.0, decay_rate * delta)
 		shield_aft = move_toward(shield_aft, 0.0, decay_rate * delta)
 		shield_port = move_toward(shield_port, 0.0, decay_rate * delta)
@@ -249,7 +534,7 @@ func _refresh_ui_display() -> void:
 		var pct := (total_hp / total_max) * 100.0 if total_max > 0.0 else 0.0
 		total_integrity_label.text = "INTEGRITÀ GLOBALE: %d / %d MW (%.1f%%)" % [int(total_hp), int(total_max), pct]
 	
-	# Aggiorna Sliders senza innescare loop segnali
+	# Sliders
 	if balance_fore_slider and not balance_fore_slider.has_focus():
 		balance_fore_slider.set_value_no_signal(ratio_fore * 100.0)
 	if balance_aft_slider and not balance_aft_slider.has_focus():
@@ -259,19 +544,20 @@ func _refresh_ui_display() -> void:
 	if balance_starboard_slider and not balance_starboard_slider.has_focus():
 		balance_starboard_slider.set_value_no_signal(ratio_starboard * 100.0)
 	
-	# Aggiorna Ologramma
+	# Ologramma
 	if hologram_canvas:
 		var f_hp_pct := shield_fore / max_f
 		var a_hp_pct := shield_aft / max_a
 		var p_hp_pct := shield_port / max_p
 		var s_hp_pct := shield_starboard / max_s
+		hologram_canvas.set_defense_devices(defense_devices)
 		hologram_canvas.update_matrix_state(
 			ratio_fore, ratio_aft, ratio_port, ratio_starboard,
 			f_hp_pct, a_hp_pct, p_hp_pct, s_hp_pct,
 			is_phase_synced, _is_ship_operational()
 		)
 	
-	# Aggiorna badge potenza
+	# Power badge
 	if power_badge:
 		var p_mw: float = active_config.get("base_power_draw_mw", 90.0)
 		if boost_cooldown_timer > 0.0:
@@ -279,6 +565,7 @@ func _refresh_ui_display() -> void:
 		power_badge.text = "POTENZA: %.0f MW" % p_mw
 
 # --- GESTIONE VECTOR PAD & SLIDER RATIO ---
+
 func _on_vector_pad_gui_input(event: InputEvent) -> void:
 	if not can_control_shields or not _is_ship_operational():
 		return
@@ -308,8 +595,6 @@ func _update_vector_from_mouse(pos: Vector2) -> void:
 	_apply_vector_bias(rel)
 
 func _apply_vector_bias(vec: Vector2) -> void:
-	# vec.x: -1 (Babordo) .. +1 (Tribordo)
-	# vec.y: -1 (Prua) .. +1 (Poppa)
 	var f_weight := maxf(0.05, 0.25 - vec.y * 0.35)
 	var a_weight := maxf(0.05, 0.25 + vec.y * 0.35)
 	var p_weight := maxf(0.05, 0.25 - vec.x * 0.35)
@@ -341,7 +626,6 @@ func _on_slider_ratio_changed(quadrant: int, val: float) -> void:
 		GlobalValues.Quadrant.STARBOARD:
 			ratio_starboard = new_ratio
 	
-	# Normalizza gli altri tre quadranti per mantenere la somma a 1.0
 	_normalize_ratios(quadrant)
 	_refresh_ui_display()
 
@@ -382,6 +666,7 @@ func _on_reset_balance_pressed() -> void:
 	_refresh_ui_display()
 
 # --- RICARICA RAPIDA D'EMERGENZA & ARMONICHE ---
+
 func _on_emergency_boost_pressed() -> void:
 	if not can_control_shields or not _is_ship_operational() or boost_cooldown_timer > 0.0:
 		return
@@ -428,6 +713,7 @@ func _log_action(msg: String) -> void:
 		action_log_label.text = "[LOG] %s" % msg
 
 # --- CONFIGURAZIONE .DAT & HOT-RELOADING ---
+
 func _on_drive_file_event(rel_path: String) -> void:
 	if "Programs/ShieldMatrix" in rel_path and rel_path.ends_with(".dat"):
 		load_dat_configuration()
@@ -481,7 +767,7 @@ func _is_ship_operational() -> bool:
 		return NetworkManager.is_ship_connected()
 	return false
 
-func _on_ship_connection_changed(is_connected: bool) -> void:
+func _on_ship_connection_changed(_is_connected: bool) -> void:
 	_update_connection_state()
 
 func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
@@ -535,7 +821,7 @@ func _update_permissions() -> void:
 			role_badge.text = "RUOLO: %s (SOLA TELEMETRIA)" % display_role
 			role_badge.modulate = Color(1.0, 0.75, 0.3)
 	
-	# Abilita o disabilita elementi di controllo
+	# Abilita o disabilita controlli
 	if emergency_boost_button:
 		emergency_boost_button.disabled = not can_control_shields or boost_cooldown_timer > 0.0
 	if reset_balance_button:
@@ -550,3 +836,9 @@ func _update_permissions() -> void:
 		balance_port_slider.editable = can_control_shields
 	if balance_starboard_slider:
 		balance_starboard_slider.editable = can_control_shields
+	if reload_all_defenses_button:
+		reload_all_defenses_button.disabled = not can_control_shields
+	
+	for dev_id in _device_cards:
+		if is_instance_valid(_device_cards[dev_id]):
+			_device_cards[dev_id].set_permissions(can_control_shields)

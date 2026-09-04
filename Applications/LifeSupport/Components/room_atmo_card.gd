@@ -15,6 +15,7 @@ signal fire_suppressed(room_id: String)
 @onready var pressure_label: Label = get_node_or_null("%PressureLabel")
 @onready var temp_label: Label = get_node_or_null("%TempLabel")
 @onready var co2_label: Label = get_node_or_null("%CO2Label")
+@onready var heater_label: Label = get_node_or_null("%HeaterLabel")
 @onready var btn_quick_seal: Button = get_node_or_null("%BtnQuickSeal")
 @onready var btn_quick_suppress: Button = get_node_or_null("%BtnQuickSuppress")
 
@@ -42,20 +43,22 @@ func update_telemetry(state: Dictionary) -> void:
 	if state.is_empty():
 		return
 	
-	room_id = str(state.get("id"))
-	room_name = str(state.get("name"))
+	room_id = str(state.get("id", room_id))
+	room_name = str(state.get("name", room_name))
 	if room_name_label:
 		room_name_label.text = room_name
 	
-	var o2: float = float(state.get("o2_pct"))
-	var co2: float = float(state.get("co2_pct"))
-	var pressure: float = float(state.get("pressure_kpa"))
-	var temp: float = float(state.get("temperature_c"))
-	is_sealed = bool(state.get("is_sealed"))
-	var is_fire: bool = bool(state.get("is_fire_active"))
-	var is_smoke: bool = bool(state.get("is_smoke_active"))
-	var is_suppressing: bool = bool(state.get("is_suppression_active"))
-	var has_breach: bool = bool(state.get("has_breach"))
+	var o2: float = float(state.get("o2_pct", 21.0))
+	var co2: float = float(state.get("co2_pct", 0.04))
+	var pressure: float = float(state.get("pressure_kpa", 101.3))
+	var temp: float = float(state.get("temperature_c", 21.5))
+	is_sealed = bool(state.get("is_sealed", false))
+	var is_fire: bool = bool(state.get("is_fire_active", false))
+	var is_smoke: bool = bool(state.get("is_smoke_active", false))
+	var is_suppressing: bool = bool(state.get("is_suppression_active", false))
+	var has_breach: bool = bool(state.get("has_breach", false))
+	var has_short: bool = bool(state.get("has_short_circuit", false))
+	var heater_online: bool = bool(state.get("heater_online", true))
 	
 	if o2_label:
 		o2_label.text = "O2: %.1f%%" % o2
@@ -70,7 +73,7 @@ func update_telemetry(state: Dictionary) -> void:
 	
 	if pressure_label:
 		pressure_label.text = "P: %.1f kPa" % pressure
-		if pressure < 60.0:
+		if pressure < 50.0:
 			pressure_label.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
 		elif pressure < 90.0:
 			pressure_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
@@ -79,12 +82,14 @@ func update_telemetry(state: Dictionary) -> void:
 	
 	if temp_label:
 		temp_label.text = "T: %.1f°C" % temp
-		if temp > 60.0:
+		if temp < 10.0:
+			temp_label.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
+		elif temp > 40.0:
 			temp_label.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
-		elif temp > 35.0:
-			temp_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
+		elif temp >= 18.0 and temp <= 24.0:
+			temp_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.4, 1.0))
 		else:
-			temp_label.add_theme_color_override("font_color", Color(0.7, 0.85, 0.9, 1.0))
+			temp_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
 	
 	if co2_label:
 		co2_label.text = "CO2: %.2f%%" % co2
@@ -95,13 +100,30 @@ func update_telemetry(state: Dictionary) -> void:
 		else:
 			co2_label.add_theme_color_override("font_color", Color(0.7, 0.85, 0.9, 1.0))
 	
+	if heater_label:
+		if heater_online:
+			heater_label.text = "Caldaia: ON"
+			heater_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.4, 1.0))
+		elif has_short:
+			heater_label.text = "Caldaia: CORTO"
+			heater_label.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		else:
+			heater_label.text = "Caldaia: OFF"
+			heater_label.add_theme_color_override("font_color", Color(0.95, 0.6, 0.2, 1.0))
+	
 	if status_badge:
-		if has_breach or pressure < 40.0:
+		if is_fire:
+			status_badge.text = "🔥 INCENDIO"
+			status_badge.add_theme_color_override("font_color", Color(0.95, 0.3, 0.1, 1.0))
+		elif has_breach:
+			status_badge.text = "🚨 BRECCIA"
+			status_badge.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		elif pressure < 50.0:
 			status_badge.text = "⚡ DECOMPRESSIONE"
 			status_badge.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
-		elif is_fire:
-			status_badge.text = "🔥 INCENDIO ATTIVO"
-			status_badge.add_theme_color_override("font_color", Color(0.95, 0.3, 0.1, 1.0))
+		elif has_short:
+			status_badge.text = "⚡ CORTO CALDAIA"
+			status_badge.add_theme_color_override("font_color", Color(0.95, 0.6, 0.2, 1.0))
 		elif is_suppressing:
 			status_badge.text = "💨 N2 INIEZIONE"
 			status_badge.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
@@ -112,8 +134,14 @@ func update_telemetry(state: Dictionary) -> void:
 			status_badge.text = "🚪 PARATIA SIGILLATA"
 			status_badge.add_theme_color_override("font_color", Color(0.85, 0.6, 0.9, 1.0))
 		elif o2 < 18.0:
-			status_badge.text = "⚠️ IPOSSIA (O2 BASSO)"
+			status_badge.text = "⚠️ IPOSSIA"
 			status_badge.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
+		elif temp < 10.0:
+			status_badge.text = "❄️ IPOTERMIA"
+			status_badge.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
+		elif temp > 40.0:
+			status_badge.text = "🔥 SOVRATEMP."
+			status_badge.add_theme_color_override("font_color", Color(0.95, 0.3, 0.1, 1.0))
 		elif co2 > 0.5:
 			status_badge.text = "⚠️ CO2 ELEVATA"
 			status_badge.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))

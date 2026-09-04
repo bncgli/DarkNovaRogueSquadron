@@ -16,19 +16,19 @@ Ristrutturazione dell'applicazione `CommsApp`. Rimozione dei vecchi moduli di ja
 - Introdurre il test di potenza segnale per la connessione EW: se la frequenza di una nave selezionata è sufficientemente forte e vicina, abilitare il tasto "Connect" per agganciare il Drive remoto tramite il modulo Hack Exploits.
 
 ## Criteri di Accettazione
-- [ ] **Rimozione Jamming & Vecchio Decripting**:
-  - [ ] Nessun residuo visivo o logico dei moduli Jammer e Decryption progress bar in `comms_app.tscn`/`.gd`.
-- [ ] **Suddivisione Inferiore in 2 Settori**:
-  - [ ] Sinistra: Controlli Antenna Direzionale (Azimut, Auto-Rotate, Frequency Lock).
-  - [ ] Destra: Pannello Info Frequenza, Menu Stazione & EW Connect.
-- [ ] **Meccanica Antenna Direzionale & Modalità Operative**:
-  - [ ] In modalità manuale, solo i segnali compresi nel cono angolare (es. ±25°) dell'antenna sono visibili/udibili con chiarezza.
-  - [ ] In auto-rotazione, l'antenna ruota autonomamente a velocità costante; il raggio di intercettazione è ridotto del 70% e presenta rumore di fondo.
-  - [ ] Con Frequency Lock attivo, l'antenna ruota autonomamente per inseguire la direzione relativa del bersaglio in tempo reale.
-- [ ] **Menu Interazione Stazioni Spaziali**:
-  - [ ] Alla sintonizzazione con una stazione compare il menu dedicato per richiedere l'autorizzazione all'attracco (`StationHub`).
-- [ ] **Abilitazione Connessione Drive EW su Segnale Potente**:
-  - [ ] Il pulsante "Connect" si attiva solo quando la potenza del segnale della nave bersaglio supera la soglia di stabilità per l'intrusione informatica.
+- [x] **Rimozione Jamming & Vecchio Decripting**:
+  - [x] Nessun residuo visivo o logico dei moduli Jammer e Decryption progress bar in `comms_app.tscn`/`.gd`.
+- [x] **Suddivisione Inferiore in 2 Settori**:
+  - [x] Sinistra: Controlli Antenna Direzionale (Azimut, Auto-Rotate, Frequency Lock).
+  - [x] Destra: Pannello Info Frequenza, Menu Stazione & EW Connect.
+- [x] **Meccanica Antenna Direzionale & Modalità Operative**:
+  - [x] In modalità manuale, solo i segnali compresi nel cono angolare (es. ±25°) dell'antenna sono visibili/udibili con chiarezza.
+  - [x] In auto-rotazione, l'antenna ruota autonomamente a velocità costante; il raggio di intercettazione è ridotto del 70% e presenta rumore di fondo.
+  - [x] Con Frequency Lock attivo, l'antenna ruota autonomamente per inseguire la direzione relativa del bersaglio in tempo reale.
+- [x] **Menu Interazione Stazioni Spaziali**:
+  - [x] Alla sintonizzazione con una stazione compare il menu dedicato per richiedere l'autorizzazione all'attracco (`StationHub`).
+- [x] **Abilitazione Connessione Drive EW su Segnale Potente**:
+  - [x] Il pulsante "Connect" si attiva solo quando la potenza del segnale della nave bersaglio supera la soglia di stabilità per l'intrusione informatica.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

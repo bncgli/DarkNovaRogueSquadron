@@ -2,6 +2,10 @@
 class_name ShipDamageData
 extends Resource
 
+const DAMAGE_TYPE_BREACH: String = "breach"
+const DAMAGE_TYPE_SHORT_CIRCUIT: String = "short_circuit"
+const DAMAGE_TYPE_FIRE: String = "fire"
+
 @export var id: String = ""
 @export var type: String = ""
 @export var name: String = ""

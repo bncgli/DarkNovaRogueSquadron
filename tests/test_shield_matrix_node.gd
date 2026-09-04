@@ -216,6 +216,156 @@ func _run_suite() -> void:
 		term.queue_free()
 	print("✔ File .dat protetto dalla lettura in chiaro standard")
 	
+	# =========================================================================
+	# FASE 10: UI SPLIT VIEW SINISTRA / DESTRA & CONTENITORI DISPOSITIVI (TASK-032)
+	# =========================================================================
+	print("\n--- TEST 10: Split View Sinistra/Destra & Lista Dispositivi ---")
+	assert(shield_app.defense_devices_panel != null, "Pannello destro %DefenseDevicesPanel deve essere presente")
+	assert(shield_app.devices_scroll_container != null, "ScrollContainer %DevicesScrollContainer deve essere presente")
+	assert(shield_app.devices_list_container != null, "VBoxContainer %DevicesListContainer deve essere presente")
+	assert(shield_app.devices_list_container.get_child_count() >= 3, "Devono essere istanziate le schede dei dispositivi iniziali")
+	
+	var default_devices := shield_app.get_defense_devices()
+	assert(default_devices.size() >= 3, "Devono essere registrati almeno 3 dispositivi predefiniti")
+	assert(default_devices[0]["id"] == "gatling_1", "Primo dispositivo predefinito deve essere gatling_1")
+	assert(default_devices[1]["id"] == "gatling_2", "Secondo dispositivo predefinito deve essere gatling_2")
+	assert(default_devices[2]["id"] == "flack_1", "Terzo dispositivo predefinito deve essere flack_1")
+	print("✔ Layout Split View e schede dispositivi istanziate correttamente")
+
+	# =========================================================================
+	# FASE 11: REGISTRAZIONE DINAMICA & RIASSEGNAZIONE IN TEMPO REALE DEL SETTORE
+	# =========================================================================
+	print("\n--- TEST 11: Registrazione Dinamica & Riassegnazione Settore ---")
+	# 1. Registrazione nuovo apparato difensivo a runtime
+	var new_pd_device := {
+		"id": "emp_defense_1",
+		"name": "Generatore EMP Settore",
+		"type": "EMP",
+		"sector": ShieldMatrixApp.DefenseSector.STARBOARD,
+		"ammo": 5,
+		"status": "READY",
+		"cooldown": 0.0
+	}
+	shield_app.register_defense_device(new_pd_device)
+	assert(shield_app.get_defense_devices().size() == 4, "La lista deve contenere 4 dispositivi dopo registrazione dinamica")
+	assert(shield_app.devices_list_container.get_child_count() == 4, "La UI deve contenere 4 schede DefenseDeviceCard")
+	
+	# 2. Riassegnazione settore
+	shield_app.assign_device_sector("gatling_1", ShieldMatrixApp.DefenseSector.AFT)
+	var devs_aft := shield_app.get_devices_in_sector(ShieldMatrixApp.DefenseSector.AFT)
+	var found_g1 := false
+	for d in devs_aft:
+		if d.get("id") == "gatling_1":
+			found_g1 = true
+			break
+	assert(found_g1 == true, "gatling_1 deve essere assegnata al settore Poppa (AFT)")
+	
+	# 3. Riposiziona gatling_1 su FORE per i test successivi
+	shield_app.assign_device_sector("gatling_1", ShieldMatrixApp.DefenseSector.FORE)
+	assert(shield_app.get_devices_in_sector(ShieldMatrixApp.DefenseSector.FORE).size() > 0, "gatling_1 riassegnata a FORE")
+	print("✔ Registrazione dinamica e riassegnazione settore verificate con successo")
+
+	# =========================================================================
+	# FASE 12: INTERCETTAZIONE AUTOMATICA GATLING & VINCOLO DIREZIONALE MONOSETTORE
+	# =========================================================================
+	print("\n--- TEST 12: Intercettazione Gatling & Vincolo Direzionale Monosettore ---")
+	if SpaceWorldManager:
+		SpaceWorldManager.clear_incoming_projectiles()
+		
+		# Ripristina munizioni
+		shield_app.reload_all_defense_devices()
+		
+		# Assicura che gatling_1 sia a FORE (Prua)
+		shield_app.assign_device_sector("gatling_1", ShieldMatrixApp.DefenseSector.FORE)
+		var g1_initial_ammo: int = shield_app.get_devices_in_sector(ShieldMatrixApp.DefenseSector.FORE)[0]["ammo"]
+		
+		# 1. Minaccia cinetica in arrivo da PRUA (FORE, -Z)
+		var proj_fore := SpaceWorldManager.spawn_incoming_projectile(
+			"KINETIC",
+			Vector3(0, 0, -50),
+			Vector3(0, 0, 20),
+			30.0,
+			Vector3.ZERO
+		)
+		assert(SpaceWorldManager.get_incoming_projectiles().size() == 1, "Proiettile registrato in SpaceWorldManager")
+		
+		# Esegui tick punto-difesa
+		shield_app._process_active_defenses(0.1)
+		
+		# Verifica distruzione proiettile e decremento munizioni
+		assert(SpaceWorldManager.get_incoming_projectiles().is_empty(), "Proiettile da Prua deve essere stato intercettato e distrutto")
+		var g1_current_ammo: int = shield_app.get_devices_in_sector(ShieldMatrixApp.DefenseSector.FORE)[0]["ammo"]
+		assert(g1_current_ammo == g1_initial_ammo - 1, "Munizioni Gatling 1 decrementate di 1")
+		
+		# 2. Minaccia in arrivo da un settore NON presidiato (es. Poppa / AFT senza Gatling per cinetici)
+		# Togliamo qualsiasi arma a Poppa
+		shield_app.assign_device_sector("flack_1", ShieldMatrixApp.DefenseSector.PORT)
+		shield_app.assign_device_sector("emp_defense_1", ShieldMatrixApp.DefenseSector.STARBOARD)
+		
+		var proj_unprotected_aft := SpaceWorldManager.spawn_incoming_projectile(
+			"KINETIC",
+			Vector3(0, 0, 50),
+			Vector3(0, 0, -20),
+			30.0,
+			Vector3.ZERO
+		)
+		# Esegui tick difese
+		shield_app._process_active_defenses(0.1)
+		
+		# Il proiettile NON deve essere intercettato (vincolo direzionale monosettore!)
+		assert(SpaceWorldManager.get_incoming_projectiles().size() == 1, "Proiettile in settore non difeso NON deve essere intercettato")
+		SpaceWorldManager.clear_incoming_projectiles()
+	print("✔ Intercettazione Gatling e vincolo direzionale monosettore convalidati")
+
+	# =========================================================================
+	# FASE 13: LANCIO CONTROMISURE FLACK ANGEL-HAIR CONTRO MISSILI A RICERCA
+	# =========================================================================
+	print("\n--- TEST 13: Contromisure Flack Angel-Hair vs Missili Homing ---")
+	if SpaceWorldManager:
+		SpaceWorldManager.clear_incoming_projectiles()
+		shield_app.reload_all_defense_devices()
+		
+		# Assegna Flack a Tribordo (STARBOARD, +X)
+		shield_app.assign_device_sector("flack_1", ShieldMatrixApp.DefenseSector.STARBOARD)
+		
+		# Spawna missile a ricerca da Tribordo (+X = Vector3(60, 0, 0))
+		var homing_missile := SpaceWorldManager.spawn_incoming_projectile(
+			"HOMING_MISSILE",
+			Vector3(60, 0, 0),
+			Vector3(-25, 0, 0),
+			45.0,
+			Vector3.ZERO
+		)
+		assert(homing_missile["is_homing"] == true, "Il missile deve essere inizialmente agganciato (is_homing = true)")
+		
+		# Esegui tick difese
+		shield_app._process_active_defenses(0.1)
+		
+		# Verifica rilascio cortina e deviazione
+		var projs := SpaceWorldManager.get_incoming_projectiles()
+		assert(projs.size() == 1, "Il missile rimane nello spazio ma con traiettoria deviata")
+		assert(projs[0]["is_deflected"] == true, "Il missile deve risultare deviato dalla cortina Angel Hair")
+		assert(projs[0]["is_homing"] == false, "L'aggancio a guida autonoma del missile deve essere azzerato")
+		
+		SpaceWorldManager.clear_incoming_projectiles()
+	print("✔ Cortina Flack Angel-Hair e deviazione missili guidati convalidate")
+
+	# =========================================================================
+	# FASE 14: INTEGRAZIONE COMBAT DIRECTOR & DEFENSE EVALUATION
+	# =========================================================================
+	print("\n--- TEST 14: CombatDirector Defense Interception Logic ---")
+	var combat_dir := CombatDirector.new()
+	add_child(combat_dir)
+	
+	var devices := shield_app.get_defense_devices()
+	# Hit locale da prua (FORE: Vector3(0, 0, -10))
+	var eval_fore := combat_dir.evaluate_defensive_interception(Vector3(0, 0, -10), "kinetic", devices)
+	assert(eval_fore.intercepted == true, "Hit da prua deve essere intercettato da Gatling 1")
+	assert(eval_fore.action == "DESTROYED", "Azione Gatling deve essere DESTROYED")
+	
+	combat_dir.queue_free()
+	print("✔ Integrazione CombatDirector e filtraggio intercettazioni validati")
+	
 	# Pulizia
 	shield_app.queue_free()
 	await get_tree().process_frame

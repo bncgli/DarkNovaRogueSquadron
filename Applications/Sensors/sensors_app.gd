@@ -2,11 +2,15 @@ class_name SensorsApp
 extends BaseApp
 
 ## Applicazione della Nave: Long-Range Sensor Array & Tactical Map (Applications/Sensors)
-## Fornisce radar a lungo raggio fino a 50 km, sweep passivo/attivo, analisi spettrometrica
-## e trasmissione coordinate waypoint a Flight Control e Weapons.
+## Fornisce radar a raggio diegetico (1 km standard, 2 km ping attivo), sweep passivo,
+## occlusione Line of Sight (LoS) da ostacoli, integrazione feed radar Probe e trasmissione waypoint.
 
 const APP_TITLE: String = "ARRAY SENSORI & RADAR"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(750, 550)
+const RADAR_STANDARD_RANGE: float = 1000.0 # 1 km
+const MAX_STANDARD_RANGE: float = 1000.0
+const ACTIVE_PING_RANGE: float = 2000.0 # 2 km
+const PING_MAX_RANGE: float = 2000.0
 const BASE_POWER_MW: float = 40.0
 const ACTIVE_PING_POWER_MW: float = 120.0
 
@@ -24,14 +28,12 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Sensors/radar_tuni
 
 @onready var radar_display: RadarDisplay = get_node_or_null("%RadarDisplay")
 @onready var option_display_mode: OptionButton = get_node_or_null("%OptionDisplayMode")
-@onready var option_range: OptionButton = get_node_or_null("%OptionRange")
-@onready var option_filter: OptionButton = get_node_or_null("%OptionFilter")
+@onready var range_indicator_label: Label = get_node_or_null("%RangeIndicatorLabel")
 @onready var btn_sweep_toggle: Button = get_node_or_null("%BtnSweepToggle")
 @onready var btn_active_ping: Button = get_node_or_null("%BtnActivePing")
 
-@onready var target_option: OptionButton = get_node_or_null("%TargetOption")
 @onready var target_details_label: RichTextLabel = get_node_or_null("%TargetDetailsLabel")
-@onready var spectrometry_label: RichTextLabel = get_node_or_null("%SpectrometryLabel")
+@onready var probe_status_label: RichTextLabel = get_node_or_null("%ProbeStatusLabel")
 @onready var btn_lock_target: Button = get_node_or_null("%BtnLockTarget")
 @onready var btn_transmit_waypoint: Button = get_node_or_null("%BtnTransmitWaypoint")
 @onready var btn_clear_waypoint: Button = get_node_or_null("%BtnClearWaypoint")
@@ -42,13 +44,19 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Sensors/radar_tuni
 @onready var ping_label: Label = get_node_or_null("%PingLabel")
 @onready var radar_damage_badge: Label = get_node_or_null("%RadarDamageBadge")
 
+# Nodi opzionali per retrocompatibilità
+@onready var target_option: OptionButton = get_node_or_null("%TargetOption")
+@onready var spectrometry_label: RichTextLabel = get_node_or_null("%SpectrometryLabel")
+@onready var option_range: OptionButton = get_node_or_null("%OptionRange")
+@onready var option_filter: OptionButton = get_node_or_null("%OptionFilter")
+
 # --- CONFIGURAZIONE RUNTIME (.DAT) ---
 var active_config: Dictionary = {
 	"app_name": "SensorsApp",
 	"version": "1.0.0",
 	"status": "OPERATIONAL",
 	"sweep_frequency_hz": 12.0,
-	"active_ping_radius": 50000.0,
+	"active_ping_radius": 2000.0,
 	"noise_filter": 0.92,
 	"spectrum_sensitivity": 1.0,
 	"iff_auto_tag": true,
@@ -99,22 +107,12 @@ func _init_ui_elements() -> void:
 		option_display_mode.add_item("Elevazione Spaziale 3D", 2)
 		option_display_mode.selected = 0
 	
-	if option_range:
-		option_range.clear()
-		option_range.add_item("Portata: 5 KM", 0)
-		option_range.add_item("Portata: 10 KM", 1)
-		option_range.add_item("Portata: 25 KM", 2)
-		option_range.add_item("Portata: 50 KM", 3)
-		option_range.selected = 3 # Default 50 km
+	if radar_display:
+		radar_display.max_range = RADAR_STANDARD_RANGE
+		radar_display.ping_max_radius = ACTIVE_PING_RANGE
 	
-	if option_filter:
-		option_filter.clear()
-		option_filter.add_item("Filtro: Tutti i Contatti", 0)
-		option_filter.add_item("Filtro: Minerali & Asteroidi", 1)
-		option_filter.add_item("Filtro: Relitti Spaziali", 2)
-		option_filter.add_item("Filtro: Minacce & Ostili", 3)
-		option_filter.add_item("Filtro: Fari & Stazioni", 4)
-		option_filter.selected = 0
+	if range_indicator_label:
+		range_indicator_label.text = "📡 SCANNER: 1000m | PING: 2000m"
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -155,18 +153,12 @@ func _connect_ui_signals() -> void:
 	
 	if option_display_mode and not option_display_mode.item_selected.is_connected(_on_display_mode_selected):
 		option_display_mode.item_selected.connect(_on_display_mode_selected)
-	if option_range and not option_range.item_selected.is_connected(_on_range_selected):
-		option_range.item_selected.connect(_on_range_selected)
-	if option_filter and not option_filter.item_selected.is_connected(_on_filter_selected):
-		option_filter.item_selected.connect(_on_filter_selected)
 	
 	if btn_sweep_toggle and not btn_sweep_toggle.pressed.is_connected(_on_sweep_toggle_pressed):
 		btn_sweep_toggle.pressed.connect(_on_sweep_toggle_pressed)
 	if btn_active_ping and not btn_active_ping.pressed.is_connected(_on_active_ping_pressed):
 		btn_active_ping.pressed.connect(_on_active_ping_pressed)
 	
-	if target_option and not target_option.item_selected.is_connected(_on_target_dropdown_selected):
-		target_option.item_selected.connect(_on_target_dropdown_selected)
 	if btn_lock_target and not btn_lock_target.pressed.is_connected(_on_lock_target_pressed):
 		btn_lock_target.pressed.connect(_on_lock_target_pressed)
 	if btn_transmit_waypoint and not btn_transmit_waypoint.pressed.is_connected(_on_transmit_waypoint_pressed):
@@ -349,13 +341,13 @@ func _update_ping_timers(delta: float) -> void:
 	
 	if ping_label:
 		if is_pinging:
-			ping_label.text = "PING: IMPULSO ATTIVO..."
+			ping_label.text = "PING: IMPULSO ATTIVO (2 km)..."
 			ping_label.modulate = Color(0.2, 0.9, 1.0)
 		elif ping_cooldown > 0.0:
 			ping_label.text = "PING: RICARICA (%.1fs)" % ping_cooldown
 			ping_label.modulate = Color(1.0, 0.8, 0.2)
 		else:
-			ping_label.text = "PING: PRONTO (50 km)"
+			ping_label.text = "PING: PRONTO (2 km)"
 			ping_label.modulate = Color(0.3, 0.9, 0.5)
 
 func _update_power_and_damage_state(_delta: float) -> void:
@@ -399,118 +391,138 @@ func _update_power_and_damage_state(_delta: float) -> void:
 		else:
 			status_label.text = "STATO RADAR: SCANSIONE OPERATIVA"
 
+# --- LINE OF SIGHT (LoS) & PROBE INTEGRATION ---
+
 func _refresh_entities() -> void:
+	var raw_entities: Array[Dictionary] = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_sensor_entities"):
-		detected_entities = SpaceWorldManager.get_sensor_entities()
+		raw_entities = SpaceWorldManager.get_sensor_entities()
+	
+	# Recupera stato eventuale sonda attiva (Probe)
+	var active_probe: Dictionary = {}
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_active_probe"):
+		active_probe = SpaceWorldManager.get_active_probe()
+	
+	if radar_display:
+		radar_display.probe_data = active_probe
+	
+	# Filtra ostacoli fisici solidi (Asteroidi, Relitti, Stazioni)
+	var obstacles: Array[Dictionary] = []
+	for e in raw_entities:
+		var t: String = str(e.get("type", ""))
+		var r_m: float = float(e.get("radius_m", 0.0))
+		if r_m > 0.0 or t in ["ASTEROID", "MINERAL_ASTEROID", "STATION", "WRECK"]:
+			obstacles.append(e)
+	
+	# Calcola occlusione Line of Sight e copertura Probe
+	detected_entities.clear()
+	for e in raw_entities:
+		var e_copy := e.duplicate(true)
+		var rel_pos: Vector3 = e_copy.get("rel_pos", e_copy.get("pos", Vector3.ZERO))
+		var e_dist: float = rel_pos.length()
+		var e_type: String = str(e_copy.get("type", ""))
+		var e_id: String = str(e_copy.get("id", ""))
+		
+		var is_occluded_from_ship := false
+		
+		# I waypoint e la propria sonda non sono occlusi
+		if e_type != "WAYPOINT" and e_type != "PROBE" and e_dist > 5.0:
+			var ray_dir := rel_pos / e_dist
+			for obs in obstacles:
+				if str(obs.get("id", "")) == e_id:
+					continue
+				
+				var obs_rel: Vector3 = obs.get("rel_pos", obs.get("pos", Vector3.ZERO))
+				var obs_rad: float = float(obs.get("radius_m", 25.0))
+				if obs_rad <= 0.0:
+					obs_rad = 25.0
+				
+				# Proiezione del vettore ostacolo sul raggio nave->contatto
+				var t_proj := obs_rel.dot(ray_dir)
+				# L'ostacolo deve trovarsi tra la nave e il contatto
+				if t_proj > obs_rad and t_proj < (e_dist - 2.0):
+					var perp_dist_sq := obs_rel.length_squared() - (t_proj * t_proj)
+					if perp_dist_sq < (obs_rad * obs_rad):
+						is_occluded_from_ship = true
+						break
+		
+		# Verifica se il contatto si trova nel raggio di scansione della sonda telemetrica
+		var is_revealed_by_probe := false
+		if not active_probe.is_empty():
+			var p_pos: Vector3 = active_probe.get("pos", Vector3.ZERO)
+			var e_world_pos: Vector3 = e_copy.get("pos", rel_pos)
+			var dist_to_probe := (e_world_pos - p_pos).length()
+			var probe_scan_r: float = float(active_probe.get("scan_radius", 1000.0))
+			if dist_to_probe <= probe_scan_r:
+				is_revealed_by_probe = true
+		
+		# Se è nel raggio della sonda, il contatto viene rivelato anche se in ombra
+		var is_occluded := is_occluded_from_ship and not is_revealed_by_probe
+		e_copy["is_occluded"] = is_occluded
+		e_copy["is_revealed_by_probe"] = is_revealed_by_probe
+		
+		detected_entities.append(e_copy)
 	
 	if radar_display:
 		radar_display.entities = detected_entities
 		radar_display.selected_entity_id = selected_entity_id
 		radar_display.locked_entity_id = locked_entity_id
-	
-	_populate_target_dropdown()
-
-func _populate_target_dropdown() -> void:
-	if not target_option:
-		return
-	
-	var cur_sel := target_option.selected
-	var prev_id := selected_entity_id
-	
-	target_option.clear()
-	target_option.add_item("-- NESSUN CONTATTO SELEZIONATO --", 0)
-	
-	var idx_to_select := 0
-	for i in range(detected_entities.size()):
-		var e: Dictionary = detected_entities[i]
-		var e_id: String = str(e.get("id", ""))
-		var e_name: String = str(e.get("name", "CONTATTO IGNOTO"))
-		var dist_km: float = float(e.get("distance", 0.0)) / 1000.0
-		var iff: String = str(e.get("iff_tag", "UNKNOWN"))
-		
-		var label_item := "%s [%.1f km] (%s)" % [e_name, dist_km, iff]
-		target_option.add_item(label_item, i + 1)
-		
-		if e_id == prev_id:
-			idx_to_select = i + 1
-	
-	target_option.selected = idx_to_select
 
 func _update_telemetry_ui() -> void:
 	var cur_entity := _get_entity_data(selected_entity_id)
 	
 	if target_details_label:
 		if cur_entity.is_empty():
-			target_details_label.text = "[color=#7799aa]Nessun bersaglio o contatto selezionato sul radar.[/color]\n[color=#557788]Fai clic sul radar o scegli dal menu a tendina.[/color]"
+			target_details_label.text = "[color=#7799aa]Nessun contatto selezionato sul display radar.[/color]\n[color=#557788]Fai clic su un eco radar per analizzare la telemetria.[/color]"
 		else:
 			var e_id: String = str(cur_entity.get("id", ""))
-			var e_name: String = str(cur_entity.get("name", "IGNOTO"))
-			var dist_km: float = float(cur_entity.get("distance", 0.0)) / 1000.0
+			var dist_m: float = float(cur_entity.get("distance", 0.0))
 			var bearing: float = float(cur_entity.get("bearing_deg", 0.0))
 			var elev: float = float(cur_entity.get("elevation_deg", 0.0))
 			var vel: Vector3 = cur_entity.get("velocity", Vector3.ZERO)
-			var iff: String = str(cur_entity.get("iff_tag", "UNKNOWN"))
-			var e_type: String = str(cur_entity.get("type", "UNKNOWN"))
 			var mass: float = float(cur_entity.get("mass_tons", 0.0))
 			var sig: float = float(cur_entity.get("signal_signature", 0.0))
-			
-			var iff_color := "#55ff55"
-			if iff == "HAZARD": iff_color = "#ffaa33"
-			elif iff == "HOSTILE": iff_color = "#ff4444"
-			elif iff == "FRIENDLY": iff_color = "#33ccff"
-			elif iff == "WAYPOINT": iff_color = "#ee44ff"
+			var e_type: String = str(cur_entity.get("type", "UNKNOWN"))
+			var is_rev_probe: bool = bool(cur_entity.get("is_revealed_by_probe", false))
 			
 			var lock_txt := " [color=#ff3333]● LOCKED[/color]" if (e_id == locked_entity_id and is_target_locked) else ""
+			var probe_txt := "\n[color=#33ccff]● Rivelato da Feed Sonda Telemetrica[/color]" if is_rev_probe else ""
+			
+			var dist_str := "%.0f m" % dist_m if dist_m < 1000.0 else "%.2f km" % (dist_m / 1000.0)
+			
+			var title_str := "ECO #%s" % e_id
+			if e_type == "WAYPOINT": title_str = "WAYPOINT TATTICO"
+			elif e_type == "PROBE": title_str = "SONDA TELEMETRICA"
 			
 			target_details_label.text = (
-				"[b]Identificativo:[/b] %s%s\n" % [e_name, lock_txt] +
-				"[b]Tipologia:[/b] %s | [b]IFF:[/b] [color=%s]%s[/color]\n" % [e_type, iff_color, iff] +
-				"[b]Distanza:[/b] %.2f km | [b]Azimut:[/b] %.1f° | [b]Elevazione:[/b] %.1f°\n" % [dist_km, bearing, elev] +
-				"[b]Velocità Relativa:[/b] %.1f m/s (%s)\n" % [vel.length(), str(vel)] +
-				"[b]Massa Stimata:[/b] %.0f tonnellate | [b]Segnatura EM:[/b] %.0f%%" % [mass, sig * 100.0]
+				"[b]Identificativo Eco:[/b] %s%s\n" % [title_str, lock_txt] +
+				"[b]Distanza Scanner:[/b] %s | [b]Azimut:[/b] %.1f° | [b]Elevazione:[/b] %.1f°\n" % [dist_str, bearing, elev] +
+				"[b]Velocità Relativa:[/b] %.1f m/s\n" % vel.length() +
+				"[b]Massa Stimata:[/b] %.0f tonnellate | [b]Segnatura EM:[/b] %.0f%%%s" % [mass, sig * 100.0, probe_txt]
 			)
 	
-	_update_spectrometry_display(cur_entity)
-
-func _update_spectrometry_display(entity: Dictionary) -> void:
-	if not spectrometry_label:
-		return
-	
-	if entity.is_empty():
-		spectrometry_label.text = "[color=#557788]In attesa di scansione spettrometrica...[/color]"
-		return
-	
-	var comp: Dictionary = entity.get("composition", {})
-	var integ: float = float(entity.get("integrity", 100.0))
-	var rad: float = float(entity.get("radiation_level", 0.0))
-	var val_cr: int = int(entity.get("estimated_value_cr", 0))
-	var e_type: String = str(entity.get("type", "UNKNOWN"))
-	
-	var spec_text := "[b]Analisi Spettrometrica Materiali & Minerali:[/b]\n"
-	
-	if comp.is_empty():
-		if e_type == "WAYPOINT":
-			spec_text += "- Nessun corpo solido (Coordinate Vettore Waypoint)\n"
+	if probe_status_label:
+		var active_probe: Dictionary = {}
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_active_probe"):
+			active_probe = SpaceWorldManager.get_active_probe()
+		
+		if active_probe.is_empty():
+			probe_status_label.text = "[b]Feed Sonda Telemetrica:[/b] [color=#8899aa]OFFLINE[/color]\n[color=#557788]Nessuna sonda attiva nello spazio.\nLancia una sonda da Weapons per estendere la copertura radar.[/color]"
 		else:
-			spec_text += "- Composizione sconosciuta o non rilevabile a questo raggio\n"
-	else:
-		for mat_name in comp:
-			var pct: float = float(comp[mat_name])
-			var col := "#44ddaa" if pct > 30.0 else "#aaddcc"
-			spec_text += "- [color=%s]● %s[/color]: %.1f%%\n" % [col, mat_name, pct]
-	
-	spec_text += "\n[b]Stato Strutturale & Dati Radiologici:[/b]\n"
-	spec_text += "- Integrità Scafo/Massa: %.1f%%\n" % integ
-	spec_text += "- Radiazioni Rilevate: %.2f Sv/h\n" % rad
-	spec_text += "- Valore Commerciale Stimato: [color=#ffdd44]%d Crediti[/color]" % val_cr
-	
-	spectrometry_label.text = spec_text
+			var prb_id: String = str(active_probe.get("id", "PROBE"))
+			var prb_pos: Vector3 = active_probe.get("pos", Vector3.ZERO)
+			var prb_scan_r: float = float(active_probe.get("scan_radius", 1000.0))
+			probe_status_label.text = (
+				"[b]Feed Sonda Telemetrica:[/b] [color=#33ff88]● ATTIVO & CONNESSO[/color]\n" +
+				"[b]Unità Sonda:[/b] %s | [b]Portata Radar Secondario:[/b] %.0f m\n" % [prb_id, prb_scan_r] +
+				"[b]Coordinate Rel:[color=#33ccff] (%.0f, %.0f, %.0f)[/color][/b]" % [prb_pos.x, prb_pos.y, prb_pos.z]
+			)
 
 func _get_entity_data(e_id: String) -> Dictionary:
 	if e_id.is_empty():
 		return {}
 	for e in detected_entities:
-		if e.get("id", "") == e_id:
+		if str(e.get("id", "")) == e_id:
 			return e
 	return {}
 
@@ -519,27 +531,6 @@ func _get_entity_data(e_id: String) -> Dictionary:
 func _on_display_mode_selected(index: int) -> void:
 	if radar_display:
 		radar_display.current_mode = index as RadarDisplay.DisplayMode
-
-func _on_range_selected(index: int) -> void:
-	var r := 50000.0
-	match index:
-		0: r = 5000.0
-		1: r = 10000.0
-		2: r = 25000.0
-		3: r = 50000.0
-	if radar_display:
-		radar_display.set_range(r)
-
-func _on_filter_selected(index: int) -> void:
-	var f := "ALL"
-	match index:
-		0: f = "ALL"
-		1: f = "MINERALS"
-		2: f = "WRECKS"
-		3: f = "THREATS"
-		4: f = "BEACONS"
-	if radar_display:
-		radar_display.filter_category = f
 
 func _on_sweep_toggle_pressed() -> void:
 	if not can_control_sensors:
@@ -551,13 +542,29 @@ func _on_sweep_toggle_pressed() -> void:
 		btn_sweep_toggle.text = "📡 Sweep: ATTIVO" if is_passive_sweep_active else "📡 Sweep: IN PAUSA"
 
 func _on_active_ping_pressed() -> void:
-	if not can_control_sensors or ping_cooldown > 0.0 or not is_radar_powered:
+	if not can_control_sensors or ping_cooldown > 0.0:
 		return
 	
-	var r := float(active_config.get("active_ping_radius", 50000.0))
+	# Verifica potenza energetica disponibile (PowerGrid / Sublayer 3)
+	var has_power := false
+	if SpaceWorldManager and SpaceWorldManager.has_method("can_consume_power"):
+		has_power = SpaceWorldManager.can_consume_power(ACTIVE_PING_POWER_MW)
+	else:
+		has_power = is_radar_powered
+	
+	if not has_power or not is_radar_powered:
+		var notif := get_node_or_null("/root/NotificationManager")
+		if notif and notif.has_method("spawn_notification"):
+			notif.spawn_notification("⚠️ ENERGIA INSUFFICIENTE PER IMPULSO PING (RICHIESTI 120 MW)")
+		return
+	
+	if SpaceWorldManager and SpaceWorldManager.has_method("consume_power"):
+		SpaceWorldManager.consume_power(ACTIVE_PING_POWER_MW)
+	
+	var r: float = float(active_config.get("active_ping_radius", ACTIVE_PING_RANGE))
 	is_pinging = true
 	ping_timer = 0.0
-	ping_cooldown = 4.0 # 4 secondi di ricarica
+	ping_cooldown = 4.0
 	
 	if radar_display:
 		radar_display.trigger_ping(r)
@@ -567,12 +574,12 @@ func _on_active_ping_pressed() -> void:
 	
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
-		notif.spawn_notification("📡 Ping Radar Attivo emesso (Raggio: %.0f km)" % (r / 1000.0))
+		notif.spawn_notification("📡 Ping Radar Attivo emesso (Raggio: %.0f m)" % r)
 	
 	_update_permissions()
 
 func _on_radar_entity_selected(entity_data: Dictionary) -> void:
-	selected_entity_id = str(entity_data.get("id"))
+	selected_entity_id = str(entity_data.get("id", ""))
 	_update_permissions()
 	_update_telemetry_ui()
 
@@ -594,17 +601,6 @@ func _on_radar_waypoint_placed(world_pos: Vector3) -> void:
 	if notif and notif.has_method("spawn_notification"):
 		notif.spawn_notification("🛰️ Waypoint fissato a coordinate (%.0f, %.0f)" % [world_pos.x, world_pos.z])
 
-func _on_target_dropdown_selected(index: int) -> void:
-	if index <= 0:
-		selected_entity_id = ""
-	else:
-		var target_idx := index - 1
-		if target_idx >= 0 and target_idx < detected_entities.size():
-			selected_entity_id = detected_entities[target_idx].get("id")
-	
-	_update_permissions()
-	_update_telemetry_ui()
-
 func _on_lock_target_pressed() -> void:
 	if not can_control_sensors or selected_entity_id.is_empty():
 		return
@@ -623,7 +619,7 @@ func _on_lock_target_pressed() -> void:
 		var notif := get_node_or_null("/root/NotificationManager")
 		if notif and notif.has_method("spawn_notification"):
 			var e := _get_entity_data(locked_entity_id)
-			notif.spawn_notification("🎯 Bersaglio agganciato: %s" % e.get("name"))
+			notif.spawn_notification("🎯 Bersaglio agganciato: ECO #%s" % e.get("id"))
 	
 	if radar_display:
 		radar_display.locked_entity_id = locked_entity_id
@@ -640,7 +636,7 @@ func _on_transmit_waypoint_pressed() -> void:
 	
 	var wp_data := {
 		"id": "WP_" + str(e.get("id")),
-		"name": "WAYPOINT: " + str(e.get("name")),
+		"name": "WAYPOINT ECO #" + str(e.get("id")),
 		"pos": e.get("pos"),
 		"target_id": e.get("id"),
 		"distance": e.get("distance"),
@@ -652,7 +648,7 @@ func _on_transmit_waypoint_pressed() -> void:
 	
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
-		notif.spawn_notification("🛰️ Waypoint bersaglio trasmesso a Flight Control & Weapons: %s" % e.get("name"))
+		notif.spawn_notification("🛰️ Waypoint bersaglio trasmesso a Flight Control & Weapons: ECO #%s" % e.get("id"))
 
 func _on_clear_waypoint_pressed() -> void:
 	if not can_control_sensors:

@@ -137,14 +137,14 @@ func _run_suite() -> void:
 	app._ui_angular_input = 0.0
 	
 	# 2. Movimento Lineare
-	SpaceWorldManager.duct_drone_heading = PI * 0.5
-	app.drone_heading = PI * 0.5
+	SpaceWorldManager.duct_drone_heading = -PI * 0.5
+	app.drone_heading = -PI * 0.5
 	app._ui_linear_input = 1.0
 	for i in range(10):
 		app._process(0.05)
 		SpaceWorldManager._physics_process(0.05)
 	app._process(0.01)
-	assert(app.drone_pos.y > initial_pos.y, "Avanzamento tank avvenuto con successo")
+	assert(app.drone_pos.y < initial_pos.y, "Avanzamento tank avvenuto con successo")
 	app._ui_linear_input = 0.0
 	
 	# Stop rapido
@@ -154,11 +154,12 @@ func _run_suite() -> void:
 	assert(app.drone_current_speed == 0.0, "Pulsante Stop arresta immediatamente il robottino")
 	
 	# Fari e Sonar
-	assert(app.lights_enabled == true, "Fari inizialmente ON")
+	assert(app.lights_enabled == false, "Fari inizialmente OFF di default")
+	assert(app.btn_lights_toggle.text.contains("OFF"), "Pulsante fari mostra OFF all'avvio")
 	app._on_lights_toggle()
-	assert(app.lights_enabled == false, "Fari impostati su OFF")
+	assert(app.lights_enabled == true, "Fari impostati su ON")
 	app._on_lights_toggle()
-	assert(app.lights_enabled == true, "Fari riaccesi su ON")
+	assert(app.lights_enabled == false, "Fari ripristinati su OFF")
 	
 	app._on_scan_pulse_pressed()
 	assert(app.scan_pulse_active == true, "Impulso Sonar attivato")
@@ -206,6 +207,8 @@ func _run_suite() -> void:
 		app._process(0.01)
 	
 	assert(breach_dmg.get("repaired") == true, "Breccia riparata con successo")
+	SpaceWorldManager.duct_drone_lights = false
+	app.lights_enabled = false
 	
 	# =========================================================================
 	# FASE 7: VERIFICA TERMINALE / CAT SUI FILE .DAT
@@ -301,7 +304,139 @@ func _run_suite() -> void:
 	assert(app.is_in_emergency_recovery == false, "Stato di recupero di emergenza terminato allo scadere dei 60s")
 	assert(app.drone_pos == bp.get_drone_spawn_pos(), "Drone riposizionato alla posizione di spawn")
 	assert(app.drone_battery == 25.0, "Batteria ripristinata al 25% dopo il recupero di emergenza")
+	app._ui_linear_input = 0.0
+	app._ui_angular_input = 0.0
+	SpaceWorldManager.stop_duct_drone()
+	app._on_stop_pressed()
 	print("✔ Timer di emergenza (60s), blocco comandi e riposizionamento al 25% verificati con successo")
+	
+	# =========================================================================
+	# FASE 9: TASK-034 - TIPO DANNO INCENDIO (FIRE / dmg_fire)
+	# =========================================================================
+	print("\n--- TEST 9: TASK-034 - Tipo Danno Incendio (FIRE / dmg_fire) ---")
+	
+	# 1. Verifica costanti danno FIRE
+	assert(ShipBlueprint.DAMAGE_TYPE_FIRE == "fire", "ShipBlueprint.DAMAGE_TYPE_FIRE definita")
+	assert(ShipDamageData.DAMAGE_TYPE_FIRE == "fire", "ShipDamageData.DAMAGE_TYPE_FIRE definita")
+	assert(SpaceWorldManager.DAMAGE_TYPE_FIRE == "fire", "SpaceWorldManager.DAMAGE_TYPE_FIRE definita")
+	
+	# 2. Spawn danno da incendio
+	SpaceWorldManager.clear_ship_damages()
+	var fire_dmg := SpaceWorldManager.spawn_ship_damage(SpaceWorldManager.DAMAGE_TYPE_FIRE, Vector2(300, 240), "Nucleo Reattore", 4.0)
+	assert(fire_dmg != null, "Danno incendio spawnato con successo")
+	assert(fire_dmg.type == "fire", "Tipo danno corrisponde a 'fire'")
+	assert(fire_dmg.revealed == false, "Incendio inizialmente non rivelato")
+	
+	# 3. Rivelazione per vicinanza termica (<= 45px)
+	SpaceWorldManager.duct_drone_pos = Vector2(300, 230)
+	SpaceWorldManager._physics_process(0.1)
+	assert(fire_dmg.revealed == true, "Incendio rivelato dai sensori termici di prossimità")
+	assert(fire_dmg.revealed_by == "thermal", "Rivelato via thermal")
+	
+	# 4. Verifica UI danno incendio
+	app.drone_pos = Vector2(300, 230)
+	app._process(0.01)
+	assert(not app.nearby_damage.is_empty(), "Danno incendio adiacente rilevato dall'app")
+	assert(app.nearby_damage_label.text.contains("Incendio"), "Label telemetria indica Incendio Attivo")
+	assert(app.btn_repair.text.contains("ESTINGUI") or app.btn_repair.text.contains("FUOCO"), "Pulsante riparazione mostra opzione estinzione fuoco")
+	
+	# 5. Estinzione e completamento riparazione
+	app._on_repair_button_pressed()
+	assert(app.is_repairing == true or SpaceWorldManager.is_duct_drone_repairing == true, "Estinzione incendio avviata")
+	
+	for step in range(35):
+		SpaceWorldManager._physics_process(0.1)
+		app._process(0.01)
+	
+	assert(fire_dmg.repaired == true, "Incendio estinto e riparato con successo")
+	assert(app.nearby_damage.is_empty(), "Nessun danno adiacente attivo dopo estinzione")
+	print("✔ Riconoscimento, rivelazione termica, UI ed estinzione del tipo di danno Incendio (FIRE) verificati con successo")
+	
+	# =========================================================================
+	# FASE 10: TASK-034 - BARRIERE STANZE SIGILLATE (ROOM SEALING COLLISION BARRIERS)
+	# =========================================================================
+	print("\n--- TEST 10: TASK-034 - Barriere Stanze Sigillate ---")
+	
+	# Sigilla la stanza del Ponte di Comando ('bridge')
+	SpaceWorldManager.set_room_sealed("bridge", true)
+	assert(SpaceWorldManager.is_room_sealed("bridge") == true, "Stanza bridge risulta sigillata in SpaceWorldManager")
+	assert(app.is_room_sealed("bridge") == true, "Stanza bridge risulta sigillata in DuctDroneApp")
+	
+	# Caso 1: Drone ESTERNO tenta di entrare nella stanza sigillata -> BLOCCATO
+	# Posiziona il drone nel condotto esterno verso il bridge a Vector2(300, 125) (Bridge rect: 230, 45, 140, 70 -> Y da 45 a 115)
+	SpaceWorldManager.duct_drone_pos = Vector2(300, 125)
+	app.drone_pos = Vector2(300, 125)
+	var target_inside_bridge := Vector2(300, 90)
+	assert(app._can_move_to(target_inside_bridge) == false, "Il drone all'esterno non può entrare nella stanza sigillata")
+	
+	# Test fisico con input verso Nord (verso il bridge)
+	SpaceWorldManager.duct_drone_heading = -PI * 0.5
+	app.drone_heading = -PI * 0.5
+	app._ui_linear_input = 1.0
+	for step in range(10):
+		app._process(0.05)
+		SpaceWorldManager._physics_process(0.05)
+	app._process(0.01)
+	assert(app.drone_pos.y >= 115.0, "Il drone rimane all'esterno del perimetro sigillato (pos: %v)" % app.drone_pos)
+	app._ui_linear_input = 0.0
+	
+	# Caso 2: Drone INTERNO tenta di uscire dalla stanza sigillata -> CONFINATO ALL'INTERNO
+	# Posiziona il drone all'interno del bridge a Vector2(300, 60)
+	SpaceWorldManager.duct_drone_pos = Vector2(300, 60)
+	app.drone_pos = Vector2(300, 60)
+	var target_outside_bridge := Vector2(300, 125)
+	assert(app._can_move_to(target_outside_bridge) == false, "Il drone all'interno non può uscire dalla stanza sigillata")
+	
+	# Test fisico con input verso Sud (verso l'uscita condotto)
+	SpaceWorldManager.duct_drone_heading = PI * 0.5
+	app.drone_heading = PI * 0.5
+	app._ui_linear_input = 1.0
+	for step in range(10):
+		app._process(0.05)
+		SpaceWorldManager._physics_process(0.05)
+	app._process(0.01)
+	assert(app.drone_pos.y <= 115.0 and app.drone_pos.y >= 45.0, "Il drone rimane confinato all'interno del ponte sigillato (pos: %v)" % app.drone_pos)
+	app._ui_linear_input = 0.0
+	
+	# Caso 3: Movimento consentito all'interno della stanza sigillata
+	var pos_before_move := app.drone_pos
+	SpaceWorldManager.duct_drone_heading = 0.0 # Est (verso destra dentro il ponte)
+	app.drone_heading = 0.0
+	app._ui_linear_input = 1.0
+	for step in range(5):
+		app._process(0.05)
+		SpaceWorldManager._physics_process(0.05)
+	app._process(0.01)
+	assert(app.drone_pos.x > pos_before_move.x, "Movimento libero all'interno della stanza sigillata")
+	app._ui_linear_input = 0.0
+	
+	# Caso 4: Dissigillatura stanza -> passaggio riaperto
+	SpaceWorldManager.set_room_sealed("bridge", false)
+	assert(app.is_room_sealed("bridge") == false, "Stanza ponte dissigillata con successo")
+	assert(app._can_move_to(Vector2(300, 125)) == true, "Transito verso l'esterno consentito dopo dissigillatura")
+	print("✔ Barriere fisiche paratie stagne perimetrali (blocco ingresso/uscita, confinamento interno) verificate con successo")
+	
+	# =========================================================================
+	# FASE 11: TASK-034 - LUCE SPENTA DI DEFAULT E SPAWN RIGOROSO DA BLUEPRINT
+	# =========================================================================
+	print("\n--- TEST 11: TASK-034 - Default Luce Spenta e Spawn Rigoroso ---")
+	SpaceWorldManager.reset_duct_drone()
+	var fresh_app: DuctDroneApp = app_res.instantiate() as DuctDroneApp
+	add_child(fresh_app)
+	await get_tree().process_frame
+	
+	# Verifica luce spenta di default all'avvio
+	assert(fresh_app.lights_enabled == false, "lights_enabled è false di default all'avvio")
+	assert(fresh_app.btn_lights_toggle.text.contains("OFF"), "Pulsante fari indica 'LUCI: OFF' all'avvio")
+	
+	# Verifica coordinate spawn e heading lette da ShipBlueprint
+	assert(fresh_app.initial_drone_pos == bp.get_drone_spawn_pos(), "initial_drone_pos corrisponde esattamente a bp.get_drone_spawn_pos() (%v)" % bp.get_drone_spawn_pos())
+	assert(fresh_app.drone_pos == bp.get_drone_spawn_pos(), "drone_pos corrisponde esattamente a bp.get_drone_spawn_pos() (%v)" % bp.get_drone_spawn_pos())
+	assert(fresh_app.drone_heading == bp.drone_spawn_heading, "drone_heading corrisponde esattamente a bp.drone_spawn_heading (%f)" % bp.drone_spawn_heading)
+	assert(fresh_app.drone_pos != Vector2(300, 80) or bp.get_drone_spawn_pos() == Vector2(300, 80), "Nessun fallback hardcoded spurio a Vector2(300, 80)")
+	
+	fresh_app.queue_free()
+	print("✔ Default luce OFF e inizializzazione coordinate spawn da Blueprint verificati con successo")
 	
 	app.queue_free()
 	print("\n=== TUTTI I TEST DELLO STANDARD ARCHITETTURALE E DUCT DRONE COMPLETATI CON SUCCESSO! ===")

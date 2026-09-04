@@ -5,6 +5,8 @@ extends BaseApp
 ## Gestisce il monitoraggio e controllo di O2, CO2, pressione barometrica, temperatura,
 ## incendi, fumo, paratie stagne e iniezione gas inerte antincendio per ciascun compartimento.
 
+signal atmosphere_anomaly_detected(room_id: String, anomaly_type: String)
+
 const APP_TITLE: String = "SUPPORTO VITALE & CONTROLLO ATMOSFERA"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(700, 500)
 const BASE_POWER_MW: float = 20.0
@@ -60,10 +62,12 @@ var active_config: Dictionary = {
 
 # --- STATO INTERNO ---
 var can_control_life_support: bool = false
+var is_life_support_powered: bool = true
 var rooms_state: Dictionary = {}
 var room_card_widgets: Dictionary = {}
 var selected_room_id: String = ""
 var global_scrubber_setting: float = 1.0
+var _room_anomalies: Dictionary = {}
 
 func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
@@ -74,8 +78,12 @@ func _ready() -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_all_ui()
+	if SpaceWorldManager and SpaceWorldManager.has_method("register_life_support_app"):
+		SpaceWorldManager.register_life_support_app(self)
 
 func _exit_tree() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("unregister_life_support_app"):
+		SpaceWorldManager.unregister_life_support_app(self)
 	_disconnect_system_signals()
 
 func _process(delta: float) -> void:
@@ -156,7 +164,8 @@ func _connect_ui_signals() -> void:
 		scrubber_slider.value_changed.connect(_on_scrubber_slider_changed)
 
 func _on_system_power_changed(category: String, is_powered: bool) -> void:
-	if category == "life_support":
+	if category == "life_support" or category == "all":
+		is_life_support_powered = is_powered
 		if not is_powered:
 			# Power lost! Start emergency oxygen consumption logic or similar
 			if status_badge:
@@ -164,6 +173,19 @@ func _on_system_power_changed(category: String, is_powered: bool) -> void:
 				status_badge.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2, 1.0))
 		else:
 			_update_connection_state()
+
+func is_power_supplied_to_room(room_id: String) -> bool:
+	if not _is_ship_operational():
+		return false
+	if not is_life_support_powered:
+		return false
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
+		var bp := SpaceWorldManager.get_ship_blueprint()
+		if bp:
+			for r in bp.rooms:
+				if r.id == room_id:
+					return bool(r.is_on)
+	return true
 
 func _on_ship_connection_changed(is_connected: bool) -> void:
 	_update_connection_state()
@@ -269,17 +291,19 @@ func _init_rooms_state() -> void:
 			"name": str(r.get("name", "Stanza Ignota")),
 			"category": str(r.get("category", "General")),
 			"rect": r.get("rect", Rect2()),
-			"o2_pct": 21.0,
-			"co2_pct": 0.04,
 			"pressure_kpa": 101.3,
 			"temperature_c": 21.5,
-			"is_sealed": false,
+			"o2_pct": 21.0,
+			"co2_pct": 0.04,
+			"has_breach": false,
+			"has_short_circuit": false,
+			"heater_online": true,
 			"is_fire_active": false,
 			"is_smoke_active": false,
 			"is_suppression_active": false,
 			"suppression_timer": 0.0,
 			"is_venting": false,
-			"has_breach": false
+			"is_sealed": false
 		}
 	
 	if not rooms_state.is_empty() and selected_room_id.is_empty():
@@ -320,85 +344,214 @@ func _simulate_atmosphere_step(delta: float) -> void:
 	var scrubber_eff: float = float(active_config.get("scrubber_efficiency", 0.98))
 	var fire_supp_co2: float = float(active_config.get("fire_suppression_co2_level", 0.45))
 	
-	# Verifica danni breccia da SpaceWorldManager
+	# Verifica danni da SpaceWorldManager
 	var active_damages: Array = []
-	if SpaceWorldManager and SpaceWorldManager.has_method("get_damage_zones"):
-		var mgr_damages := SpaceWorldManager.get_damage_zones()
-		for d in mgr_damages:
-			if d is ShipDamageData:
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_active_ship_damages"):
+			var rt_damages := SpaceWorldManager.get_active_ship_damages()
+			for d in rt_damages:
 				active_damages.append({
-					"pos": d.local_pos,
+					"pos": d.pos,
 					"type": d.type,
-					"id": d.id
+					"id": d.id,
+					"sector": d.sector
 				})
-			else:
-				active_damages.append(d)
+		if active_damages.is_empty() and SpaceWorldManager.has_method("get_damage_zones"):
+			var mgr_damages := SpaceWorldManager.get_damage_zones()
+			for d in mgr_damages:
+				if d is ShipDamageData:
+					if not d.repaired:
+						active_damages.append({
+							"pos": d.pos,
+							"type": d.type,
+							"id": d.id,
+							"sector": d.sector
+						})
+				elif d is Dictionary:
+					if not d.get("repaired", false):
+						active_damages.append(d)
 	
+	var has_swm_damages := (SpaceWorldManager != null and (
+		(SpaceWorldManager.has_method("get_ship_damages") and SpaceWorldManager.get_ship_damages().size() > 0) or
+		(SpaceWorldManager.has_method("get_damage_zones") and SpaceWorldManager.get_damage_zones().size() > 0)
+	))
+
 	for r_id in rooms_state:
 		var state: Dictionary = rooms_state[r_id]
 		var r_rect: Rect2 = state.get("rect", Rect2())
 		
-		# Verifica se c'è un danno/breccia in questa stanza
+		# Calcolo stato brecce, corti e incendi
 		var breach_present := false
+		var short_present := false
+		var fire_present := false
 		for dmg in active_damages:
 			var d_pos: Vector2 = dmg.get("pos", Vector2.ZERO)
 			var d_type: String = str(dmg.get("type", ""))
-			if (d_type.begins_with("dmg_breach") or d_type == "STRUCTURAL") and r_rect.has_point(d_pos):
-				breach_present = true
-				break
-		state["has_breach"] = breach_present
+			var d_sector: String = str(dmg.get("sector", ""))
+			var in_room: bool = (r_rect.has_point(d_pos) and r_rect.size != Vector2.ZERO) or (not d_sector.is_empty() and (d_sector == state.get("name", "") or d_sector == r_id))
+			if in_room:
+				if d_type.begins_with("dmg_breach") or d_type == "STRUCTURAL" or d_type == "breach" or (SpaceWorldManager and d_type == SpaceWorldManager.DAMAGE_TYPE_BREACH):
+					breach_present = true
+				if d_type.begins_with("dmg_short") or d_type == "ELECTRICAL" or d_type == "short_circuit" or (SpaceWorldManager and d_type == SpaceWorldManager.DAMAGE_TYPE_SHORT_CIRCUIT):
+					short_present = true
+				if d_type.begins_with("dmg_fire") or d_type == "FIRE" or d_type == "fire" or (SpaceWorldManager and d_type == SpaceWorldManager.DAMAGE_TYPE_FIRE):
+					fire_present = true
+		
+		if breach_present:
+			state["has_breach"] = true
+		if short_present:
+			state["has_short_circuit"] = true
+		if fire_present:
+			state["is_fire_active"] = true
+		
+		# Calcolo stato caldaia: heater_online
+		state["heater_online"] = not state["has_short_circuit"] and is_power_supplied_to_room(r_id)
 		
 		# Gestione timer iniezione soppressione gas inerte
 		if state["is_suppression_active"]:
 			state["suppression_timer"] -= delta
 			state["is_fire_active"] = false
 			state["is_smoke_active"] = false
-			state["temperature_c"] = move_toward(state["temperature_c"], 18.0, delta * 15.0)
-			state["o2_pct"] = move_toward(state["o2_pct"], 12.0, delta * 4.0)
 			state["co2_pct"] = move_toward(state["co2_pct"], fire_supp_co2, delta * 0.1)
 			if state["suppression_timer"] <= 0.0:
 				state["is_suppression_active"] = false
 		
 		# Incendio attivo
 		if state["is_fire_active"]:
-			state["temperature_c"] = move_toward(state["temperature_c"], 380.0, delta * 25.0)
-			state["o2_pct"] = move_toward(state["o2_pct"], 4.0, delta * 2.5)
-			state["co2_pct"] = move_toward(state["co2_pct"], 3.5, delta * 0.4)
 			state["is_smoke_active"] = true
 			if auto_fire_suppress and not state["is_suppression_active"]:
 				trigger_fire_suppression(r_id)
 		
-		# Decompressione da breccia o venting manuale
+		# Dinamica Decompressione (Breccia o Venting) vs Pressurizzazione
 		if state["has_breach"] or state["is_venting"]:
-			var rate_mult: float = decomp_rate * (3.0 if state["has_breach"] else 1.5)
-			state["pressure_kpa"] = move_toward(state["pressure_kpa"], 0.0, delta * 12.0 * rate_mult)
-			state["o2_pct"] = move_toward(state["o2_pct"], 0.0, delta * 3.0 * rate_mult)
-			state["temperature_c"] = move_toward(state["temperature_c"], -40.0, delta * 5.0)
-			# Senza ossigeno l'incendio soffoca
-			if state["o2_pct"] < 6.0:
+			var rate_mult: float = decomp_rate * (1.5 if state["has_breach"] else 1.0)
+			state["pressure_kpa"] = move_toward(state["pressure_kpa"], 0.0, delta * 25.0 * rate_mult)
+			state["o2_pct"] = move_toward(state["o2_pct"], 0.0, delta * 15.0 * rate_mult)
+			# Nel vuoto o senza ossigeno l'incendio soffoca
+			if state["o2_pct"] < 6.0 or state["pressure_kpa"] < 10.0:
 				state["is_fire_active"] = false
 		else:
 			# Pressurizzazione e rigenerazione normale
 			if not state["is_suppression_active"]:
 				state["pressure_kpa"] = move_toward(state["pressure_kpa"], 101.3, delta * 4.0)
-				state["o2_pct"] = move_toward(state["o2_pct"], 21.0, delta * o2_gen_rate * 0.5)
-				state["temperature_c"] = move_toward(state["temperature_c"], 21.5, delta * 2.0)
+				if not state["is_fire_active"]:
+					state["o2_pct"] = move_toward(state["o2_pct"], 21.0, delta * o2_gen_rate * 0.5)
 				
 				# Scrubber CO2
 				var scrub_rate := delta * 0.08 * scrubber_eff * global_scrubber_setting
 				state["co2_pct"] = move_toward(state["co2_pct"], 0.04, scrub_rate)
 				if state["co2_pct"] <= 0.1 and not state["is_fire_active"]:
 					state["is_smoke_active"] = false
+		
+		# Se c'è incendio e c'è ancora pressione/combustibile
+		if state["is_fire_active"]:
+			state["o2_pct"] = move_toward(state["o2_pct"], 0.0, delta * 4.0)
+			state["co2_pct"] = move_toward(state["co2_pct"], 3.5, delta * 0.4)
+		
+		# DINAMICA DELLA TEMPERATURA:
+		# 1. Nel vuoto (pressione <= 1.0 kPa), la temperatura decade rapidamente e incondizionatamente verso 0.0 °C
+		if state["pressure_kpa"] <= 1.0:
+			state["temperature_c"] = move_toward(state["temperature_c"], 0.0, delta * 30.0)
+		# 2. Incendio attivo porta la temperatura a picchi critici (420.0 °C)
+		elif state["is_fire_active"]:
+			state["temperature_c"] = move_toward(state["temperature_c"], 420.0, delta * 35.0)
+		# 3. Soppressione gas inerte raffredda a 18.0 °C
+		elif state["is_suppression_active"]:
+			state["temperature_c"] = move_toward(state["temperature_c"], 18.0, delta * 15.0)
+		# 4. Riscaldamento normale con caldaia online verso 21.5 °C
+		elif state["heater_online"]:
+			state["temperature_c"] = move_toward(state["temperature_c"], 21.5, delta * 1.5)
+		# 5. Caldaia spenta / corto circuito -> raffreddamento progressivo verso 0.0 °C
+		else:
+			state["temperature_c"] = move_toward(state["temperature_c"], 0.0, delta * 0.8)
+		
+		_check_and_emit_room_anomalies(r_id, state)
+
+func _check_and_emit_room_anomalies(r_id: String, state: Dictionary) -> void:
+	if not _room_anomalies.has(r_id):
+		_room_anomalies[r_id] = {}
+	var prev_anomalies: Dictionary = _room_anomalies[r_id]
+	var current_anomalies: Dictionary = {}
+	
+	if bool(state.get("is_fire_active", false)):
+		current_anomalies["FIRE"] = true
+	if bool(state.get("has_breach", false)):
+		current_anomalies["BREACH"] = true
+	if bool(state.get("has_short_circuit", false)):
+		current_anomalies["SHORT_CIRCUIT"] = true
+	if float(state.get("pressure_kpa", 101.3)) < 50.0:
+		current_anomalies["DECOMPRESSION"] = true
+	if float(state.get("o2_pct", 21.0)) < 18.0:
+		current_anomalies["HYPOXIA"] = true
+	if float(state.get("temperature_c", 21.5)) < 10.0:
+		current_anomalies["FREEZING"] = true
+	elif float(state.get("temperature_c", 21.5)) > 40.0:
+		current_anomalies["OVERHEAT"] = true
+	
+	for anomaly in current_anomalies:
+		if not prev_anomalies.has(anomaly):
+			atmosphere_anomaly_detected.emit(r_id, anomaly)
+	
+	_room_anomalies[r_id] = current_anomalies
 
 # --- METODI PUBBLICI / CONTROLLO ATMOSFERA ---
+
+func get_room_atmo_state(room_id: String) -> Dictionary:
+	if rooms_state.has(room_id):
+		return rooms_state[room_id].duplicate()
+	return {}
+
+func get_all_rooms_atmo_state() -> Dictionary:
+	return rooms_state.duplicate(true)
+
+func set_room_breach(room_id: String, has_breach: bool) -> void:
+	if not rooms_state.has(room_id):
+		return
+	rooms_state[room_id]["has_breach"] = has_breach
+	if room_card_widgets.has(room_id):
+		room_card_widgets[room_id].update_telemetry(rooms_state[room_id])
+	_update_selected_room_ui()
+
+func set_room_short_circuit(room_id: String, has_short: bool) -> void:
+	if not rooms_state.has(room_id):
+		return
+	rooms_state[room_id]["has_short_circuit"] = has_short
+	rooms_state[room_id]["heater_online"] = not has_short and is_power_supplied_to_room(room_id)
+	if room_card_widgets.has(room_id):
+		room_card_widgets[room_id].update_telemetry(rooms_state[room_id])
+	_update_selected_room_ui()
+
+func set_room_fire(room_id: String, is_fire: bool) -> void:
+	if not rooms_state.has(room_id):
+		return
+	rooms_state[room_id]["is_fire_active"] = is_fire
+	if is_fire:
+		rooms_state[room_id]["is_smoke_active"] = true
+	if room_card_widgets.has(room_id):
+		room_card_widgets[room_id].update_telemetry(rooms_state[room_id])
+	_update_selected_room_ui()
 
 func set_bulkhead_sealed(room_id: String, sealed: bool) -> void:
 	if not rooms_state.has(room_id):
 		return
 	rooms_state[room_id]["is_sealed"] = sealed
+	if SpaceWorldManager:
+		SpaceWorldManager.sealed_rooms[room_id] = sealed
 	if room_card_widgets.has(room_id):
 		room_card_widgets[room_id].update_telemetry(rooms_state[room_id])
 	_update_selected_room_ui()
+
+func get_sealed_rooms() -> Array:
+	var list: Array = []
+	for r_id in rooms_state:
+		if rooms_state[r_id].get("is_sealed", false):
+			list.append(rooms_state[r_id])
+	return list
+
+func is_room_sealed(room_id: String) -> bool:
+	if rooms_state.has(room_id):
+		return bool(rooms_state[room_id].get("is_sealed", false))
+	return false
 
 func trigger_fire_suppression(room_id: String) -> void:
 	if not rooms_state.has(room_id):
@@ -422,18 +575,26 @@ func normalize_room_atmosphere(room_id: String) -> void:
 		return
 	var state: Dictionary = rooms_state[room_id]
 	state["is_suppression_active"] = false
+	state["suppression_timer"] = 0.0
 	state["is_venting"] = false
 	state["is_fire_active"] = false
 	state["is_smoke_active"] = false
+	state["has_breach"] = false
+	state["has_short_circuit"] = false
+	state["heater_online"] = is_power_supplied_to_room(room_id)
 	state["o2_pct"] = 21.0
 	state["co2_pct"] = 0.04
 	state["pressure_kpa"] = 101.3
 	state["temperature_c"] = 21.5
+	if room_card_widgets.has(room_id):
+		room_card_widgets[room_id].update_telemetry(state)
 	_update_selected_room_ui()
 
 func seal_all_bulkheads() -> void:
 	for r_id in rooms_state:
 		rooms_state[r_id]["is_sealed"] = true
+		if SpaceWorldManager:
+			SpaceWorldManager.sealed_rooms[r_id] = true
 	_refresh_all_ui()
 
 func suppress_all_fires() -> void:
@@ -521,6 +682,8 @@ func _update_selected_room_ui() -> void:
 	var is_smoke: bool = bool(st.get("is_smoke_active", false))
 	var is_supp: bool = bool(st.get("is_suppression_active", false))
 	var has_br: bool = bool(st.get("has_breach", false))
+	var has_short: bool = bool(st.get("has_short_circuit", false))
+	var heater_on: bool = bool(st.get("heater_online", true))
 	
 	if selected_o2_label: selected_o2_label.text = "Livello O2: %.1f%%" % o2
 	if selected_o2_bar:
@@ -533,16 +696,39 @@ func _update_selected_room_ui() -> void:
 			selected_o2_bar.modulate = Color(0.2, 0.85, 0.95, 1.0)
 	
 	if selected_co2_label: selected_co2_label.text = "CO2: %.2f%%" % co2
-	if selected_pressure_label: selected_pressure_label.text = "Pressione: %.1f kPa (%.2f atm)" % [pres, pres / 101.3]
-	if selected_temp_label: selected_temp_label.text = "Temperatura: %.1f°C" % tmp
+	if selected_pressure_label:
+		selected_pressure_label.text = "Pressione: %.1f kPa (%.2f atm)" % [pres, pres / 101.3]
+		if pres < 50.0:
+			selected_pressure_label.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		elif pres < 90.0:
+			selected_pressure_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
+		else:
+			selected_pressure_label.add_theme_color_override("font_color", Color(0.7, 0.85, 0.9, 1.0))
+	
+	if selected_temp_label:
+		selected_temp_label.text = "Temperatura: %.1f°C (%s)" % [tmp, "Caldaia ON" if heater_on else ("CORTO" if has_short else "Caldaia OFF")]
+		if tmp < 10.0:
+			selected_temp_label.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
+		elif tmp > 40.0:
+			selected_temp_label.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		elif tmp >= 18.0 and tmp <= 24.0:
+			selected_temp_label.add_theme_color_override("font_color", Color(0.2, 0.85, 0.4, 1.0))
+		else:
+			selected_temp_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
 	
 	if selected_room_status:
-		if has_br or pres < 40.0:
-			selected_room_status.text = "⚡ ALLARME DECOMPRESSIONE / BRECCIA SCAFO"
-			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
-		elif is_fire:
+		if is_fire:
 			selected_room_status.text = "🔥 ALLARME INCENDIO ATTIVO"
 			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.3, 0.1, 1.0))
+		elif has_br:
+			selected_room_status.text = "🚨 ALLARME BRECCIA SCAFO ATTIVA"
+			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		elif pres < 50.0:
+			selected_room_status.text = "⚡ ALLARME DECOMPRESSIONE (VUOTO)"
+			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.2, 0.2, 1.0))
+		elif has_short:
+			selected_room_status.text = "⚡ CORTO CIRCUITO CALDAIA / CAVI"
+			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.6, 0.2, 1.0))
 		elif is_supp:
 			selected_room_status.text = "💨 INIEZIONE AZOTO / SOPPRESSIONE IN CORSO"
 			selected_room_status.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
@@ -555,6 +741,12 @@ func _update_selected_room_ui() -> void:
 		elif o2 < 18.0:
 			selected_room_status.text = "⚠️ ALLARME IPOSSIA (O2 < 18%)"
 			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0))
+		elif tmp < 10.0:
+			selected_room_status.text = "❄️ ALLARME IPOTERMIA (T < 10°C)"
+			selected_room_status.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
+		elif tmp > 40.0:
+			selected_room_status.text = "🔥 ALLARME SOVRATEMPERATURA (T > 40°C)"
+			selected_room_status.add_theme_color_override("font_color", Color(0.95, 0.3, 0.1, 1.0))
 		else:
 			selected_room_status.text = "● PARAMETRI AMBIENTALI OTTIMALI"
 			selected_room_status.add_theme_color_override("font_color", Color(0.2, 0.85, 0.4, 1.0))
@@ -574,10 +766,11 @@ func _update_telemetry_ui() -> void:
 		var st: Dictionary = rooms_state[r_id]
 		var o2: float = float(st.get("o2_pct", 21.0))
 		var pr: float = float(st.get("pressure_kpa", 101.3))
+		var tmp: float = float(st.get("temperature_c", 21.5))
 		total_o2 += o2
 		total_press += pr
 		
-		if bool(st.get("is_fire_active")) or bool(st.get("has_breach")) or o2 < 18.0 or pr < 80.0:
+		if bool(st.get("is_fire_active")) or bool(st.get("has_breach")) or bool(st.get("has_short_circuit")) or o2 < 18.0 or pr < 80.0 or tmp < 10.0 or tmp > 40.0:
 			alarms_count += 1
 		
 		if room_card_widgets.has(r_id):

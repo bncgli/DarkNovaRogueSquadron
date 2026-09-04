@@ -9,6 +9,10 @@ extends Resource
 signal blueprint_changed()
 
 # --- METADATI GENERALI ---
+const DAMAGE_TYPE_BREACH: String = "breach"
+const DAMAGE_TYPE_SHORT_CIRCUIT: String = "short_circuit"
+const DAMAGE_TYPE_FIRE: String = "fire"
+
 const SHIP_CLASSES: Array[String] = ["Corvette", "Frigate", "Destroyer", "Cruiser", "Freighter", "Science Vessel", "Scout", "Carrier", "Station"]
 const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support", "engineering", "tactical", "sensors", "comms", "mainframe", "defense", "cargo", "service", "utility"]
 

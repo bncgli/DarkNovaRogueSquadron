@@ -71,6 +71,16 @@ var is_firmware_hacked: bool = false # Motori disabilitati
 var hack_duration: float = 0.0
 var accuracy_penalty: float = 0.0 # 0.0 a 1.0 (imprecisione da EW)
 
+# Suite Exploit Hackwarfare (TASK-037)
+var is_spammer_active: bool = false
+var is_blind_eye_active: bool = false
+var is_8loops_active: bool = false
+var is_gout_active: bool = false
+var loops_angle: float = 0.0
+var gout_spin_speed: float = 0.0
+var g_force_accumulated: float = 1.0
+var is_crew_blackout: bool = false
+
 func _ready() -> void:
 	if ship_id.is_empty():
 		ship_id = "ENEMY_" + str(get_instance_id())
@@ -143,6 +153,11 @@ func _update_ew_effects(delta: float) -> void:
 			is_firmware_hacked = false
 			if current_state == AIState.DISABLED:
 				set_state(AIState.PATROL)
+
+	if is_blind_eye_active:
+		accuracy_penalty = 1.0
+	elif is_spammer_active:
+		accuracy_penalty = max(accuracy_penalty, 0.5)
 
 func _update_cooldowns(delta: float) -> void:
 	if primary_timer > 0.0:
@@ -236,6 +251,28 @@ func _execute_state_behavior(delta: float) -> void:
 	if is_firmware_hacked or current_state == AIState.DISABLED:
 		# Motori disabilitati: decelera per inerzia
 		velocity = velocity.move_toward(Vector3.ZERO, acceleration * 0.5 * delta)
+		global_position += velocity * delta
+		return
+
+	if is_8loops_active:
+		loops_angle += delta * 2.5
+		g_force_accumulated = min(12.0, g_force_accumulated + delta * 2.0)
+		if g_force_accumulated >= 8.0:
+			is_crew_blackout = true
+			accuracy_penalty = 1.0
+		var target_loop_vel := Vector3(cos(loops_angle) * max_speed * 1.5, sin(loops_angle * 2.0) * (max_speed * 0.8), sin(loops_angle) * max_speed * 1.5)
+		velocity = velocity.move_toward(target_loop_vel, acceleration * 2.0 * delta)
+		global_position += velocity * delta
+		global_rotate(Vector3.UP, delta * 3.0)
+		return
+
+	if is_gout_active:
+		gout_spin_speed = min(30.0, gout_spin_speed + delta * 10.0)
+		g_force_accumulated = min(15.0, g_force_accumulated + delta * 3.0)
+		is_crew_blackout = true
+		accuracy_penalty = 1.0
+		global_rotate(Vector3(0.5, 1.0, 0.2).normalized(), gout_spin_speed * delta)
+		velocity = velocity.move_toward(Vector3.ZERO, acceleration * 0.3 * delta)
 		global_position += velocity * delta
 		return
 
@@ -426,6 +463,37 @@ func inject_firmware_exploit(duration: float) -> void:
 	set_state(AIState.DISABLED)
 	ew_effect_applied.emit("FIRMWARE_EXPLOIT", duration)
 
+## Guerra Elettronica / Hack Exploits Suite (TASK-037)
+func apply_spammer_exploit(active: bool) -> void:
+	is_spammer_active = active
+	ew_effect_applied.emit("SPAMMER", 999.0 if active else 0.0)
+
+func apply_blind_eye_exploit(active: bool) -> void:
+	is_blind_eye_active = active
+	if not active and not is_jammed:
+		accuracy_penalty = 0.0
+	ew_effect_applied.emit("BLIND_EYE", 999.0 if active else 0.0)
+
+func apply_8loops_exploit(active: bool) -> void:
+	is_8loops_active = active
+	if not active:
+		loops_angle = 0.0
+		g_force_accumulated = 1.0
+		is_crew_blackout = false
+		if not is_jammed and not is_blind_eye_active:
+			accuracy_penalty = 0.0
+	ew_effect_applied.emit("8LOOPS", 999.0 if active else 0.0)
+
+func apply_gout_exploit(active: bool) -> void:
+	is_gout_active = active
+	if not active:
+		gout_spin_speed = 0.0
+		g_force_accumulated = 1.0
+		is_crew_blackout = false
+		if not is_jammed and not is_blind_eye_active:
+			accuracy_penalty = 0.0
+	ew_effect_applied.emit("GOUT", 999.0 if active else 0.0)
+
 func get_tactical_status() -> Dictionary:
 	return {
 		"id": ship_id,
@@ -438,5 +506,11 @@ func get_tactical_status() -> Dictionary:
 		"max_shield": max_shield,
 		"position": global_position,
 		"is_jammed": is_jammed,
-		"is_hacked": is_firmware_hacked
+		"is_hacked": is_firmware_hacked,
+		"is_spammer": is_spammer_active,
+		"is_blind": is_blind_eye_active,
+		"is_8loops": is_8loops_active,
+		"is_gout": is_gout_active,
+		"g_force": g_force_accumulated,
+		"is_blackout": is_crew_blackout
 	}

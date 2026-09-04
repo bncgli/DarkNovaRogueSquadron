@@ -10,15 +10,15 @@ Risoluzione e potenziamento delle meccaniche del `DuctDrone`: introduzione del n
 - Impostare lo stato predefinito delle luci del drone su Spento (`lights_enabled = false`) all'avvio.
 
 ## Criteri di Accettazione
-- [ ] **Nuovo Tipo Danno Incendio (FIRE)**:
-  - [ ] Il sistema danni riconosce `FIRE` / `dmg_fire` con icona/animazione diegetica sul canvas e impatto termico sul compartimento.
-- [ ] **Barriere Stanze Sigillate**:
-  - [ ] Quando una stanza viene sigillata da `LifeSupportApp`, il contorno della stanza funge da collider invalicabile per il drone (nessun passaggio consentito attraverso condotti/porte della stanza bloccata).
-  - [ ] Se il drone si trova all'interno di una stanza al momento del sigillo, resta confinato all'interno fino al dissigillo.
-- [ ] **Spawn Corretto da Blueprint**:
-  - [ ] All'apertura dell'app, `drone_pos` e `drone_heading` vengono letti rigorosamente da `ShipBlueprint.drone_spawn_pos` e `ShipBlueprint.drone_spawn_heading`, senza fallback forzati a `(300, 80)` (ponte di comando).
-- [ ] **Luce Spenta di Default**:
-  - [ ] All'avvio dell'applicazione `lights_enabled` è `false` e il pulsante `%BtnLightsToggle` riflette lo stato spento senza consumo batteria passivo delle luci.
+- [x] **Nuovo Tipo Danno Incendio (FIRE)**:
+  - [x] Il sistema danni riconosce `FIRE` / `dmg_fire` con icona/animazione diegetica sul canvas e impatto termico sul compartimento.
+- [x] **Barriere Stanze Sigillate**:
+  - [x] Quando una stanza viene sigillata da `LifeSupportApp`, il contorno della stanza funge da collider invalicabile per il drone (nessun passaggio consentito attraverso condotti/porte della stanza bloccata).
+  - [x] Se il drone si trova all'interno di una stanza al momento del sigillo, resta confinato all'interno fino al dissigillo.
+- [x] **Spawn Corretto da Blueprint**:
+  - [x] All'apertura dell'app, `drone_pos` e `drone_heading` vengono letti rigorosamente da `ShipBlueprint.drone_spawn_pos` e `ShipBlueprint.drone_spawn_heading`, senza fallback forzati a `(300, 80)` (ponte di comando).
+- [x] **Luce Spenta di Default**:
+  - [x] All'avvio dell'applicazione `lights_enabled` è `false` e il pulsante `%BtnLightsToggle` riflette lo stato spento senza consumo batteria passivo delle luci.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

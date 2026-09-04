@@ -10,14 +10,14 @@ Ottimizzazione del sistema di notifiche e gestione periferiche di GodotOS. Risol
 - Generare notifiche diegetiche informative quando un controller o joystick viene collegato o scollegato (es. *"🎮 Controller Rilevato: Xbox Wireless Controller [Porta #0]"*).
 
 ## Criteri di Accettazione
-- [ ] **Impilamento Verticale Ordinato delle Notifiche**:
-  - [ ] Generando 5 notifiche consecutive in contemporanea, ciascuna notifica occupa uno slot separato senza coprire il testo delle altre.
-- [ ] **Dissolvenza e Riordino Dinamico**:
-  - [ ] Quando una notifica scade ed esegue il fade out / `queue_free()`, le altre notifiche nello stack scalano fluidamente verso il basso o verso la loro posizione ordinata.
-- [ ] **Riconoscimento Connessione Gamepad/Controller**:
-  - [ ] Al collegamento di un controller, compare una notifica verde con icona/tag `[CONTROLLER CONNESSO]` riportante il modello del dispositivo.
-- [ ] **Riconoscimento Disconnessione Periferica**:
-  - [ ] Alla disconnessione del controller, compare una notifica di avviso giallo/arancio con l'indice della porta disconnessa.
+- [x] **Impilamento Verticale Ordinato delle Notifiche**:
+  - [x] Generando 5 notifiche consecutive in contemporanea, ciascuna notifica occupa uno slot separato senza coprire il testo delle altre.
+- [x] **Dissolvenza e Riordino Dinamico**:
+  - [x] Quando una notifica scade ed esegue il fade out / `queue_free()`, le altre notifiche nello stack scalano fluidamente verso il basso o verso la loro posizione ordinata.
+- [x] **Riconoscimento Connessione Gamepad/Controller**:
+  - [x] Al collegamento di un controller, compare una notifica verde con icona/tag `[CONTROLLER CONNESSO]` riportante il modello del dispositivo.
+- [x] **Riconoscimento Disconnessione Periferica**:
+  - [x] Alla disconnessione del controller, compare una notifica di avviso giallo/arancio con l'indice della porta disconnessa.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

@@ -24,3 +24,9 @@ func usage() -> Array[String]:
 	assert(false, "Not implemented, the command usage instructions goes here")
 	
 	return []
+
+
+## Called when an interactive session is active and user submits text.
+@warning_ignore("unused_parameter")
+func handle_interactive_input(terminal: Terminal, input: String) -> void:
+	pass

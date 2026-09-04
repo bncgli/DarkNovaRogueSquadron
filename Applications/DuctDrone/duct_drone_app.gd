@@ -85,11 +85,11 @@ var active_config: Dictionary = {
 }
 
 # Stato del robottino
-var drone_pos: Vector2 = Vector2(300, 80) # Posizione iniziale nel Ponte di Comando
+var drone_pos: Vector2 = Vector2(150, 150)
 var drone_heading: float = -PI * 0.5 # Angolo di prua in radianti (-PI/2 = orientato in alto/Nord)
 var drone_current_speed: float = 0.0
 var drone_battery: float = 100.0
-var lights_enabled: bool = true
+var lights_enabled: bool = false
 var scan_pulse_radius: float = 0.0
 var scan_pulse_active: bool = false
 
@@ -123,8 +123,8 @@ var speed_modes: Array[Dictionary] = [
 # Definizione Blueprint Nave e Condotti
 # Coordinate base di riferimento blueprint: Larghezza 600, Altezza 440
 const BLUEPRINT_SIZE := Vector2(600, 440)
-var initial_drone_pos := Vector2(300, 80)
-var current_sector_name: String = "Ponte di Comando"
+var initial_drone_pos := Vector2(150, 150)
+var current_sector_name: String = "Condotti di Servizio"
 
 # Stanze della nave: { "id": str, "name": str, "rect": Rect2, "color": Color }
 var rooms: Array[Dictionary] = [
@@ -241,13 +241,17 @@ var drone_trail: Array[Vector2] = []
 const MAX_TRAIL_LENGTH: int = 35
 
 func _ready() -> void:
+	var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint() if SpaceWorldManager else null
+	if bp:
+		initial_drone_pos = bp.get_drone_spawn_pos()
+		drone_pos = initial_drone_pos
+		drone_heading = bp.drone_spawn_heading
+	else:
+		initial_drone_pos = Vector2(150, 150)
+		drone_pos = initial_drone_pos
+		drone_heading = -PI * 0.5
+	
 	if SpaceWorldManager:
-		var bp: ShipBlueprint = SpaceWorldManager.get_ship_blueprint()
-		if bp:
-			initial_drone_pos = bp.get_drone_spawn_pos()
-			drone_pos = initial_drone_pos
-			drone_heading = bp.drone_spawn_heading
-		
 		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
 		if mgr_rooms.size() > 0:
 			rooms.clear()
@@ -518,7 +522,7 @@ func is_operational() -> bool:
 	return false
 
 func is_control_active() -> bool:
-	if not is_inside_tree() or not is_visible_in_tree():
+	if not is_inside_tree():
 		return false
 	if parent_window:
 		if parent_window.is_minimized or not parent_window.visible:
@@ -789,12 +793,17 @@ func _update_damage_ui() -> void:
 	
 	if nearby_damage_label:
 		if not nearby_damage.is_empty():
-			var type_str := "Breccia Scafo" if nearby_damage.get("type") == "breach" else "Cortocircuito"
+			var dtype: String = str(nearby_damage.get("type", ""))
+			var type_str := "Breccia Scafo"
+			if dtype == "short_circuit" or dtype == "ELECTRICAL" or dtype.begins_with("dmg_short"):
+				type_str = "Cortocircuito"
+			elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+				type_str = "Incendio Attivo"
 			var is_revealed: bool = nearby_damage.get("revealed")
 			var dur: float = float(nearby_damage.get("repair_duration", 5.0))
 			if is_revealed:
 				nearby_damage_label.text = "⚠️ Adiacente a: %s (Tempo: %.1fs)" % [type_str, dur]
-				nearby_damage_label.modulate = Color(1.0, 0.75, 0.2)
+				nearby_damage_label.modulate = Color(1.0, 0.4, 0.1) if (dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire")) else Color(1.0, 0.75, 0.2)
 			else:
 				nearby_damage_label.text = "❓ Anomalia adiacente non rilevata (Usa Fari / Radar)"
 				nearby_damage_label.modulate = Color(0.6, 0.6, 0.8)
@@ -808,9 +817,14 @@ func _update_damage_ui() -> void:
 			btn_repair.modulate = Color(1.0, 0.35, 0.35)
 			btn_repair.disabled = false
 		elif not nearby_damage.is_empty() and nearby_damage.get("revealed"):
-			var type_label := "BRECCIA" if nearby_damage.get("type") == "breach" else "CORTO"
-			btn_repair.text = "🔧 RIPARA %s (E)" % type_label
-			btn_repair.modulate = Color(0.3, 1.0, 0.6)
+			var dtype: String = str(nearby_damage.get("type", ""))
+			var type_label := "BRECCIA"
+			if dtype == "short_circuit" or dtype == "ELECTRICAL" or dtype.begins_with("dmg_short"):
+				type_label = "CORTO"
+			elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+				type_label = "ESTINGUI FUOCO"
+			btn_repair.text = "🔧 RIPARA %s (E)" % type_label if type_label != "ESTINGUI FUOCO" else "🧯 %s (E)" % type_label
+			btn_repair.modulate = Color(1.0, 0.4, 0.1) if (dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire")) else Color(0.3, 1.0, 0.6)
 			btn_repair.disabled = false
 		else:
 			btn_repair.text = "🔧 RIPARA (E)"
@@ -937,6 +951,32 @@ func _local_simulate_repair_and_discovery(delta: float) -> void:
 					else:
 						dmg.revealed = true
 						dmg.revealed_by = "radar"
+			elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+				var dist := drone_pos.distance_to(dpos)
+				if dist <= 45.0:
+					if dmg is Dictionary:
+						dmg["revealed"] = true
+						dmg["revealed_by"] = "thermal"
+					else:
+						dmg.revealed = true
+						dmg.revealed_by = "thermal"
+				elif lights_enabled and dist <= 90.0:
+					var to_dmg := (dpos - drone_pos).normalized()
+					var forward := Vector2.from_angle(drone_heading)
+					if absf(forward.angle_to(to_dmg)) <= 0.55:
+						if dmg is Dictionary:
+							dmg["revealed"] = true
+							dmg["revealed_by"] = "light"
+						else:
+							dmg.revealed = true
+							dmg.revealed_by = "light"
+				elif scan_pulse_active and dist <= scan_pulse_radius:
+					if dmg is Dictionary:
+						dmg["revealed"] = true
+						dmg["revealed_by"] = "radar"
+					else:
+						dmg.revealed = true
+						dmg.revealed_by = "radar"
 	
 	if lights_enabled:
 		drone_battery = maxf(0.0, drone_battery - 0.75 * delta)
@@ -973,14 +1013,22 @@ func _on_ship_damage_discovered(damage: Variant) -> void:
 	if status_summary_label:
 		var dtype: String = str(damage.type if "type" in damage else damage.get("type", ""))
 		var dsec: String = str(damage.sector if "sector" in damage else damage.get("sector", ""))
-		var type_str := "BRECCIA nello scafo" if dtype == "breach" else "CORTOCIRCUITO elettrico"
+		var type_str := "BRECCIA nello scafo"
+		if dtype == "short_circuit" or dtype.begins_with("dmg_short"):
+			type_str = "CORTOCIRCUITO elettrico"
+		elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+			type_str = "INCENDIO ATTIVO"
 		status_summary_label.text = "⚠️ Rilevato %s nel settore %s!" % [type_str, dsec]
 
 func _on_ship_damage_repaired(damage: Variant) -> void:
 	if status_summary_label:
 		var dtype: String = str(damage.type if "type" in damage else damage.get("type", ""))
 		var dsec: String = str(damage.sector if "sector" in damage else damage.get("sector", ""))
-		var type_str := "Breccia" if dtype == "breach" else "Cortocircuito"
+		var type_str := "Breccia"
+		if dtype == "short_circuit" or dtype.begins_with("dmg_short"):
+			type_str = "Cortocircuito"
+		elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+			type_str = "Incendio"
 		status_summary_label.text = "✔ %s riparato con successo in %s!" % [type_str, dsec]
 
 func _on_repair_state_changed(rep: bool, dmg_id: String, progress: float) -> void:
@@ -1059,22 +1107,69 @@ func _local_simulate_movement(delta: float) -> void:
 		drone_pos = new_pos
 		_update_trail(drone_pos)
 
+func is_room_sealed(room_id: String) -> bool:
+	if SpaceWorldManager and SpaceWorldManager.has_method("is_room_sealed"):
+		if SpaceWorldManager.is_room_sealed(room_id):
+			return true
+	var ls := get_node_or_null("/root/LifeSupportApp")
+	if ls and ls.has_method("is_room_sealed"):
+		if ls.is_room_sealed(room_id):
+			return true
+	for r in rooms:
+		if r.get("id") == room_id and r.get("is_sealed", false):
+			return true
+	return false
+
+func _get_sealed_rooms() -> Array:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_sealed_rooms"):
+		var swm_sealed = SpaceWorldManager.get_sealed_rooms()
+		if swm_sealed.size() > 0:
+			return swm_sealed
+	
+	var ls := get_node_or_null("/root/LifeSupportApp")
+	if ls and ls.has_method("get_sealed_rooms"):
+		var ls_sealed = ls.get_sealed_rooms()
+		if ls_sealed.size() > 0:
+			return ls_sealed
+	
+	var sealed: Array = []
+	for r in rooms:
+		var is_s: bool = bool(r.get("is_sealed", false))
+		var r_id: String = str(r.get("id", ""))
+		if is_room_sealed(r_id):
+			is_s = true
+		if is_s:
+			sealed.append(r)
+	return sealed
+
+func _can_move_to(target_pos: Vector2, from_pos: Vector2 = Vector2.INF) -> bool:
+	var start_pos := drone_pos if from_pos == Vector2.INF else from_pos
+	if not _is_position_valid(target_pos):
+		return false
+	
+	var sealed_list := _get_sealed_rooms()
+	for room in sealed_list:
+		var rect: Rect2 = room.rect if "rect" in room else room.get("rect", Rect2())
+		if rect.size == Vector2.ZERO:
+			continue
+		var was_inside := rect.has_point(start_pos)
+		var will_be_inside := rect.has_point(target_pos)
+		if was_inside != will_be_inside:
+			return false
+	return true
+
 func _constrain_drone_movement(old_pos: Vector2, new_pos: Vector2) -> Vector2:
-	# Controlla se la nuova posizione è valida all'interno di una stanza o condotto
-	if _is_position_valid(new_pos):
+	if _can_move_to(new_pos, old_pos):
 		return new_pos
 	
-	# Tentativo di scorrimento su asse X
 	var test_x := Vector2(new_pos.x, old_pos.y)
-	if _is_position_valid(test_x):
+	if _can_move_to(test_x, old_pos):
 		return test_x
 	
-	# Tentativo di scorrimento su asse Y
 	var test_y := Vector2(old_pos.x, new_pos.y)
-	if _is_position_valid(test_y):
+	if _can_move_to(test_y, old_pos):
 		return test_y
 	
-	# Altrimenti blocca la posizione
 	return old_pos
 
 func _is_position_valid(pos: Vector2) -> bool:
@@ -1221,10 +1316,10 @@ func _on_lights_toggle() -> void:
 func _update_lights_button() -> void:
 	if btn_lights_toggle:
 		if lights_enabled:
-			btn_lights_toggle.text = "💡 Fari: ON"
+			btn_lights_toggle.text = "💡 LUCI: ON"
 			btn_lights_toggle.modulate = Color(1.0, 0.9, 0.3)
 		else:
-			btn_lights_toggle.text = "💡 Fari: OFF"
+			btn_lights_toggle.text = "💡 LUCI: OFF"
 			btn_lights_toggle.modulate = Color(0.6, 0.6, 0.6)
 
 func _on_scan_pulse_pressed() -> void:
@@ -1345,6 +1440,37 @@ func _draw_damages(canvas: Control, trans: Transform2D) -> void:
 			canvas.draw_line(bolt3, bolt4, Color(1.0, 1.0, 0.6, 0.95), 1.8 * s)
 			
 			canvas.draw_string(font, p + Vector2(-16 * s, -10 * s), "⚡ CORTO", HORIZONTAL_ALIGNMENT_LEFT, -1, int(9 * s), Color(0.3, 0.95, 1.0, 0.95))
+			
+		elif dtype == "fire" or dtype == "FIRE" or dtype.begins_with("dmg_fire"):
+			# --- INCENDIO ATTIVO / FOCOLARE (Arancio brillante / Rosso fuoco pulsante) ---
+			var fire_pulse := 0.65 + 0.35 * sin(time_now * 5.0)
+			var fire_col := Color(1.0, 0.4, 0.1, fire_pulse)
+			
+			# Alone termico fiamme
+			canvas.draw_circle(p, 12.0 * s, Color(1.0, 0.25, 0.0, 0.22 * fire_pulse))
+			canvas.draw_circle(p, 7.0 * s, Color(1.0, 0.5, 0.1, 0.4 * fire_pulse))
+			canvas.draw_arc(p, 9.5 * s, 0, TAU, 22, fire_col, 1.8 * s, true)
+			
+			# Particelle / lingue di fuoco rotanti/pulsanti
+			for idx in range(4):
+				var ang := time_now * 3.0 + float(idx) * (TAU / 4.0)
+				var rad := (4.5 + 2.0 * sin(time_now * 4.0 + float(idx))) * s
+				var spark_pos := p + Vector2(cos(ang), sin(ang)) * rad
+				var spark_col := Color(1.0, 0.8, 0.2, 0.85) if idx % 2 == 0 else Color(1.0, 0.3, 0.05, 0.85)
+				canvas.draw_circle(spark_pos, 2.0 * s, spark_col)
+			
+			# Icona centrale fuoco
+			var flame_poly: PackedVector2Array = [
+				p + Vector2(0, -6 * s),
+				p + Vector2(3 * s, -1 * s),
+				p + Vector2(2 * s, 4 * s),
+				p + Vector2(-2 * s, 4 * s),
+				p + Vector2(-3 * s, -1 * s)
+			]
+			canvas.draw_colored_polygon(flame_poly, Color(1.0, 0.75, 0.1, 0.95))
+			
+			# Etichetta identificativa
+			canvas.draw_string(font, p + Vector2(-22 * s, -12 * s), "🔥 INCENDIO", HORIZONTAL_ALIGNMENT_LEFT, -1, int(9 * s), Color(1.0, 0.45, 0.1, 0.95))
 
 func _draw_repair_overlay(canvas: Control, trans: Transform2D) -> void:
 	var s: float = trans.get_scale().x
@@ -1449,18 +1575,52 @@ func _draw_rooms(canvas: Control, trans: Transform2D) -> void:
 		var p1 := trans * r.position
 		var p2 := trans * (r.position + r.size)
 		var transformed_rect := Rect2(p1, p2 - p1)
+		var r_id: String = str(room.get("id", ""))
+		var is_sealed: bool = bool(room.get("is_sealed", false)) or is_room_sealed(r_id)
 		
 		# Riempimento stanza
 		var col: Color = room.get("color", Color(0.2, 0.4, 0.6, 0.5))
+		if is_sealed:
+			col = Color(0.5, 0.1, 0.1, 0.4)
 		canvas.draw_rect(transformed_rect, col)
-		# Bordo stanza
-		var bcol: Color = room.get("border_color", col.lightened(0.3))
-		canvas.draw_rect(transformed_rect, bcol, false, 1.5)
+		
+		# Bordo stanza / Paratia stagna
+		if is_sealed:
+			_draw_sealed_bulkhead_border(canvas, transformed_rect, trans.get_scale().x)
+		else:
+			var bcol: Color = room.get("border_color", col.lightened(0.3))
+			canvas.draw_rect(transformed_rect, bcol, false, 1.5)
 		
 		# Etichetta stanza
 		var font: Font = ThemeDB.fallback_font
 		var text_pos := p1 + Vector2(6, 14)
-		canvas.draw_string(font, text_pos, str(room.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.8, 0.9, 1.0, 0.85))
+		var label_str: String = str(room.get("name", ""))
+		if is_sealed:
+			label_str += " [SIGILLATA]"
+		var label_col: Color = Color(1.0, 0.4, 0.4, 0.95) if is_sealed else Color(0.8, 0.9, 1.0, 0.85)
+		canvas.draw_string(font, text_pos, label_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, label_col)
+
+func _draw_sealed_bulkhead_border(canvas: Control, rect: Rect2, scale_factor: float) -> void:
+	var time_now := Time.get_ticks_msec() * 0.003
+	var pulse := 0.75 + 0.25 * sin(time_now * 4.0)
+	var red_color := Color(1.0, 0.15, 0.15, 0.95 * pulse)
+	var yellow_color := Color(1.0, 0.85, 0.2, 0.9)
+	var border_w := maxf(2.5, 3.5 * scale_factor)
+	
+	# Bordo rosso esterno continuo
+	canvas.draw_rect(rect, red_color, false, border_w)
+	
+	# Tratteggio di sicurezza sui 4 lati
+	var dash_len := 8.0 * scale_factor
+	var p_tl := rect.position
+	var p_tr := rect.position + Vector2(rect.size.x, 0)
+	var p_br := rect.position + rect.size
+	var p_bl := rect.position + Vector2(0, rect.size.y)
+	
+	canvas.draw_dashed_line(p_tl, p_tr, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_tr, p_br, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_br, p_bl, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_bl, p_tl, yellow_color, border_w * 0.5, dash_len)
 
 func _draw_ducts(canvas: Control, trans: Transform2D) -> void:
 	for duct in ducts:

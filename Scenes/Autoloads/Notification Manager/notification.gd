@@ -1,26 +1,16 @@
-extends Panel
+extends PanelContainer
 
 func _ready() -> void:
-	adjust_width()
 	play_animation()
 
-func adjust_width() -> void:
-	while true:
-		if $"Notification Text".get_line_count() > 1:
-			size.x += 20
-			position.x -= 20
-		else:
-			size.x += 10
-			position.x -= 10
-			return
-
 func play_animation() -> void:
-	var tween: Tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(self, "position:y", position.y - 75, 3)
+	modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 1.0, 0.25)
 	
-	await get_tree().create_timer(2).timeout
-	var fade: Tween = create_tween()
-	fade.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
-	await fade.tween_property(self, "modulate:a", 0, 1.5).finished
+	await get_tree().create_timer(3.5).timeout
+	if not is_inside_tree():
+		return
+	var fade := create_tween()
+	await fade.tween_property(self, "modulate:a", 0.0, 0.5).finished
 	queue_free()

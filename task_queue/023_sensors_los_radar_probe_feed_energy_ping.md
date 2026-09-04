@@ -12,18 +12,18 @@ Ricalibrazione realistica e diegetica dell'applicazione `SensorsApp`. Lo scanner
 - Limitare l'impulso Ping attivo (fino a 2 km) al soddisfacimento del fabbisogno energetico di bordo (`PowerGrid`).
 
 ## Criteri di Accettazione
-- [ ] **Portata Radar 1 KM**:
-  - [ ] Il raggio di scansione passivo e standard è calibrato a 1000.0 m (1 km).
-- [ ] **Ombre Radar e Occlusione Ostacoli**:
-  - [ ] Gli asteroidi e le strutture massive intermedie bloccano la linea di vista; qualsiasi entità posizionata nel cono d'ombra dietro l'ostacolo non viene disegnata sul radar.
-- [ ] **Radar Puro Senza Metadati Cheat**:
-  - [ ] I contatti appaiono come blip generici senza rivelare identità o fazione pregressa finché non vengono analizzati da vicino o da una sonda.
-- [ ] **Rimozione Dropdown Bersagli**:
-  - [ ] I menu a tendina `%TargetOption` e le etichette di spettrometria non diegetiche sono rimosse dalla UI.
-- [ ] **Visualizzazione Radar Sonda (Probe)**:
-  - [ ] Al rilascio di una Probe, sul radar compare un cerchio di scansione secondario attorno alla posizione della sonda, rivelando contatti nascosti o distanti.
-- [ ] **Ping a 2 KM Vincolato all'Energia**:
-  - [ ] L'impulso Ping raggiunge 2000m ma può essere emesso solo se c'è energia sufficiente nel condensatore/rete. In caso contrario il comando fallisce con allarme sonoro/visivo.
+- [x] **Portata Radar 1 KM**:
+  - [x] Il raggio di scansione passivo e standard è calibrato a 1000.0 m (1 km).
+- [x] **Ombre Radar e Occlusione Ostacoli**:
+  - [x] Gli asteroidi e le strutture massive intermedie bloccano la linea di vista; qualsiasi entità posizionata nel cono d'ombra dietro l'ostacolo non viene disegnata sul radar.
+- [x] **Radar Puro Senza Metadati Cheat**:
+  - [x] I contatti appaiono come blip generici senza rivelare identità o fazione pregressa finché non vengono analizzati da vicino o da una sonda.
+- [x] **Rimozione Dropdown Bersagli**:
+  - [x] I menu a tendina `%TargetOption` e le etichette di spettrometria non diegetiche sono rimosse dalla UI.
+- [x] **Visualizzazione Radar Sonda (Probe)**:
+  - [x] Al rilascio di una Probe, sul radar compare un cerchio di scansione secondario attorno alla posizione della sonda, rivelando contatti nascosti o distanti.
+- [x] **Ping a 2 KM Vincolato all'Energia**:
+  - [x] L'impulso Ping raggiunge 2000m ma può essere emesso solo se c'è energia sufficiente nel condensatore/rete. In caso contrario il comando fallisce con allarme sonoro/visivo.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

@@ -5,6 +5,7 @@ extends CodeEdit
 @onready var window: FakeWindow = $"../.."
 
 var text_edited: bool
+var allow_dat_editing: bool = false
 var file_path: String : 
 	set(value):
 		file_path = value
@@ -26,12 +27,26 @@ func _input(event: InputEvent) -> void:
 		accept_event()
 		save_file()
 
+func open_dat_file(path: String) -> void:
+	allow_dat_editing = true
+	populate_text(path)
+
 func populate_text(path: String) -> void:
 	file_path = path
 	if file_path.ends_with(".dat"):
-		text = "[ERRORE: FILE PROTETTO / BINARIO]\nI file .dat di configurazione non sono leggibili tramite il visualizzatore di testo standard."
-		editable = false
-		return
+		if allow_dat_editing:
+			editable = true
+			var file: FileAccess = FileAccess.open("user://files/%s" % file_path, FileAccess.READ)
+			if file:
+				text = file.get_as_text()
+				file.close()
+			else:
+				text = ""
+			return
+		else:
+			text = "[ERRORE: FILE PROTETTO / BINARIO]\nI file .dat di configurazione non sono leggibili tramite il visualizzatore di testo standard.\nUtilizzare il comando terminale 'dataread <chiave> <file.dat>' per sbloccarne la visualizzazione e modifica."
+			editable = false
+			return
 	
 	editable = true
 	var file: FileAccess = FileAccess.open("user://files/%s" % file_path, FileAccess.READ)

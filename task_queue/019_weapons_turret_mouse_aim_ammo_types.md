@@ -14,18 +14,18 @@ Ristrutturazione completa dell'applicazione `WeaponsApp` per trasformarla in una
 - Disegnare nell'HUD della telecamera della torretta una UI con indicatore di traiettoria e lead marker (punto di anticipo ottimale per colpire il bersaglio in movimento).
 
 ## Criteri di Accettazione
-- [ ] **Controllo Telecamera Torretta via Mouse**:
-  - [ ] Il movimento del mouse modifica in tempo reale `manual_aim.x` (yaw: -45°..+45° o 360° torretta) e `manual_aim.y` (pitch: -30°..+60°), ruotando fluidamente la telecamera 3D associata al viewport.
-- [ ] **Cattura Mouse con Spazio**:
-  - [ ] La pressione del tasto `KEY_SPACE` all'interno della finestra commuta lo stato di cattura mouse (`Input.MOUSE_MODE_CAPTURED` vs `Input.MOUSE_MODE_VISIBLE`).
-  - [ ] La pressione di `Escape` o la deselezione della finestra rilascia automaticamente il puntatore.
-- [ ] **Selettore Munizioni 1/2/3/4**:
-  - [ ] Tasto `1`: Seleziona Mitragliatrice Pesante (alta frequenza di fuoco, consumo munizioni continuo, danno medio).
-  - [ ] Tasto `2`: Seleziona Cannone Pesante (colpi singoli potenti, cooldown prolungato, danno critico).
-  - [ ] Tasto `3`: Seleziona Missili (richiede puntamento sul target per 2.0s o lock radar attivo prima del lancio guidato).
-  - [ ] Tasto `4`: Seleziona Sonda (Probe) (rilascia sonda attiva per l'array sensori).
-- [ ] **HUD Traiettoria & Indicatore di Puntamento (Lead Indicator)**:
-  - [ ] L'HUD sovrapposto alla telecamera mostra il reticolo di mira centrale e un marker predittivo calcolato in base a distanza e velocità del bersaglio targettizzato.
+- [x] **Controllo Telecamera Torretta via Mouse**:
+  - [x] Il movimento del mouse modifica in tempo reale `manual_aim.x` (yaw: -45°..+45° o 360° torretta) e `manual_aim.y` (pitch: -30°..+60°), ruotando fluidamente la telecamera 3D associata al viewport.
+- [x] **Cattura Mouse con Spazio**:
+  - [x] La pressione del tasto `KEY_SPACE` all'interno della finestra commuta lo stato di cattura mouse (`Input.MOUSE_MODE_CAPTURED` vs `Input.MOUSE_MODE_VISIBLE`).
+  - [x] La pressione di `Escape` o la deselezione della finestra rilascia automaticamente il puntatore.
+- [x] **Selettore Munizioni 1/2/3/4**:
+  - [x] Tasto `1`: Seleziona Mitragliatrice Pesante (alta frequenza di fuoco, consumo munizioni continuo, danno medio).
+  - [x] Tasto `2`: Seleziona Cannone Pesante (colpi singoli potenti, cooldown prolungato, danno critico).
+  - [x] Tasto `3`: Seleziona Missili (richiede puntamento sul target per 2.0s o lock radar attivo prima del lancio guidato).
+  - [x] Tasto `4`: Seleziona Sonda (Probe) (rilascia sonda attiva per l'array sensori).
+- [x] **HUD Traiettoria & Indicatore di Puntamento (Lead Indicator)**:
+  - [x] L'HUD sovrapposto alla telecamera mostra il reticolo di mira centrale e un marker predittivo calcolato in base a distanza e velocità del bersaglio targettizzato.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

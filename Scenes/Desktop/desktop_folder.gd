@@ -25,6 +25,8 @@ func _ready() -> void:
 			$Folder/TextureRect.modulate = Color("00e5ff")
 		elif folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
 			$Folder/TextureRect.modulate = Color("39ff14")
+		elif folder_name == "Target Drive" and (folder_path == "Target Drive" or folder_path == ""):
+			$Folder/TextureRect.modulate = Color("ff0055")
 		else:
 			$Folder/TextureRect.modulate = FOLDER_COLOR
 		$Folder/TextureRect.texture = load("res://Art/Folder Icons/folder.png")
@@ -155,6 +157,9 @@ func delete_file() -> void:
 		return
 	if folder_name == "Terminal Drive" and (folder_path == "Terminal Drive" or folder_path == ""):
 		NotificationManagerSingleton.spawn_notification("Non e' possibile eliminare 'Terminal Drive'.")
+		return
+	if folder_name == "Target Drive" and (folder_path == "Target Drive" or folder_path == ""):
+		NotificationManagerSingleton.spawn_notification("Non e' possibile eliminare 'Target Drive'. Disconnettere il link radio per smontare l'unita'.")
 		return
 	
 	if file_type == GlobalValues.FileType.FOLDER:

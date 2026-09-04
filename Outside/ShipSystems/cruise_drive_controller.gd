@@ -54,6 +54,11 @@ var target_cruise_speed: float = 160.0 # 20 m/s * 8.0
 var current_heat: float = 0.0
 var is_rcs_locked: bool = false
 
+# Hack Exploits Overrides (TASK-037)
+var is_8loops_active: bool = false
+var is_gout_active: bool = false
+var _loops_timer: float = 0.0
+
 # Riferimenti
 var spaceship_ref: Spaceship = null
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/FlightControls/thrusters_tuning.dat"
@@ -492,3 +497,22 @@ func _process_cooldown(delta: float) -> void:
 	if cooldown_timer <= 0.0:
 		cooldown_timer = 0.0
 		_change_state(State.IDLE)
+
+## Hack Exploits API (TASK-037)
+func apply_8loops_exploit(active: bool) -> void:
+	is_8loops_active = active
+	if active:
+		if current_state != State.ENGAGED:
+			_change_state(State.ENGAGED)
+	else:
+		if current_state == State.ENGAGED:
+			_change_state(State.IDLE)
+
+func apply_gout_exploit(active: bool) -> void:
+	is_gout_active = active
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		if active:
+			ship.max_angular_speed = 25.0
+		else:
+			ship.max_angular_speed = 2.5

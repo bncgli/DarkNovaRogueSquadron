@@ -128,47 +128,72 @@ func _run_suite() -> void:
 	print("✔ Matrice dei ruoli RBAC verificata con successo")
 	
 	# =========================================================================
-	# FASE 6: GESTIONE GRUPPI D'ARMA, FUOCO E TERMODINAMICA
+	# FASE 6: GESTIONE CLASSI DI MUNIZIONI [1-4], FUOCO E TERMODINAMICA
 	# =========================================================================
-	print("\n--- TEST 6: Gruppi d'Arma, Fuoco, Munizioni e Termodinamica ---")
+	print("\n--- TEST 6: Selettore Munizioni 1-4, Fuoco Differenziato e Termodinamica ---")
 	
-	# 1. Torrette Laser (Consumo carica e aumento calore)
-	weapons_app._select_weapon_group(WeaponsApp.WeaponGroup.LASER)
-	weapons_app.laser_charge = 100.0
+	# 1. Mitragliatrice Pesante [1] (Alta cadenza, consumo 1 colpo)
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.HEAVY_MG)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.HEAVY_MG, "Mitragliatrice Pesante attiva")
+	var prev_mg: int = weapons_app.heavy_mg_ammo
+	weapons_app.fire_cooldown_timer = 0.0
 	weapons_app.barrel_heat = 0.0
-	weapons_app.fire_cooldown_timer = 0.0
 	weapons_app.is_overheated = false
-	
 	weapons_app._on_fire_button_pressed()
-	assert(weapons_app.laser_charge == 80.0, "Il fuoco laser deve consumare il 20% di carica")
-	assert(weapons_app.barrel_heat > 0.0, "Il fuoco laser deve generare calore nelle canne")
-	print("✔ Fuoco Torrette Laser binate verificato con successo")
+	assert(weapons_app.heavy_mg_ammo == prev_mg - 1, "Il fuoco MG deve consumare 1 colpo")
+	assert(weapons_app.barrel_heat > 0.0, "Il fuoco MG deve generare calore nelle canne")
+	print("✔ Fuoco Mitragliatrice Pesante [1] verificato con successo")
 	
-	# 2. Siluri Pesanti (Decremento munizioni)
-	weapons_app._select_weapon_group(WeaponsApp.WeaponGroup.TORPEDO)
-	var prev_torp: int = weapons_app.torpedo_ammo
+	# 2. Cannone Pesante [2] (Danno elevato, consumo carica/colpo)
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.HEAVY_CANNON)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.HEAVY_CANNON, "Cannone Pesante attivo")
+	weapons_app.laser_charge = 100.0
 	weapons_app.fire_cooldown_timer = 0.0
+	var prev_cannon: int = weapons_app.heavy_cannon_ammo
 	weapons_app._on_fire_button_pressed()
-	assert(weapons_app.torpedo_ammo == prev_torp - 1, "Il lancio siluro deve decrementare le munizioni di 1")
-	print("✔ Lancio Siluro Pesante verificato con successo")
+	assert(weapons_app.laser_charge == 80.0, "Il cannone pesante deve consumare il 20% di condensatore")
+	assert(weapons_app.heavy_cannon_ammo == prev_cannon - 1, "Il cannone pesante deve consumare 1 colpo")
+	print("✔ Fuoco Cannone Pesante [2] verificato con successo")
 	
-	# 3. PDG Difesa di Prossimità (Raffica manuale)
-	weapons_app._select_weapon_group(WeaponsApp.WeaponGroup.PDG)
-	var prev_pdg: int = weapons_app.pdg_ammo
+	# 3. Missili a Ricerca [3] (Richiede Lock Bersaglio)
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.MISSILE)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.MISSILE, "Missili attivi")
 	weapons_app.fire_cooldown_timer = 0.0
-	weapons_app._on_fire_button_pressed()
-	assert(weapons_app.pdg_ammo == prev_pdg - 5, "La raffica PDG deve consumare 5 munizioni")
-	print("✔ Raffica manuale PDG verificata con successo")
+	weapons_app.is_missile_locked = false
+	weapons_app.is_target_locked = false
+	var prev_missiles: int = weapons_app.missile_ammo
 	
-	# 4. Overheat Lockout & Scarico Termico d'Emergenza (Thermal Vent)
+	# Tentativo di fuoco senza lock (deve essere rifiutato)
+	weapons_app._on_fire_button_pressed()
+	assert(weapons_app.missile_ammo == prev_missiles, "Il fuoco missile senza lock deve essere bloccato")
+	
+	# Con lock attivo (deve essere consentito)
+	weapons_app.is_missile_locked = true
+	weapons_app.selected_target_id = "AST-01"
+	weapons_app._on_fire_button_pressed()
+	assert(weapons_app.missile_ammo == prev_missiles - 1, "Il lancio missile con lock deve consumare 1 missile")
+	print("✔ Logica di lancio Missili a Ricerca [3] con Lock verificata con successo")
+	
+	# 4. Sonda Telemetrica [4] (Lancio sonda sensori nello spazio)
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.PROBE)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.PROBE, "Sonde telemetriche attive")
+	weapons_app.fire_cooldown_timer = 0.0
+	var prev_probes: int = weapons_app.probe_ammo
+	weapons_app._on_fire_button_pressed()
+	assert(weapons_app.probe_ammo == prev_probes - 1, "Il lancio sonda deve decrementare la riserva di 1")
+	assert(SpaceWorldManager.active_probes.size() > 0, "Una sonda attiva deve risultare registrata in SpaceWorldManager")
+	print("✔ Lancio Sonda Telemetrica [4] verificato con successo")
+	
+	# 5. Overheat Lockout & Scarico Termico d'Emergenza (Thermal Vent)
 	weapons_app.barrel_heat = 100.0
 	weapons_app._update_cooling_and_power(0.1)
 	assert(weapons_app.is_overheated == true, "barrel_heat a 100% deve innescare il blocco di surriscaldamento")
 	
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.HEAVY_MG)
 	weapons_app.fire_cooldown_timer = 0.0
-	var ammo_before_overheat_fire := weapons_app.pdg_ammo
+	var ammo_before_overheat := weapons_app.heavy_mg_ammo
 	weapons_app._on_fire_button_pressed()
-	assert(weapons_app.pdg_ammo == ammo_before_overheat_fire, "Il fuoco deve essere bloccato durante il surriscaldamento")
+	assert(weapons_app.heavy_mg_ammo == ammo_before_overheat, "Il fuoco deve essere bloccato durante il surriscaldamento")
 	
 	# Esegui scarico termico
 	weapons_app.vent_cooldown_timer = 0.0
@@ -234,6 +259,7 @@ func _run_suite() -> void:
 	print("\n--- TEST 10: Camera Ottica di Puntamento e SubViewport 3D ---")
 	assert(weapons_app.feed_viewport != null, "Feed viewport deve essere presente")
 	assert(weapons_app.feed_camera_3d != null, "Feed Camera3D deve essere presente")
+	assert(weapons_app.trajectory_hud != null, "TrajectoryHUD deve essere presente nel viewport")
 	
 	# Test orientamento ottico manuale
 	weapons_app.aim_yaw_slider.value = 15.0
@@ -247,8 +273,100 @@ func _run_suite() -> void:
 	assert(weapons_app.manual_aim == Vector2.ZERO, "La pressione di Centro deve azzerare la mira")
 	print("✔ Camera ottica di puntamento, SubViewport 3D e orientamento verificati con successo")
 	
+	# =========================================================================
+	# FASE 11: CONTROLLO MOUSE AIMING, CATTURA SPAZIO ED ESCAPE (TASK-031)
+	# =========================================================================
+	print("\n--- TEST 11: Controllo Torretta Mouse, Cattura con Spazio e Rilascio con Escape ---")
+	weapons_app.is_mouse_captured = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	
+	# Test cattura mouse con tasto Spazio
+	var ev_space := InputEventKey.new()
+	ev_space.keycode = KEY_SPACE
+	ev_space.pressed = true
+	weapons_app._input(ev_space)
+	assert(weapons_app.is_mouse_captured == true, "La pressione di Spazio deve attivare la cattura del mouse")
+	if DisplayServer.get_name() != "headless":
+		assert(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "Il mouse_mode deve passare a MOUSE_MODE_CAPTURED")
+	
+	# Test tracciamento movimento mouse
+	weapons_app.manual_aim = Vector2.ZERO
+	var ev_motion := InputEventMouseMotion.new()
+	ev_motion.relative = Vector2(40.0, -20.0)
+	weapons_app._input(ev_motion)
+	assert(weapons_app.manual_aim.x != 0.0 or weapons_app.manual_aim.y != 0.0, "Il movimento del mouse deve muovere yaw e pitch della torretta")
+	
+	# Test rilascio mouse con tasto Escape
+	var ev_esc := InputEventKey.new()
+	ev_esc.keycode = KEY_ESCAPE
+	ev_esc.pressed = true
+	weapons_app._input(ev_esc)
+	assert(weapons_app.is_mouse_captured == false, "La pressione di Escape deve rilasciare il mouse")
+	if DisplayServer.get_name() != "headless":
+		assert(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "Il mouse_mode deve tornare a MOUSE_MODE_VISIBLE")
+	
+	# Test rilascio mouse per perdita di focus della finestra
+	weapons_app._toggle_mouse_capture()
+	assert(weapons_app.is_mouse_captured == true, "Mouse ricatturato")
+	weapons_app._on_parent_window_selected(false)
+	assert(weapons_app.is_mouse_captured == false, "La de-selezione della finestra deve rilasciare il mouse")
+	print("✔ Cattura, rilascio con Spazio/Escape/Deselezione e mira mouse convalidate")
+	
+	# =========================================================================
+	# FASE 12: SELETTORE TASTI 1-4, LOCK OTTICO MISSILE E HUD TRAIETTORIA
+	# =========================================================================
+	print("\n--- TEST 12: Selettore Tasti 1-4, Lock Ottico Continuo e HUD Traiettoria ---")
+	
+	# Test selezione rapida con tasti numerici 1, 2, 3, 4
+	var ev_k1 := InputEventKey.new()
+	ev_k1.keycode = KEY_1
+	ev_k1.pressed = true
+	weapons_app._input(ev_k1)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.HEAVY_MG, "Tasto 1 deve selezionare Heavy MG")
+	
+	var ev_k2 := InputEventKey.new()
+	ev_k2.keycode = KEY_2
+	ev_k2.pressed = true
+	weapons_app._input(ev_k2)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.HEAVY_CANNON, "Tasto 2 deve selezionare Heavy Cannon")
+	
+	var ev_k3 := InputEventKey.new()
+	ev_k3.keycode = KEY_3
+	ev_k3.pressed = true
+	weapons_app._input(ev_k3)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.MISSILE, "Tasto 3 deve selezionare Missile")
+	
+	var ev_k4 := InputEventKey.new()
+	ev_k4.keycode = KEY_4
+	ev_k4.pressed = true
+	weapons_app._input(ev_k4)
+	assert(weapons_app.active_ammo_type == WeaponsApp.AmmoType.PROBE, "Tasto 4 deve selezionare Probe")
+	
+	# Test accumulatore lock ottico missile (allineamento continuo per 2.0s)
+	weapons_app._select_ammo_type(WeaponsApp.AmmoType.MISSILE)
+	weapons_app._refresh_targets()
+	assert(weapons_app.detected_targets.size() > 0, "Bersagli rilevati per il lock")
+	var target_ast := weapons_app.detected_targets[0]
+	weapons_app.manual_aim = Vector2(float(target_ast.get("bearing_deg", 0.0)), float(target_ast.get("elevation_deg", 0.0)))
+	weapons_app.missile_current_aim_time = 0.0
+	weapons_app.is_missile_locked = false
+	weapons_app.is_target_locked = false
+	
+	# Simula allineamento nel processo per 2.2 secondi
+	weapons_app._process(1.0)
+	assert(weapons_app.missile_current_aim_time >= 1.0 and not weapons_app.is_missile_locked, "Lock missile in accumulo")
+	weapons_app._process(1.2)
+	assert(weapons_app.is_missile_locked == true, "Lock missile completato dopo 2.0s di puntamento continuo")
+	
+	# Test aggiornamento TrajectoryHUD
+	weapons_app._update_turret_camera_feed()
+	assert(weapons_app.trajectory_hud.active_ammo_type == WeaponsApp.AmmoType.MISSILE, "TrajectoryHUD deve riflettere il tipo d'arma")
+	assert(weapons_app.trajectory_hud.is_missile_locked == true, "TrajectoryHUD deve mostrare lock missile attivo")
+	assert(weapons_app.trajectory_hud.has_lead == true, "TrajectoryHUD deve mostrare lead indicator per il bersaglio")
+	print("✔ Selettore tasti 1-4, lock ottico missile e rendering TrajectoryHUD convalidati con successo")
+	
 	weapons_app.queue_free()
 	print("\n=======================================================")
-	print("✔ TUTTI I TEST TACTICAL WEAPONS COMPLETATI CON SUCCESSO!")
+	print("✔ TUTTI I TEST TACTICAL WEAPONS (TASK-031) COMPLETATI CON SUCCESSO!")
 	print("=======================================================")
 	get_tree().quit(0)

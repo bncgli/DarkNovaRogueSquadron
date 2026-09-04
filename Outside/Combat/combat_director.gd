@@ -123,8 +123,58 @@ func _on_enemy_weapon_fired(weapon_type: String, origin: Vector3, target_pos: Ve
 		if player_ship_node and is_instance_valid(player_ship_node):
 			hit_dir_local = player_ship_node.global_transform.basis.inverse() * (origin - player_pos)
 
+		if SpaceWorldManager and SpaceWorldManager.has_method("spawn_incoming_projectile"):
+			var p_type := "TORPEDO" if weapon_type == "torpedo" else "KINETIC"
+			var proj_vel := (player_pos - origin).normalized() * 40.0
+			SpaceWorldManager.spawn_incoming_projectile(p_type, origin, proj_vel, damage, player_pos)
+
 		if systemic_damage_handler and is_instance_valid(systemic_damage_handler):
 			systemic_damage_handler.process_hit(hit_dir_local, damage, "plasma" if weapon_type == "torpedo" else "kinetic")
+
+## Verifica se un colpo in arrivo viene intercettato da dispositivi di difesa point-defense
+func evaluate_defensive_interception(hit_dir_local: Vector3, weapon_type: String, devices: Array[Dictionary]) -> Dictionary:
+	var dir_norm := hit_dir_local.normalized()
+	var bearing_deg := rad_to_deg(atan2(dir_norm.x, -dir_norm.z))
+	
+	var sector := 0
+	if bearing_deg >= -45.0 and bearing_deg <= 45.0:
+		sector = 0 # FORE
+	elif bearing_deg > 45.0 and bearing_deg <= 135.0:
+		sector = 2 # STARBOARD
+	elif bearing_deg < -45.0 and bearing_deg >= -135.0:
+		sector = 1 # PORT
+	else:
+		sector = 3 # AFT
+	
+	for dev in devices:
+		if dev.get("sector", -1) != sector:
+			continue
+		if dev.get("ammo", 0) <= 0:
+			continue
+		
+		var dev_type: String = str(dev.get("type", "")).to_upper()
+		var is_missile_or_torp: bool = weapon_type.to_lower() in ["torpedo", "missile", "homing_missile", "rocket"]
+		
+		if dev_type == "GATLING":
+			return {
+				"intercepted": true,
+				"action": "DESTROYED",
+				"device_id": dev.get("id", ""),
+				"sector": sector
+			}
+		elif dev_type == "FLACK" and is_missile_or_torp:
+			return {
+				"intercepted": true,
+				"action": "DEFLECTED",
+				"device_id": dev.get("id", ""),
+				"sector": sector
+			}
+	
+	return {
+		"intercepted": false,
+		"action": "NONE",
+		"sector": sector
+	}
 
 ## Notifica distruzione nemico
 func _on_enemy_destroyed(ship_id: String, ship_type: String, pos: Vector3) -> void:

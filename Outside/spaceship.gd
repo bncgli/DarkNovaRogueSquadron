@@ -38,6 +38,13 @@ var initial_transform: Transform3D = Transform3D.IDENTITY
 
 # Sistema di Propulsione a Velocità di Crociera (Cruise Mode)
 var cruise_controller: Node = null
+var current_g_force: float = 1.0
+
+func get_current_g_force() -> float:
+	return current_g_force
+
+func set_current_g_force(g: float) -> void:
+	current_g_force = g
 
 # Proprietà per la sincronizzazione di rete e stato di connessione
 var is_ship_connected: bool = false
@@ -178,8 +185,30 @@ func _physics_process(delta: float) -> void:
 	else:
 		_apply_flight_physics(delta)
 	
+	_update_g_force(delta)
+	
 	var cur_pos := global_position if is_inside_tree() else position
 	flight_telemetry_updated.emit(linear_velocity.length(), cur_pos, linear_velocity, rotation_degrees)
+
+func _update_g_force(delta: float) -> void:
+	if cruise_controller and is_instance_valid(cruise_controller):
+		var ctrl_state: int = int(cruise_controller.get("current_state"))
+		if ctrl_state == 1: # WARMUP
+			current_g_force = 3.5
+			return
+		elif ctrl_state == 2: # ENGAGED
+			current_g_force = 6.2
+			return
+		elif ctrl_state == 3: # EMERGENCY_DROP
+			current_g_force = -2.5
+			return
+
+	var target_g := 1.0
+	if linear_input.length_squared() > 0.001:
+		var fwd_accel := -linear_input.z * (linear_acceleration / 9.8)
+		var vert_accel := linear_input.y * (linear_acceleration / 9.8)
+		target_g = 1.0 + fwd_accel + vert_accel * 0.5
+	current_g_force = move_toward(current_g_force, target_g, delta * 4.0)
 
 func _apply_client_interpolation(delta: float) -> void:
 	var cur_trans := global_transform if is_inside_tree() else transform

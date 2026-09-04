@@ -21,7 +21,7 @@ var pos: Vector2 = INITIAL_POS
 var heading: float = INITIAL_HEADING
 var speed: float = 0.0
 var battery: float = 100.0
-var lights: bool = true
+var lights: bool = false
 var scan_active: bool = false
 var scan_radius: float = 80.0
 

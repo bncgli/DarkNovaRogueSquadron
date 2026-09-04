@@ -11,16 +11,16 @@ Estensione del modello simulativo e telemetrico di `LifeSupportApp`. Oltre ai li
 - Simulare il pericolo termico degli incendi: temperature elevate (>350°C) e fumo tossico che infliggono danni letali all'equipaggio presente.
 
 ## Criteri di Accettazione
-- [ ] **Monitoraggio a 4 Parametri per Stanza**:
-  - [ ] La UI di ogni scheda stanza in `room_atmo_card.tscn` visualizza O2 (%), Pressione (kPa), Temperatura (°C) e Stato Caldaia/Termoregolazione.
-- [ ] **Dinamica Brecce e Decompressione**:
-  - [ ] Se in una stanza è presente una breccia (`has_breach == true` o danno strutturale da DuctDrone), la pressione scende a 0 kPa a una velocità proporzionale alla dimensione della falla.
-- [ ] **Azzeramento Temperatura nel Vuoto**:
-  - [ ] Non appena la pressione di una stanza scende sotto la soglia critica (es. < 1.0 kPa), la temperatura della stanza decade rapidamente e incondizionatamente verso 0.0 °C / zero assoluto, indipendentemente dal riscaldatore.
-- [ ] **Disattivazione Caldaia da Cortocircuito**:
-  - [ ] Se un dispositivo elettrico/cablaggio nella stanza va in corto circuito (`has_short_circuit == true`), l'impianto termico locale si spegne e la temperatura cala gradualmente verso la temperatura ambiente esterna.
-- [ ] **Incendi e Danni Termici Equipaggio**:
-  - [ ] La presenza di fuoco eleva la temperatura a picchi critici; se l'equipaggio/personaggio si trova nella stanza in fiamme o adiacente non sigillata, riceve danni continui da calore e asfissia comunicati a `PodInfo`.
+- [x] **Monitoraggio a 4 Parametri per Stanza**:
+  - [x] La UI di ogni scheda stanza in `room_atmo_card.tscn` visualizza O2 (%), Pressione (kPa), Temperatura (°C) e Stato Caldaia/Termoregolazione.
+- [x] **Dinamica Brecce e Decompressione**:
+  - [x] Se in una stanza è presente una breccia (`has_breach == true` o danno strutturale da DuctDrone), la pressione scende a 0 kPa a una velocità proporzionale alla dimensione della falla.
+- [x] **Azzeramento Temperatura nel Vuoto**:
+  - [x] Non appena la pressione di una stanza scende sotto la soglia critica (es. < 1.0 kPa), la temperatura della stanza decade rapidamente e incondizionatamente verso 0.0 °C / zero assoluto, indipendentemente dal riscaldatore.
+- [x] **Disattivazione Caldaia da Cortocircuito**:
+  - [x] Se un dispositivo elettrico/cablaggio nella stanza va in corto circuito (`has_short_circuit == true`), l'impianto termico locale si spegne e la temperatura cala gradualmente verso la temperatura ambiente esterna.
+- [x] **Incendi e Danni Termici Equipaggio**:
+  - [x] La presenza di fuoco eleva la temperatura a picchi critici; se l'equipaggio/personaggio si trova nella stanza in fiamme o adiacente non sigillata, riceve danni continui da calore e asfissia comunicati a `PodInfo`.
 
 ## Dettagli Tecnici
 - **File coinvolti**:

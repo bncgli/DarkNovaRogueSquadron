@@ -8,8 +8,8 @@ var current_frequency: float = 1420.0
 var min_freq: float = 100.0
 var max_freq: float = 3000.0
 
-var is_jamming_active: bool = false
-var jamming_power: float = 120.0
+var is_auto_rotating: bool = false
+var antenna_azimuth: float = 0.0
 var is_operational: bool = false
 var anim_time: float = 0.0
 
@@ -60,20 +60,19 @@ func _update_waterfall_row(_delta: float) -> void:
 				var factor := 1.0 - (dist / 80.0)
 				noise += factor * sig_strength * (0.7 + 0.3 * sin(anim_time * 8.0 + j))
 		
-		# Effetto disturbo Jammer su tutto lo spettro o bande vicine
-		if is_jamming_active:
-			var jam_factor := clampf(jamming_power / 180.0, 0.3, 1.0)
-			noise += randf_range(0.2, 0.6) * jam_factor
+		# Effetto disturbo e rumore di fondo in auto-rotazione
+		if is_auto_rotating:
+			noise += randf_range(0.08, 0.22)
 		
 		new_row[j] = clampf(noise, 0.0, 1.0)
 	
 	waterfall_history.pop_back()
 	waterfall_history.push_front(new_row)
 
-func update_state(freq: float, jamming: bool, jam_pwr: float, operational: bool, signals: Array[Dictionary]) -> void:
+func update_state(freq: float, auto_rot_or_jam: bool = false, azimuth_or_pwr: float = 0.0, operational: bool = true, signals: Array[Dictionary] = []) -> void:
 	current_frequency = freq
-	is_jamming_active = jamming
-	jamming_power = jam_pwr
+	is_auto_rotating = auto_rot_or_jam
+	antenna_azimuth = azimuth_or_pwr
 	is_operational = operational
 	active_signals = signals
 	queue_redraw()
