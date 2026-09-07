@@ -29,10 +29,10 @@ func close_window() -> void:
 ## Goes to the folder above the currently shown one. Can't go higher than user://files/
 func _on_back_button_pressed() -> void:
 	#TODO move it to a position that's less stupid
-	var split_path: PackedStringArray = file_path.split("/")
-	if split_path.size() <= 1:
+	if file_path.is_empty():
 		return
 	
+	var split_path: PackedStringArray = file_path.split("/")
 	split_path.remove_at(split_path.size() - 1)
 	file_path = "/".join(split_path)
 	

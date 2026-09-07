@@ -24,7 +24,12 @@ func _input(event: InputEvent) -> void:
 func show_rename() -> void:
 	get_parent().visible = true
 	grab_focus()
-	text = %"Folder Title".text.trim_prefix("[center]").split(".")[0]
+	var folder: FakeFolder = $"../../.."
+	var full_name: String = %"Folder Title".text.trim_prefix("[center]")
+	if folder.file_type == GlobalValues.FileType.FOLDER:
+		text = full_name
+	else:
+		text = full_name.get_basename()
 	select_all()
 
 func trigger_rename() -> void:

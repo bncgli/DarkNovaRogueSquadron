@@ -170,7 +170,7 @@ func scavenge_module_by_index(index: int, destination_cargo_or_drone: Node = nul
 	var stored := false
 	if destination_cargo_or_drone:
 		if destination_cargo_or_drone.has_method("add_item"):
-			stored = destination_cargo_or_drone.add_item(item, 1)
+			stored = destination_cargo_or_drone.add_item(_to_cargo_item_dict(item), 1)
 		elif destination_cargo_or_drone.has_method("collect_cargo_item"):
 			stored = destination_cargo_or_drone.collect_cargo_item(item.id, item.name, item.mass_kg)
 	
@@ -190,7 +190,7 @@ func scavenge_all_available(destination_cargo_or_drone: Node = null) -> Dictiona
 		var mod_data: Dictionary = salvageable_modules.pop_back()
 		if destination_cargo_or_drone:
 			if destination_cargo_or_drone.has_method("add_item"):
-				destination_cargo_or_drone.add_item(mod_data, 1)
+				destination_cargo_or_drone.add_item(_to_cargo_item_dict(mod_data), 1)
 			elif destination_cargo_or_drone.has_method("collect_cargo_item"):
 				destination_cargo_or_drone.collect_cargo_item(mod_data.id, mod_data.name, mod_data.mass_kg)
 		collected_modules.append(mod_data)
@@ -212,6 +212,22 @@ func scavenge_all_available(destination_cargo_or_drone: Node = null) -> Dictiona
 		"flux_recovered": fl,
 		"modules_recovered": collected_modules,
 		"black_box": bb_data
+	}
+
+## Converte un dizionario modulo/scavenge (schema mass_kg/volume_m3/value_credits) nello
+## schema atteso da CargoManager/CargoItemData (unit_mass_kg/unit_volume_m3/unit_base_value).
+## BUGFIX: prima di questa conversione, add_item() riceveva chiavi non riconosciute e i
+## moduli recuperati finivano in stiva con massa/volume/valore azzerati.
+func _to_cargo_item_dict(mod_data: Dictionary) -> Dictionary:
+	return {
+		"id": mod_data.get("id", ""),
+		"name": mod_data.get("name", ""),
+		"category": str(mod_data.get("type", "MODULE")),
+		"unit_mass_kg": float(mod_data.get("mass_kg", 0.0)),
+		"unit_volume_m3": float(mod_data.get("volume_m3", 0.0)),
+		"unit_base_value": float(mod_data.get("value_credits", 0.0)),
+		"is_contraband": false,
+		"is_snet_disk": false
 	}
 
 func _check_fully_scavenged() -> void:

@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://hrycc7j5sm77"]
-
-[ext_resource type="Script" path="res://tests/test_cams_system_node.gd" id="1_test_script"]
-
-[node name="TestCamsSystem" type="Node"]
-script = ExtResource("1_test_script")

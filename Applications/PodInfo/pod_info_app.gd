@@ -1,9 +1,10 @@
 class_name PodInfoApp
 extends Control
 
-## Applicazione Terminale PodInfo per il monitoraggio dei parametri vitali,
+## Widget diegetico PodInfo per il monitoraggio dei parametri vitali (sempre attivo in Taskbar),
 ## microfono virtuale diegetico in plancia e gestione degli stati fisiologici dell'equipaggio.
-## Segue lo standard APP_ARCHITECTURE_STANDARD.md.
+## A differenza delle altre app GodotOS non è una finestra apribile/chiudibile: viene istanziato
+## direttamente nella Taskbar all'avvio ed è sempre presente, poiché gestisce anche l'audio di bordo.
 
 enum CrewPhysiologicalState {
 	NORMAL,
@@ -15,23 +16,16 @@ enum CrewPhysiologicalState {
 	DECEASED
 }
 
-signal vital_signs_updated(o2: float, temp: float, pressure: float, g_force: float, hr: float)
+signal vital_signs_updated(o2: float, temp: float, pressure: float, g_force: float)
 signal crew_state_changed(old_state: int, new_state: int)
 signal game_over_triggered(reason: String)
 signal spatial_sound_played(sound_name: String, event_pos: Vector2, distance: float, vol_db: float, is_lowpass: bool)
 
-const APP_TITLE: String = "POD INFO - MONITOR VITALI"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(450, 350)
-
 # --- RIFERIMENTI UI ---
-@onready var hr_label: Label = %HRLabel
 @onready var oxygen_label: Label = %OxygenLabel
 @onready var temp_label: Label = %TempLabel
 @onready var pressure_label: Label = get_node_or_null("%PressureLabel")
-@onready var air_quality_label: Label = %AirQualityLabel
 @onready var g_force_label: Label = %GForceLabel
-@onready var status_label: Label = get_node_or_null("%StatusLabel")
-@onready var heart_rate_timer: Timer = %HeartRateTimer
 
 # --- RIFERIMENTI AUDIO ---
 @onready var background_audio: AudioStreamPlayer = %BackgroundAudio
@@ -41,11 +35,9 @@ const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(450, 350)
 @onready var spatial_audio: AudioStreamPlayer = get_node_or_null("%SpatialAudio")
 
 # --- STATO PARAMETRI VITALI (Sincronizzati in tempo reale) ---
-var hr_value: float = 72.0
 var oxygen_value: float = 21.0
 var temp_value: float = 21.5
 var pressure_value: float = 101.3
-var air_quality_value: float = 100.0
 var g_force_value: float = 1.0
 
 var current_state: CrewPhysiologicalState = CrewPhysiologicalState.NORMAL
@@ -73,10 +65,7 @@ var game_over_panel: Control = null
 var game_over_label: Label = null
 
 func _ready() -> void:
-	_configure_window()
 	_init_procedural_audio()
-	_setup_timers()
-	_setup_audio()
 	_setup_overlay()
 	_connect_system_signals()
 	_update_bridge_position()
@@ -93,24 +82,9 @@ func _process(delta: float) -> void:
 		return
 	_simulate_vital_signs(delta)
 	_update_physiological_state(delta)
-	_update_audio_pacing()
 	_update_overlay_visuals()
 	_update_ui()
-	vital_signs_updated.emit(oxygen_value, temp_value, pressure_value, g_force_value, hr_value)
-
-func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
-	var parent_win := get_parent()
-	while parent_win:
-		if "window_title" in parent_win:
-			parent_win.window_title = APP_TITLE
-			break
-		parent_win = parent_win.get_parent()
-
-func _setup_timers() -> void:
-	if heart_rate_timer:
-		heart_rate_timer.wait_time = 60.0 / maxf(hr_value, 20.0)
-		heart_rate_timer.start()
+	vital_signs_updated.emit(oxygen_value, temp_value, pressure_value, g_force_value)
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -134,26 +108,6 @@ func _simulate_vital_signs(delta: float) -> void:
 		temp_value = float(atmo.get("temperature_c", 21.5))
 		pressure_value = float(atmo.get("pressure_kpa", 101.3))
 		g_force_value = SpaceWorldManager.get_ship_g_force()
-	
-	air_quality_value = clampf((oxygen_value / 21.0) * (pressure_value / 101.3) * 100.0, 0.0, 100.0)
-	
-	# Calcolo dinamico frequenza cardiaca basato su stress fisiologico
-	var target_hr := 72.0
-	if oxygen_value < 18.0:
-		if oxygen_value < 5.0:
-			target_hr = maxf(30.0, oxygen_value * 8.0)
-		else:
-			target_hr += (18.0 - oxygen_value) * 6.0
-	
-	if temp_value > 38.0:
-		target_hr += (temp_value - 38.0) * 3.0
-	elif temp_value < 20.0:
-		target_hr -= (20.0 - temp_value) * 2.0
-		
-	if abs(g_force_value - 1.0) > 0.5:
-		target_hr += (abs(g_force_value) - 1.0) * 15.0
-		
-	hr_value = move_toward(hr_value, clampf(target_hr, 30.0, 200.0), delta * 15.0 if delta > 0.0 else 1.0)
 
 # --- MACCHINA A STATI FISIOLOGICA DELL'EQUIPAGGIO ---
 
@@ -445,7 +399,6 @@ func _setup_diegetic_audio_bus() -> void:
 
 func _init_procedural_audio() -> void:
 	_setup_diegetic_audio_bus()
-	_cached_audio_streams["heartbeat"] = _create_heartbeat_stream()
 	_cached_audio_streams["asphyxia"] = _create_asphyxia_stream()
 	_cached_audio_streams["panting"] = _create_panting_stream()
 	_cached_audio_streams["scream"] = _create_scream_stream()
@@ -469,11 +422,6 @@ static func _create_pcm_wav(duration: float, generator_fn: Callable, mix_rate: i
 		bytes.encode_s16(i * 2, s)
 	wav.data = bytes
 	return wav
-
-static func _create_heartbeat_stream() -> AudioStreamWAV:
-	return _create_pcm_wav(0.25, func(t: float, _dur: float) -> float:
-		return sin(2.0 * PI * 65.0 * t) * exp(-12.0 * t)
-	)
 
 static func _create_asphyxia_stream() -> AudioStreamWAV:
 	return _create_pcm_wav(0.5, func(t: float, dur: float) -> float:
@@ -524,36 +472,13 @@ static func _create_drone_hum_stream() -> AudioStreamWAV:
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	return wav
 
-func _setup_audio() -> void:
-	if heart_rate_timer:
-		if not heart_rate_timer.timeout.is_connected(_on_heart_rate_beat):
-			heart_rate_timer.timeout.connect(_on_heart_rate_beat)
-
-func _update_audio_pacing() -> void:
-	if heart_rate_timer:
-		heart_rate_timer.wait_time = 60.0 / maxf(hr_value, 20.0)
-
-func _on_heart_rate_beat() -> void:
-	if sfx_audio and _cached_audio_streams.has("heartbeat"):
-		sfx_audio.bus = &"SFX" if AudioServer.get_bus_index("SFX") != -1 else &"Master"
-		sfx_audio.volume_db = -4.0
-		sfx_audio.stream = _cached_audio_streams["heartbeat"]
-		sfx_audio.play()
-
 # --- AGGIORNAMENTO UI ---
 
+## Aggiorna il widget compatto in Taskbar: mostra solo i 4 valori vitali essenziali
+## (Ossigeno, Temperatura, Pressione, G-Force), colorati in base alla criticità.
 func _update_ui() -> void:
-	if hr_label:
-		hr_label.text = "FREQ. CARDIACA: %.1f BPM" % hr_value
-		if hr_value > 120.0 or hr_value < 50.0:
-			hr_label.modulate = Color.RED
-		elif hr_value > 100.0 or hr_value < 60.0:
-			hr_label.modulate = Color.YELLOW
-		else:
-			hr_label.modulate = Color.WHITE
-		
 	if oxygen_label:
-		oxygen_label.text = "OSSIGENO: %.1f%%" % oxygen_value
+		oxygen_label.text = "O2 %.0f%%" % oxygen_value
 		if oxygen_value < 12.0:
 			oxygen_label.modulate = Color.RED
 		elif oxygen_value < 18.0:
@@ -562,7 +487,7 @@ func _update_ui() -> void:
 			oxygen_label.modulate = Color.WHITE
 		
 	if temp_label:
-		temp_label.text = "TEMPERATURA: %.1f °C" % temp_value
+		temp_label.text = "%.1f°C" % temp_value
 		if temp_value > 65.0 or temp_value <= 0.0:
 			temp_label.modulate = Color.RED
 		elif temp_value > 45.0 or temp_value < 10.0:
@@ -571,7 +496,7 @@ func _update_ui() -> void:
 			temp_label.modulate = Color.WHITE
 		
 	if pressure_label:
-		pressure_label.text = "PRESSIONE: %.1f kPa" % pressure_value
+		pressure_label.text = "%.0f kPa" % pressure_value
 		if pressure_value < 20.0:
 			pressure_label.modulate = Color.RED
 		elif pressure_value < 70.0:
@@ -579,38 +504,11 @@ func _update_ui() -> void:
 		else:
 			pressure_label.modulate = Color.WHITE
 		
-	if air_quality_label:
-		air_quality_label.text = "QUALITÀ ARIA: %.1f%%" % air_quality_value
-		
 	if g_force_label:
-		g_force_label.text = "GRAVITÀ NAVE: %.2f G" % g_force_value
+		g_force_label.text = "%.1fG" % g_force_value
 		if g_force_value > 4.5 or g_force_value < -1.5:
 			g_force_label.modulate = Color.RED
 		elif g_force_value > 2.5 or g_force_value < 0.0:
 			g_force_label.modulate = Color.YELLOW
 		else:
 			g_force_label.modulate = Color.WHITE
-			
-	if status_label:
-		match current_state:
-			CrewPhysiologicalState.NORMAL:
-				status_label.text = "STATO EQUIPAGGIO: NOMINALE"
-				status_label.modulate = Color.GREEN
-			CrewPhysiologicalState.HYPOXIA:
-				status_label.text = "STATO EQUIPAGGIO: ⚠️ ASFISSIA / IPOSSIA"
-				status_label.modulate = Color.RED
-			CrewPhysiologicalState.HYPERTHERMIA:
-				status_label.text = "STATO EQUIPAGGIO: 🔥 IPERTERMIA CRITICA"
-				status_label.modulate = Color.RED
-			CrewPhysiologicalState.HYPOTHERMIA:
-				status_label.text = "STATO EQUIPAGGIO: ❄️ IPOTERMIA / ASSIDERAMENTO"
-				status_label.modulate = Color.CYAN
-			CrewPhysiologicalState.GLOC_BLACKOUT:
-				status_label.text = "STATO EQUIPAGGIO: ⚡ G-LOC / BLACKOUT"
-				status_label.modulate = Color.RED
-			CrewPhysiologicalState.REDOUT:
-				status_label.text = "STATO EQUIPAGGIO: 🩸 REDOUT VASCOLARE"
-				status_label.modulate = Color.RED
-			CrewPhysiologicalState.DECEASED:
-				status_label.text = "STATO EQUIPAGGIO: ✖ DECESSO (COLLASSO VITALE)"
-				status_label.modulate = Color.DARK_RED

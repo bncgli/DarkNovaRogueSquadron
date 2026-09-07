@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://c6v2n3q80au4m"]
-
-[ext_resource type="Script" path="res://tests/test_software_managers_node.gd" id="1_test_script"]
-
-[node name="TestSoftwareManagers" type="Node"]
-script = ExtResource("1_test_script")

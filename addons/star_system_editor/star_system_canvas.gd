@@ -6,7 +6,7 @@ extends Control
 
 signal entity_selected(body: CelestialBodyData)
 signal sector_clicked(coords: Vector3i)
-signal entity_moved(body_id: String, new_coords: Vector3i)
+signal entity_moved(body_id: String, old_coords: Vector3i, new_coords: Vector3i)
 signal cursor_coords_changed(coords: Vector3i)
 
 var system_data: StarSystemData = null
@@ -32,6 +32,7 @@ var show_sectors_id: bool = true
 var selected_body_id: String = ""
 var is_dragging: bool = false
 var drag_body_id: String = ""
+var drag_start_coords: Vector3i = Vector3i.ZERO
 
 # Colori entità per tipo
 const TYPE_COLORS := {
@@ -44,12 +45,6 @@ const TYPE_COLORS := {
 	"WRECK": Color(0.8, 0.2, 0.2, 1.0),
 	"PATROL": Color(0.9, 0.3, 0.9, 1.0)
 }
-
-func _ready() -> void:
-	clip_contents = true
-	custom_minimum_size = Vector2(400, 300)
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 func reset_view() -> void:
 	zoom_level = 1.0
@@ -98,6 +93,7 @@ func _gui_input(event: InputEvent) -> void:
 				if hit_body:
 					selected_body_id = hit_body.id
 					drag_body_id = selected_body_id
+					drag_start_coords = hit_body.coords
 					is_dragging = true
 					entity_selected.emit(hit_body)
 				else:
@@ -109,7 +105,7 @@ func _gui_input(event: InputEvent) -> void:
 				if is_dragging:
 					is_dragging = false
 					var new_g_coords := screen_to_grid_coords(mb.position)
-					entity_moved.emit(drag_body_id, new_g_coords)
+					entity_moved.emit(drag_body_id, drag_start_coords, new_g_coords)
 					drag_body_id = ""
 					queue_redraw()
 		elif mb.button_index == MOUSE_BUTTON_RIGHT:

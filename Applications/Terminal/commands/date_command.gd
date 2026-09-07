@@ -75,8 +75,6 @@ func get_month_string(month: Time.Month) -> String:
 			return "March"
 		Time.MONTH_APRIL:
 			return "April"
-		Time.WEEKDAY_THURSDAY:
-			return "Thursday"
 		Time.MONTH_MAY:
 			return "May"
 		Time.MONTH_JUNE:
@@ -84,9 +82,9 @@ func get_month_string(month: Time.Month) -> String:
 		Time.MONTH_JULY:
 			return "July"
 		Time.MONTH_AUGUST:
-			return "AUGUST"
+			return "August"
 		Time.MONTH_SEPTEMBER:
-			return "Setember"
+			return "September"
 		Time.MONTH_OCTOBER:
 			return "October"
 		Time.MONTH_NOVEMBER:

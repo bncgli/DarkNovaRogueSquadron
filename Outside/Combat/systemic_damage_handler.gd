@@ -264,8 +264,8 @@ func _sync_with_space_world_manager(systemic_events: Array[Dictionary]) -> void:
 				var m_type: String = evt.get("malfunction_type")
 				if m_type == "dmg_breach" or m_type == "short_circuit":
 					var damage_type := "breach" if m_type == "dmg_breach" else "short_circuit"
-					if swm_node.has_method("report_ship_damage"):
-						swm_node.report_ship_damage(damage_type, evt.get("room"), Vector2.ZERO)
+					if swm_node.has_method("spawn_ship_damage"):
+						swm_node.spawn_ship_damage(damage_type, Vector2.ZERO, str(evt.get("room", "")))
 
 ## Imposta il bilanciamento scudi (usato da ShieldMatrixApp)
 func set_shield_quadrant_value(quadrant: GlobalValues.Quadrant, value: float) -> void:

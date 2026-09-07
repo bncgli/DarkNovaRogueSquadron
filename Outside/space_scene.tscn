@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://kum551xxjfdh"]
+[gd_scene format=3 uid="uid://kum551xxjfdh"]
 
-[ext_resource type="Script" path="res://Outside/space_scene.gd" id="1_space_scene_script"]
-[ext_resource type="PackedScene" path="res://Outside/spaceship.tscn" id="1_ship"]
-[ext_resource type="PackedScene" path="res://Outside/asteroid.tscn" id="2_asteroid"]
+[ext_resource type="PackedScene" uid="uid://cor6md0ymrc48" path="res://Outside/spaceship.tscn" id="1_ship"]
+[ext_resource type="Script" uid="uid://bxl3vm37tbj2x" path="res://Outside/space_scene.gd" id="1_space_scene_script"]
+[ext_resource type="PackedScene" uid="uid://c8q4v1p7y2yam" path="res://Outside/asteroid.tscn" id="2_asteroid"]
+[ext_resource type="Script" uid="uid://bxs8j135lkvxi" path="res://Outside/Skybox/dynamic_space_skybox.gd" id="3_dynamic_skybox"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_space"]
 sky_top_color = Color(0.015, 0.018, 0.035, 1)
@@ -34,68 +35,67 @@ radius = 0.08
 height = 0.16
 
 [sub_resource type="Curve" id="Curve_star_fade"]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.2, 1), 0.0, 0.0, 0, 0, Vector2(0.8, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.25139666, 0.49438208), 0.0, 0.0, 0, 0, Vector2(0.7597765, 0.49438208), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
 point_count = 4
 
-[node name="SpaceScene" type="Node3D"]
+[node name="SpaceScene" type="Node3D" unique_id=1787659512]
 script = ExtResource("1_space_scene_script")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=467042784]
 environment = SubResource("Environment_space")
 
-[node name="SunLight" type="DirectionalLight3D" parent="."]
+[node name="SunLight" type="DirectionalLight3D" parent="." unique_id=731141220]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 10, 0)
 light_color = Color(1, 0.96, 0.9, 1)
 light_energy = 1.3
 shadow_enabled = true
 
-[node name="SpaceDustParticles" type="CPUParticles3D" parent="."]
-amount = 150
-lifetime = 6.0
-preprocess = 3.0
+[node name="DynamicSpaceSkybox" type="Node3D" parent="."]
+script = ExtResource("3_dynamic_skybox")
+
+[node name="SpaceDustParticles" type="CPUParticles3D" parent="." unique_id=581974049]
+amount = 50
 mesh = SubResource("SphereMesh_star")
-emission_shape = 3
-emission_box_extents = Vector3(50, 30, 50)
+emission_shape = 1
+emission_sphere_radius = 5.0
 gravity = Vector3(0, 0, 0)
-initial_velocity_min = 0.1
-initial_velocity_max = 0.5
 scale_amount_curve = SubResource("Curve_star_fade")
 
-[node name="Spaceship" parent="." instance=ExtResource("1_ship")]
+[node name="Spaceship" parent="." unique_id=1559907296 instance=ExtResource("1_ship")]
 
-[node name="Asteroids" type="Node3D" parent="."]
+[node name="Asteroids" type="Node3D" parent="." unique_id=1918189465]
 
-[node name="Asteroid_Ahead1" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Ahead1" parent="Asteroids" unique_id=1001879488 instance=ExtResource("2_asteroid")]
 transform = Transform3D(2.5, 0, 0, 0, 2, 0, 0, 0, 2.8, 0, 8, -65)
 
-[node name="Asteroid_AheadRight" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_AheadRight" parent="Asteroids" unique_id=1118810617 instance=ExtResource("2_asteroid")]
 transform = Transform3D(3.8, 0, 0, 0, 3.5, 0, 0, 0, 4, 45, -6, -110)
 
-[node name="Asteroid_AheadLeft" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_AheadLeft" parent="Asteroids" unique_id=820493796 instance=ExtResource("2_asteroid")]
 transform = Transform3D(1.8, 0, 0, 0, 1.5, 0, 0, 0, 2, -32, 12, -50)
 
-[node name="Asteroid_LeftWing" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_LeftWing" parent="Asteroids" unique_id=1422242436 instance=ExtResource("2_asteroid")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3.2, -65, 2, 15)
 
-[node name="Asteroid_RightWing" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_RightWing" parent="Asteroids" unique_id=1675680760 instance=ExtResource("2_asteroid")]
 transform = Transform3D(2.2, 0, 0, 0, 2.5, 0, 0, 0, 2, 60, 10, -25)
 
-[node name="Asteroid_Rear" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Rear" parent="Asteroids" unique_id=541521722 instance=ExtResource("2_asteroid")]
 transform = Transform3D(3.5, 0, 0, 0, 3, 0, 0, 0, 3.8, 15, -18, 85)
 
-[node name="Asteroid_Dorsal" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Dorsal" parent="Asteroids" unique_id=900989281 instance=ExtResource("2_asteroid")]
 transform = Transform3D(4.2, 0, 0, 0, 3.8, 0, 0, 0, 4.5, 8, 55, -35)
 
-[node name="Asteroid_Ventral" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Ventral" parent="Asteroids" unique_id=884125158 instance=ExtResource("2_asteroid")]
 transform = Transform3D(3.6, 0, 0, 0, 3.2, 0, 0, 0, 3.4, -18, -45, -40)
 
-[node name="Asteroid_Close1" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Close1" parent="Asteroids" unique_id=1676925037 instance=ExtResource("2_asteroid")]
 transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 1.4, 16, 5, -30)
 
-[node name="Asteroid_Close2" parent="Asteroids" instance=ExtResource("2_asteroid")]
+[node name="Asteroid_Close2" parent="Asteroids" unique_id=1004641459 instance=ExtResource("2_asteroid")]
 transform = Transform3D(1.5, 0, 0, 0, 1.3, 0, 0, 0, 1.5, -20, -7, -38)
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1769021363]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2.5, 6)
 current = true
 fov = 70.0

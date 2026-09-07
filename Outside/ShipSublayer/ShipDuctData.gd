@@ -26,8 +26,8 @@ func to_dict() -> Dictionary:
 	}
 
 func from_dict(data: Dictionary) -> void:
-	id = data.get("id")
-	name = data.get("name")
+	id = str(data.get("id", id))
+	name = str(data.get("name", name))
 	
 	if data.has("from"):
 		if data["from"] is Array and data["from"].size() == 2:

@@ -53,6 +53,9 @@ var target_synced_transform: Transform3D = Transform3D.IDENTITY
 var target_synced_linear_velocity: Vector3 = Vector3.ZERO
 var target_synced_angular_velocity: Vector3 = Vector3.ZERO
 
+# Blocco cinematico del movimento (es. durante l'attracco a una stazione)
+var movement_locked: bool = false
+
 signal ship_connection_changed(is_connected: bool)
 
 func _ready() -> void:
@@ -199,15 +202,15 @@ func _update_g_force(delta: float) -> void:
 		elif ctrl_state == 2: # ENGAGED
 			current_g_force = 6.2
 			return
-		elif ctrl_state == 3: # EMERGENCY_DROP
+		elif ctrl_state == 4: # EMERGENCY_DROP
 			current_g_force = -2.5
 			return
 
 	var target_g := 1.0
 	if linear_input.length_squared() > 0.001:
-		var fwd_accel := -linear_input.z * (linear_acceleration / 9.8)
 		var vert_accel := linear_input.y * (linear_acceleration / 9.8)
-		target_g = 1.0 + fwd_accel + vert_accel * 0.5
+		var ang_accel := pow(angular_input.x, 2) * (angular_acceleration / 9.8)
+		target_g = 1.0 + ang_accel * 2 + vert_accel * 0.5
 	current_g_force = move_toward(current_g_force, target_g, delta * 4.0)
 
 func _apply_client_interpolation(delta: float) -> void:
@@ -221,6 +224,14 @@ func _apply_client_interpolation(delta: float) -> void:
 	
 	linear_velocity = target_synced_linear_velocity
 	angular_velocity = target_synced_angular_velocity
+
+func set_movement_locked(locked: bool) -> void:
+	movement_locked = locked
+	if locked:
+		stop_engines()
+
+func get_movement_locked() -> bool:
+	return movement_locked
 
 func set_ship_connected(connected: bool) -> void:
 	if is_ship_connected != connected:
@@ -274,6 +285,12 @@ func get_network_state() -> Dictionary:
 	}
 
 func _apply_flight_physics(delta: float) -> void:
+	# Blocco cinematico esterno (es. attracco a stazione): annulla ogni movimento residuo
+	if movement_locked:
+		linear_velocity = Vector3.ZERO
+		angular_velocity = Vector3.ZERO
+		return
+	
 	# Se Cruise Mode è attiva o RCS è bloccato da cruise controller, non applicare i controlli RCS ordinari
 	if cruise_controller and is_instance_valid(cruise_controller):
 		var ctrl_state: int = int(cruise_controller.get("current_state"))

@@ -1,8 +1,16 @@
 class_name GameNetworkManager
 extends Node
 
-## NetworkManager: Singleton per la gestione multiplayer, ciurma, ruoli e comunicazioni.
-## Progettato per essere agnostico rispetto al trasporto (ENet, Steamworks, Nakama).
+## NetworkManager: sistema multiplayer completo e MANTENUTO del progetto (non un placeholder).
+## Gestisce lobby/ciurma, ruoli (RBAC), chat di bordo, sincronizzazione delle risorse di
+## sessione (ShipBlueprint / StarSystemData) e l'avvio/fine missione, esponendo un'API pubblica
+## stabile (segnali, metodi RPC, `player_role`, ecc.) usata da tutto il resto della codebase.
+##
+## Il backend di trasporto di rete è incapsulato dietro l'interfaccia astratta `NetworkTransport`
+## (vedi `network_transport.gd`): l'implementazione corrente è `ENetTransport` (ENet/LAN diretto),
+## ma il confine è pensato per accogliere in futuro backend alternativi (es. Steamworks, Nakama)
+## semplicemente fornendo una nuova sottoclasse a `set_transport()`, senza toccare l'API pubblica
+## né i chiamanti esterni (RPC, segnali, RBAC restano invariati).
 
 signal lobby_updated(players_dict: Dictionary)
 signal session_resources_updated(ship_blueprint_info: Dictionary, star_system_info: Dictionary)
@@ -226,6 +234,7 @@ func disconnect_game() -> void:
 	is_connected_to_network = false
 	is_solo_mode = false
 	is_mission_started = false
+	is_headless_server = false
 	local_peer_id = 1
 	
 	# Reset risorse sessione

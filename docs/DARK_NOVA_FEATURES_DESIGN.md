@@ -158,11 +158,11 @@ Ad uso esclusivo dello sviluppatore per attività di debug, test e override rapi
 | **Shield Matrix** | `Ship Drive/Programs/ShieldMatrix/` | `SHLD-7815` | `shields_config.dat`, `deflector_tuning.dat` |
 | **Comms & EW** | `Ship Drive/Programs/Comms/` | `COMM-7815` | `comms_config.dat`, `crypto_tuning.dat` |
 | **System Diagnostics** | `Ship Drive/Programs/Diagnostics/` | `DIAG-7815` | `diagnostics_config.dat`, `security_tuning.dat` |
-| **Sensors (Roadmap)** | `Ship Drive/Programs/Sensors/` | `SENS-7815` | `sensors_config.dat`, `radar_tuning.dat` |
+| **Sensors** | `Ship Drive/Programs/Sensors/` | `SENS-7815` | `sensors_config.dat`, `radar_tuning.dat` |
 | **Life Support (Roadmap)** | `Ship Drive/Programs/LifeSupport/` | `LIFE-7815` | `life_support_config.dat`, `atmo_tuning.dat` |
 | **Logbook (Roadmap)** | `Ship Drive/Programs/Logbook/` | `LOGS-7815` | `logbook_config.dat`, `journal_tuning.dat` |
 | **Service Drone (Roadmap)** | `Ship Drive/Programs/ServiceDrone/` | `SERV-7815` | `service_drone_config.dat`, `manipulator_tuning.dat` |
-| **Cargo Bay & FLUX** | `Ship Drive/Programs/CargoBay/` | `CARG-7815` | `cargo_bay_config.dat` |
+| **Cargo Bay** | `Ship Drive/Programs/CargoBay/` | `CARG-7815` | `cargo_bay_config.dat` |
 | **Flux Wallet** | `Ship Drive/Programs/FluxWallet/` | `FLUX-7815` | `flux_wallet_config.dat` |
 | **Hub Servizi Portuali** | `Ship Drive/Programs/StationHub/` | `STTN-7815` | `station_hub_config.dat` |
 | **System Map** | `Ship Drive/Programs/SystemMap/` | `MAPS-7815` | `system_map_config.dat` |
@@ -254,34 +254,44 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
   - Protezione diegetica dei file `.dat`: il comando `cat` rifiuta la lettura grezza dei file di configurazione per preservare l'integrità del sistema.
 
 ### 4.7 Tactical Weapons & Point Defense (`Applications/Weapons`)
-- **Scopo**: Gestione, puntamento e ingaggio dei sistemi d'arma di bordo (Torrette Laser binate, Siluri e PDG).
+- **Scopo**: Puntamento manuale della torretta di bordo (mouse o slider Yaw/Pitch) con quattro sistemi d'arma intercambiabili — Mitragliatrice Pesante, Cannone Pesante a Impulsi, Missili a Ricerca Termica e Sonda Telemetrica — radar tattico con lock bersaglio, calcolo del punto di anticipo balistico (lead indicator) e HUD di traiettoria diegetico, oltre a un modulo Point-Defense automatico (PDG Auto) contro minacce ravvicinate.
 - **Finestra**: `weapons_app.tscn` (Dimensioni: `720x520`).
-- **Ruolo**: **Soldato** (Override: Capitano/Factotum).
+- **Flusso Utente**:
+  1. Il Soldato apre l'app, cattura il puntatore mouse (Barra Spaziatrice, rilascio con ESC) e orienta la torretta (Yaw ±60°, Pitch -35°/+45°) con il mouse o gli slider dedicati.
+  2. Seleziona il sistema d'arma attivo con i tasti `1`-`4` o i pulsanti dedicati (Mitragliatrice Pesante, Cannone Pesante, Missili, Sonda).
+  3. Seleziona un bersaglio dal radar tattico o dal menu a tendina e preme "Aggancia Lock"; per i missili è necessario mantenere il reticolo allineato al bersaglio per 2 secondi (o confermare il lock radar) prima del lancio.
+  4. Fa fuoco con il pulsante dedicato o il click sinistro del mouse: ogni sistema consuma la propria scorta di munizioni/carica dei condensatori e genera calore sulle canne, monitorato dalla barra "Calore".
+  5. Al raggiungimento del 100% di calore il fuoco viene bloccato fino al raffreddamento naturale o all'attivazione dello "Scarico Termico d'Emergenza" (azzera il calore, soggetto a tempo di ricarica).
+  6. Il PDG Automatico, se attivo, ingaggia autonomamente con la Mitragliatrice Pesante i bersagli ostili o quelli entro 65 m di distanza.
+  7. Il pulsante "Ricarica Riserve" ripristina al 100% tutte le scorte munizioni e i condensatori.
+- **Ruolo**: **Soldato** (Override: Capitano/Factotum/Stagista; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Weapons/`, file `weapons_config.dat` e `ammo_tuning.dat` (Password debug: `WEAP-7815`).
 
-### 4.8 Shield Matrix & Hull Deflectors (`Applications/ShieldMatrix`)
-- **Scopo**: Gestione, distribuzione e bilanciamento della barriera deflettente energetica a 4 quadranti (Prua, Poppa, Babordo, Tribordo).
-- **Finestra**: `shield_matrix_app.tscn` (Dimensioni: `620x460`).
+### 4.8 Shield Matrix & Point-Defense Direzionale (`Applications/ShieldMatrix`)
+- **Scopo**: Vista divisa in due sezioni: a sinistra l'ologramma interattivo e il bilanciamento energetico dei 4 quadranti scudo (Prua, Poppa, Babordo, Tribordo); a destra la gestione dinamica dei dispositivi di difesa direzionale montati a bordo (torrette Gatling anti-cinetiche e lanciatori Flack Angel-Hair anti-missile a guida autonoma), ciascuno assegnabile a un singolo quadrante di provenienza della minaccia.
+- **Finestra**: `shield_matrix_app.tscn` (Dimensioni: `800x520`).
 - **Flusso Utente**:
-  1. L'Ingegnere apre l'app dal menu Start o Taskbar.
-  2. Monitora lo stato energetico e l'integrità dei 4 quadranti attraverso il visualizzatore olografico e le barre telemetriche.
-  3. Utilizza gli slider dedicati o il Vector Pad 2D per sbilanciare la protezione verso la direzione dei pericoli/impatti.
-  4. In caso di emergenza, attiva la **Ricarica Rapida d'Emergenza** per un boost istantaneo di energia deflettente al costo di un picco di assorbimento (120 MW).
-  5. Sincronizza le armoniche di fase (440.0 Hz) per massimizzare stabilità ed efficienza di assorbimento.
-- **Ruolo**: **Ingegnere** (Override: Capitano/Factotum; Solo Mode: controllo totale).
+  1. L'Ingegnere apre l'app dal menu Start o Taskbar e monitora l'integrità e la ricarica dei 4 quadranti attraverso il visualizzatore olografico e le barre telemetriche.
+  2. Utilizza gli slider percentuali dedicati o il Vector Pad 2D per sbilanciare la capacità massima verso il quadrante desiderato (ogni quadrante resta vincolato tra il 5% e il 70% del totale).
+  3. In caso di emergenza, attiva la **Ricarica Rapida** per un boost istantaneo di energia deflettente ai quadranti (soggetto a tempo di ricarica).
+  4. Sincronizza le armoniche di fase (440.0 Hz di default) per modificare la velocità di ricarica dei quadranti; la disattivazione riduce l'efficienza di rigenerazione.
+  5. Nel pannello destro assegna ciascun dispositivo difensivo (Gatling o Flack) al quadrante da coprire: quando un proiettile o missile in arrivo viene rilevato nel settore corrispondente e a portata, il dispositivo lo intercetta o lo devia automaticamente consumando le proprie munizioni; "Ricarica Tutti i Dispositivi" ripristina le scorte al 100%.
+  6. I danni strutturali che colpiscono lo scudo (`shields_degraded`) riducono la capacità massima del quadrante Babordo interessato.
+- **Ruolo**: **Ingegnere** (Override: Capitano/Factotum/Stagista; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ShieldMatrix/`, file `shields_config.dat` e `deflector_tuning.dat` (Password debug: `SHLD-7815`).
 
-### 4.9 Communications, Electronic Warfare & Hackwarfare (`Applications/Comms`)
-- **Scopo**: Suite integrata per comunicazioni subspaziali radio, ricezione di richieste di soccorso (SOS) da relitti o colonie, contromisure di guerra elettronica (Electronic Warfare - Jamming & Spoofing IFF) e strumenti di intrusione/decodifica crittografica (Hackwarfare).
+### 4.9 Communications & Directional Antenna Array (`Applications/Comms`)
+- **Scopo**: Suite di ricezione radio subspaziale tramite antenna direzionale orientabile (manuale, auto-rotazione a 360° o Frequency Lock di tracking), waterfall display procedurale, sintonizzazione su portanti note (SOS, Relay Subspaziale, Canale Pirata), gestione delle procedure di attracco/emergenza/commercio con le stazioni spaziali e intrusione EW per montare il drive remoto di un'imbarcazione bersaglio agganciata.
 - **Finestra**: `comms_app.tscn` (Dimensioni: `680x480`).
 - **Flusso Utente**:
-  1. L'Hacker o il Capitano apre l'app dal menu Start o Taskbar.
-  2. Utilizza il sintonizzatore di frequenze RF e il visualizzatore Waterfall Display procedurale per agganciare le portanti attive (es. SOS Emergenza a 850.5 MHz, Relay Subspaziale a 1420.0 MHz, Canale Pirata a 2185.2 MHz).
-  3. Preme "Registra Trascrizione" per trascrivere i messaggi nel registro di bordo diegetico.
-  4. Attiva l'emettitore Jammer modulando la potenza da 50 a 180 MW per disturbare i radar nemici e deviare missili guidati, o seleziona una firma transponder per lo Spoofing IFF (`CORVETTE_CIVILIAN`, `CARGO_HAULER_MINING`, `DERELICT_DEBRIS`, `MILITARY_ESCORT`).
-  5. Nel modulo Hackwarfare, seleziona pacchetti crittografati recuperati da sonde o relitti, avvia la decodifica in tempo reale ed esporta le chiavi/password estratte direttamente su `Ship Drive` (`intercepted_crypto_key.txt`).
-- **Ruolo**: **Hacker** / **Capitano** (Override: Factotum; Solo Mode: controllo totale).
+  1. L'Hacker o il Capitano orienta l'antenna direzionale con lo slider (0-360°) o attiva la rotazione automatica continua (a scapito di portata e rapporto segnale/rumore); il Frequency Lock mantiene invece l'antenna puntata sulla sorgente sintonizzata.
+  2. Sintonizza la frequenza manualmente con lo slider o con i pulsanti rapidi (SOS Emergenza a 850.5 MHz, Relay Subspaziale a 1420.0 MHz, Canale Pirata a 2185.2 MHz); il waterfall e il badge di aggancio mostrano la qualità del segnale (SNR), dipendente dall'angolo di puntamento rispetto al cono di ricezione (±25° di default) e dalla distanza della sorgente.
+  3. Con SNR sufficiente preme "Ascolta / Trascrivi" per registrare il messaggio nel registro comunicazioni diegetico.
+  4. Se la sorgente sintonizzata è una stazione spaziale, può richiedere l'autorizzazione di attracco (integrazione con `DockingManager`), aprire il canale d'emergenza riservato o richiedere il bollettino commerciale della stazione.
+  5. Se la sorgente è un vascello bersaglio (nave nemica o relitto) e il segnale è sufficientemente forte e vicino (SNR ≥ 75%, distanza < 1200 m), può premere "Connetti a Drive Bersaglio" per montare il drive remoto del bersaglio sul filesystem di GodotOS e lanciare automaticamente la suite *Hack Exploits*.
+- **Ruolo**: **Hacker** / **Capitano** (Override: Factotum/Stagista; Solo Mode: controllo totale).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Comms/`, file `comms_config.dat` e `crypto_tuning.dat` (Password debug: `COMM-7815`).
+- **Nota di Allineamento**: le funzionalità di Jamming, Spoofing IFF e decodifica crittografica in-app precedentemente descritte in questa sezione non sono implementate in `comms_app.gd`; l'accesso ai sistemi del bersaglio avviene tramite l'app *Hack Exploits* (`Applications/HackExploits`), lanciata automaticamente dopo la connessione al drive remoto.
 
 ### 4.10 System Diagnostics, Cyber Security & ICE Defense (`Applications/Diagnostics`)
 - **Scopo**: Centro di sicurezza informatica, diagnostica d'integrità dei drive virtuali, scansione e bonifica da minacce malware/trojan, gestione nodi barriera ICE (Intrusion Countermeasure Electronics) e ripristino di fabbrica dei firmware `.dat`.
@@ -296,18 +306,18 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Diagnostics/`, file `diagnostics_config.dat` e `security_tuning.dat` (Password debug: `DIAG-7815`).
 
 ### 4.11 Long-Range Sensor Array & Tactical Map (`Applications/Sensors`)
-- **Scopo**: Sistema di scansione e telemetria subspaziale a lungo raggio per mappare corpi celesti, campi di asteroidi, stazioni orbitali, navi nemiche e relitti derelitti fino a 50 km di distanza.
+- **Scopo**: Radar tattico di bordo con sweep passivo continuo (portata standard 1000 m) e impulso Ping Attivo a raggio esteso (2000 m, maggiore assorbimento energetico e tempo di ricarica), occlusione realistica Line-of-Sight da ostacoli solidi (asteroidi, relitti, stazioni), integrazione con il feed di eventuali sonde telemetriche lanciate (che rivelano i contatti nella propria area di scansione anche se occlusi rispetto alla nave) e trasmissione di waypoint tattici a *Flight Control* e *Weapons*.
 - **Flusso Utente e Finestre**:
   - **Finestra Principale (`sensors_app.tscn`, `750x550`)**:
-    - Radar tattico 2D/3D circolare con zoom multilivello e filtri selettivi (Massa, Segnature Elettromagnetiche, Segnali IFF Amico/Nemico).
-    - Modalità di scansione: **"Scansione Passiva"** (invisibile ai nemici, basso assorbimento energetico) e **"Ping Attivo"** (massima portata e risoluzione istantanea, ma rivela la posizione della nave a tutti i vascelli nel settore).
-    - Modulo di analisi spettrometrica per scansionare la composizione minerale degli asteroidi o i moduli ancora integri nei relitti da saccheggiare.
-    - Pulsante "Invia Coordinate": trasmette i waypoint dei bersagli rilevati direttamente al *Flight Control* del Pilota e all'app *Weapons* del Soldato.
-- **Ruolo Assegnato**: **Soldato** / **Hacker** (Pieno controllo dello sweep, analisi e marcatura bersagli; gli altri membri dell'equipaggio ricevono i contatti marcati).
+    - Radar tattico con tre modalità di visualizzazione selezionabili (Polare 2D, Griglia Cartesiana, Elevazione 3D).
+    - Modalità di scansione: **"Sweep Passivo"** (continuo, assorbimento 40 MW) e **"Ping Attivo"** (raggio esteso a 2000 m, risoluzione istantanea, assorbimento 120 MW, soggetto a tempo di ricarica di 4s).
+    - Pannello di telemetria del contatto selezionato (distanza, azimut, elevazione, velocità relativa, massa stimata, segnatura elettromagnetica) e pannello di stato del feed sonda telemetrica attiva.
+    - Pulsanti "Lock Bersaglio" (aggancia il contatto selezionato), "Trasmetti Waypoint" (invia le coordinate del bersaglio a *Flight Control* e *Weapons*) e "Cancella Waypoint"; è inoltre possibile piazzare un waypoint libero cliccando direttamente sul radar.
+- **Ruolo Assegnato**: **Soldato** / **Hacker** (Pieno controllo dello sweep, lock e marcatura bersagli; gli altri membri dell'equipaggio ricevono solo i contatti/waypoint condivisi).
 - **Integrazione con i Sublayer e la Simulazione 3D**:
   - Interagisce direttamente con `SpaceWorldManager` per interrogare le entità 3D presenti nello spazio di gioco.
-  - **Sublayer 3 (Rete Elettrica)**: Collegato al nodo avionica e radar (`sensors_radar`, assorbimento 120 MW).
-  - **Sublayer 4 (Danni)**: Guasti all'array generano "segnali fantasma" (radar ghosts) o zone d'ombra cieche nella mappa.
+  - **Sublayer 3 (Rete Elettrica)**: assorbimento 40 MW in sweep passivo, 120 MW durante il Ping Attivo.
+  - **Sublayer 4 (Danni)**: Guasti all'array generano "segnali fantasma" (radar ghosts) segnalati da un badge dedicato nella mappa.
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/Sensors/`, file `sensors_config.dat` e `radar_tuning.dat` (Password debug: `SENS-7815`).
 
 ### 4.12 Life Support & Atmosphere Control (`Applications/LifeSupport`)
@@ -355,9 +365,15 @@ La tabella seguente specifica l'accesso e i permessi di controllo per ciascun ru
   - **Sublayer 4 (Danni)**: Ripara direttamente le coordinate dei danni allo scafo esterno registrati dal sistema di diagnostica (`dmg_breach` e usura scafo).
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/ServiceDrone/`, file `service_drone_config.dat` e `manipulator_tuning.dat` (Password debug: `SERV-7815`).
 
-### 4.15 Stiva Cargo & FLUX (`Applications/CargoBay`)
-- **Scopo**: Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net.
+### 4.15 Stiva Cargo (`Applications/CargoBay`)
+- **Scopo**: Gestione dell'inventario di stiva con monitoraggio dei limiti di massa e volume, dettaglio dei singoli articoli caricati (quantità, massa/volume unitari e totali, valore stimato in crediti) e segnalazione visiva di merci di contrabbando o dischi snapshot S-Net recuperati (con relativo stato di cifratura ICE), oltre all'espulsione (jettison) del carico selezionato.
 - **Finestra**: `cargo_bay_app.tscn` (Dimensioni: `760x560`).
+- **Flusso Utente**:
+  1. Un membro dell'equipaggio apre l'app e consulta le barre di occupazione massa/volume della stiva rispetto ai limiti configurati.
+  2. Seleziona un articolo dalla lista per visualizzarne i dettagli completi, incluse eventuali etichette `[ILLEGALE]` per il contrabbando o `[S-NET: ICE-BLOCCATO]` / `[S-NET: DECRIPTATO]` per i dischi dati recuperati.
+  3. Preme "Espelli" per gettare in spazio aperto un'unità dell'articolo selezionato.
+  4. I limiti massa/volume vengono ricaricati a caldo (hot-reload) dal file `.dat` non appena modificato su `Ship Drive`.
+- **Nota di Allineamento**: la gestione del rating economico FLUX è demandata all'app *Flux Wallet* (`Applications/FluxWallet`); la decrittazione dei dischi S-Net avviene tramite le meccaniche dedicate dell'Hacker (*Hack Exploits* / *Diagnostics*), non all'interno di `CargoBayApp`.
 - **Integrazione .DAT**: Cartella protetta `Ship Drive/Programs/CargoBay/`, file `cargo_bay_config.dat` (Password debug: `CARG-7815`).
 
 ### 4.16 Flux Wallet (`Applications/FluxWallet`)

@@ -484,11 +484,14 @@ func _get_selected_element_data() -> Dictionary:
 		return {}
 	match selected_type:
 		"room":
-			return blueprint.get_room_by_id(selected_id).to_dict()
+			var room := blueprint.get_room_by_id(selected_id)
+			return room.to_dict() if room else {}
 		"duct":
-			return blueprint.get_duct_by_id(selected_id).to_dict()
+			var duct := blueprint.get_duct_by_id(selected_id)
+			return duct.to_dict() if duct else {}
 		"damage":
-			return blueprint.get_damage_by_id(selected_id).to_dict()
+			var dmg := blueprint.get_damage_by_id(selected_id)
+			return dmg.to_dict() if dmg else {}
 		"device":
 			var dev := blueprint.get_device_by_id(selected_id)
 			return dev.to_dict() if dev else {}

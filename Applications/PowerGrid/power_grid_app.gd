@@ -287,7 +287,7 @@ func _update_inspector() -> void:
 
 func _update_system_effects(active_categories: Dictionary) -> void:
 	var categories := [
-		"defence", "mainframe", "comms", "tactical", "propulsion", 
+		"defense", "mainframe", "comms", "tactical", "propulsion", 
 		"service", "sensors", "life_support", "command", "engineering", "cargo"
 	]
 	
@@ -321,7 +321,7 @@ func autobalance_grid() -> void:
 	_print_terminal("[color=#ffaa00]Bilanciamento automatico: spegnimento stanze non essenziali...[/color]")
 	
 	# Simple heuristic: shut down until net_power >= 0
-	var priority_order := ["cargo", "service", "mainframe", "engineering", "comms", "sensors", "tactical", "defence", "propulsion", "command", "life_support"]
+	var priority_order := ["cargo", "service", "mainframe", "engineering", "comms", "sensors", "tactical", "defense", "propulsion", "command", "life_support"]
 	
 	for cat_to_cut in priority_order:
 		if net_power_mw >= 0: break

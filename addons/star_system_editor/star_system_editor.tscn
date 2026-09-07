@@ -1,0 +1,299 @@
+[gd_scene format=3 uid="uid://cfslhhn6hqw5s"]
+
+[ext_resource type="Script" uid="uid://t6vy788fji4l" path="res://addons/star_system_editor/star_system_editor.gd" id="1_editor"]
+[ext_resource type="Script" uid="uid://dsqwkd6c04347" path="res://addons/star_system_editor/star_system_canvas.gd" id="2_canvas"]
+
+[node name="StarSystemEditor" type="Control"]
+custom_minimum_size = Vector2(850, 550)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_editor")
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopToolbar" type="HBoxContainer" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="BtnNew" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Crea un nuovo sistema stellare vuoto"
+text = "Nuovo"
+
+[node name="BtnOpen" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Carica una risorsa .tres/.res di sistema stellare"
+text = "Apri..."
+
+[node name="BtnSave" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Salva il sistema stellare corrente"
+text = "Salva"
+
+[node name="BtnSaveAs" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Salva con un nuovo nome di file"
+text = "Salva con nome..."
+
+[node name="VSeparator1" type="VSeparator" parent="MainVBox/TopToolbar"]
+layout_mode = 2
+
+[node name="BtnExportJson" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Esporta la configurazione del sistema in formato JSON"
+text = "Esporta JSON"
+
+[node name="BtnImportJson" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Importa la configurazione da file JSON"
+text = "Importa JSON"
+
+[node name="VSeparator2" type="VSeparator" parent="MainVBox/TopToolbar"]
+layout_mode = 2
+
+[node name="LblCurrentFile" type="Label" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Helios Nova System"
+
+[node name="CreationToolbar" type="HBoxContainer" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="LblAdd" type="Label" parent="MainVBox/CreationToolbar"]
+layout_mode = 2
+text = "Aggiungi:"
+
+[node name="BtnAddStar" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Stella"
+
+[node name="BtnAddPlanet" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Pianeta"
+
+[node name="BtnAddGasGiant" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Gigante Gassoso"
+
+[node name="BtnAddMoon" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Luna"
+
+[node name="BtnAddStation" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Stazione"
+
+[node name="BtnAddAsteroid" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Asteroidi"
+
+[node name="BtnAddWreck" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Relitto"
+
+[node name="BtnAddPatrol" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Pattuglia"
+
+[node name="VSeparator1" type="VSeparator" parent="MainVBox/CreationToolbar"]
+layout_mode = 2
+
+[node name="BtnDeleteSelected" type="Button" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Elimina l'entità celeste selezionata"
+text = "Elimina"
+
+[node name="VSeparator2" type="VSeparator" parent="MainVBox/CreationToolbar"]
+layout_mode = 2
+
+[node name="ChkGrid" type="CheckBox" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Griglia"
+
+[node name="ChkOrbits" type="CheckBox" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Orbite"
+
+[node name="ChkShadows" type="CheckBox" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Coni Ombra"
+
+[node name="ChkLabels" type="CheckBox" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Etichette"
+
+[node name="ChkSecIds" type="CheckBox" parent="MainVBox/CreationToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "ID Settori"
+
+[node name="HSplitMain" type="HSplitContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LeftOutliner" type="VBoxContainer" parent="MainVBox/HSplitMain"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="LblOutlinerTitle" type="Label" parent="MainVBox/HSplitMain/LeftOutliner"]
+layout_mode = 2
+text = "Corpi Celesti & Macro-Entità"
+
+[node name="OutlinerTree" type="Tree" parent="MainVBox/HSplitMain/LeftOutliner"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+
+[node name="HSplitRight" type="HSplitContainer" parent="MainVBox/HSplitMain"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CanvasContainer" type="VBoxContainer" parent="MainVBox/HSplitMain/HSplitRight"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ViewBar" type="HBoxContainer" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer"]
+layout_mode = 2
+
+[node name="BtnResetView" type="Button" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer/ViewBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Centra Vista"
+
+[node name="LblZoomCaption" type="Label" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer/ViewBar"]
+layout_mode = 2
+text = " Zoom:"
+
+[node name="ZoomSlider" type="HSlider" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer/ViewBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+min_value = 0.2
+max_value = 3.0
+step = 0.05
+value = 1.0
+
+[node name="LblZoom" type="Label" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer/ViewBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100%"
+
+[node name="Canvas" type="Control" parent="MainVBox/HSplitMain/HSplitRight/CanvasContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+clip_contents = true
+script = ExtResource("2_canvas")
+
+[node name="RightInspector" type="VBoxContainer" parent="MainVBox/HSplitMain/HSplitRight"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+
+[node name="LblSelectedTitle" type="Label" parent="MainVBox/HSplitMain/HSplitRight/RightInspector"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Proprietà Sistema"
+
+[node name="PropScroll" type="ScrollContainer" parent="MainVBox/HSplitMain/HSplitRight/RightInspector"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="PropEditorVBox" type="VBoxContainer" parent="MainVBox/HSplitMain/HSplitRight/RightInspector/PropScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusBar" type="HBoxContainer" parent="MainVBox"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="LblStatusCoords" type="Label" parent="MainVBox/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cursore: [0, 0, 0] (SEC-00-00)"
+
+[node name="VSeparator1" type="VSeparator" parent="MainVBox/StatusBar"]
+layout_mode = 2
+
+[node name="LblStatusSelection" type="Label" parent="MainVBox/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Nessuna selezione"
+
+[node name="VSeparator2" type="VSeparator" parent="MainVBox/StatusBar"]
+layout_mode = 2
+
+[node name="LblStatusStats" type="Label" parent="MainVBox/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entità: 0"
+
+[node name="VSeparator3" type="VSeparator" parent="MainVBox/StatusBar"]
+layout_mode = 2
+
+[node name="LblStatusMsg" type="Label" parent="MainVBox/StatusBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pronto"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Apri file"
+initial_position = 1
+size = Vector2i(700, 500)
+visible = false
+access = 1
+
+[node name="ConfirmDialog" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "Conferma"
+initial_position = 1
+visible = false

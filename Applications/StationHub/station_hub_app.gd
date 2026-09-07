@@ -71,7 +71,6 @@ var is_station_docked: bool = false
 var current_station_id: String = ""
 var current_station_data: Dictionary = {}
 var can_manage_services: bool = true # RBAC
-var credits: int = 5000
 var player_nanites: int = 15
 
 # Cache dati attivi
@@ -336,7 +335,7 @@ func _on_station_market_selected(index: int) -> void:
 		if buy_quantity_spin_box:
 			buy_quantity_spin_box.max_value = maxf(1.0, float(item.get("quantity", 0.0)))
 		if btn_buy_cargo:
-			btn_buy_cargo.disabled = not can_manage_services or not is_station_docked or credits < price
+			btn_buy_cargo.disabled = not can_manage_services or not is_station_docked or _get_credits() < price
 
 func _on_ship_cargo_selected(index: int) -> void:
 	selected_ship_cargo_idx = index
@@ -377,7 +376,7 @@ func _on_btn_buy_cargo_pressed() -> void:
 	var unit_price: int = int(_get_effective_price(base_val, true))
 	var total_cost: int = unit_price * qty
 	
-	if credits < total_cost:
+	if _get_credits() < total_cost:
 		_notify("Mercato Portuale", "Crediti insufficienti per completare l'acquisto (%d CR richiesti)." % total_cost)
 		return
 		
@@ -392,8 +391,7 @@ func _on_btn_buy_cargo_pressed() -> void:
 		return
 		
 	# Esecuzione transazione
-	credits -= total_cost
-	_update_credits_display()
+	_spend_credits(total_cost)
 	
 	var item_id: String = str(item.get("id", ""))
 	cargo_mgr.add_item_by_id(item_id, qty)
@@ -434,8 +432,7 @@ func _on_btn_sell_cargo_pressed() -> void:
 	if removed == null:
 		return
 		
-	credits += total_payout
-	_update_credits_display()
+	_add_credits(total_payout)
 	
 	if flux_mgr:
 		if flux_mgr.has_method("add_transaction"):
@@ -635,19 +632,18 @@ func _on_software_item_selected(index: int) -> void:
 				item.get("description", "")
 			]
 		if btn_buy_market_item:
-			btn_buy_market_item.disabled = not can_manage_services or not is_station_docked or credits < item.get("price", 0)
+			btn_buy_market_item.disabled = not can_manage_services or not is_station_docked or _get_credits() < item.get("price", 0)
 
 func _on_buy_software_item_pressed() -> void:
 	if not can_manage_services or not is_station_docked or selected_software_idx < 0 or selected_software_idx >= active_software_items.size():
 		return
 	var item: Variant = active_software_items[selected_software_idx]
 	var price: int = item.get("price", 0)
-	if credits < price:
+	if _get_credits() < price:
 		_notify("Software Repository", "Crediti insufficienti per acquistare il modulo software.")
 		return
 		
-	credits -= price
-	_update_credits_display()
+	_spend_credits(price)
 	
 	# Scrittura fisica del file su Ship Drive/Programs/
 	var folder_name: String = item.get("app_target_folder", "StationHub")
@@ -703,9 +699,8 @@ func _refresh_shipyard_view() -> void:
 func _on_repair_hull_pressed() -> void:
 	if not can_manage_services or not is_station_docked: return
 	var cost := 150
-	if credits >= cost:
-		credits -= cost
-		_update_credits_display()
+	if _get_credits() >= cost:
+		_spend_credits(cost)
 		
 		# Azzeramento danni e brecce su SpaceWorldManager
 		if SpaceWorldManager and SpaceWorldManager.has_method("clear_ship_damages"):
@@ -729,9 +724,8 @@ func _on_repair_hull_pressed() -> void:
 func _on_service_ducts_pressed() -> void:
 	if not can_manage_services or not is_station_docked: return
 	var cost := 100
-	if credits >= cost:
-		credits -= cost
-		_update_credits_display()
+	if _get_credits() >= cost:
+		_spend_credits(cost)
 		if SpaceWorldManager and SpaceWorldManager.has_method("clear_ship_damages"):
 			SpaceWorldManager.clear_ship_damages()
 		_refresh_shipyard_view()
@@ -740,18 +734,16 @@ func _on_service_ducts_pressed() -> void:
 func _on_recharge_battery_pressed() -> void:
 	if not can_manage_services or not is_station_docked: return
 	var cost := 50
-	if credits >= cost:
-		credits -= cost
-		_update_credits_display()
+	if _get_credits() >= cost:
+		_spend_credits(cost)
 		_notify("Cantiere Navale", "Accumulatori e batterie della nave ricaricati al 100% (-%d CR)." % cost)
 
 func _on_buy_nanites_pressed() -> void:
 	if not can_manage_services or not is_station_docked: return
 	var cost := 200
-	if credits >= cost:
-		credits -= cost
+	if _get_credits() >= cost:
+		_spend_credits(cost)
 		player_nanites += 25
-		_update_credits_display()
 		_refresh_shipyard_view()
 		_notify("Cantiere Navale", "Acquistato kit 25x Naniti di Riparazione (-%d CR)." % cost)
 
@@ -808,9 +800,29 @@ func _on_btn_undock_pressed() -> void:
 	else:
 		_on_undocking_completed()
 
+## Legge i crediti direttamente dalla fonte di verità economica (FluxEconomyManager)
+func _get_credits() -> int:
+	if flux_mgr:
+		return flux_mgr.credits
+	return 0
+
+## Sottrae crediti tramite FluxEconomyManager, propagandone il segnale
+func _spend_credits(amount: int) -> void:
+	if flux_mgr:
+		flux_mgr.credits -= amount
+		flux_mgr.credits_changed.emit(flux_mgr.credits, -amount)
+	_update_credits_display()
+
+## Aggiunge crediti tramite FluxEconomyManager, propagandone il segnale
+func _add_credits(amount: int) -> void:
+	if flux_mgr:
+		flux_mgr.credits += amount
+		flux_mgr.credits_changed.emit(flux_mgr.credits, amount)
+	_update_credits_display()
+
 func _update_credits_display() -> void:
 	if credits_label:
-		credits_label.text = "Crediti: %d CR" % credits
+		credits_label.text = "Crediti: %d CR" % _get_credits()
 
 func _update_flux_display() -> void:
 	if flux_rating_label:
@@ -864,7 +876,6 @@ status=OPERATIONAL
 
 [SERVICES]
 auto_handshake=true
-default_credits=5000
 allow_firmware_trade=true
 logbook_sync=true
 """
@@ -894,18 +905,17 @@ func _load_config() -> void:
 			_parse_config_text(txt)
 
 func _parse_config_text(txt: String) -> void:
+	# Il file di configurazione non contiene più campi rilevanti per questa app
+	# (i crediti sono gestiti unicamente da FluxEconomyManager), ma il parsing
+	# resta disponibile per future direttive di configurazione dello StationHub.
 	var lines := txt.split("\n")
 	for line in lines:
 		var l := line.strip_edges()
 		if l.begins_with("#") or l.begins_with(";") or l.is_empty():
 			continue
 		var parts := l.split("=", false, 2)
-		if parts.size() == 2:
-			var k: Variant = parts[0].strip_edges()
-			var v: Variant = parts[1].strip_edges()
-			if k == "default_credits" and v.is_valid_int():
-				credits = v.to_int()
-				_update_credits_display()
+		if parts.size() != 2:
+			continue
 
 func _on_drive_file_synced(rel_path: String) -> void:
 	if "StationHub" in rel_path and rel_path.ends_with(".dat"):

@@ -4,69 +4,137 @@ extends Control
 
 ## Editor visivo per la creazione e modifica dei Sistemi Stellari in Godot Engine / GodotOS.
 ## Funziona sia integrato nell'Editor di Godot (Bottom Panel / Main Screen) sia come applicazione o scena standalone.
+## La UI statica è definita in star_system_editor.tscn; questo script contiene solo logica ed event handling.
 
 const DEFAULT_SYSTEM_PATH := "res://Outside/StarSystemGrid/default_star_system.tres"
 
 var current_system: StarSystemData = null
 var current_file_path: String = ""
 
-# UI Components
-var canvas: StarSystemCanvas = null
+## Gestore di Undo/Redo: se il plugin lo assegna prima di _ready() (EditorUndoRedoManager,
+## caso EditorPlugin integrato), viene riusato. Altrimenti viene creato un UndoRedo nativo
+## locale per l'uso standalone, con Ctrl+Z / Ctrl+Y gestiti manualmente.
+var undo_redo: Object = null
+var _using_local_undo_redo: bool = false
 
-# Toolbar Controlli
-var lbl_current_file: Label = null
-var btn_new: Button = null
-var btn_open: Button = null
-var btn_save: Button = null
-var btn_save_as: Button = null
-var btn_export_json: Button = null
-var btn_import_json: Button = null
-
-# Toolbar Aggiunta Rapida Entità
-var btn_add_star: Button = null
-var btn_add_planet: Button = null
-var btn_add_gas_giant: Button = null
-var btn_add_moon: Button = null
-var btn_add_station: Button = null
-var btn_add_asteroid: Button = null
-var btn_add_wreck: Button = null
-var btn_add_patrol: Button = null
-var btn_delete_selected: Button = null
-
-# Layer Toggles
-var chk_grid: CheckBox = null
-var chk_orbits: CheckBox = null
-var chk_shadows: CheckBox = null
-var chk_labels: CheckBox = null
-var chk_sec_ids: CheckBox = null
-
-# Zoom & View
-var zoom_slider: HSlider = null
-var lbl_zoom: Label = null
-var btn_reset_view: Button = null
-
-# Inspector & Outliner
-var outliner_tree: Tree = null
-var prop_editor_vbox: VBoxContainer = null
-var lbl_selected_title: Label = null
-
-# Status Bar
-var lbl_status_coords: Label = null
-var lbl_status_selection: Label = null
-var lbl_status_stats: Label = null
-var lbl_status_msg: Label = null
-
-# Dialogs
-var file_dialog: FileDialog = null
-var confirm_dialog: ConfirmationDialog = null
 var _pending_file_action: String = ""
 
+# UI Components (definiti in star_system_editor.tscn, referenziati via Unique Name)
+@onready var canvas: StarSystemCanvas = %Canvas
+
+# Toolbar Controlli
+@onready var lbl_current_file: Label = %LblCurrentFile
+@onready var btn_new: Button = %BtnNew
+@onready var btn_open: Button = %BtnOpen
+@onready var btn_save: Button = %BtnSave
+@onready var btn_save_as: Button = %BtnSaveAs
+@onready var btn_export_json: Button = %BtnExportJson
+@onready var btn_import_json: Button = %BtnImportJson
+
+# Toolbar Aggiunta Rapida Entità
+@onready var btn_add_star: Button = %BtnAddStar
+@onready var btn_add_planet: Button = %BtnAddPlanet
+@onready var btn_add_gas_giant: Button = %BtnAddGasGiant
+@onready var btn_add_moon: Button = %BtnAddMoon
+@onready var btn_add_station: Button = %BtnAddStation
+@onready var btn_add_asteroid: Button = %BtnAddAsteroid
+@onready var btn_add_wreck: Button = %BtnAddWreck
+@onready var btn_add_patrol: Button = %BtnAddPatrol
+@onready var btn_delete_selected: Button = %BtnDeleteSelected
+
+# Layer Toggles
+@onready var chk_grid: CheckBox = %ChkGrid
+@onready var chk_orbits: CheckBox = %ChkOrbits
+@onready var chk_shadows: CheckBox = %ChkShadows
+@onready var chk_labels: CheckBox = %ChkLabels
+@onready var chk_sec_ids: CheckBox = %ChkSecIds
+
+# Zoom & View
+@onready var zoom_slider: HSlider = %ZoomSlider
+@onready var lbl_zoom: Label = %LblZoom
+@onready var btn_reset_view: Button = %BtnResetView
+
+# Inspector & Outliner
+@onready var outliner_tree: Tree = %OutlinerTree
+@onready var prop_editor_vbox: VBoxContainer = %PropEditorVBox
+@onready var lbl_selected_title: Label = %LblSelectedTitle
+
+# Status Bar
+@onready var lbl_status_coords: Label = %LblStatusCoords
+@onready var lbl_status_selection: Label = %LblStatusSelection
+@onready var lbl_status_stats: Label = %LblStatusStats
+@onready var lbl_status_msg: Label = %LblStatusMsg
+
+# Dialogs
+@onready var file_dialog: FileDialog = %FileDialog
+@onready var confirm_dialog: ConfirmationDialog = %ConfirmDialog
+
 func _ready() -> void:
-	custom_minimum_size = Vector2(850, 550)
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_build_ui()
+	_ensure_undo_redo()
+	_connect_signals()
 	_load_initial_system()
+
+func _ensure_undo_redo() -> void:
+	if undo_redo == null:
+		undo_redo = UndoRedo.new()
+		_using_local_undo_redo = true
+
+## Ctrl+Z / Ctrl+Y solo quando si usa lo stack di Undo/Redo locale (uso standalone).
+## Quando integrato come EditorPlugin, l'EditorUndoRedoManager è già collegato
+## al menu Modifica > Annulla/Ripristina dell'editor di Godot.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not _using_local_undo_redo:
+		return
+	if not (event is InputEventKey and event.pressed):
+		return
+	var k := event as InputEventKey
+	if not k.ctrl_pressed:
+		return
+	if k.keycode == KEY_Z and not k.shift_pressed:
+		if undo_redo.has_undo():
+			undo_redo.undo()
+		get_viewport().set_input_as_handled()
+	elif k.keycode == KEY_Y or (k.keycode == KEY_Z and k.shift_pressed):
+		if undo_redo.has_redo():
+			undo_redo.redo()
+		get_viewport().set_input_as_handled()
+
+func _connect_signals() -> void:
+	btn_new.pressed.connect(_on_btn_new_pressed)
+	btn_open.pressed.connect(_on_btn_open_pressed)
+	btn_save.pressed.connect(_on_btn_save_pressed)
+	btn_save_as.pressed.connect(_on_btn_save_as_pressed)
+	btn_export_json.pressed.connect(_on_btn_export_json_pressed)
+	btn_import_json.pressed.connect(_on_btn_import_json_pressed)
+
+	btn_add_star.pressed.connect(func(): _add_celestial_body("STAR"))
+	btn_add_planet.pressed.connect(func(): _add_celestial_body("PLANET"))
+	btn_add_gas_giant.pressed.connect(func(): _add_celestial_body("GAS_GIANT"))
+	btn_add_moon.pressed.connect(func(): _add_celestial_body("MOON"))
+	btn_add_station.pressed.connect(func(): _add_celestial_body("STATION"))
+	btn_add_asteroid.pressed.connect(func(): _add_celestial_body("ASTEROID_FIELD"))
+	btn_add_wreck.pressed.connect(func(): _add_celestial_body("WRECK"))
+	btn_add_patrol.pressed.connect(func(): _add_celestial_body("PATROL"))
+	btn_delete_selected.pressed.connect(_on_btn_delete_selected_pressed)
+
+	chk_grid.toggled.connect(func(v): canvas.show_grid = v; canvas.queue_redraw())
+	chk_orbits.toggled.connect(func(v): canvas.show_orbits = v; canvas.queue_redraw())
+	chk_shadows.toggled.connect(func(v): canvas.show_shadow_cones = v; canvas.queue_redraw())
+	chk_labels.toggled.connect(func(v): canvas.show_labels = v; canvas.queue_redraw())
+	chk_sec_ids.toggled.connect(func(v): canvas.show_sectors_id = v; canvas.queue_redraw())
+
+	btn_reset_view.pressed.connect(func(): if canvas: canvas.reset_view())
+	zoom_slider.value_changed.connect(func(val): if canvas: canvas.zoom_level = val; canvas.queue_redraw(); _update_zoom_label())
+
+	outliner_tree.item_selected.connect(_on_outliner_item_selected)
+
+	canvas.entity_selected.connect(_on_canvas_entity_selected)
+	canvas.sector_clicked.connect(_on_canvas_sector_clicked)
+	canvas.entity_moved.connect(_on_canvas_entity_moved)
+	canvas.cursor_coords_changed.connect(_on_canvas_cursor_coords_changed)
+
+	file_dialog.file_selected.connect(_on_file_dialog_selected)
+	confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
 
 func _load_initial_system() -> void:
 	if ResourceLoader.exists(DEFAULT_SYSTEM_PATH):
@@ -141,320 +209,23 @@ func _populate_default_bodies(sys: StarSystemData) -> void:
 func load_star_system(sys: StarSystemData, path: String = "") -> void:
 	current_system = sys
 	current_file_path = path
-	
+
+	if undo_redo:
+		undo_redo.clear_history()
+
 	if canvas:
 		canvas.system_data = current_system
+		canvas.selected_body_id = ""
 		canvas.reset_view()
-		
+
 	if lbl_current_file:
 		lbl_current_file.text = path.get_file() if not path.is_empty() else "Nuovo Sistema Stellare (non salvato)"
 		lbl_current_file.tooltip_text = path
-		
+
 	_refresh_outliner()
 	_update_stats_label()
 	_show_system_global_props()
 	_set_status_msg("Sistema stellare caricato con successo.")
-
-func _build_ui() -> void:
-	for c in get_children():
-		c.queue_free()
-		
-	var main_vbox := VBoxContainer.new()
-	main_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	main_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(main_vbox)
-	
-	# Toolbar File & Operazioni
-	var top_toolbar := _create_top_toolbar()
-	main_vbox.add_child(top_toolbar)
-	
-	# Toolbar Aggiunta Rapida Entità Celesti & Toggles
-	var creation_toolbar := _create_creation_toolbar()
-	main_vbox.add_child(creation_toolbar)
-	
-	# Area Centrale (Outliner | Canvas Grafico | Inspector Proprietà)
-	var hsplit_main := HSplitContainer.new()
-	hsplit_main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hsplit_main.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(hsplit_main)
-	
-	# Outliner Sinistro
-	var left_panel := _create_left_outliner()
-	hsplit_main.add_child(left_panel)
-	
-	# Split Centrale-Destro
-	var hsplit_right := HSplitContainer.new()
-	hsplit_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hsplit_right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hsplit_main.add_child(hsplit_right)
-	
-	# Canvas Centrale
-	var canvas_container := _create_canvas_container()
-	hsplit_right.add_child(canvas_container)
-	
-	# Inspector Destro
-	var right_panel := _create_right_inspector()
-	hsplit_right.add_child(right_panel)
-	
-	# Status Bar Inferiore
-	var status_bar := _create_status_bar()
-	main_vbox.add_child(status_bar)
-	
-	# Setup Dialogs
-	_setup_dialogs()
-
-func _create_top_toolbar() -> HBoxContainer:
-	var bar := HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(0, 32)
-	
-	btn_new = Button.new()
-	btn_new.text = "Nuovo"
-	btn_new.tooltip_text = "Crea un nuovo sistema stellare vuoto"
-	btn_new.pressed.connect(_on_btn_new_pressed)
-	bar.add_child(btn_new)
-	
-	btn_open = Button.new()
-	btn_open.text = "Apri..."
-	btn_open.tooltip_text = "Carica una risorsa .tres/.res di sistema stellare"
-	btn_open.pressed.connect(_on_btn_open_pressed)
-	bar.add_child(btn_open)
-	
-	btn_save = Button.new()
-	btn_save.text = "Salva"
-	btn_save.tooltip_text = "Salva il sistema stellare corrente"
-	btn_save.pressed.connect(_on_btn_save_pressed)
-	bar.add_child(btn_save)
-	
-	btn_save_as = Button.new()
-	btn_save_as.text = "Salva con nome..."
-	btn_save_as.tooltip_text = "Salva con un nuovo nome di file"
-	btn_save_as.pressed.connect(_on_btn_save_as_pressed)
-	bar.add_child(btn_save_as)
-	
-	bar.add_child(VSeparator.new())
-	
-	btn_export_json = Button.new()
-	btn_export_json.text = "Esporta JSON"
-	btn_export_json.tooltip_text = "Esporta la configurazione del sistema in formato JSON"
-	btn_export_json.pressed.connect(_on_btn_export_json_pressed)
-	bar.add_child(btn_export_json)
-	
-	btn_import_json = Button.new()
-	btn_import_json.text = "Importa JSON"
-	btn_import_json.tooltip_text = "Importa la configurazione da file JSON"
-	btn_import_json.pressed.connect(_on_btn_import_json_pressed)
-	bar.add_child(btn_import_json)
-	
-	bar.add_child(VSeparator.new())
-	
-	lbl_current_file = Label.new()
-	lbl_current_file.text = "Helios Nova System"
-	lbl_current_file.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(lbl_current_file)
-	
-	return bar
-
-func _create_creation_toolbar() -> HBoxContainer:
-	var bar := HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(0, 30)
-	
-	var lbl_add := Label.new()
-	lbl_add.text = "Aggiungi:"
-	bar.add_child(lbl_add)
-	
-	btn_add_star = Button.new()
-	btn_add_star.text = "+ Stella"
-	btn_add_star.pressed.connect(func(): _add_celestial_body("STAR"))
-	bar.add_child(btn_add_star)
-	
-	btn_add_planet = Button.new()
-	btn_add_planet.text = "+ Pianeta"
-	btn_add_planet.pressed.connect(func(): _add_celestial_body("PLANET"))
-	bar.add_child(btn_add_planet)
-	
-	btn_add_gas_giant = Button.new()
-	btn_add_gas_giant.text = "+ Gigante Gassoso"
-	btn_add_gas_giant.pressed.connect(func(): _add_celestial_body("GAS_GIANT"))
-	bar.add_child(btn_add_gas_giant)
-	
-	btn_add_moon = Button.new()
-	btn_add_moon.text = "+ Luna"
-	btn_add_moon.pressed.connect(func(): _add_celestial_body("MOON"))
-	bar.add_child(btn_add_moon)
-	
-	btn_add_station = Button.new()
-	btn_add_station.text = "+ Stazione"
-	btn_add_station.pressed.connect(func(): _add_celestial_body("STATION"))
-	bar.add_child(btn_add_station)
-	
-	btn_add_asteroid = Button.new()
-	btn_add_asteroid.text = "+ Asteroidi"
-	btn_add_asteroid.pressed.connect(func(): _add_celestial_body("ASTEROID_FIELD"))
-	bar.add_child(btn_add_asteroid)
-	
-	btn_add_wreck = Button.new()
-	btn_add_wreck.text = "+ Relitto"
-	btn_add_wreck.pressed.connect(func(): _add_celestial_body("WRECK"))
-	bar.add_child(btn_add_wreck)
-	
-	btn_add_patrol = Button.new()
-	btn_add_patrol.text = "+ Pattuglia"
-	btn_add_patrol.pressed.connect(func(): _add_celestial_body("PATROL"))
-	bar.add_child(btn_add_patrol)
-	
-	bar.add_child(VSeparator.new())
-	
-	btn_delete_selected = Button.new()
-	btn_delete_selected.text = "Elimina"
-	btn_delete_selected.tooltip_text = "Elimina l'entità celeste selezionata"
-	btn_delete_selected.pressed.connect(_on_btn_delete_selected_pressed)
-	bar.add_child(btn_delete_selected)
-	
-	bar.add_child(VSeparator.new())
-	
-	# Layer checkboxes
-	chk_grid = CheckBox.new()
-	chk_grid.text = "Griglia"
-	chk_grid.button_pressed = true
-	chk_grid.toggled.connect(func(v): canvas.show_grid = v; canvas.queue_redraw())
-	bar.add_child(chk_grid)
-	
-	chk_orbits = CheckBox.new()
-	chk_orbits.text = "Orbite"
-	chk_orbits.button_pressed = true
-	chk_orbits.toggled.connect(func(v): canvas.show_orbits = v; canvas.queue_redraw())
-	bar.add_child(chk_orbits)
-	
-	chk_shadows = CheckBox.new()
-	chk_shadows.text = "Coni Ombra"
-	chk_shadows.button_pressed = true
-	chk_shadows.toggled.connect(func(v): canvas.show_shadow_cones = v; canvas.queue_redraw())
-	bar.add_child(chk_shadows)
-	
-	chk_labels = CheckBox.new()
-	chk_labels.text = "Etichette"
-	chk_labels.button_pressed = true
-	chk_labels.toggled.connect(func(v): canvas.show_labels = v; canvas.queue_redraw())
-	bar.add_child(chk_labels)
-	
-	return bar
-
-func _create_left_outliner() -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(220, 0)
-	
-	var lbl := Label.new()
-	lbl.text = "Corpi Celesti & Macro-Entità"
-	vbox.add_child(lbl)
-	
-	outliner_tree = Tree.new()
-	outliner_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outliner_tree.hide_root = true
-	outliner_tree.item_selected.connect(_on_outliner_item_selected)
-	vbox.add_child(outliner_tree)
-	
-	return vbox
-
-func _create_canvas_container() -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	
-	# Barra controlli zoom e reset
-	var view_bar := HBoxContainer.new()
-	btn_reset_view = Button.new()
-	btn_reset_view.text = "Centra Vista"
-	btn_reset_view.pressed.connect(func(): if canvas: canvas.reset_view())
-	view_bar.add_child(btn_reset_view)
-	
-	var lbl_z := Label.new()
-	lbl_z.text = " Zoom:"
-	view_bar.add_child(lbl_z)
-	
-	zoom_slider = HSlider.new()
-	zoom_slider.min_value = 0.2
-	zoom_slider.max_value = 3.0
-	zoom_slider.step = 0.05
-	zoom_slider.value = 1.0
-	zoom_slider.custom_minimum_size = Vector2(100, 0)
-	zoom_slider.value_changed.connect(func(val): if canvas: canvas.zoom_level = val; canvas.queue_redraw(); _update_zoom_label())
-	view_bar.add_child(zoom_slider)
-	
-	lbl_zoom = Label.new()
-	lbl_zoom.text = "100%"
-	view_bar.add_child(lbl_zoom)
-	
-	vbox.add_child(view_bar)
-	
-	# Canvas 2D
-	canvas = StarSystemCanvas.new()
-	canvas.entity_selected.connect(_on_canvas_entity_selected)
-	canvas.sector_clicked.connect(_on_canvas_sector_clicked)
-	canvas.entity_moved.connect(_on_canvas_entity_moved)
-	canvas.cursor_coords_changed.connect(_on_canvas_cursor_coords_changed)
-	vbox.add_child(canvas)
-	
-	return vbox
-
-func _create_right_inspector() -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(260, 0)
-	
-	lbl_selected_title = Label.new()
-	lbl_selected_title.text = "Proprietà Sistema"
-	vbox.add_child(lbl_selected_title)
-	
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(scroll)
-	
-	prop_editor_vbox = VBoxContainer.new()
-	prop_editor_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(prop_editor_vbox)
-	
-	return vbox
-
-func _create_status_bar() -> HBoxContainer:
-	var bar := HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(0, 24)
-	
-	lbl_status_coords = Label.new()
-	lbl_status_coords.text = "Cursore: [0, 0, 0] (SEC-00-00)"
-	bar.add_child(lbl_status_coords)
-	
-	bar.add_child(VSeparator.new())
-	
-	lbl_status_selection = Label.new()
-	lbl_status_selection.text = "Nessuna selezione"
-	lbl_status_selection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(lbl_status_selection)
-	
-	bar.add_child(VSeparator.new())
-	
-	lbl_status_stats = Label.new()
-	lbl_status_stats.text = "Entità: 0"
-	bar.add_child(lbl_status_stats)
-	
-	bar.add_child(VSeparator.new())
-	
-	lbl_status_msg = Label.new()
-	lbl_status_msg.text = "Pronto"
-	bar.add_child(lbl_status_msg)
-	
-	return bar
-
-func _setup_dialogs() -> void:
-	file_dialog = FileDialog.new()
-	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	file_dialog.access = FileDialog.ACCESS_RESOURCES
-	file_dialog.file_selected.connect(_on_file_dialog_selected)
-	add_child(file_dialog)
-	
-	confirm_dialog = ConfirmationDialog.new()
-	confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
-	add_child(confirm_dialog)
 
 # =============================================================================
 # GESTIONE OUTLINER & PROPRIETÀ
@@ -508,47 +279,43 @@ func _show_system_global_props() -> void:
 	_clear_prop_editor()
 	lbl_selected_title.text = "Proprietà Globali Sistema"
 	
-	_add_text_field("ID Sistema:", current_system.system_id, func(v): current_system.system_id = v)
-	_add_text_field("Nome Sistema:", current_system.system_name, func(v): current_system.system_name = v; _refresh_outliner())
-	_add_text_field("Descrizione:", current_system.description, func(v): current_system.description = v)
+	_add_text_field("ID Sistema:", current_system, "system_id", "Modifica ID Sistema")
+	_add_text_field("Nome Sistema:", current_system, "system_name", "Modifica Nome Sistema", _refresh_outliner)
+	_add_text_field("Descrizione:", current_system, "description", "Modifica Descrizione Sistema")
 	
 	_add_separator()
 	_add_heading("Parametri Stella Primaria")
-	_add_text_field("Nome Stella:", current_system.primary_star_name, func(v): current_system.primary_star_name = v)
-	_add_vector3i_field("Coordinate Stella:", current_system.primary_star_coords, func(v): current_system.primary_star_coords = v; if canvas: canvas.queue_redraw())
-	_add_float_field("Energia Base:", current_system.primary_star_energy, func(v): current_system.primary_star_energy = v)
-	_add_float_field("Raggio (km):", current_system.primary_star_radius_km, func(v): current_system.primary_star_radius_km = v)
-	_add_color_field("Colore Luce:", current_system.primary_star_color, func(v): current_system.primary_star_color = v; if canvas: canvas.queue_redraw())
+	_add_text_field("Nome Stella:", current_system, "primary_star_name", "Modifica Nome Stella Primaria")
+	_add_vector3i_field("Coordinate Stella:", current_system, "primary_star_coords", "Sposta Stella Primaria", _redraw_canvas)
+	_add_float_field("Energia Base:", current_system, "primary_star_energy", "Modifica Energia Stella Primaria")
+	_add_float_field("Raggio (km):", current_system, "primary_star_radius_km", "Modifica Raggio Stella Primaria")
+	_add_color_field("Colore Luce:", current_system, "primary_star_color", "Modifica Colore Stella Primaria", _redraw_canvas)
 
 func _show_body_props(body: CelestialBodyData) -> void:
 	if prop_editor_vbox == null:
 		return
 	_clear_prop_editor()
-	var b_id: String = body.id
-	var b_name: String = body.name
-	lbl_selected_title.text = "Modifica: %s" % b_name
+	lbl_selected_title.text = "Modifica: %s" % body.name
 	
-	_add_text_field("ID Entità:", b_id, func(v): body.id = v; _refresh_outliner())
-	_add_text_field("Nome:", b_name, func(v): body.name = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
+	_add_text_field("ID Entità:", body, "id", "Modifica ID Entità", func(): if canvas: canvas.selected_body_id = body.id; _refresh_outliner())
+	_add_text_field("Nome:", body, "name", "Rinomina Entità", func(): _refresh_outliner(); _redraw_canvas())
 	
 	var types: Array[String] = ["STAR", "PLANET", "GAS_GIANT", "MOON", "STATION", "ASTEROID_FIELD", "WRECK", "PATROL"]
-	_add_option_field("Tipo:", types, body.type, func(v): body.type = v; _refresh_outliner(); if canvas: canvas.queue_redraw())
+	_add_option_field("Tipo:", types, body, "type", "Modifica Tipo Entità", func(): _refresh_outliner(); _redraw_canvas())
 	
-	var coords: Vector3i = body.coords
-	_add_vector3i_field("Coordinate Griglia:", coords, func(v): body.coords = v; if canvas: canvas.queue_redraw(); _refresh_outliner())
+	_add_vector3i_field("Coordinate Griglia:", body, "coords", "Sposta Entità", func(): _redraw_canvas(); _refresh_outliner())
 	
-	_add_float_field("Raggio (km):", float(body.radius_km), func(v): body.radius_km = v; if canvas: canvas.queue_redraw())
-	_add_float_field("Massa (Tonnellate):", float(body.mass_tons), func(v): body.mass_tons = v)
-	_add_bool_field("Proietta Cono d'Ombra:", bool(body.occluding), func(v): body.occluding = v; if canvas: canvas.queue_redraw())
-	_add_text_field("Descrizione:", body.description, func(v): body.description = v)
+	_add_float_field("Raggio (km):", body, "radius_km", "Modifica Raggio Entità", _redraw_canvas)
+	_add_float_field("Massa (Tonnellate):", body, "mass_tons", "Modifica Massa Entità")
+	_add_bool_field("Proietta Cono d'Ombra:", body, "occluding", "Modifica Occlusione Entità", _redraw_canvas)
+	_add_text_field("Descrizione:", body, "description", "Modifica Descrizione Entità")
 	
 	if body.color is Color:
-		var col: Color = body.color
-		_add_color_field("Colore Display:", col, func(v): body.color = v; if canvas: canvas.queue_redraw())
+		_add_color_field("Colore Display:", body, "color", "Modifica Colore Entità", _redraw_canvas)
 		
 	var btn_del := Button.new()
 	btn_del.text = "🗑️ Rimuovi Entità"
-	btn_del.pressed.connect(func(): _delete_body(b_id))
+	btn_del.pressed.connect(func(): _delete_body(body.id))
 	prop_editor_vbox.add_child(btn_del)
 
 func _clear_prop_editor() -> void:
@@ -564,20 +331,58 @@ func _add_heading(title: String) -> void:
 func _add_separator() -> void:
 	prop_editor_vbox.add_child(HSeparator.new())
 
-func _add_text_field(label: String, val: String, callback: Callable) -> void:
+func _redraw_canvas() -> void:
+	if canvas:
+		canvas.queue_redraw()
+
+# =============================================================================
+# UNDO/REDO - HELPER GENERICO PER MODIFICA PROPRIETÀ
+# =============================================================================
+
+## Registra un'azione di Undo/Redo per la modifica di una singola proprietà di un oggetto
+## (Resource dei dati del sistema stellare). Il valore nuovo viene applicato immediatamente
+## tramite add_do_property; refresh_callback (se valido) viene eseguito sia sul do che sull'undo
+## per aggiornare la UI (outliner, canvas, ecc.).
+func _commit_property_change(action_name: String, obj: Object, prop: StringName, old_value: Variant, new_value: Variant, refresh_callback: Callable = Callable()) -> void:
+	if typeof(old_value) == typeof(new_value) and old_value == new_value:
+		return
+	_ensure_undo_redo()
+	undo_redo.create_action(action_name)
+	undo_redo.add_do_property(obj, prop, new_value)
+	undo_redo.add_undo_property(obj, prop, old_value)
+	if refresh_callback.is_valid():
+		undo_redo.add_do_method(refresh_callback)
+		undo_redo.add_undo_method(refresh_callback)
+	undo_redo.commit_action()
+
+# =============================================================================
+# CAMPI DINAMICI DELL'INSPECTOR (generati a runtime, dipendono dai dati selezionati)
+# =============================================================================
+
+func _add_text_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
 	var h := HBoxContainer.new()
 	var l := Label.new()
 	l.text = label
 	l.custom_minimum_size = Vector2(90, 0)
 	h.add_child(l)
 	var le := LineEdit.new()
-	le.text = val
+	le.text = str(obj.get(prop))
 	le.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	le.text_changed.connect(callback)
+	var baseline := {"value": obj.get(prop)}
+	le.focus_entered.connect(func(): baseline.value = obj.get(prop))
+	le.text_changed.connect(func(v):
+		obj.set(prop, v)
+		if extra_refresh.is_valid():
+			extra_refresh.call()
+	)
+	le.focus_exited.connect(func():
+		_commit_property_change(action_name, obj, prop, baseline.value, obj.get(prop), extra_refresh)
+		baseline.value = obj.get(prop)
+	)
 	h.add_child(le)
 	prop_editor_vbox.add_child(h)
 
-func _add_float_field(label: String, val: float, callback: Callable) -> void:
+func _add_float_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
 	var h := HBoxContainer.new()
 	var l := Label.new()
 	l.text = label
@@ -587,18 +392,32 @@ func _add_float_field(label: String, val: float, callback: Callable) -> void:
 	sb.min_value = 0.0
 	sb.max_value = 1.0e30
 	sb.step = 0.1
-	sb.value = val
+	sb.value = float(obj.get(prop))
 	sb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sb.value_changed.connect(func(v): callback.call(v))
+	var baseline := {"value": obj.get(prop)}
+	var le := sb.get_line_edit()
+	le.focus_entered.connect(func(): baseline.value = obj.get(prop))
+	sb.value_changed.connect(func(v):
+		obj.set(prop, v)
+		if extra_refresh.is_valid():
+			extra_refresh.call()
+	)
+	le.focus_exited.connect(func():
+		_commit_property_change(action_name, obj, prop, baseline.value, obj.get(prop), extra_refresh)
+		baseline.value = obj.get(prop)
+	)
 	h.add_child(sb)
 	prop_editor_vbox.add_child(h)
 
-func _add_vector3i_field(label: String, val: Vector3i, callback: Callable) -> void:
+func _add_vector3i_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
+	var val: Vector3i = obj.get(prop)
 	var vbox := VBoxContainer.new()
 	var l := Label.new()
 	l.text = label
 	vbox.add_child(l)
 	var h := HBoxContainer.new()
+	
+	var baseline := {"value": val}
 	
 	var sb_x := SpinBox.new()
 	sb_x.min_value = -100
@@ -623,52 +442,80 @@ func _add_vector3i_field(label: String, val: Vector3i, callback: Callable) -> vo
 	
 	var update_vec := func():
 		var vec := Vector3i(int(sb_x.value), int(sb_y.value), int(sb_z.value))
-		callback.call(vec)
-		
+		obj.set(prop, vec)
+		if extra_refresh.is_valid():
+			extra_refresh.call()
+	
+	var commit_vec := func():
+		_commit_property_change(action_name, obj, prop, baseline.value, obj.get(prop), extra_refresh)
+		baseline.value = obj.get(prop)
+	
 	sb_x.value_changed.connect(func(_v): update_vec.call())
 	sb_y.value_changed.connect(func(_v): update_vec.call())
 	sb_z.value_changed.connect(func(_v): update_vec.call())
 	
+	for sb in [sb_x, sb_y, sb_z]:
+		var le: LineEdit = sb.get_line_edit()
+		le.focus_entered.connect(func(): baseline.value = obj.get(prop))
+		le.focus_exited.connect(func(): commit_vec.call())
+	
 	vbox.add_child(h)
 	prop_editor_vbox.add_child(vbox)
 
-func _add_bool_field(label: String, val: bool, callback: Callable) -> void:
+func _add_bool_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
 	var cb := CheckBox.new()
 	cb.text = label
-	cb.button_pressed = val
-	cb.toggled.connect(callback)
+	cb.button_pressed = bool(obj.get(prop))
+	cb.toggled.connect(func(v):
+		var old_v: Variant = obj.get(prop)
+		_commit_property_change(action_name, obj, prop, old_v, v, extra_refresh)
+	)
 	prop_editor_vbox.add_child(cb)
 
-func _add_color_field(label: String, val: Color, callback: Callable) -> void:
+func _add_color_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
 	var h := HBoxContainer.new()
 	var l := Label.new()
 	l.text = label
 	l.custom_minimum_size = Vector2(90, 0)
 	h.add_child(l)
 	var cp := ColorPickerButton.new()
-	cp.color = val
+	cp.color = obj.get(prop)
 	cp.custom_minimum_size = Vector2(50, 24)
-	cp.color_changed.connect(callback)
+	var baseline := {"value": cp.color}
+	cp.button_down.connect(func(): baseline.value = obj.get(prop))
+	cp.color_changed.connect(func(v):
+		obj.set(prop, v)
+		if extra_refresh.is_valid():
+			extra_refresh.call()
+	)
+	cp.popup_closed.connect(func():
+		_commit_property_change(action_name, obj, prop, baseline.value, obj.get(prop), extra_refresh)
+		baseline.value = obj.get(prop)
+	)
 	h.add_child(cp)
 	prop_editor_vbox.add_child(h)
 
-func _add_option_field(label: String, options: Array[String], current_val: String, callback: Callable) -> void:
+func _add_option_field(label: String, options: Array[String], obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
 	var h := HBoxContainer.new()
 	var l := Label.new()
 	l.text = label
 	l.custom_minimum_size = Vector2(90, 0)
 	h.add_child(l)
 	var opt := OptionButton.new()
+	var current_val: Variant = obj.get(prop)
 	for i in range(options.size()):
 		opt.add_item(options[i], i)
 		if options[i] == current_val:
 			opt.selected = i
-	opt.item_selected.connect(func(idx): callback.call(options[idx]))
+	opt.item_selected.connect(func(idx):
+		var old_v: Variant = obj.get(prop)
+		_commit_property_change(action_name, obj, prop, old_v, options[idx], extra_refresh)
+	)
 	h.add_child(opt)
 	prop_editor_vbox.add_child(h)
 
 # =============================================================================
-# OPERAZIONI SU CORPI CELESTI
+# OPERAZIONI SU CORPI CELESTI (con supporto Undo/Redo)
 # =============================================================================
 
 func _add_celestial_body(type: String) -> void:
@@ -699,27 +546,47 @@ func _add_celestial_body(type: String) -> void:
 		new_body.radius_km = 10.0
 		new_body.mass_tons = 5.0e9
 		new_body.occluding = false
-		
-	current_system.add_or_update_body(new_body)
+	
+	_ensure_undo_redo()
+	undo_redo.create_action("Aggiungi %s" % type)
+	undo_redo.add_do_method(_do_add_body.bind(new_body))
+	undo_redo.add_undo_method(_do_remove_body.bind(new_body.id))
+	undo_redo.add_do_reference(new_body)
+	undo_redo.commit_action()
+
+func _do_add_body(body: CelestialBodyData) -> void:
+	current_system.add_or_update_body(body)
 	if canvas:
-		canvas.selected_body_id = new_body.id
+		canvas.selected_body_id = body.id
 		canvas.queue_redraw()
 	_refresh_outliner()
 	_update_stats_label()
-	_show_body_props(new_body)
-	_set_status_msg("Aggiunta entità '%s'." % new_body.name)
+	_show_body_props(body)
+	_set_status_msg("Aggiunta entità '%s'." % body.name)
+
+func _do_remove_body(body_id: String) -> void:
+	current_system.remove_body(body_id)
+	if canvas and canvas.selected_body_id == body_id:
+		canvas.selected_body_id = ""
+	if canvas:
+		canvas.queue_redraw()
+	_refresh_outliner()
+	_update_stats_label()
+	_show_system_global_props()
+	_set_status_msg("Entità rimossa.")
 
 func _delete_body(body_id: String) -> void:
 	if current_system == null or body_id.is_empty():
 		return
-	if current_system.remove_body(body_id):
-		if canvas and canvas.selected_body_id == body_id:
-			canvas.selected_body_id = ""
-			canvas.queue_redraw()
-		_refresh_outliner()
-		_update_stats_label()
-		_show_system_global_props()
-		_set_status_msg("Entità rimossa.")
+	var body := current_system.get_body(body_id)
+	if body == null:
+		return
+	_ensure_undo_redo()
+	undo_redo.create_action("Rimuovi %s" % body.name)
+	undo_redo.add_do_method(_do_remove_body.bind(body_id))
+	undo_redo.add_undo_method(_do_add_body.bind(body))
+	undo_redo.add_undo_reference(body)
+	undo_redo.commit_action()
 
 func _on_btn_delete_selected_pressed() -> void:
 	if canvas and not canvas.selected_body_id.is_empty():
@@ -763,13 +630,17 @@ func _show_sector_props(coords: Vector3i) -> void:
 			var new_sec := SectorData.new()
 			new_sec.sector_id = sec_id
 			new_sec.coordinates = coords
-			current_system.custom_sectors.append(new_sec)
-			_show_sector_props(coords)
+			_ensure_undo_redo()
+			undo_redo.create_action("Personalizza Settore %s" % sec_id)
+			undo_redo.add_do_method(_do_add_custom_sector.bind(new_sec))
+			undo_redo.add_undo_method(_do_remove_custom_sector.bind(sec_id, coords))
+			undo_redo.add_do_reference(new_sec)
+			undo_redo.commit_action()
 		)
 		prop_editor_vbox.add_child(btn_create)
 		return
 
-	_add_text_field("Nome Locale:", sector.sector_name, func(v): sector.sector_name = v)
+	_add_text_field("Nome Locale:", sector, "sector_name", "Modifica Nome Settore")
 	
 	_add_separator()
 	_add_heading("Pericoli Ambientali")
@@ -790,11 +661,33 @@ func _show_sector_props(coords: Vector3i) -> void:
 	var btn_add_h := Button.new()
 	btn_add_h.text = "+ Aggiungi Pericolo"
 	btn_add_h.pressed.connect(func():
-		var new_h := EnvironmentalHazardData.new("new_hazard", "RAD", 0.5)
-		sector.environmental_hazards.append(new_h)
-		_show_sector_props(coords)
+		var new_h := EnvironmentalHazardData.new("HAZARD_%d" % sector.environmental_hazards.size(), "RAD", 0.5)
+		var insert_index := sector.environmental_hazards.size()
+		_ensure_undo_redo()
+		undo_redo.create_action("Aggiungi Pericolo Ambientale")
+		undo_redo.add_do_method(_do_insert_hazard_at.bind(sector, insert_index, new_h, coords))
+		undo_redo.add_undo_method(_do_remove_hazard_at.bind(sector, insert_index, coords))
+		undo_redo.add_do_reference(new_h)
+		undo_redo.commit_action()
 	)
 	prop_editor_vbox.add_child(btn_add_h)
+
+func _do_add_custom_sector(sec: SectorData) -> void:
+	current_system.add_or_update_custom_sector(sec)
+	_show_sector_props(sec.coordinates)
+
+func _do_remove_custom_sector(sec_id: String, coords: Vector3i) -> void:
+	current_system.remove_custom_sector(sec_id)
+	_show_sector_props(coords)
+
+func _do_insert_hazard_at(sector: SectorData, index: int, hazard: EnvironmentalHazardData, coords: Vector3i) -> void:
+	sector.environmental_hazards.insert(index, hazard)
+	_show_sector_props(coords)
+
+func _do_remove_hazard_at(sector: SectorData, index: int, coords: Vector3i) -> void:
+	if index >= 0 and index < sector.environmental_hazards.size():
+		sector.environmental_hazards.remove_at(index)
+	_show_sector_props(coords)
 
 func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData, sector: SectorData, index: int, coords: Vector3i) -> void:
 	var h_type_hbox := HBoxContainer.new()
@@ -809,15 +702,22 @@ func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData
 		opt_type.add_item(types[i], i)
 		if types[i] == hazard.type:
 			opt_type.selected = i
-	opt_type.item_selected.connect(func(idx): hazard.type = types[idx])
+	opt_type.item_selected.connect(func(idx):
+		var old_v: String = hazard.type
+		_commit_property_change("Modifica Tipo Pericolo", hazard, "type", old_v, types[idx])
+	)
 	h_type_hbox.add_child(opt_type)
 	
 	var btn_del := Button.new()
 	btn_del.text = "X"
 	btn_del.modulate = Color.CRIMSON
 	btn_del.pressed.connect(func():
-		sector.environmental_hazards.remove_at(index)
-		_show_sector_props(coords)
+		_ensure_undo_redo()
+		undo_redo.create_action("Rimuovi Pericolo Ambientale")
+		undo_redo.add_do_method(_do_remove_hazard_at.bind(sector, index, coords))
+		undo_redo.add_undo_method(_do_insert_hazard_at.bind(sector, index, hazard, coords))
+		undo_redo.add_undo_reference(hazard)
+		undo_redo.commit_action()
 	)
 	h_type_hbox.add_child(btn_del)
 	container.add_child(h_type_hbox)
@@ -830,7 +730,13 @@ func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData
 	var le_name := LineEdit.new()
 	le_name.text = hazard.name
 	le_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var baseline_name := {"value": hazard.name}
+	le_name.focus_entered.connect(func(): baseline_name.value = hazard.name)
 	le_name.text_changed.connect(func(v): hazard.name = v)
+	le_name.focus_exited.connect(func():
+		_commit_property_change("Modifica Nome Pericolo", hazard, "name", baseline_name.value, hazard.name)
+		baseline_name.value = hazard.name
+	)
 	h_name_hbox.add_child(le_name)
 	container.add_child(h_name_hbox)
 	
@@ -843,19 +749,39 @@ func _add_hazard_item_editor(container: Control, hazard: EnvironmentalHazardData
 	sb_sev.min_value = 0.0
 	sb_sev.max_value = 100.0
 	sb_sev.value = hazard.severity
+	var baseline_sev := {"value": hazard.severity}
+	var sev_le := sb_sev.get_line_edit()
+	sev_le.focus_entered.connect(func(): baseline_sev.value = hazard.severity)
 	sb_sev.value_changed.connect(func(v): hazard.severity = v)
+	sev_le.focus_exited.connect(func():
+		_commit_property_change("Modifica Severità Pericolo", hazard, "severity", baseline_sev.value, hazard.severity)
+		baseline_sev.value = hazard.severity
+	)
 	h_sev_hbox.add_child(sb_sev)
 	container.add_child(h_sev_hbox)
 
-func _on_canvas_entity_moved(body_id: String, new_coords: Vector3i) -> void:
-	if current_system == null:
+func _on_canvas_entity_moved(body_id: String, old_coords: Vector3i, new_coords: Vector3i) -> void:
+	if current_system == null or old_coords == new_coords:
 		return
 	var b := current_system.get_body(body_id)
+	if b == null:
+		return
+	_ensure_undo_redo()
+	undo_redo.create_action("Sposta Entità")
+	undo_redo.add_do_property(b, "coords", new_coords)
+	undo_redo.add_undo_property(b, "coords", old_coords)
+	undo_redo.add_do_method(_refresh_after_move.bind(body_id))
+	undo_redo.add_undo_method(_refresh_after_move.bind(body_id))
+	undo_redo.commit_action()
+
+func _refresh_after_move(body_id: String) -> void:
+	var b := current_system.get_body(body_id)
 	if b:
-		b.coords = new_coords
+		if canvas:
+			canvas.queue_redraw()
 		_show_body_props(b)
 		_refresh_outliner()
-		_set_status_msg("Entità '%s' spostata in %s." % [b.name, SectorData.format_coords_to_id(new_coords)])
+		_set_status_msg("Entità '%s' spostata in %s." % [b.name, SectorData.format_coords_to_id(b.coords)])
 
 func _on_canvas_cursor_coords_changed(coords: Vector3i) -> void:
 	lbl_status_coords.text = "Cursore: [%d, %d, %d] (%s)" % [coords.x, coords.y, coords.z, SectorData.format_coords_to_id(coords)]

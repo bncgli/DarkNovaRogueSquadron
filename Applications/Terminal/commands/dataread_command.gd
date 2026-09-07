@@ -61,8 +61,11 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 	
 	window.title_text = file_path.get_file()
 	var tree := terminal.get_tree()
-	if tree and tree.current_scene:
-		tree.current_scene.add_child(window)
+	if tree:
+		var parent_node: Node = tree.current_scene
+		if parent_node == null:
+			parent_node = tree.root
+		parent_node.add_child(window)
 		var taskbar_group := tree.get_first_node_in_group("taskbar_buttons")
 		if taskbar_group:
 			var taskbar_button: Control = load("res://Scenes/Taskbar/taskbar_button.tscn").instantiate()

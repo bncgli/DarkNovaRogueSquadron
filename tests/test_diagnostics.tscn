@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://cb8bdxckqdiag"]
-
-[ext_resource type="Script" path="res://tests/test_diagnostics_node.gd" id="1_diag_test_script"]
-
-[node name="TestDiagnostics" type="Node"]
-script = ExtResource("1_diag_test_script")

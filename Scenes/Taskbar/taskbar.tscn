@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://cwnaaut64gd15" path="res://Art/Icons/cog.png" id="5_srcnq"]
 [ext_resource type="Script" uid="uid://bcvlao324av3w" path="res://Scenes/Taskbar/settings_button.gd" id="6_38i4x"]
 [ext_resource type="Script" uid="uid://33k2ree3e2yt" path="res://Scenes/Taskbar/taskbar_time.gd" id="7_2yhho"]
+[ext_resource type="PackedScene" uid="uid://c6f8u7v4m1p2n" path="res://Applications/PodInfo/pod_info_app.tscn" id="8_podinfo"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lxws7"]
 bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.784314)
@@ -152,7 +153,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 48.0
-offset_right = -94.0
+offset_right = -226.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -160,6 +161,20 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="PodInfoWidget" parent="Taskbar" instance=ExtResource("8_podinfo")]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -222.0
+offset_top = -16.0
+offset_right = -96.0
+offset_bottom = 16.0
+grow_horizontal = 0
+grow_vertical = 2
 
 [node name="TimeAndDate" type="Control" parent="Taskbar" unique_id=1688310786]
 layout_mode = 1

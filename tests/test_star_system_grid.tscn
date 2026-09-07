@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://b7vy8km2q4w5l"]
-
-[ext_resource type="Script" path="res://tests/test_star_system_grid.gd" id="1_test_script"]
-
-[node name="TestStarSystemGrid" type="Node"]
-script = ExtResource("1_test_script")

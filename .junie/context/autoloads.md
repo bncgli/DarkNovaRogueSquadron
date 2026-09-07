@@ -8,7 +8,7 @@
 | **CopyPasteManager** | `Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.tscn` | Clipboard for file operations. |
 | **GlobalValues** | `Scenes/Autoloads/GlobalValues/global_values.tscn` | Tracks current active window. |
 | **DefaultValues** | `Scenes/Autoloads/Default Values/default_values.tscn` | Handles user preferences (wallpaper, zoom, etc.). |
-| **NetworkManager** | `Scenes/Networking/network_manager.tscn` | Multi-player/networking logic (placeholder/partial). |
+| **NetworkManager** | `Scenes/Networking/network_manager.tscn` | Complete, maintained multiplayer system (crew, roles, RBAC, chat, mission sync). Transport backend (ENet) is encapsulated behind `NetworkTransport` to allow future backends (e.g. Steam) without breaking the public API. |
 | **SpaceWorldManager** | `Outside/space_world_manager.gd` | **Critical**. Manages 3D space, cameras, duct drone, and ship damage. |
 | **StarSystemGridManager** | `Outside/StarSystemGrid/star_system_grid_manager.gd` | Manages the galactic grid and sector data. |
 | **ShipDriveManager** | `Scenes/Autoloads/ShipDrive/ship_drive_manager.gd` | High-level ship movement and drive states. |

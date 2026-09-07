@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://tests/test_service_drone_app_node.gd" id="1_test_serv_script"]
-
-[node name="TestServiceDroneApp" type="Node"]
-script = ExtResource("1_test_serv_script")

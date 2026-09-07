@@ -91,7 +91,7 @@ func detect_custom_tile_data() -> void:
 			var tilemap_layer: TileMapLayer = collision.get_collider()
 			var tile_coords: Vector2i = tilemap_layer.get_coords_for_body_rid(collision.get_collider_rid())
 			var tile_data: TileData = tilemap_layer.get_cell_tile_data(tile_coords)
-			if tile_data.get_custom_data("instakill"):
+			if tile_data != null and tile_data.get_custom_data("instakill"):
 				die()
 
 func _on_left_wall_jump_area_2d_body_entered(body: Node2D) -> void:

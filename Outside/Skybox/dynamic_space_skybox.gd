@@ -5,13 +5,21 @@ extends Node3D
 
 @export var target_environment: Environment = null
 @export var sun_light: DirectionalLight3D = null
+@export var ship_node: Node3D = null
 var grid_manager: Node = null
 
 # Nodo contenitore per gli impostori 3D / proiezioni dei corpi celesti sullo skybox
 @onready var celestial_container: Node3D = Node3D.new()
 
+# Nodo contenitore del campo stellare procedurale (sempre centrato sulla nave)
+@onready var starfield: CPUParticles3D = CPUParticles3D.new()
+
 # Raggio della sfera di proiezione dello skybox attorno alla nave/camera
 const SKY_SPHERE_RADIUS: float = 400.0
+
+# Raggio della sfera del campo stellare (leggermente entro SKY_SPHERE_RADIUS)
+const STARFIELD_RADIUS: float = 380.0
+const STARFIELD_COUNT: int = 600
 
 var _rendered_entities: Array[Dictionary] = []
 
@@ -20,6 +28,11 @@ func _ready() -> void:
 	if not celestial_container.is_inside_tree():
 		add_child(celestial_container)
 		celestial_container.name = "CelestialContainer"
+	
+	if not starfield.is_inside_tree():
+		add_child(starfield)
+		starfield.name = "Starfield"
+		_setup_starfield()
 	
 	if grid_manager == null:
 		grid_manager = get_node_or_null("/root/StarSystemGridManager")
@@ -35,7 +48,7 @@ func _ready() -> void:
 	_auto_detect_scene_elements()
 	update_skybox()
 
-## Rileva automaticamente WorldEnvironment e DirectionalLight3D se presenti nella scena genitore
+## Rileva automaticamente WorldEnvironment, DirectionalLight3D e la nave se presenti nella scena genitore
 func _auto_detect_scene_elements() -> void:
 	if target_environment == null:
 		var world_env: WorldEnvironment = get_node_or_null("../WorldEnvironment") as WorldEnvironment
@@ -44,6 +57,9 @@ func _auto_detect_scene_elements() -> void:
 	
 	if sun_light == null:
 		sun_light = get_node_or_null("../SunLight") as DirectionalLight3D
+	
+	if ship_node == null:
+		ship_node = get_node_or_null("../Spaceship") as Node3D
 
 func set_target_environment(env: Environment) -> void:
 	target_environment = env
@@ -147,6 +163,18 @@ func _on_system_entities_updated(entities: Array[Dictionary]) -> void:
 func _process(_delta: float) -> void:
 	if not is_inside_tree():
 		return
+	
+	# Centra lo skybox sulla nave (non sulla camera attiva del viewport), cosi' la
+	# proiezione dei corpi celesti e il campo stellare seguono l'astronave anche
+	# quando viene osservata da una camera esterna (es. Cams) diversa da quella
+	# statica di default della scena.
+	if ship_node == null or not is_instance_valid(ship_node):
+		_auto_detect_scene_elements()
+	
+	if ship_node and is_instance_valid(ship_node):
+		global_position = ship_node.global_position
+		return
+	
 	var cam := get_viewport().get_camera_3d() if get_viewport() else null
 	if cam and is_instance_valid(cam):
 		global_position = cam.global_position
@@ -209,3 +237,38 @@ func _create_celestial_impostor_node(info: Dictionary) -> void:
 
 func _on_sector_changed(_old_coords: Vector3i, _new_coords: Vector3i, _sec_data: SectorData) -> void:
 	update_skybox()
+
+## Configura il campo stellare procedurale: piccoli punti luminosi non ombreggiati
+## distribuiti sulla superficie di una sfera centrata sulla nave, per simulare
+## un cielo stellato a distanza infinita (nessuna parallasse) attorno all'astronave.
+func _setup_starfield() -> void:
+	starfield.amount = STARFIELD_COUNT
+	starfield.lifetime = 1000.0
+	starfield.preprocess = 1000.0
+	starfield.one_shot = false
+	starfield.speed_scale = 0.0
+	starfield.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE_SURFACE
+	starfield.emission_sphere_radius = STARFIELD_RADIUS
+	starfield.direction = Vector3.ZERO
+	starfield.spread = 0.0
+	starfield.gravity = Vector3.ZERO
+	starfield.initial_velocity_min = 0.0
+	starfield.initial_velocity_max = 0.0
+	starfield.scale_amount_min = 0.4
+	starfield.scale_amount_max = 1.8
+	
+	var star_mesh := SphereMesh.new()
+	star_mesh.radius = 0.05
+	star_mesh.height = 0.1
+	star_mesh.radial_segments = 4
+	star_mesh.rings = 2
+	
+	var star_mat := StandardMaterial3D.new()
+	star_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	star_mat.albedo_color = Color(0.9, 0.95, 1.0, 1.0)
+	star_mat.emission_enabled = true
+	star_mat.emission = Color(0.85, 0.9, 1.0)
+	star_mat.emission_energy_multiplier = 1.5
+	star_mesh.material = star_mat
+	
+	starfield.mesh = star_mesh

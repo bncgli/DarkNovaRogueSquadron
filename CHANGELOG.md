@@ -4,7 +4,20 @@ Tutti i cambiamenti significativi a questo progetto saranno documentati in quest
 
 ## [Unreleased]
 
+### Fixed
+- **DynamicSpaceSkybox**: il nodo non veniva mai istanziato nella scena di gioco reale (era presente solo nei test GUT). Aggiunto come figlio di `SpaceScene` in `Outside/space_scene.tscn`, accanto a `WorldEnvironment` e `SunLight` (già rilevati automaticamente da `_auto_detect_scene_elements()`), così la proiezione diegetica dei corpi celesti e l'illuminazione stellare dinamica ora funzionano effettivamente durante il volo.
+- **DynamicSpaceSkybox non visibile da Cams**: lo skybox si centrava sulla camera "attiva del viewport" (`get_viewport().get_camera_3d()`), che in `space_scene.tscn` è una `Camera3D` statica di default e non si muove mai con la nave. I feed delle telecamere esterne (`Cams`) invece seguono la trasformazione reale dell'astronave, quindi non appena la nave si spostava dall'origine della scena, i corpi celesti proiettati restavano "indietro" e uscivano dal campo visivo dei feed. Ora lo skybox rileva automaticamente il nodo `Spaceship` (sibling in scena) e si centra sulla sua posizione globale ad ogni frame, restando quindi sempre visibile da qualsiasi camera, incluse quelle di `Cams`.
+
+### Added
+- **Cielo stellato diegetico**: aggiunto un campo stellare procedurale (`CPUParticles3D`) a `DynamicSpaceSkybox`, composto da punti luminosi non ombreggiati distribuiti sulla superficie di una sfera (raggio 380m) centrata sulla nave, per simulare stelle a distanza infinita (nessuna parallasse) attorno all'astronave, prima assente nel `ProceduralSkyMaterial` (che offriva solo un gradiente di colore).
+
+### Documentation
+- Riscritto integralmente `README.md` come guida introduttiva per i giocatori di *Dark Nova: Rogue Squadron*, riflettendo lo stato reale del progetto (concept, avvio, applicazioni giocabili, controlli).
+- Allineato `docs/DARK_NOVA_FEATURES_DESIGN.md` alle implementazioni effettive delle app `Weapons`, `ShieldMatrix`, `Comms`, `Sensors` e `CargoBay`, rimuovendo funzionalità descritte ma non implementate (jamming/spoofing IFF, decodifica crypto in-app, radar a 50km, spettrometria asteroidi, FLUX/S-Net in CargoBay).
+- Rimossi da `TODO.md` i riferimenti a file `task_queue/*.md` non più esistenti (TASK-003, TASK-004, TASK-005).
+
 ### Changed
+- **PodInfo**: convertita da app a finestra apribile/chiudibile a widget diegetico sempre attivo, istanziato direttamente in `Scenes/Taskbar/taskbar.tscn` accanto all'orologio (analogo ai widget di sistema di un desktop environment); rimossi comando terminale `pod`, registrazione in `TerminalSoftwareManager` e voce nel menu Start/Software Manager. Rimossa la frequenza cardiaca (label, timer, calcolo, suono heartbeat) e i campi non essenziali (qualità aria, stato equipaggio testuale); il widget mostra ora solo Ossigeno, Temperatura, Pressione e G-Force in forma compatta. Restano invariati il microfono virtuale spazializzato e gli effetti fisiologici critici (Blackout/Redout/GameOver).
 - Massivo refactoring dei dati core da `Dictionary` a classi basate su `Resource`.
 - `ShipBlueprint.gd`: `rooms`, `ducts`, `devices`, `damages`, `installed_apps`, `flux_modifiers` e `drive_files` ora usano `Array` tipizzati di oggetti Resource.
 - `RoomDatabase.gd`: `CAMERAS_METADATA` e `DUCT_ROOMS` convertiti in array di oggetti tipizzati.

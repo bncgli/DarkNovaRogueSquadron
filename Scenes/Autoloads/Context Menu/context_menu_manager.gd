@@ -40,7 +40,7 @@ func handle_right_click(node: Control) -> void:
 		target = node
 		add_folder_options()
 		play_cooldown()
-	elif node is FileManagerWindow or DesktopFileManager:
+	elif node is FileManagerWindow or node is DesktopFileManager:
 		target = node
 		add_file_manager_options()
 		play_cooldown()

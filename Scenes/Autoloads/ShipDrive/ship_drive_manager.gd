@@ -365,11 +365,12 @@ func sync_file(rel_path: String, content: String) -> void:
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_file.rpc(rel_path, content)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_file.rpc(rel_path, content)
 	else:
 		_rpc_client_sync_file.rpc_id(1, rel_path, content)
 
@@ -381,11 +382,12 @@ func sync_folder(rel_path: String) -> void:
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_folder.rpc(rel_path)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_folder.rpc(rel_path)
 	else:
 		_rpc_client_sync_folder.rpc_id(1, rel_path)
 
@@ -397,11 +399,12 @@ func sync_folder_password(rel_path: String, password_str: String) -> void:
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_folder_password.rpc(rel_path, password_str)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_folder_password.rpc(rel_path, password_str)
 	else:
 		_rpc_client_sync_folder_password.rpc_id(1, rel_path, password_str)
 
@@ -413,11 +416,12 @@ func sync_remove_folder_password(rel_path: String) -> void:
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_remove_folder_password.rpc(rel_path)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_remove_folder_password.rpc(rel_path)
 	else:
 		_rpc_client_sync_remove_folder_password.rpc_id(1, rel_path)
 
@@ -430,11 +434,12 @@ func sync_rename(old_rel_path: String, new_rel_path: String, is_dir: bool) -> vo
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_rename.rpc(old_rel_path, new_rel_path, is_dir)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_rename.rpc(old_rel_path, new_rel_path, is_dir)
 	else:
 		_rpc_client_sync_rename.rpc_id(1, old_rel_path, new_rel_path, is_dir)
 
@@ -446,11 +451,12 @@ func sync_delete(rel_path: String, is_dir: bool) -> void:
 		return
 	
 	var nm := _get_net_mgr()
-	if not nm or not nm.get("is_connected_to_network"):
+	if not nm or not nm.get("is_connected_to_network") or nm.get("is_solo_mode"):
 		return
 	
 	if nm.get("is_host"):
-		_rpc_sync_delete.rpc(rel_path, is_dir)
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_sync_delete.rpc(rel_path, is_dir)
 	else:
 		_rpc_client_sync_delete.rpc_id(1, rel_path, is_dir)
 

@@ -10,7 +10,7 @@ class_name SnakeBoard
 # Also, every 50 points you move a bit faster.
 # Can you beat your high score?
 
-signal score_updated(old_score:int, new_score:int)
+signal score_updated(new_score:int)
 signal game_ended(final_score:int)
 
 var board_image: Image

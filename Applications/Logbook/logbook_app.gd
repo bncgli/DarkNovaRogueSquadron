@@ -88,8 +88,8 @@ func _connect_system_signals() -> void:
 	if NetworkManager:
 		if NetworkManager.has_signal("player_role_changed") and not NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.connect(_on_player_role_changed)
-		if NetworkManager.has_signal("player_list_updated") and not NetworkManager.player_list_updated.is_connected(_on_player_list_updated):
-			NetworkManager.player_list_updated.connect(_on_player_list_updated)
+		if NetworkManager.has_signal("lobby_updated") and not NetworkManager.lobby_updated.is_connected(_on_player_list_updated):
+			NetworkManager.lobby_updated.connect(_on_player_list_updated)
 
 	if ShipDriveManager:
 		if ShipDriveManager.has_signal("file_modified") and not ShipDriveManager.file_modified.is_connected(_on_drive_file_modified):
@@ -111,8 +111,8 @@ func _disconnect_system_signals() -> void:
 	if NetworkManager:
 		if NetworkManager.has_signal("player_role_changed") and NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
-		if NetworkManager.has_signal("player_list_updated") and NetworkManager.player_list_updated.is_connected(_on_player_list_updated):
-			NetworkManager.player_list_updated.disconnect(_on_player_list_updated)
+		if NetworkManager.has_signal("lobby_updated") and NetworkManager.lobby_updated.is_connected(_on_player_list_updated):
+			NetworkManager.lobby_updated.disconnect(_on_player_list_updated)
 
 	if ShipDriveManager:
 		if ShipDriveManager.has_signal("file_modified") and ShipDriveManager.file_modified.is_connected(_on_drive_file_modified):
@@ -171,8 +171,8 @@ func _on_mission_ended() -> void:
 # -----------------------------------------------------------------------------
 func _update_rbac_permissions() -> void:
 	if NetworkManager:
-		if NetworkManager.has_method("get_my_role"):
-			current_role = NetworkManager.get_my_role()
+		if NetworkManager.has_method("get_local_player_role"):
+			current_role = NetworkManager.get_local_player_role()
 		elif "current_role" in NetworkManager:
 			current_role = NetworkManager.current_role
 		
@@ -201,8 +201,8 @@ func _update_rbac_permissions() -> void:
 
 func _on_player_role_changed(peer_id: int, new_role: String) -> void:
 	var my_peer_id: int = 1
-	if NetworkManager and NetworkManager.has_method("get_my_peer_id"):
-		my_peer_id = NetworkManager.get_my_peer_id()
+	if NetworkManager and "local_peer_id" in NetworkManager:
+		my_peer_id = NetworkManager.local_peer_id
 	elif multiplayer and multiplayer.has_method("get_unique_id"):
 		my_peer_id = multiplayer.get_unique_id()
 
@@ -210,7 +210,7 @@ func _on_player_role_changed(peer_id: int, new_role: String) -> void:
 		current_role = new_role
 		_update_rbac_permissions()
 
-func _on_player_list_updated() -> void:
+func _on_player_list_updated(_players_dict: Dictionary = {}) -> void:
 	_update_rbac_permissions()
 
 # -----------------------------------------------------------------------------
@@ -228,23 +228,18 @@ func load_dat_configuration() -> void:
 	_apply_configuration(parsed_config, parsed_tuning)
 
 func _apply_configuration(parsed_config: Dictionary, parsed_tuning: Dictionary) -> void:
-	if parsed_config.has("SYSTEM"):
-		var sys: Dictionary = parsed_config["SYSTEM"]
-		if sys.has("app_name"): config_data["app_name"] = str(sys["app_name"])
-		if sys.has("version"): config_data["version"] = str(sys["version"])
-		if sys.has("status"): config_data["status"] = str(sys["status"])
+	# NOTA: _parse_dat_file ritorna un dizionario "flat" (le intestazioni [SEZIONE] vengono
+	# ignorate durante il parsing), quindi le chiavi vanno lette direttamente qui.
+	if parsed_config.has("app_name"): config_data["app_name"] = str(parsed_config["app_name"])
+	if parsed_config.has("version"): config_data["version"] = str(parsed_config["version"])
+	if parsed_config.has("status"): config_data["status"] = str(parsed_config["status"])
+	if parsed_config.has("auto_log_events"): config_data["auto_log_events"] = bool(parsed_config["auto_log_events"])
+	if parsed_config.has("max_history_entries"): config_data["max_history_entries"] = int(parsed_config["max_history_entries"])
+	if parsed_config.has("log_telemetry_errors"): config_data["log_telemetry_errors"] = bool(parsed_config["log_telemetry_errors"])
 
-	if parsed_config.has("LOGGING"):
-		var logg: Variant = parsed_config["LOGGING"]
-		if logg.has("auto_log_events"): config_data["auto_log_events"] = bool(logg["auto_log_events"])
-		if logg.has("max_history_entries"): config_data["max_history_entries"] = int(logg["max_history_entries"])
-		if logg.has("log_telemetry_errors"): config_data["log_telemetry_errors"] = bool(logg["log_telemetry_errors"])
-
-	if parsed_tuning.has("SYNC"):
-		var sync: Variant = parsed_tuning["SYNC"]
-		if sync.has("sync_to_ship_drive"): tuning_data["sync_to_ship_drive"] = bool(sync["sync_to_ship_drive"])
-		if sync.has("timestamp_format"): tuning_data["timestamp_format"] = str(sync["timestamp_format"])
-		if sync.has("cloud_backup"): tuning_data["cloud_backup"] = bool(sync["cloud_backup"])
+	if parsed_tuning.has("sync_to_ship_drive"): tuning_data["sync_to_ship_drive"] = bool(parsed_tuning["sync_to_ship_drive"])
+	if parsed_tuning.has("timestamp_format"): tuning_data["timestamp_format"] = str(parsed_tuning["timestamp_format"])
+	if parsed_tuning.has("cloud_backup"): tuning_data["cloud_backup"] = bool(parsed_tuning["cloud_backup"])
 
 func _on_drive_file_modified(rel_path: String) -> void:
 	if "Logbook" in rel_path and rel_path.ends_with(".dat"):
@@ -352,17 +347,13 @@ func complete_contract(contract_id: String) -> void:
 			var r_flux: int = contract.get("reward_flux")
 			var r_cr: int = contract.get("reward_credits")
 			
-			# Accreditamento fondi persistenti nave
-			if SpaceWorldManager:
-				if SpaceWorldManager.has_method("add_ship_flux"):
-					SpaceWorldManager.add_ship_flux(r_flux)
-				elif "ship_flux" in SpaceWorldManager:
-					SpaceWorldManager.ship_flux += r_flux
-				
-				if SpaceWorldManager.has_method("add_ship_credits"):
-					SpaceWorldManager.add_ship_credits(r_cr)
-				elif "ship_credits" in SpaceWorldManager:
-					SpaceWorldManager.ship_credits += r_cr
+			# Accreditamento fondi persistenti nave tramite il vero sistema economico (FluxEconomyManager)
+			if FluxEconomyManager:
+				FluxEconomyManager.credits += r_cr
+				FluxEconomyManager.credits_changed.emit(FluxEconomyManager.credits, r_cr)
+				# "reward_flux" è espresso su scala 0-2200, incompatibile col range 0-1000 del
+				# rating FLUX: lo trattiamo come bonus proporzionale allo score (rapporto 1:100).
+				FluxEconomyManager.adjust_flux_score(float(r_flux) / 100.0, "Ricompensa contratto: " + contract["title"])
 
 			log_event("CONTRATTO COMPLETATO: %s (+%d FLUX, +%d CR)" % [contract["title"], r_flux, r_cr])
 			break
@@ -446,6 +437,9 @@ func _load_notes_list() -> void:
 	notes_option_btn.add_item("Rapporto Danni Ingegneria", 2)
 	notes_option_btn.add_item("Appunti Personali Stazione", 3)
 	
+	if note_storage_type_btn and note_storage_type_btn.selected < 0:
+		note_storage_type_btn.selected = 0
+	
 	if storage_notes_label:
 		var target_drive := "Ship Drive" if (note_storage_type_btn and note_storage_type_btn.selected == 0) else "Terminal Drive"
 		storage_notes_label.text = "STORAGE: %s" % target_drive
@@ -469,20 +463,23 @@ func _on_save_note_pressed() -> void:
 	var is_ship_drive: bool = (note_storage_type_btn == null or note_storage_type_btn.selected == 0)
 	var content: String = note_edit_text.text
 	var filename: String = "note_%d.txt" % Time.get_unix_time_from_system()
+	var drive_root := "Ship Drive" if is_ship_drive else "Terminal Drive"
+	var rel_path := "%s/Documents/%s" % [drive_root, filename]
 	
-	if is_ship_drive and ShipDriveManager:
-		var target_path := "Ship Drive/Documents/%s" % filename
-		if ShipDriveManager.has_method("write_file"):
-			ShipDriveManager.write_file(target_path, content)
-		elif ShipDriveManager.has_method("create_file"):
-			ShipDriveManager.create_file("Ship Drive/Documents", filename, content)
-	elif not is_ship_drive and TerminalDriveManager:
-		var target_path := "Terminal Drive/Documents/%s" % filename
-		if TerminalDriveManager.has_method("write_file"):
-			TerminalDriveManager.write_file(target_path, content)
-		elif TerminalDriveManager.has_method("create_file"):
-			TerminalDriveManager.create_file("Terminal Drive/Documents", filename, content)
+	# Scrittura fisica del file (stesso pattern usato dalle altre app, es. StationHub)
+	var abs_path := "user://files/%s" % rel_path
+	var base_dir := abs_path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(base_dir):
+		DirAccess.make_dir_recursive_absolute(base_dir)
+	var f := FileAccess.open(abs_path, FileAccess.WRITE)
+	if f:
+		f.store_string(content)
+		f.close()
+	
+	var drive_mgr: Node = ShipDriveManager if is_ship_drive else TerminalDriveManager
+	if drive_mgr and drive_mgr.has_method("sync_file"):
+		drive_mgr.sync_file(rel_path, content)
 
-	log_event("NOTA SALVATA: %s su %s" % [filename, "Ship Drive" if is_ship_drive else "Terminal Drive"])
+	log_event("NOTA SALVATA: %s su %s" % [filename, drive_root])
 	if status_label:
 		status_label.text = "NOTA SALVATA CON SUCCESSO"

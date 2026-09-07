@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://cb8bdxckqcomm"]
-
-[ext_resource type="Script" path="res://tests/test_comms_node.gd" id="1_comms_test_script"]
-
-[node name="TestComms" type="Node"]
-script = ExtResource("1_comms_test_script")

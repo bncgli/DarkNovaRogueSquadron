@@ -29,7 +29,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-HotkeyManager="res://Scenes/Autoloads/Hotkey Manager/hotkey_manager.tscn"
+HotkeyManager="*res://Scenes/Autoloads/Hotkey Manager/hotkey_manager.tscn"
 ContextMenu="*res://Scenes/Autoloads/Context Menu/context_menu.tscn"
 NotificationManager="*res://Scenes/Autoloads/Notification Manager/notification_manager.tscn"
 CopyPasteManager="*res://Scenes/Autoloads/CopyPaste Manager/copy_paste_manager.tscn"
@@ -59,7 +59,7 @@ window/vsync/vsync_mode=0
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ship_sublayer_editor/plugin.cfg", "res://addons/star_system_editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/ship_sublayer_editor/plugin.cfg", "res://addons/star_system_editor/plugin.cfg")
 
 [file_customization]
 

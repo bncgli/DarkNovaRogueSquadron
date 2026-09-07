@@ -854,8 +854,16 @@ func _update_firmware_ui() -> void:
 	
 	var text := "[b]Stato Firmware Mainframe:[/b]\n"
 	for sub_name in SUBSYSTEM_FACTORY_DEFAULTS:
-		var cfg_p: String = "Ship Drive/Programs/%s/%s_config.dat" % [sub_name, sub_name.to_snake_case()]
-		var exists := FileAccess.file_exists("user://files/" + cfg_p)
+		var sub_data: Dictionary = SUBSYSTEM_FACTORY_DEFAULTS[sub_name]
+		var files_map: Dictionary = sub_data.get("files", {})
+		var cfg_p := ""
+		for fp in files_map.keys():
+			if str(fp).ends_with("_config.dat"):
+				cfg_p = fp
+				break
+		if cfg_p.is_empty() and not files_map.is_empty():
+			cfg_p = files_map.keys()[0]
+		var exists := not cfg_p.is_empty() and FileAccess.file_exists("user://files/" + cfg_p)
 		var status_col := "green" if exists else "yellow"
 		var status_str := "ONLINE (VALIDATO)" if exists else "NON PRESENTE (FALLBACK)"
 		text += "- [color=%s]● %s[/color]: %s\n" % [status_col, sub_name, status_str]

@@ -90,7 +90,7 @@ func new_folder(new_folder_name: String = "New Folder", folder_path: String = ""
 			await get_tree().process_frame # Waiting for child to get added...
 			file_manager.sort_folders()
 	
-	if clean_dir.is_empty():
+	if clean_dir.is_empty() and not is_in_group("file_manager_window"):
 		instantiate_file(candidate_name, candidate_name, GlobalValues.FileType.FOLDER)
 		sort_folders()
 
@@ -136,7 +136,7 @@ func new_file(extension: String, file_type: GlobalValues.FileType, new_file_name
 			await get_tree().process_frame # Waiting for child to get added...
 			file_manager.sort_folders()
 	
-	if clean_dir.is_empty():
+	if clean_dir.is_empty() and not is_in_group("file_manager_window"):
 		instantiate_file(candidate_name, clean_dir, file_type)
 		sort_folders()
 

@@ -57,10 +57,9 @@ func place(piece: GodotrisPiece) -> void:
 	check_and_clear_lines()
 
 func check_and_clear_lines() -> void:
-	var i := blocks.size()
+	var i := blocks.size() - 1
 	var lines_to_clear: Array[int] = []
 	while i >= 0:
-		i -= 1
 		var line: Array = blocks[i]
 		var is_full := true
 		for pos: GodotrisBlock in line:
@@ -68,10 +67,10 @@ func check_and_clear_lines() -> void:
 				is_full = false
 				break
 		
-		if !is_full:
-			continue
+		if is_full:
+			lines_to_clear.append(i)
 		
-		lines_to_clear.append(i)
+		i -= 1
 	
 	if lines_to_clear.size() > 0:
 		clear_lines(lines_to_clear)
