@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cx6y8v2u0diag"]
 
-[ext_resource type="Script" path="res://Applications/Diagnostics/diagnostics_app.gd" id="1_diag_script"]
+[ext_resource type="Script" uid="uid://xu051gam6phk" path="res://Applications/Diagnostics/diagnostics_app.gd" id="1_diag_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.04, 0.07, 0.12, 0.85)
@@ -9,18 +9,6 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.15, 0.35, 0.45, 0.6)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_action"]
-bg_color = Color(0.1, 0.45, 0.75, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.4, 0.85, 1, 0.9)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -38,7 +26,7 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[node name="DiagnosticsApp" type="Control"]
+[node name="DiagnosticsApp" type="Control" unique_id=447955821]
 custom_minimum_size = Vector2(640, 450)
 layout_mode = 3
 anchors_preset = 15
@@ -48,7 +36,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_diag_script")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=635809179]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -57,7 +45,7 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer" unique_id=530365856]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -66,68 +54,68 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin" unique_id=763019864]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=649069398]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard" unique_id=2027694098]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1850033445]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.9, 0.7, 1)
 theme_override_font_sizes/font_size = 13
 text = "🛡️ SYSTEM DIAGNOSTICS & ICE DEFENSE"
 
-[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1064327935]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "● INTEGRITÀ 100% (SECURE)"
 
-[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1935770075]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "👤 RUOLO: HACKER"
 
-[node name="IceBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="IceBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1994200588]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "🛡️ ICE: 100/100"
 
-[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=823566567]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
 theme_override_font_sizes/font_size = 11
 text = "⚙️ .DAT: STANDARD"
 
-[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=252485861]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "🔄 Ricarica .DAT"
 
-[node name="TabContainer" type="TabContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="TabContainer" type="TabContainer" parent="ScrollContainer/Margin/VBox" unique_id=1144803479]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/font_size = 11
 current_tab = 0
 
-[node name="🔍 Scanner Minacce & Drive" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer"]
+[node name="🔍 Scanner Minacce & Drive" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer" unique_id=1351376712]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
@@ -135,37 +123,37 @@ theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 metadata/_tab_index = 0
 
-[node name="VBoxScanner" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive"]
+[node name="VBoxScanner" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive" unique_id=1181550915]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner"]
+[node name="ControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner" unique_id=1471014381]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TargetLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="TargetLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=166332019]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Unità Target:"
 
-[node name="TargetDriveOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="TargetDriveOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=1564823903]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 
-[node name="DepthLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="DepthLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=1253440757]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Profondità:"
 
-[node name="DepthOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="DepthOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=14193914]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 
-[node name="BtnStartScan" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="BtnStartScan" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=657057]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 26)
 layout_mode = 2
@@ -173,18 +161,18 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 text = "🔍 Avvia Scansione"
 
-[node name="BtnPurgeThreats" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox"]
+[node name="BtnPurgeThreats" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ControlsHBox" unique_id=1778913047]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "🧹 Purga Minacce"
 
-[node name="ProgressHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner"]
+[node name="ProgressHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner" unique_id=1229495856]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ScanProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox"]
+[node name="ScanProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox" unique_id=2047105575]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
@@ -192,7 +180,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 10
 
-[node name="ScanStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox"]
+[node name="ScanStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox" unique_id=236461166]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
@@ -200,27 +188,27 @@ theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 10
 text = "Pronto alla scansione."
 
-[node name="IntegrityScoreLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox"]
+[node name="IntegrityScoreLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner/ProgressHBox" unique_id=149108776]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "Integrità Sistema: 100%"
 
-[node name="ThreatsListLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner"]
+[node name="ThreatsListLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner" unique_id=312097193]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "Minacce Rilevate / Stato Integrità File System:"
 
-[node name="ThreatsList" type="ItemList" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner"]
+[node name="ThreatsList" type="ItemList" parent="ScrollContainer/Margin/VBox/TabContainer/🔍 Scanner Minacce & Drive/VBoxScanner" unique_id=1640674389]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 140)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/font_size = 10
 
-[node name="🛡️ Barriera ICE & Difesa" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer"]
+[node name="🛡️ Barriera ICE & Difesa" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer" unique_id=1347373197]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 6
@@ -229,15 +217,15 @@ theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 metadata/_tab_index = 1
 
-[node name="VBoxICE" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa"]
+[node name="VBoxICE" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa" unique_id=1587346832]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ICEStatusHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE"]
+[node name="ICEStatusHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE" unique_id=1971217669]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="IceProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox"]
+[node name="IceProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox" unique_id=963768623]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
@@ -246,81 +234,81 @@ size_flags_vertical = 4
 theme_override_font_sizes/font_size = 10
 value = 100.0
 
-[node name="IceValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox"]
+[node name="IceValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox" unique_id=32890905]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "Integrità ICE: 100.0 / 100.0 HP (100%)"
 
-[node name="BtnReinforceIce" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox"]
+[node name="BtnReinforceIce" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox" unique_id=188918381]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(130, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "⚡ Rinforza ICE (+25%)"
 
-[node name="BtnFlushFirewall" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox"]
+[node name="BtnFlushFirewall" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/ICEStatusHBox" unique_id=818114480]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "🛡️ Flush Firewall"
 
-[node name="NodesLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE"]
+[node name="NodesLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE" unique_id=1177435685]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "Nodi di Protezione Sottosistemi Nave:"
 
-[node name="IceNodesGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE"]
+[node name="IceNodesGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE" unique_id=1771245075]
 layout_mode = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 4
 columns = 3
 
-[node name="NodeAvionicsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid"]
+[node name="NodeAvionicsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid" unique_id=303642807]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Avionica: 100% [SECURE]"
 
-[node name="NodeReactorStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid"]
+[node name="NodeReactorStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid" unique_id=12457743]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Reattore: 100% [SECURE]"
 
-[node name="NodeCommsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid"]
+[node name="NodeCommsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid" unique_id=875717399]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Comms: 100% [SECURE]"
 
-[node name="NodeWeaponsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid"]
+[node name="NodeWeaponsStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid" unique_id=270450709]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Armi: 100% [SECURE]"
 
-[node name="NodeMainframeStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid"]
+[node name="NodeMainframeStatus" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE/IceNodesGrid" unique_id=225897908]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Mainframe OS: 100% [SECURE]"
 
-[node name="IceLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE"]
+[node name="IceLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE" unique_id=1713762816]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "Log Intrusione & Telemetria ICE:"
 
-[node name="IceLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE"]
+[node name="IceLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/🛡️ Barriera ICE & Difesa/VBoxICE" unique_id=1409387373]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
@@ -329,7 +317,7 @@ theme_override_font_sizes/normal_font_size = 10
 bbcode_enabled = true
 scroll_following = true
 
-[node name="🔄 Reset Firmware .DAT" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer"]
+[node name="🔄 Reset Firmware .DAT" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer" unique_id=1185435352]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 6
@@ -338,26 +326,26 @@ theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 metadata/_tab_index = 2
 
-[node name="VBoxReset" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT"]
+[node name="VBoxReset" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT" unique_id=1617961466]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ResetControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset"]
+[node name="ResetControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset" unique_id=745630395]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SubsystemLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox"]
+[node name="SubsystemLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox" unique_id=410640150]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Sottosistema:"
 
-[node name="SubsystemOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox"]
+[node name="SubsystemOption" type="OptionButton" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox" unique_id=1023823179]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 26)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 
-[node name="BtnFactoryReset" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox"]
+[node name="BtnFactoryReset" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetControlsHBox" unique_id=1695824990]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(170, 26)
 layout_mode = 2
@@ -365,11 +353,11 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 text = "🔄 Factory Reset Firmware"
 
-[node name="ResetProgressHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset"]
+[node name="ResetProgressHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset" unique_id=436690242]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ResetProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetProgressHBox"]
+[node name="ResetProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetProgressHBox" unique_id=1684412643]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
@@ -377,7 +365,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 10
 
-[node name="ResetStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetProgressHBox"]
+[node name="ResetStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset/ResetProgressHBox" unique_id=277971115]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
@@ -385,7 +373,7 @@ theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 10
 text = "Pronto al ripristino valori di fabbrica."
 
-[node name="FirmwareStatusText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset"]
+[node name="FirmwareStatusText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/🔄 Reset Firmware .DAT/VBoxReset" unique_id=1136895834]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 140)
 layout_mode = 2
@@ -394,7 +382,7 @@ theme_override_font_sizes/normal_font_size = 10
 bbcode_enabled = true
 scroll_following = true
 
-[node name="📜 Audit Log Cyber" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer"]
+[node name="📜 Audit Log Cyber" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TabContainer" unique_id=818849188]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 6
@@ -403,28 +391,28 @@ theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 metadata/_tab_index = 3
 
-[node name="VBoxLog" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber"]
+[node name="VBoxLog" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber" unique_id=82089072]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LogHeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog"]
+[node name="LogHeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog" unique_id=549542865]
 layout_mode = 2
 
-[node name="LogTitle" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog/LogHeaderHBox"]
+[node name="LogTitle" type="Label" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog/LogHeaderHBox" unique_id=331325075]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "Registro Completo Eventi di Sicurezza & Diagnostica:"
 
-[node name="BtnClearLog" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog/LogHeaderHBox"]
+[node name="BtnClearLog" type="Button" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog/LogHeaderHBox" unique_id=155221857]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 22)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Cancella Log"
 
-[node name="AuditLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog"]
+[node name="AuditLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/TabContainer/📜 Audit Log Cyber/VBoxLog" unique_id=1582103169]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
@@ -433,18 +421,18 @@ theme_override_font_sizes/normal_font_size = 10
 bbcode_enabled = true
 scroll_following = true
 
-[node name="FooterCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="FooterCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=1391984783]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/FooterCard"]
+[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/FooterCard" unique_id=1052127284]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "Stato: Mainframe diagnostico operativo."
 
-[node name="DisconnectedOverlay" type="Panel" parent="."]
+[node name="DisconnectedOverlay" type="Panel" parent="." unique_id=1944930243]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -455,7 +443,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
 
-[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay" unique_id=1890849659]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -463,18 +451,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center" unique_id=1226314185]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1830516311]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.3, 0.3, 1)
 theme_override_font_sizes/font_size = 28
 text = "⚠️ SISTEMI DIAGNOSTICI OFFLINE"
 horizontal_alignment = 1
 
-[node name="SubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="SubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1622316841]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.8)
 theme_override_font_sizes/font_size = 12

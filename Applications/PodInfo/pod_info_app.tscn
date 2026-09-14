@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://c6f8u7v4m1p2n"]
 
-[ext_resource type="Script" path="res://Applications/PodInfo/pod_info_app.gd" id="1_pod_info"]
+[ext_resource type="Script" uid="uid://dd4dk00y8ubei" path="res://Applications/PodInfo/pod_info_app.gd" id="1_pod_info"]
 
-[node name="PodInfoApp" type="Control"]
+[node name="PodInfoApp" type="Control" unique_id=632311817]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_pod_info")
 
-[node name="GridContainer" type="GridContainer" parent="."]
+[node name="GridContainer" type="GridContainer" parent="." unique_id=1359301879]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,70 +24,65 @@ theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 0
 columns = 2
 
-[node name="OxygenLabel" type="Label" parent="GridContainer"]
+[node name="OxygenLabel" type="Label" parent="GridContainer" unique_id=2058396563]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
 text = "O2 --%"
 horizontal_alignment = 2
 
-[node name="GForceLabel" type="Label" parent="GridContainer"]
+[node name="GForceLabel" type="Label" parent="GridContainer" unique_id=2138637535]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
 text = "--G"
 horizontal_alignment = 2
 
-[node name="TempLabel" type="Label" parent="GridContainer"]
+[node name="TempLabel" type="Label" parent="GridContainer" unique_id=800241937]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
 text = "--°C"
 horizontal_alignment = 2
 
-[node name="PressureLabel" type="Label" parent="GridContainer"]
+[node name="PressureLabel" type="Label" parent="GridContainer" unique_id=2084671080]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
 text = "-- kPa"
 horizontal_alignment = 2
 
-[node name="BackgroundAudio" type="AudioStreamPlayer" parent="."]
+[node name="BackgroundAudio" type="AudioStreamPlayer" parent="." unique_id=1410432229]
 unique_name_in_owner = true
-bus = &"Ambient"
 
-[node name="SFXAudio" type="AudioStreamPlayer" parent="."]
+[node name="SFXAudio" type="AudioStreamPlayer" parent="." unique_id=851456222]
 unique_name_in_owner = true
-bus = &"SFX"
 
-[node name="VocalAudio" type="AudioStreamPlayer" parent="."]
+[node name="VocalAudio" type="AudioStreamPlayer" parent="." unique_id=973202381]
 unique_name_in_owner = true
-bus = &"SFX"
 
-[node name="DroneAudio" type="AudioStreamPlayer" parent="."]
+[node name="DroneAudio" type="AudioStreamPlayer" parent="." unique_id=2074735758]
 unique_name_in_owner = true
-bus = &"Ambient"
 
-[node name="SpatialAudio" type="AudioStreamPlayer" parent="."]
+[node name="SpatialAudio" type="AudioStreamPlayer" parent="." unique_id=1083872196]
 unique_name_in_owner = true
-bus = &"SFX"

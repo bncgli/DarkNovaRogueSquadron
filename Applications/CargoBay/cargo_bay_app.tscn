@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cargo_bay_app_scene_001"]
+[gd_scene format=3 uid="uid://8o6mx717iit3"]
 
-[ext_resource type="Script" path="res://Applications/CargoBay/cargo_bay_app.gd" id="1_cargo_script"]
+[ext_resource type="Script" uid="uid://d204e0tw685l5" path="res://Applications/CargoBay/cargo_bay_app.gd" id="1_cargo_script"]
 
-[node name="CargoBayApp" type="Control"]
+[node name="CargoBayApp" type="Control" unique_id=1796628475]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cargo_script")
 
-[node name="MainLayout" type="VBoxContainer" parent="."]
+[node name="MainLayout" type="VBoxContainer" parent="." unique_id=1942804724]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,35 +19,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HeaderPanel" type="PanelContainer" parent="MainLayout"]
+[node name="HeaderPanel" type="PanelContainer" parent="MainLayout" unique_id=634072512]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="MainLayout/HeaderPanel"]
+[node name="Margin" type="MarginContainer" parent="MainLayout/HeaderPanel" unique_id=981269695]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_right = 12
 
-[node name="HBox" type="HBoxContainer" parent="MainLayout/HeaderPanel/Margin"]
+[node name="HBox" type="HBoxContainer" parent="MainLayout/HeaderPanel/Margin" unique_id=1132029026]
 layout_mode = 2
 
-[node name="Titles" type="VBoxContainer" parent="MainLayout/HeaderPanel/Margin/HBox"]
+[node name="Titles" type="VBoxContainer" parent="MainLayout/HeaderPanel/Margin/HBox" unique_id=384351203]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TitleLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles"]
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles" unique_id=338044558]
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "📦 GESTIONE STIVA CARGO"
 
-[node name="StatusSubLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles"]
+[node name="StatusSubLabel" type="Label" parent="MainLayout/HeaderPanel/Margin/HBox/Titles" unique_id=1255896568]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
 theme_override_font_sizes/font_size = 11
 text = "Sistemi Cargo Operativi."
 
-[node name="ContentMargin" type="MarginContainer" parent="MainLayout"]
+[node name="ContentMargin" type="MarginContainer" parent="MainLayout" unique_id=980644241]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 12
@@ -55,88 +55,88 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="CargoVBox" type="VBoxContainer" parent="MainLayout/ContentMargin"]
+[node name="CargoVBox" type="VBoxContainer" parent="MainLayout/ContentMargin" unique_id=2127614414]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CapacitiesGrid" type="GridContainer" parent="MainLayout/ContentMargin/CargoVBox"]
+[node name="CapacitiesGrid" type="GridContainer" parent="MainLayout/ContentMargin/CargoVBox" unique_id=1662553660]
 layout_mode = 2
 columns = 2
 
-[node name="MassStatusLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid"]
+[node name="MassStatusLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid" unique_id=1940251418]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Massa Stiva: 0.0 / 2000.0 kg (0.0%)"
 
-[node name="VolStatusLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid"]
+[node name="VolStatusLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid" unique_id=408295781]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Volume Stiva: 0.0 / 100.0 m³ (0.0%)"
 
-[node name="MassProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid"]
+[node name="MassProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid" unique_id=1373037809]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 max_value = 2000.0
 
-[node name="VolProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid"]
+[node name="VolProgressBar" type="ProgressBar" parent="MainLayout/ContentMargin/CargoVBox/CapacitiesGrid" unique_id=240851061]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
-max_value = 100.0
 
-[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/CargoVBox"]
+[node name="HSeparator" type="HSeparator" parent="MainLayout/ContentMargin/CargoVBox" unique_id=433948780]
 layout_mode = 2
 
-[node name="HSplit" type="HSplitContainer" parent="MainLayout/ContentMargin/CargoVBox"]
+[node name="HSplit" type="HSplitContainer" parent="MainLayout/ContentMargin/CargoVBox" unique_id=1272112420]
 layout_mode = 2
 size_flags_vertical = 3
+split_offsets = PackedInt32Array(320)
 split_offset = 320
 
-[node name="LeftListVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit"]
+[node name="LeftListVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit" unique_id=685130103]
 layout_mode = 2
 
-[node name="ListLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox"]
+[node name="ListLabel" type="Label" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox" unique_id=1441114812]
 layout_mode = 2
 text = "Merci e Moduli a Bordo:"
 
-[node name="CargoItemList" type="ItemList" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox"]
+[node name="CargoItemList" type="ItemList" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox" unique_id=1147379058]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="BtnJettison" type="Button" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox"]
+[node name="BtnJettison" type="Button" parent="MainLayout/ContentMargin/CargoVBox/HSplit/LeftListVBox" unique_id=1941177426]
 unique_name_in_owner = true
 layout_mode = 2
 text = "🗑 Getta / Espelli Nello Spazio (Jettison)"
 
-[node name="RightDetailVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit"]
+[node name="RightDetailVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit" unique_id=71432955]
 layout_mode = 2
 
-[node name="DetailHeader" type="Label" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox"]
+[node name="DetailHeader" type="Label" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox" unique_id=1266418364]
 layout_mode = 2
 text = "Specifiche Merce Selezionata:"
 
-[node name="ItemDetailsPanel" type="PanelContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox"]
+[node name="ItemDetailsPanel" type="PanelContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox" unique_id=1324468952]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemMargin" type="MarginContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel"]
+[node name="ItemMargin" type="MarginContainer" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel" unique_id=1855960094]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="ItemDetailsLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel/ItemMargin"]
+[node name="ItemDetailsLabel" type="RichTextLabel" parent="MainLayout/ContentMargin/CargoVBox/HSplit/RightDetailVBox/ItemDetailsPanel/ItemMargin" unique_id=1708962710]
 unique_name_in_owner = true
 layout_mode = 2
 bbcode_enabled = true
 text = "Seleziona un articolo dalla stiva per i dettagli."
 
-[node name="DisconnectedOverlay" type="PanelContainer" parent="."]
+[node name="DisconnectedOverlay" type="PanelContainer" parent="." unique_id=178600316]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -146,26 +146,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay" unique_id=214100057]
 layout_mode = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center" unique_id=506361697]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="IconLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="IconLabel" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1148537103]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "📦 ⚠"
 horizontal_alignment = 1
 
-[node name="StatusTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="StatusTitle" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1305738031]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "STIVA CARGO OFFLINE"
 horizontal_alignment = 1
 
-[node name="StatusDesc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="StatusDesc" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=2061643098]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 text = "Nessun collegamento con i sublayer della corvetta. Avviare la missione per attivare la telemetria."

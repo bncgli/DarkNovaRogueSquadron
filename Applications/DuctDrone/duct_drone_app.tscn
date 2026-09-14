@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b08qj27d00fxe"]
 
-[ext_resource type="Script" path="res://Applications/DuctDrone/duct_drone_app.gd" id="1_duct_script"]
-[ext_resource type="Script" path="res://Applications/DuctDrone/duct_map_canvas.gd" id="2_canvas_script"]
+[ext_resource type="Script" uid="uid://dkqs4f17rdku7" path="res://Applications/DuctDrone/duct_drone_app.gd" id="1_duct_script"]
+[ext_resource type="Script" uid="uid://oe326yjo1qij" path="res://Applications/DuctDrone/duct_map_canvas.gd" id="2_canvas_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.05, 0.07, 0.1, 0.8)
@@ -10,18 +10,6 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.15, 0.25, 0.35, 0.6)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_bg"]
-bg_color = Color(0.02, 0.04, 0.08, 0.95)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.2, 0.4, 0.6, 0.6)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -51,6 +39,18 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_bg"]
+bg_color = Color(0.02, 0.04, 0.08, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.4, 0.6, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
 bg_color = Color(0.04, 0.06, 0.1, 0.94)
 border_width_left = 2
@@ -63,7 +63,7 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[node name="DuctDroneApp" type="Control"]
+[node name="DuctDroneApp" type="Control" unique_id=146523327]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -72,7 +72,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_duct_script")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=1751500974]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -84,142 +84,142 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=174190115]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeaderCard" type="PanelContainer" parent="Margin/VBox"]
+[node name="HeaderCard" type="PanelContainer" parent="Margin/VBox" unique_id=388329879]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/HeaderCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/HeaderCard" unique_id=843480465]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="HBox" type="HBoxContainer" parent="Margin/VBox/HeaderCard/Margin"]
+[node name="HBox" type="HBoxContainer" parent="Margin/VBox/HeaderCard/Margin" unique_id=587560349]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=1516412903]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+[node name="TitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox" unique_id=1547861353]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 13
 text = "🤖 DUCT DRONE - SCHEMA NAVE & CONDOTTI"
 
-[node name="SubTitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+[node name="SubTitleLabel" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox/TitleVBox" unique_id=1228143619]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Robot ispezione e manutenzione 2D - Comandi Tank"
 
-[node name="StatusBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="StatusBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=1620571910]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 11
 text = "● ATTIVO"
 
-[node name="RoleBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="RoleBadge" type="Label" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=1738284461]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 1.0, 0.6, 1)
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
 theme_override_font_sizes/font_size = 11
 text = "MODO: SOLO"
 
-[node name="BtnLightsToggle" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="BtnLightsToggle" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=1563459104]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "💡 LUCI: OFF"
 
-[node name="BtnScanPulse" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="BtnScanPulse" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=1429835764]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "📡 Sonar"
 
-[node name="BtnSpeedMode" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="BtnSpeedMode" type="Button" parent="Margin/VBox/HeaderCard/Margin/HBox" unique_id=232023771]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "⚡ NORMALE (1x)"
 
-[node name="ContentHBox" type="HBoxContainer" parent="Margin/VBox"]
+[node name="ContentHBox" type="HBoxContainer" parent="Margin/VBox" unique_id=596865585]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="MapPanel" type="PanelContainer" parent="Margin/VBox/ContentHBox"]
+[node name="MapPanel" type="PanelContainer" parent="Margin/VBox/ContentHBox" unique_id=262312808]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.4
 theme_override_styles/panel = SubResource("StyleBoxFlat_map_bg")
 
-[node name="MapCanvas" type="Control" parent="Margin/VBox/ContentHBox/MapPanel"]
+[node name="MapCanvas" type="Control" parent="Margin/VBox/ContentHBox/MapPanel" unique_id=134134540]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("2_canvas_script")
 
-[node name="SidebarScroll" type="ScrollContainer" parent="Margin/VBox/ContentHBox"]
+[node name="SidebarScroll" type="ScrollContainer" parent="Margin/VBox/ContentHBox" unique_id=68725625]
 custom_minimum_size = Vector2(245, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_scroll_mode = 0
 
-[node name="SidebarVBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll"]
+[node name="SidebarVBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll" unique_id=2081736018]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 
-[node name="TelemetryCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox"]
+[node name="TelemetryCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox" unique_id=270524229]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard" unique_id=180774750]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin" unique_id=460609179]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=52491899]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "📊 TELEMETRIA DRONE"
 
-[node name="SectorHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="SectorHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=1590753093]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SectorHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SectorHBox" unique_id=322521020]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Settore:"
 
-[node name="SectorValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SectorHBox"]
+[node name="SectorValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SectorHBox" unique_id=559733611]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -228,16 +228,16 @@ theme_override_font_sizes/font_size = 11
 text = "Ponte di Comando"
 horizontal_alignment = 2
 
-[node name="PosHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="PosHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=1655194477]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/PosHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/PosHBox" unique_id=503973735]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Posizione:"
 
-[node name="PosValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/PosHBox"]
+[node name="PosValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/PosHBox" unique_id=370054894]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -246,16 +246,16 @@ theme_override_font_sizes/font_size = 11
 text = "X: 300.0 | Y:  80.0"
 horizontal_alignment = 2
 
-[node name="HeadingHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="HeadingHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=1357196992]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/HeadingHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/HeadingHBox" unique_id=1967991113]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Prua:"
 
-[node name="HeadingValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/HeadingHBox"]
+[node name="HeadingValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/HeadingHBox" unique_id=2077712380]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -264,16 +264,16 @@ theme_override_font_sizes/font_size = 11
 text = "-90° (N - Prua)"
 horizontal_alignment = 2
 
-[node name="SpeedHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="SpeedHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=233863139]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SpeedHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SpeedHBox" unique_id=926784743]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Velocità:"
 
-[node name="SpeedValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SpeedHBox"]
+[node name="SpeedValueLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/SpeedHBox" unique_id=1102182067]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -282,17 +282,17 @@ theme_override_font_sizes/font_size = 11
 text = "0.0 px/s"
 horizontal_alignment = 2
 
-[node name="BatteryHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox"]
+[node name="BatteryHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox" unique_id=516808661]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox" unique_id=1948351794]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Batteria:"
 
-[node name="BatteryProgressBar" type="ProgressBar" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox"]
+[node name="BatteryProgressBar" type="ProgressBar" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox" unique_id=607634267]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
@@ -301,44 +301,44 @@ size_flags_vertical = 4
 value = 100.0
 show_percentage = false
 
-[node name="BatteryLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox"]
+[node name="BatteryLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/TelemetryCard/Margin/VBox/BatteryHBox" unique_id=1014024422]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "100%"
 
-[node name="MaintenanceCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox"]
+[node name="MaintenanceCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox" unique_id=1589834895]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard" unique_id=1217666853]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin" unique_id=447595501]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox"]
+[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox" unique_id=88470021]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.65, 0.25, 1)
 theme_override_font_sizes/font_size = 11
 text = "🛠️ DANNI & RIPARAZIONI"
 
-[node name="DamageStatusHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox"]
+[node name="DamageStatusHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox" unique_id=1336955506]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/DamageStatusHBox"]
+[node name="Label" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/DamageStatusHBox" unique_id=450081785]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Danni Rilevati:"
 
-[node name="DamageCountLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/DamageStatusHBox"]
+[node name="DamageCountLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/DamageStatusHBox" unique_id=99672694]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -347,7 +347,7 @@ theme_override_font_sizes/font_size = 11
 text = "0 / 0"
 horizontal_alignment = 2
 
-[node name="NearbyDamageLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox"]
+[node name="NearbyDamageLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox" unique_id=219757145]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.85)
@@ -355,28 +355,28 @@ theme_override_font_sizes/font_size = 10
 text = "Nessun danno adiacente"
 autowrap_mode = 2
 
-[node name="BtnRepair" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox"]
+[node name="BtnRepair" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox" unique_id=844325354]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
 focus_mode = 0
 theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "🔧 RIPARA (E)"
 
-[node name="RepairProgressVBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox"]
+[node name="RepairProgressVBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox" unique_id=6589066]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="RepairProgressBar" type="ProgressBar" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/RepairProgressVBox"]
+[node name="RepairProgressBar" type="ProgressBar" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/RepairProgressVBox" unique_id=594138838]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 show_percentage = false
 
-[node name="RepairStatusLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/RepairProgressVBox"]
+[node name="RepairStatusLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/MaintenanceCard/Margin/VBox/RepairProgressVBox" unique_id=910439573]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.9, 0.7, 0.9)
@@ -384,49 +384,49 @@ theme_override_font_sizes/font_size = 9
 text = "In attesa"
 horizontal_alignment = 1
 
-[node name="DatConfigCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox"]
+[node name="DatConfigCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox" unique_id=1286211]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard" unique_id=422218917]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin" unique_id=1963899634]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HeaderHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox"]
+[node name="HeaderHBox" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox" unique_id=1733577575]
 layout_mode = 2
 
-[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox/HeaderHBox"]
+[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox/HeaderHBox" unique_id=612967011]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
 theme_override_font_sizes/font_size = 11
 text = "⚙️ CONFIG .DAT & TUNING"
 
-[node name="DatStatusBadge" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox/HeaderHBox"]
+[node name="DatStatusBadge" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox/HeaderHBox" unique_id=302547085]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
 theme_override_font_sizes/font_size = 10
 text = "● .DAT ATTIVO"
 
-[node name="ReloadConfigButton" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox"]
+[node name="ReloadConfigButton" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox" unique_id=114096679]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "🔄 Ricarica .DAT"
 
-[node name="DatConfigSummaryLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox"]
+[node name="DatConfigSummaryLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/DatConfigCard/Margin/VBox" unique_id=2144746763]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.85)
@@ -434,58 +434,58 @@ theme_override_font_sizes/font_size = 10
 text = "File: duct_drone_config.dat | VMax: 175 px/s | Rot: 3.0 rad/s | Drain: 0.35/s"
 autowrap_mode = 2
 
-[node name="ControlsCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox"]
+[node name="ControlsCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox" unique_id=88254261]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard" unique_id=678250652]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin" unique_id=1077274444]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox"]
+[node name="CardTitle" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox" unique_id=1181703544]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "🕹️ COMANDI TANK"
 
-[node name="UpRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox"]
+[node name="UpRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox" unique_id=1790298723]
 layout_mode = 2
 alignment = 1
 
-[node name="BtnForward" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/UpRow"]
+[node name="BtnForward" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/UpRow" unique_id=237149220]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 26)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "▲ AVANTI (W)"
 
-[node name="MidRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox"]
+[node name="MidRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox" unique_id=1386694991]
 layout_mode = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="BtnRotLeft" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow"]
+[node name="BtnRotLeft" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow" unique_id=1442810821]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(68, 26)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "◄ SX (A)"
 
-[node name="BtnStop" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow"]
+[node name="BtnStop" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow" unique_id=1140432601]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(68, 26)
 layout_mode = 2
@@ -493,47 +493,47 @@ size_flags_horizontal = 3
 focus_mode = 0
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 theme_override_font_sizes/font_size = 10
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "⏹ STOP"
 
-[node name="BtnRotRight" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow"]
+[node name="BtnRotRight" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/MidRow" unique_id=2004934196]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(68, 26)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "DX (D) ►"
 
-[node name="DownRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox"]
+[node name="DownRow" type="HBoxContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox" unique_id=283753171]
 layout_mode = 2
 alignment = 1
 
-[node name="BtnBackward" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/DownRow"]
+[node name="BtnBackward" type="Button" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/ControlsCard/Margin/VBox/DownRow" unique_id=316256308]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(100, 26)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 11
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "▼ INDIETRO (S)"
 
-[node name="HelpCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox"]
+[node name="HelpCard" type="PanelContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox" unique_id=1712779681]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/HelpCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/HelpCard" unique_id=246230511]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="HelpLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/HelpCard/Margin"]
+[node name="HelpLabel" type="Label" parent="Margin/VBox/ContentHBox/SidebarScroll/SidebarVBox/HelpCard/Margin" unique_id=920105560]
 layout_mode = 2
 size_flags_vertical = 1
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.75)
@@ -549,25 +549,25 @@ text = "Guida Comandi Tank:
 • Spazio / X: Stop rapido"
 autowrap_mode = 2
 
-[node name="StatusBarCard" type="PanelContainer" parent="Margin/VBox"]
+[node name="StatusBarCard" type="PanelContainer" parent="Margin/VBox" unique_id=726326302]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="Margin/VBox/StatusBarCard"]
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/StatusBarCard" unique_id=1219410132]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 4
 
-[node name="StatusSummaryLabel" type="Label" parent="Margin/VBox/StatusBarCard/Margin"]
+[node name="StatusSummaryLabel" type="Label" parent="Margin/VBox/StatusBarCard/Margin" unique_id=833847872]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.75, 0.9, 0.9)
 theme_override_font_sizes/font_size = 11
 text = "Telemetria Drone Collegata - Canale Manutenzione Attivo"
 
-[node name="DisconnectedOverlay" type="PanelContainer" parent="."]
+[node name="DisconnectedOverlay" type="PanelContainer" parent="." unique_id=1398450920]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -578,29 +578,29 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
 
-[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay" unique_id=824302216]
 layout_mode = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center" unique_id=784103282]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1264427900]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.7, 0.2, 1)
 theme_override_font_sizes/font_size = 28
 text = "⚠️ SISTEMI OFFLINE"
 horizontal_alignment = 1
 
-[node name="SubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="SubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=453354007]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.9)
 theme_override_font_sizes/font_size = 13
 text = "In attesa di connessione alla nave / Avvio missione..."
 horizontal_alignment = 1
 
-[node name="HintLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="HintLabel" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=732262969]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.65, 0.8, 0.7)
 theme_override_font_sizes/font_size = 11
