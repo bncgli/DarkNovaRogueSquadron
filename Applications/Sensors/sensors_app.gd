@@ -30,6 +30,8 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Sensors/radar_tuni
 @onready var radar_display: RadarDisplay = get_node_or_null("%RadarDisplay")
 @onready var option_display_mode: OptionButton = get_node_or_null("%OptionDisplayMode")
 @onready var range_indicator_label: Label = get_node_or_null("%RangeIndicatorLabel")
+@onready var btn_zoom_in: Button = get_node_or_null("%BtnZoomIn")
+@onready var btn_zoom_out: Button = get_node_or_null("%BtnZoomOut")
 @onready var btn_sweep_toggle: Button = get_node_or_null("%BtnSweepToggle")
 @onready var btn_active_ping: Button = get_node_or_null("%BtnActivePing")
 
@@ -103,17 +105,35 @@ func _process(delta: float) -> void:
 func _init_ui_elements() -> void:
 	if option_display_mode:
 		option_display_mode.clear()
-		option_display_mode.add_item("Vista Polare 2D", 0)
-		option_display_mode.add_item("Griglia Cartesiana", 1)
-		option_display_mode.add_item("Elevazione Spaziale 3D", 2)
+		option_display_mode.add_item("Vista Orbitale 3D", 0)
+		option_display_mode.add_item("Vista Zenitale (Top-Down)", 1)
+		option_display_mode.add_item("Vista Frontale (Elevazione)", 2)
 		option_display_mode.selected = 0
+	
+	if option_range:
+		option_range.clear()
+		option_range.add_item("Raggio: 200m (Zoom 5x)", 0)
+		option_range.add_item("Raggio: 500m (Zoom 2x)", 1)
+		option_range.add_item("Raggio: 1000m (1 km)", 2)
+		option_range.add_item("Raggio: 2000m (2 km)", 3)
+		option_range.selected = 2
 	
 	if radar_display:
 		radar_display.max_range = RADAR_STANDARD_RANGE
 		radar_display.ping_max_radius = ACTIVE_PING_RANGE
 	
-	if range_indicator_label:
-		range_indicator_label.text = "📡 SCANNER: 1000m | PING: 2000m"
+	_update_range_indicator()
+
+func _update_range_indicator() -> void:
+	if not range_indicator_label:
+		return
+	var cur_r: float = radar_display.max_range if radar_display else RADAR_STANDARD_RANGE
+	var zoom_txt := ""
+	if cur_r < 1000.0:
+		zoom_txt = " (ZOOM %.0fx)" % (1000.0 / cur_r)
+	elif cur_r > 1000.0:
+		zoom_txt = " (PANORAMICO)"
+	range_indicator_label.text = "📡 SCANNER: %.0fm%s | PING: 2000m" % [cur_r, zoom_txt]
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -151,9 +171,17 @@ func _connect_ui_signals() -> void:
 			radar_display.entity_selected.connect(_on_radar_entity_selected)
 		if not radar_display.waypoint_placed.is_connected(_on_radar_waypoint_placed):
 			radar_display.waypoint_placed.connect(_on_radar_waypoint_placed)
+		if not radar_display.range_changed.is_connected(_on_radar_range_changed):
+			radar_display.range_changed.connect(_on_radar_range_changed)
 	
 	if option_display_mode and not option_display_mode.item_selected.is_connected(_on_display_mode_selected):
 		option_display_mode.item_selected.connect(_on_display_mode_selected)
+	if option_range and not option_range.item_selected.is_connected(_on_range_selected):
+		option_range.item_selected.connect(_on_range_selected)
+	if btn_zoom_in and not btn_zoom_in.pressed.is_connected(_on_zoom_in_pressed):
+		btn_zoom_in.pressed.connect(_on_zoom_in_pressed)
+	if btn_zoom_out and not btn_zoom_out.pressed.is_connected(_on_zoom_out_pressed):
+		btn_zoom_out.pressed.connect(_on_zoom_out_pressed)
 	
 	if btn_sweep_toggle and not btn_sweep_toggle.pressed.is_connected(_on_sweep_toggle_pressed):
 		btn_sweep_toggle.pressed.connect(_on_sweep_toggle_pressed)
@@ -419,31 +447,32 @@ func _refresh_entities() -> void:
 	detected_entities.clear()
 	for e in raw_entities:
 		var e_copy := e.duplicate(true)
-		var rel_pos: Vector3 = e_copy.get("rel_pos", e_copy.get("pos", Vector3.ZERO))
+		var rel_pos: Vector3 = e_copy.get("local_rel_pos", e_copy.get("rel_pos", e_copy.get("pos", Vector3.ZERO)))
 		var e_dist: float = rel_pos.length()
 		var e_type: String = str(e_copy.get("type", ""))
 		var e_id: String = str(e_copy.get("id", ""))
+		var e_rad: float = float(e_copy.get("radius_m", 0.0))
 		
 		var is_occluded_from_ship := false
 		
-		# I waypoint e la propria sonda non sono occlusi
+		# I waypoint e la propria sonda non sono mai occlusi
 		if e_type != "WAYPOINT" and e_type != "PROBE" and e_dist > 5.0:
 			var ray_dir := rel_pos / e_dist
 			for obs in obstacles:
 				if str(obs.get("id", "")) == e_id:
 					continue
 				
-				var obs_rel: Vector3 = obs.get("rel_pos", obs.get("pos", Vector3.ZERO))
-				var obs_rad: float = float(obs.get("radius_m", 25.0))
+				var obs_rel: Vector3 = obs.get("local_rel_pos", obs.get("rel_pos", obs.get("pos", Vector3.ZERO)))
+				var obs_rad: float = float(obs.get("radius_m", 4.0))
 				if obs_rad <= 0.0:
-					obs_rad = 25.0
+					obs_rad = 4.0
 				
 				# Proiezione del vettore ostacolo sul raggio nave->contatto
 				var t_proj := obs_rel.dot(ray_dir)
 				# L'ostacolo deve trovarsi tra la nave e il contatto
-				if t_proj > obs_rad and t_proj < (e_dist - 2.0):
+				if t_proj > (obs_rad * 0.5) and t_proj < (e_dist - 2.0):
 					var perp_dist_sq := obs_rel.length_squared() - (t_proj * t_proj)
-					if perp_dist_sq < (obs_rad * obs_rad):
+					if perp_dist_sq >= 0.0 and perp_dist_sq < (obs_rad * obs_rad):
 						is_occluded_from_ship = true
 						break
 		
@@ -573,6 +602,36 @@ func _on_display_mode_selected(index: int) -> void:
 	if radar_display:
 		radar_display.current_mode = index as RadarDisplay.DisplayMode
 
+func _on_range_selected(index: int) -> void:
+	var r: float = 1000.0
+	match index:
+		0: r = 200.0
+		1: r = 500.0
+		2: r = 1000.0
+		3: r = 2000.0
+	if radar_display:
+		radar_display.set_range(r)
+
+func _on_zoom_in_pressed() -> void:
+	if radar_display:
+		radar_display.zoom_in_range()
+
+func _on_zoom_out_pressed() -> void:
+	if radar_display:
+		radar_display.zoom_out_range()
+
+func _on_radar_range_changed(new_range: float) -> void:
+	_update_range_indicator()
+	if option_range:
+		if is_equal_approx(new_range, 200.0):
+			option_range.selected = 0
+		elif is_equal_approx(new_range, 500.0):
+			option_range.selected = 1
+		elif is_equal_approx(new_range, 1000.0):
+			option_range.selected = 2
+		elif is_equal_approx(new_range, 2000.0):
+			option_range.selected = 3
+
 func _on_sweep_toggle_pressed() -> void:
 	if not can_control_sensors:
 		return
@@ -628,10 +687,18 @@ func _on_radar_waypoint_placed(world_pos: Vector3) -> void:
 	if not can_control_sensors:
 		return
 	
+	# world_pos dal radar è in coordinate locali sfera (relative alla nave).
+	# Convertiamo in coordinate globali mondo per il manager spaziale.
+	var global_pos := world_pos
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
+		var ship := SpaceWorldManager.get_spaceship()
+		if ship and is_instance_valid(ship) and ship.is_inside_tree():
+			global_pos = ship.global_transform * world_pos
+	
 	var wp_data := {
 		"id": "TACTICAL_WP",
 		"name": "WAYPOINT TATTICO SENSORI",
-		"pos": world_pos,
+		"pos": global_pos,
 		"type": "WAYPOINT"
 	}
 	
@@ -640,7 +707,7 @@ func _on_radar_waypoint_placed(world_pos: Vector3) -> void:
 	
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
-		notif.spawn_notification("🛰️ Waypoint fissato a coordinate (%.0f, %.0f)" % [world_pos.x, world_pos.z])
+		notif.spawn_notification("🛰️ Waypoint fissato a coordinate (%.0f, %.0f)" % [global_pos.x, global_pos.z])
 
 func _on_lock_target_pressed() -> void:
 	if not can_control_sensors or selected_entity_id.is_empty():

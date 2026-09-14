@@ -14,7 +14,7 @@ extends StaticBody3D
 }
 @export var integrity: float = 100.0
 @export var mass_tons: float = 2400.0
-@export var radius_m: float = 30.0
+@export var radius_m: float = 4.0
 @export var iff_tag: String = "NEUTRAL"
 @export var signal_signature: float = 0.80
 
@@ -25,6 +25,8 @@ var _time_elapsed: float = 0.0
 func _ready() -> void:
 	add_to_group("asteroids")
 	add_to_group("scannable_entities")
+	var max_scale := maxf(scale.x, maxf(scale.y, scale.z))
+	radius_m = 4.0 * max_scale
 	# Randomizza leggermente la fase di rotazione per non avere asteroidi sincronizzati
 	rotation_degrees += Vector3(
 		randf_range(-180, 180),

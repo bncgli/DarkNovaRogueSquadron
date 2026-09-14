@@ -174,6 +174,28 @@ popup/item_1/id = 1
 popup/item_2/text = "Elevazione Spaziale 3D"
 popup/item_2/id = 2
 
+[node name="OptionRange" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=2149021881]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+
+[node name="BtnZoomIn" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=1849102832]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "＋"
+tooltip_text = "Zoom In (Avvicina raggio radar)"
+
+[node name="BtnZoomOut" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=1948201842]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "－"
+tooltip_text = "Zoom Out (Allarga raggio radar)"
+
 [node name="RangeIndicatorLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=933658685]
 unique_name_in_owner = true
 layout_mode = 2
