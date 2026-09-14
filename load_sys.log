@@ -1,0 +1,29 @@
+Godot Engine v4.7.2.stable.steam.ed1daf0bf - https://godotengine.org
+
+--- TEST LOAD DEFAULT STAR SYSTEM ---
+Loaded res: (res://Outside/StarSystemGrid/default_star_system.tres):<Resource#-9223372008316729863>
+Is StarSystemData! celestial_bodies size: 10
+ - Item: ():<Resource#-9223372008299952646> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008283175429> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008266398212> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008249620995> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008232843778> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008216066561> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008199289344> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008182512127> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008165734910> typeof: 24 is CelestialBodyData: true
+ - Item: ():<Resource#-9223372008148957693> typeof: 24 is CelestialBodyData: true
+Editor instantiated and added to root
+SCRIPT ERROR: Invalid access to property or key 'system_data' on a base object of type 'Nil'.
+   at: _init (res://tests/test_load_sys.gd:16)
+   GDScript backtrace (most recent call first):
+       [0] _init (res://tests/test_load_sys.gd:16)
+ERROR: Node not found: "/root/Control/BackgroundColor" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:6)
+ERROR: Node not found: "/root/Control/Wallpaper" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:7)
+default_values.gd: Couldn't find wallpaper (are you debugging a scene?)

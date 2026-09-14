@@ -106,10 +106,12 @@ func find_adjacent_spawn_sector(station_coords: Vector3i) -> Vector3i:
 		Vector3i(-1, -1, 0)
 	]
 	
-	# Mappa coordinate già occupate da macro-corpi celesti
+	# Mappa coordinate già occupate da macro-corpi celesti maggiori
 	var occupied_coords: Dictionary = {}
 	for b in celestial_bodies:
-		occupied_coords[b.coords] = true
+		var b_obj := _ensure_body_is_object(b)
+		if b_obj != null and b_obj.type in ["STAR", "PLANET", "GAS_GIANT", "MOON", "STATION"]:
+			occupied_coords[b_obj.coords] = true
 	
 	for offset in candidate_offsets:
 		var cand := station_coords + offset

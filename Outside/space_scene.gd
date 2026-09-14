@@ -4,7 +4,6 @@ extends Node3D
 ## Gestione della scena spaziale e fornitura dei riferimenti all'astronave.
 
 @onready var spaceship: Spaceship = $Spaceship
-@onready var space_dust_particles: CPUParticles3D = $SpaceDustParticles
 @onready var sun_light: DirectionalLight3D = $SunLight
 
 func _ready() -> void:

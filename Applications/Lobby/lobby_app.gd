@@ -5,7 +5,8 @@ extends Control
 
 ## Configurazione standard della finestra GodotOS
 const APP_TITLE: String = "Pannello Comunicazioni & Lobby Equipaggio"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(860, 580)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(860, 610)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(700, 530)
 
 @onready var connection_view: Control = %ConnectionView
 @onready var lobby_room_view: Control = %LobbyRoomView
@@ -107,11 +108,11 @@ func _exit_tree() -> void:
 		if not NetworkManager.is_connected_to_network and NetworkManager.lan_discovery:
 			NetworkManager.lan_discovery.stop()
 
-func _setup_parent_window(_title: String, _size: Vector2) -> void:
+func _setup_parent_window(_title: String, _size: Vector2, _min_size: Vector2 = Vector2.ZERO) -> void:
 	var parent_window := _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
-		parent_window.custom_minimum_size = Vector2(700, 500)
+		parent_window.custom_minimum_size = MIN_WINDOW_SIZE
 		parent_window.title_text = APP_TITLE
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:

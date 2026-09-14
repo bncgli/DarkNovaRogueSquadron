@@ -8,7 +8,9 @@ extends BaseApp
 signal atmosphere_anomaly_detected(room_id: String, anomaly_type: String)
 
 const APP_TITLE: String = "SUPPORTO VITALE & CONTROLLO ATMOSFERA"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(700, 500)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(880, 610)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(850, 590)
+const BLUEPRINT_SIZE: Vector2 = Vector2(600, 480)
 const BASE_POWER_MW: float = 20.0
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/LifeSupport/life_support_config.dat"
@@ -17,6 +19,7 @@ const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/LifeSupport/atmo_tuning
 const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/LifeSupport/atmo_tuning.dat"
 
 # --- RIFERIMENTI UI (Unique Names) ---
+@onready var map_canvas: Control = get_node_or_null("%MapCanvas")
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
 @onready var status_badge: Label = get_node_or_null("%StatusBadge")
 @onready var role_badge: Label = get_node_or_null("%RoleBadge")
@@ -69,8 +72,49 @@ var selected_room_id: String = ""
 var global_scrubber_setting: float = 1.0
 var _room_anomalies: Dictionary = {}
 
+var rooms: Array = [
+	{"id": "bridge", "name": "Ponte di Comando", "category": "Command", "rect": Rect2(260, 40, 80, 50), "color": Color(0.15, 0.35, 0.55, 0.65), "border_color": Color(0.3, 0.7, 1.0, 0.9)},
+	{"id": "sensors", "name": "Sensori & Scanner", "category": "Sensors", "rect": Rect2(160, 80, 75, 45), "color": Color(0.15, 0.4, 0.45, 0.65), "border_color": Color(0.2, 0.8, 0.8, 0.9)},
+	{"id": "comms", "name": "Comunicazioni", "category": "Comms", "rect": Rect2(365, 80, 75, 45), "color": Color(0.2, 0.35, 0.5, 0.65), "border_color": Color(0.4, 0.6, 0.9, 0.9)},
+	{"id": "life_support", "name": "Supporto Vitale", "category": "LifeSupport", "rect": Rect2(170, 155, 85, 55), "color": Color(0.15, 0.45, 0.3, 0.65), "border_color": Color(0.3, 0.9, 0.5, 0.9)},
+	{"id": "shields", "name": "Generatore Scudi", "category": "Defense", "rect": Rect2(345, 155, 85, 55), "color": Color(0.25, 0.3, 0.55, 0.65), "border_color": Color(0.5, 0.6, 1.0, 0.9)},
+	{"id": "corridor", "name": "Corridoio Centrale", "category": "Corridor", "rect": Rect2(275, 115, 50, 110), "color": Color(0.12, 0.2, 0.3, 0.65), "border_color": Color(0.3, 0.5, 0.7, 0.8)},
+	{"id": "weapons", "name": "Controllo Armi", "category": "Tactical", "rect": Rect2(255, 245, 90, 50), "color": Color(0.45, 0.2, 0.2, 0.65), "border_color": Color(1.0, 0.4, 0.3, 0.9)},
+	{"id": "engines", "name": "Sala Macchine & Motori", "category": "Engineering", "rect": Rect2(200, 315, 200, 75), "color": Color(0.4, 0.3, 0.15, 0.65), "border_color": Color(0.9, 0.6, 0.2, 0.9)}
+]
+
+var ducts: Array = [
+	# Condotti principali asse Y
+	{"from": Vector2(300, 90), "to": Vector2(300, 115), "width": 16.0, "name": "Condotto Dorsale Prua"},
+	{"from": Vector2(300, 225), "to": Vector2(300, 245), "width": 16.0, "name": "Condotto Dorsale Centro"},
+	{"from": Vector2(300, 295), "to": Vector2(300, 315), "width": 16.0, "name": "Condotto Dorsale Poppa"},
+	
+	# Condotti orizzontali asse X
+	{"from": Vector2(235, 100), "to": Vector2(275, 140), "width": 14.0, "name": "Condotto Sensori"},
+	{"from": Vector2(365, 100), "to": Vector2(325, 140), "width": 14.0, "name": "Condotto Comms"},
+	{"from": Vector2(255, 180), "to": Vector2(275, 180), "width": 14.0, "name": "Condotto Life Support"},
+	{"from": Vector2(325, 180), "to": Vector2(345, 180), "width": 14.0, "name": "Condotto Shields"},
+	
+	# Condotti di servizio ali esterne
+	{"from": Vector2(170, 180), "to": Vector2(65, 250), "width": 12.0, "name": "Condotto Ala SX"},
+	{"from": Vector2(430, 180), "to": Vector2(535, 250), "width": 12.0, "name": "Condotto Ala DX"},
+	
+	# Condotti laterali vano motori
+	{"from": Vector2(160, 275), "to": Vector2(160, 350), "width": 14.0, "name": "Condotto Manutenzione SX"},
+	{"from": Vector2(160, 350), "to": Vector2(185, 350), "width": 14.0, "name": "Accesso Motori SX"},
+	{"from": Vector2(440, 275), "to": Vector2(440, 350), "width": 14.0, "name": "Condotto Manutenzione DX"},
+	{"from": Vector2(440, 350), "to": Vector2(415, 350), "width": 14.0, "name": "Accesso Motori DX"},
+	
+	# Condotti di sfiato poppa
+	{"from": Vector2(250, 400), "to": Vector2(250, 425), "width": 14.0, "name": "Sfiato Plasma 1"},
+	{"from": Vector2(350, 400), "to": Vector2(350, 425), "width": 14.0, "name": "Sfiato Plasma 2"}
+]
+
+var hovered_room_id: String = ""
+var _cached_active_damages: Array = []
+
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_init_rooms_state()
 	_connect_system_signals()
 	_connect_ui_signals()
@@ -92,6 +136,8 @@ func _process(delta: float) -> void:
 	
 	_simulate_atmosphere_step(delta)
 	_update_telemetry_ui()
+	if map_canvas:
+		map_canvas.queue_redraw()
 
 func _is_ship_operational() -> bool:
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_ship_connected"):
@@ -113,9 +159,13 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
 	
 	var net_mgr := get_node_or_null("/root/NetworkManager")
-	if net_mgr and net_mgr.has_signal("player_role_changed"):
-		if not net_mgr.player_role_changed.is_connected(_on_player_role_changed):
+	if net_mgr:
+		if net_mgr.has_signal("player_role_changed") and not net_mgr.player_role_changed.is_connected(_on_player_role_changed):
 			net_mgr.player_role_changed.connect(_on_player_role_changed)
+		if net_mgr.has_signal("mission_started") and not net_mgr.mission_started.is_connected(_on_mission_started):
+			net_mgr.mission_started.connect(_on_mission_started)
+		if net_mgr.has_signal("connection_state_changed") and not net_mgr.connection_state_changed.is_connected(_on_net_connection_state_changed):
+			net_mgr.connection_state_changed.connect(_on_net_connection_state_changed)
 	
 	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
@@ -134,9 +184,13 @@ func _disconnect_system_signals() -> void:
 			SpaceWorldManager.ship_system_power_changed.disconnect(_on_system_power_changed)
 	
 	var net_mgr := get_node_or_null("/root/NetworkManager")
-	if net_mgr and net_mgr.has_signal("player_role_changed"):
-		if net_mgr.player_role_changed.is_connected(_on_player_role_changed):
+	if net_mgr:
+		if net_mgr.has_signal("player_role_changed") and net_mgr.player_role_changed.is_connected(_on_player_role_changed):
 			net_mgr.player_role_changed.disconnect(_on_player_role_changed)
+		if net_mgr.has_signal("mission_started") and net_mgr.mission_started.is_connected(_on_mission_started):
+			net_mgr.mission_started.disconnect(_on_mission_started)
+		if net_mgr.has_signal("connection_state_changed") and net_mgr.connection_state_changed.is_connected(_on_net_connection_state_changed):
+			net_mgr.connection_state_changed.disconnect(_on_net_connection_state_changed)
 	
 	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
@@ -209,6 +263,16 @@ func _update_connection_state() -> void:
 func _on_player_role_changed(_peer_id: int, _new_role: String) -> void:
 	_update_permissions()
 
+func _on_mission_started() -> void:
+	_update_connection_state()
+	_update_permissions()
+	_refresh_all_ui()
+
+func _on_net_connection_state_changed(_is_connected: bool, _is_host: bool) -> void:
+	_update_connection_state()
+	_update_permissions()
+	_refresh_all_ui()
+
 func _update_permissions() -> void:
 	var nm := get_node_or_null("/root/NetworkManager")
 	var my_role := ""
@@ -255,42 +319,68 @@ func _update_controls_interactivity() -> void:
 
 # --- INIZIALIZZAZIONE E GESTIONE STANZE ---
 
+func _infer_room_category(r_id: String) -> String:
+	var cat := "Compartment"
+	match r_id:
+		"bridge": cat = "Command"
+		"sensors": cat = "Sensors"
+		"comms": cat = "Comms"
+		"life_support": cat = "LifeSupport"
+		"shields": cat = "Defense"
+		"weapons": cat = "Tactical"
+		"engines", "reactor_room": cat = "Engineering"
+		"corridor", "tech_corridor": cat = "Corridor"
+		"crew_quarters": cat = "Habitation"
+		"drone_bay": cat = "Tech"
+		"cargo_bay": cat = "Cargo"
+	return cat
+
 func _init_rooms_state() -> void:
 	rooms_state.clear()
-	var rooms_list: Array = []
+	var loaded_rooms: Array = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_duct_rooms"):
-		var mgr_rooms := SpaceWorldManager.get_duct_rooms()
+		var mgr_rooms: Array = SpaceWorldManager.get_duct_rooms()
 		for r in mgr_rooms:
 			if r is DuctRoomData:
-				rooms_list.append({
+				loaded_rooms.append({
 					"id": r.id,
 					"name": r.name,
 					"rect": r.rect,
-					"category": "Habitation" # Fallback per compatibilità
+					"color": r.color,
+					"border_color": r.border_color,
+					"category": _infer_room_category(r.id)
 				})
-			else:
-				rooms_list.append(r)
+			elif r is Dictionary:
+				loaded_rooms.append(r)
 	
-	if rooms_list.is_empty():
-		rooms_list = [
-			{"id": "bridge", "name": "Ponte di Comando", "category": "Command"},
-			{"id": "crew_quarters", "name": "Alloggi Equipaggio", "category": "Habitation"},
-			{"id": "drone_bay", "name": "Baia Droni", "category": "Tech"},
-			{"id": "tech_corridor", "name": "Corridoio Tecnico", "category": "Corridor"},
-			{"id": "cargo_bay", "name": "Baia di Carico", "category": "Cargo"},
-			{"id": "reactor_room", "name": "Sala Reattore", "category": "Engineering"},
-			{"id": "engines", "name": "Sala Motori", "category": "Engineering"},
-			{"id": "armory", "name": "Armeria & Scudi", "category": "Tactical"}
-		]
+	if loaded_rooms.size() > 0:
+		rooms = loaded_rooms
 	
-	for r in rooms_list:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_duct_corridors"):
+		var mgr_ducts: Array = SpaceWorldManager.get_duct_corridors()
+		if mgr_ducts.size() > 0:
+			ducts.clear()
+			for d in mgr_ducts:
+				if d is ShipDuctData:
+					ducts.append({
+						"from": d.from,
+						"to": d.to,
+						"width": d.width,
+						"name": d.name
+					})
+				elif d is Dictionary:
+					ducts.append(d)
+
+	for r in rooms:
 		var r_id: String = str(r.get("id", ""))
 		if r_id.is_empty(): continue
 		rooms_state[r_id] = {
 			"id": r_id,
 			"name": str(r.get("name", "Stanza Ignota")),
-			"category": str(r.get("category", "General")),
+			"category": str(r.get("category", _infer_room_category(r_id))),
 			"rect": r.get("rect", Rect2()),
+			"color": r.get("color", Color(0.15, 0.35, 0.55, 0.65)),
+			"border_color": r.get("border_color", Color(0.3, 0.7, 1.0, 0.9)),
 			"pressure_kpa": 101.3,
 			"temperature_c": 21.5,
 			"o2_pct": 21.0,
@@ -306,7 +396,12 @@ func _init_rooms_state() -> void:
 			"is_sealed": false
 		}
 	
-	if not rooms_state.is_empty() and selected_room_id.is_empty():
+	if SpaceWorldManager and "sealed_rooms" in SpaceWorldManager:
+		for s_id in SpaceWorldManager.sealed_rooms:
+			if rooms_state.has(s_id):
+				rooms_state[s_id]["is_sealed"] = bool(SpaceWorldManager.sealed_rooms[s_id])
+
+	if not rooms_state.is_empty() and (selected_room_id.is_empty() or not rooms_state.has(selected_room_id)):
 		selected_room_id = str(rooms_state.keys()[0])
 	
 	_build_room_cards_ui()
@@ -370,6 +465,8 @@ func _simulate_atmosphere_step(delta: float) -> void:
 				elif d is Dictionary:
 					if not d.get("repaired", false):
 						active_damages.append(d)
+	
+	_cached_active_damages = active_damages
 	
 	var has_swm_damages := (SpaceWorldManager != null and (
 		(SpaceWorldManager.has_method("get_ship_damages") and SpaceWorldManager.get_ship_damages().size() > 0) or
@@ -605,9 +702,16 @@ func suppress_all_fires() -> void:
 # --- CALLBACK UI ---
 
 func _on_room_card_selected(room_id: String) -> void:
+	select_room(room_id)
+
+func select_room(room_id: String) -> void:
+	if not rooms_state.has(room_id):
+		return
 	selected_room_id = room_id
 	_update_selected_room_visuals()
 	_update_selected_room_ui()
+	if map_canvas:
+		map_canvas.queue_redraw()
 
 func _on_room_card_seal_toggled(room_id: String, is_sealed: bool) -> void:
 	set_bulkhead_sealed(room_id, is_sealed)
@@ -663,6 +767,8 @@ func _update_selected_room_visuals() -> void:
 		var card: RoomAtmoCard = room_card_widgets[r_id]
 		if card:
 			card.set_selected_visual(r_id == selected_room_id)
+	if map_canvas:
+		map_canvas.queue_redraw()
 
 func _update_selected_room_ui() -> void:
 	if not rooms_state.has(selected_room_id):
@@ -755,6 +861,9 @@ func _update_selected_room_ui() -> void:
 		btn_toggle_seal.text = "🔓 Apri Paratia" if is_sealed else "🚪 Sigilla Paratia"
 	if btn_toggle_vent:
 		btn_toggle_vent.text = "⏹ Ferma Evacuazione" if is_vent else "💨 Evacua Atmosfera"
+	
+	if map_canvas:
+		map_canvas.queue_redraw()
 
 func _update_telemetry_ui() -> void:
 	var total_o2 := 0.0
@@ -852,3 +961,308 @@ func _on_drive_file_modified(rel_path: String) -> void:
 func _on_drive_file_synced(rel_path: String, _content: String = "") -> void:
 	if "LifeSupport" in rel_path and rel_path.ends_with(".dat"):
 		load_dat_configuration()
+
+# --- RENDERING BLUEPRINT & CONTROLLO MAPPA ---
+
+func draw_blueprint(canvas: Control) -> void:
+	if canvas == null:
+		return
+	var canvas_size: Vector2 = canvas.size
+	var scale_factor: float = minf(canvas_size.x / BLUEPRINT_SIZE.x, canvas_size.y / BLUEPRINT_SIZE.y)
+	if scale_factor <= 0.001:
+		scale_factor = 1.0
+	var offset: Vector2 = (canvas_size - BLUEPRINT_SIZE * scale_factor) * 0.5
+	var trans := Transform2D().translated(offset).scaled(Vector2(scale_factor, scale_factor))
+	
+	_draw_blueprint_grid(canvas, trans)
+	_draw_ship_hull(canvas, trans)
+	_draw_ducts(canvas, trans)
+	_draw_rooms(canvas, trans)
+	_draw_damages(canvas, trans)
+
+func _draw_blueprint_grid(canvas: Control, trans: Transform2D) -> void:
+	var grid_color := Color(0.08, 0.16, 0.25, 0.4)
+	var step := 30.0
+	
+	for x in range(0, int(BLUEPRINT_SIZE.x), int(step)):
+		var p1 := trans * Vector2(x, 0)
+		var p2 := trans * Vector2(x, BLUEPRINT_SIZE.y)
+		canvas.draw_line(p1, p2, grid_color, 1.0)
+	
+	for y in range(0, int(BLUEPRINT_SIZE.y), int(step)):
+		var p1 := trans * Vector2(0, y)
+		var p2 := trans * Vector2(BLUEPRINT_SIZE.x, y)
+		canvas.draw_line(p1, p2, grid_color, 1.0)
+
+func _draw_ship_hull(canvas: Control, trans: Transform2D) -> void:
+	var hull_points: PackedVector2Array = [
+		Vector2(300, 20),   # Prua / Muso Cockpit
+		Vector2(340, 45),
+		Vector2(400, 70),   # Ala Comms
+		Vector2(500, 110),
+		Vector2(510, 170),
+		Vector2(490, 200),
+		Vector2(580, 225),  # Ala Esterna RCS DX
+		Vector2(580, 300),
+		Vector2(510, 305),
+		Vector2(430, 310),  # Inizio Motori DX
+		Vector2(420, 410),  # Propulsore DX
+		Vector2(350, 425),  # Ugello Centrale DX
+		Vector2(300, 430),  # Poppa Centro
+		Vector2(250, 425),  # Ugello Centrale SX
+		Vector2(180, 410),  # Propulsore SX
+		Vector2(170, 310),  # Inizio Motori SX
+		Vector2(90, 305),
+		Vector2(20, 300),   # Ala Esterna RCS SX
+		Vector2(20, 225),
+		Vector2(110, 200),
+		Vector2(90, 170),
+		Vector2(100, 110),
+		Vector2(200, 70),   # Ala Sensori
+		Vector2(260, 45)
+	]
+	
+	var transformed_hull: PackedVector2Array = []
+	for pt in hull_points:
+		transformed_hull.push_back(trans * pt)
+	
+	canvas.draw_colored_polygon(transformed_hull, Color(0.04, 0.08, 0.14, 0.85))
+	
+	for i in range(transformed_hull.size()):
+		var p1: Variant = transformed_hull[i]
+		var p2: Variant = transformed_hull[(i + 1) % transformed_hull.size()]
+		canvas.draw_line(p1, p2, Color(0.25, 0.55, 0.85, 0.8), 2.0)
+
+func _draw_ducts(canvas: Control, trans: Transform2D) -> void:
+	for duct in ducts:
+		var from_pos: Vector2 = duct["from"]
+		var to_pos: Vector2 = duct["to"]
+		var p1: Vector2 = trans * from_pos
+		var p2: Vector2 = trans * to_pos
+		var w: float = float(duct.get("width", 14.0)) * trans.get_scale().x
+		
+		canvas.draw_line(p1, p2, Color(0.08, 0.22, 0.28, 0.95), w)
+		canvas.draw_line(p1, p2, Color(0.2, 0.8, 0.9, 0.75), w, false)
+		canvas.draw_line(p1, p2, Color(0.4, 1.0, 0.9, 0.4), 1.5)
+		
+		canvas.draw_circle(p1, w * 0.45, Color(0.25, 0.85, 1.0, 0.9))
+		canvas.draw_circle(p2, w * 0.45, Color(0.25, 0.85, 1.0, 0.9))
+
+func _draw_rooms(canvas: Control, trans: Transform2D) -> void:
+	var font: Font = ThemeDB.fallback_font
+	var time_now := Time.get_ticks_msec() * 0.003
+	var s: float = trans.get_scale().x
+	
+	for room in rooms:
+		var r_id: String = str(room.get("id", ""))
+		var r: Rect2 = room.get("rect", Rect2())
+		if r.size == Vector2.ZERO:
+			continue
+		var p1 := trans * r.position
+		var p2 := trans * (r.position + r.size)
+		var tr_rect := Rect2(p1, p2 - p1)
+		
+		var st: Dictionary = rooms_state.get(r_id, {})
+		var is_selected: bool = (r_id == selected_room_id)
+		var is_hovered: bool = (r_id == hovered_room_id)
+		var is_sealed: bool = bool(st.get("is_sealed", false))
+		var is_fire: bool = bool(st.get("is_fire_active", false))
+		var is_vent: bool = bool(st.get("is_venting", false))
+		var is_supp: bool = bool(st.get("is_suppression_active", false))
+		var has_br: bool = bool(st.get("has_breach", false))
+		var has_short: bool = bool(st.get("has_short_circuit", false))
+		var o2: float = float(st.get("o2_pct", 21.0))
+		var pres: float = float(st.get("pressure_kpa", 101.3))
+		
+		# Sfondo stanza dinamico in base allo stato
+		var fill_color: Color = room.get("color", Color(0.15, 0.35, 0.55, 0.65))
+		if is_fire:
+			fill_color = Color(0.75, 0.2, 0.1, 0.6 + 0.2 * sin(time_now * 6.0))
+		elif has_br or pres < 50.0:
+			fill_color = Color(0.6, 0.1, 0.35, 0.55 + 0.2 * sin(time_now * 4.0))
+		elif is_vent:
+			fill_color = Color(0.1, 0.45, 0.65, 0.5 + 0.15 * sin(time_now * 5.0))
+		elif is_supp:
+			fill_color = Color(0.2, 0.5, 0.7, 0.5)
+		elif is_sealed:
+			fill_color = Color(0.4, 0.12, 0.15, 0.65)
+		
+		if is_hovered:
+			fill_color = fill_color.lightened(0.18)
+		if is_selected:
+			fill_color = fill_color.lightened(0.1)
+		
+		canvas.draw_rect(tr_rect, fill_color, true)
+		
+		# Bordo stanza
+		if is_sealed:
+			_draw_sealed_bulkhead_border(canvas, tr_rect, s)
+		elif is_fire:
+			var border_pulse := 0.7 + 0.3 * sin(time_now * 6.0)
+			canvas.draw_rect(tr_rect, Color(1.0, 0.35, 0.1, border_pulse), false, 2.0 * s)
+		elif has_br:
+			var border_pulse := 0.7 + 0.3 * sin(time_now * 5.0)
+			canvas.draw_rect(tr_rect, Color(1.0, 0.2, 0.2, border_pulse), false, 2.0 * s)
+		else:
+			var bcol: Color = room.get("border_color", Color(0.3, 0.7, 1.0, 0.8))
+			canvas.draw_rect(tr_rect, bcol, false, 1.5 * s)
+		
+		# Evidenziazione Stanza Selezionata
+		if is_selected:
+			var sel_color := Color(0.2, 0.9, 1.0, 0.95)
+			var corner_len := minf(tr_rect.size.x, tr_rect.size.y) * 0.25
+			canvas.draw_rect(tr_rect.grow(2.0 * s), sel_color, false, 2.0 * s)
+			var tl := tr_rect.position - Vector2(2, 2) * s
+			var tr := Vector2(tr_rect.position.x + tr_rect.size.x, tr_rect.position.y) + Vector2(2, -2) * s
+			var bl := Vector2(tr_rect.position.x, tr_rect.position.y + tr_rect.size.y) + Vector2(-2, 2) * s
+			var br := tr_rect.position + tr_rect.size + Vector2(2, 2) * s
+			canvas.draw_line(tl, tl + Vector2(corner_len, 0), Color.WHITE, 2.5 * s)
+			canvas.draw_line(tl, tl + Vector2(0, corner_len), Color.WHITE, 2.5 * s)
+			canvas.draw_line(tr, tr - Vector2(corner_len, 0), Color.WHITE, 2.5 * s)
+			canvas.draw_line(tr, tr + Vector2(0, corner_len), Color.WHITE, 2.5 * s)
+			canvas.draw_line(bl, bl + Vector2(corner_len, 0), Color.WHITE, 2.5 * s)
+			canvas.draw_line(bl, bl - Vector2(0, corner_len), Color.WHITE, 2.5 * s)
+			canvas.draw_line(br, br - Vector2(corner_len, 0), Color.WHITE, 2.5 * s)
+			canvas.draw_line(br, br - Vector2(0, corner_len), Color.WHITE, 2.5 * s)
+		elif is_hovered:
+			canvas.draw_rect(tr_rect, Color(0.7, 0.9, 1.0, 0.4), false, 1.5 * s)
+		
+		# Testo nome e parametri stanza
+		var room_name: String = str(st.get("name", room.get("name", r_id)))
+		var title_col: Color = Color(1.0, 0.9, 0.3, 1.0) if is_selected else Color(0.9, 0.95, 1.0, 0.95)
+		var text_pos := p1 + Vector2(4 * s, 12 * s)
+		canvas.draw_string(font, text_pos, room_name, HORIZONTAL_ALIGNMENT_LEFT, int(tr_rect.size.x - 8 * s), int(maxf(8.0, 10.0 * s)), title_col)
+		
+		if tr_rect.size.y >= 30 * s:
+			var status_str := "O2:%.0f%% P:%.0f" % [o2, pres]
+			var stat_col := Color(0.4, 0.9, 0.6, 0.9)
+			if is_fire:
+				status_str = "🔥 INCENDIO"
+				stat_col = Color(1.0, 0.35, 0.1, 1.0)
+			elif has_br:
+				status_str = "🚨 BRECCIA"
+				stat_col = Color(1.0, 0.25, 0.25, 1.0)
+			elif pres < 50.0:
+				status_str = "⚡ VUOTO"
+				stat_col = Color(1.0, 0.3, 0.3, 1.0)
+			elif has_short:
+				status_str = "⚡ CORTO"
+				stat_col = Color(1.0, 0.8, 0.2, 1.0)
+			elif is_vent:
+				status_str = "💨 SFIATO"
+				stat_col = Color(0.3, 0.8, 1.0, 1.0)
+			elif is_sealed:
+				status_str = "🚪 SIGILLATA"
+				stat_col = Color(1.0, 0.5, 0.5, 1.0)
+			
+			canvas.draw_string(font, p1 + Vector2(4 * s, 24 * s), status_str, HORIZONTAL_ALIGNMENT_LEFT, int(tr_rect.size.x - 8 * s), int(maxf(7.0, 9.0 * s)), stat_col)
+
+func _draw_sealed_bulkhead_border(canvas: Control, rect: Rect2, scale_factor: float) -> void:
+	var time_now := Time.get_ticks_msec() * 0.003
+	var pulse := 0.75 + 0.25 * sin(time_now * 4.0)
+	var red_color := Color(1.0, 0.15, 0.15, 0.95 * pulse)
+	var yellow_color := Color(1.0, 0.85, 0.2, 0.9)
+	var border_w := maxf(2.0, 3.0 * scale_factor)
+	
+	# Bordo rosso esterno continuo
+	canvas.draw_rect(rect, red_color, false, border_w)
+	
+	# Tratteggio di sicurezza sui 4 lati
+	var dash_len := 8.0 * scale_factor
+	var p_tl := rect.position
+	var p_tr := rect.position + Vector2(rect.size.x, 0)
+	var p_br := rect.position + rect.size
+	var p_bl := rect.position + Vector2(0, rect.size.y)
+	
+	canvas.draw_dashed_line(p_tl, p_tr, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_tr, p_br, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_br, p_bl, yellow_color, border_w * 0.5, dash_len)
+	canvas.draw_dashed_line(p_bl, p_tl, yellow_color, border_w * 0.5, dash_len)
+
+func _draw_damages(canvas: Control, trans: Transform2D) -> void:
+	var font: Font = ThemeDB.fallback_font
+	var time_now := Time.get_ticks_msec() * 0.003
+	var s: float = trans.get_scale().x
+	
+	for dmg in _cached_active_damages:
+		var d_pos := _parse_pos(dmg.get("pos", Vector2.ZERO))
+		if d_pos == Vector2.ZERO:
+			continue
+		var canvas_pos: Vector2 = trans * d_pos
+		var d_type: String = str(dmg.get("type", ""))
+		var d_color := Color(1.0, 0.3, 0.2, 0.9)
+		var d_symbol := "💥"
+		if d_type.begins_with("dmg_fire") or d_type == "FIRE":
+			d_color = Color(1.0, 0.45, 0.1, 0.9)
+			d_symbol = "🔥"
+		elif d_type.begins_with("dmg_short") or d_type == "ELECTRICAL":
+			d_color = Color(1.0, 0.85, 0.2, 0.9)
+			d_symbol = "⚡"
+		elif d_type.begins_with("dmg_breach") or d_type == "STRUCTURAL":
+			d_color = Color(0.9, 0.2, 0.4, 0.9)
+			d_symbol = "🚨"
+		
+		var pulse := 0.6 + 0.4 * sin(time_now * 5.0)
+		canvas.draw_circle(canvas_pos, 7.0 * s, Color(d_color.r, d_color.g, d_color.b, 0.3 * pulse))
+		canvas.draw_circle(canvas_pos, 4.0 * s, d_color)
+		canvas.draw_string(font, canvas_pos + Vector2(-6 * s, -6 * s), d_symbol, HORIZONTAL_ALIGNMENT_CENTER, -1, int(11 * s), Color.WHITE)
+
+func _parse_pos(val: Variant) -> Vector2:
+	if val is Vector2:
+		return val
+	elif val is Dictionary:
+		return Vector2(float(val.get("x", 0.0)), float(val.get("y", 0.0)))
+	elif val is Array and val.size() >= 2:
+		return Vector2(float(val[0]), float(val[1]))
+	return Vector2.ZERO
+
+# --- INPUT E INTERAZIONE BLUEPRINT ---
+
+func handle_blueprint_gui_input(canvas: Control, event: InputEvent) -> void:
+	var canvas_size: Vector2 = canvas.size
+	var scale_factor: float = minf(canvas_size.x / BLUEPRINT_SIZE.x, canvas_size.y / BLUEPRINT_SIZE.y)
+	if scale_factor <= 0.001:
+		scale_factor = 1.0
+	var offset: Vector2 = (canvas_size - BLUEPRINT_SIZE * scale_factor) * 0.5
+	var trans := Transform2D().translated(offset).scaled(Vector2(scale_factor, scale_factor))
+	var inv_trans := trans.affine_inverse()
+	
+	if event is InputEventMouseMotion:
+		var bp_pos: Vector2 = inv_trans * event.position
+		var found_room_id := ""
+		for room in rooms:
+			var r: Rect2 = room.get("rect", Rect2())
+			if r.has_point(bp_pos):
+				found_room_id = str(room.get("id", ""))
+				break
+		
+		if found_room_id != hovered_room_id:
+			hovered_room_id = found_room_id
+			if hovered_room_id.is_empty():
+				canvas.mouse_default_cursor_shape = Control.CURSOR_ARROW
+			else:
+				canvas.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			canvas.queue_redraw()
+	
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var bp_pos: Vector2 = inv_trans * event.position
+			for room in rooms:
+				var r: Rect2 = room.get("rect", Rect2())
+				if r.has_point(bp_pos):
+					var r_id: String = str(room.get("id", ""))
+					select_room(r_id)
+					break
+
+func _on_blueprint_gui_input(canvas: Control, event: InputEvent) -> void:
+	handle_blueprint_gui_input(canvas, event)
+
+func handle_blueprint_mouse_exited() -> void:
+	if not hovered_room_id.is_empty():
+		hovered_room_id = ""
+		if map_canvas:
+			map_canvas.mouse_default_cursor_shape = Control.CURSOR_ARROW
+			map_canvas.queue_redraw()
+
+func _on_blueprint_mouse_exited() -> void:
+	handle_blueprint_mouse_exited()

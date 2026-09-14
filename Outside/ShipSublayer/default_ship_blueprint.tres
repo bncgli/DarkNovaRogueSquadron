@@ -349,6 +349,41 @@ total_damage_sectors=8
 is_protected = true
 desc = "Topologia scafo, settori strutturali e tolleranze danni nave."
 
+[sub_resource type="Resource" id="Resource_vganl"]
+script = ExtResource("2_2o3qs")
+path = "Ship Drive/Programs/HackExploits/hack_exploits_config.dat"
+content = "# HACK EXPLOITS SUITE RUNTIME CONFIGURATION
+# WARNING: CLASSIFIED ELECTRONIC WARFARE FIRMWARE
+[SYSTEM]
+app_name=HackExploits
+version=1.0.0
+status=OPERATIONAL
+decryption_key=HACK-CFG-7815
+
+[EXPLOITS]
+spammer_enabled=true
+blind_eye_enabled=true
+eight_loops_enabled=true
+gout_enabled=true
+sentinel_poll_rate=0.25
+"
+is_protected = true
+desc = "Configurazione della suite di exploit offensivi e parametri sentinella."
+
+[sub_resource type="Resource" id="Resource_gtdma"]
+script = ExtResource("2_2o3qs")
+path = "Ship Drive/Programs/HackExploits/exploit_payloads.dat"
+content = "# EXPLOIT PAYLOAD CALIBRATION & INTRUSION MATRIX
+[PAYLOADS]
+decryption_key=EXPLOIT-PAYLOAD-7815
+spammer_frequency_sec=2.5
+blind_eye_timeout_sec=1.0
+eight_loops_g_mult=8.0
+gout_angular_mult=6.0
+"
+is_protected = true
+desc = "Parametri di calibrazione payload, rateo spammer e moltiplicatori G."
+
 [sub_resource type="Resource" id="Resource_duct_1"]
 script = ExtResource("1_10483")
 id = "duct_1"
@@ -681,11 +716,25 @@ icon_color = Color(0.2, 0.6, 1, 1)
 roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
 drive_folder = "Programs/ShieldMatrix"
 
+[sub_resource type="Resource" id="Resource_rpa3i"]
+script = ExtResource("6_app_script")
+id = "hack_exploits"
+title = "Hack Exploits Suite"
+description = "Suite offensiva di sottoprogrammi di violazione informatica e guerra elettronica."
+developer = "Dark Nova Cyber Division"
+category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
+scene_path = "res://Applications/HackExploits/hack_exploits_app.tscn"
+icon_color = Color(1, 0, 0.35, 1)
+roles = Array[String](["Hacker", "Capitano", "Captain", "Stagista"])
+drive_folder = "Programs/HackExploits"
+
 [sub_resource type="Resource" id="Resource_dev_lights_main"]
 script = ExtResource("4_dev_script")
 id = "lights_main"
 name = "Illuminazione Interna"
 power_mw = -5.0
+sector = "Nucleo Reattore & Fusione"
 
 [sub_resource type="Resource" id="Resource_uyi6u"]
 script = ExtResource("4_dev_script")
@@ -704,6 +753,7 @@ rect = Rect2(230, 45, 140, 70)
 color = Color(0.12, 0.28, 0.45, 0.55)
 border_color = Color(0.35, 0.75, 1, 0.8)
 devices = [SubResource("Resource_dev_lights_main"), SubResource("Resource_uyi6u")]
+power_mw = -15.0
 
 [sub_resource type="Resource" id="Resource_dev_sensors"]
 script = ExtResource("4_dev_script")
@@ -711,6 +761,7 @@ id = "sensor_array"
 name = "Array Sensori"
 power_mw = -20.0
 category = "sensors"
+sector = "Sensori & Avionica"
 
 [sub_resource type="Resource" id="Resource_room_sensors"]
 script = ExtResource("2_r4o8m")
@@ -720,6 +771,7 @@ rect = Rect2(110, 115, 110, 65)
 color = Color(0.12, 0.35, 0.3, 0.5)
 border_color = Color(0.2, 0.85, 0.65, 0.8)
 devices = [SubResource("Resource_dev_sensors")]
+power_mw = -20.0
 
 [sub_resource type="Resource" id="Resource_dev_comms"]
 script = ExtResource("4_dev_script")
@@ -737,6 +789,7 @@ rect = Rect2(390, 115, 100, 65)
 color = Color(0.12, 0.35, 0.3, 0.5)
 border_color = Color(0.2, 0.85, 0.65, 0.8)
 devices = [SubResource("Resource_dev_comms")]
+power_mw = -10.0
 
 [sub_resource type="Resource" id="Resource_dev_shields"]
 script = ExtResource("4_dev_script")
@@ -754,6 +807,7 @@ rect = Rect2(245, 135, 110, 60)
 color = Color(0.35, 0.15, 0.2, 0.5)
 border_color = Color(0.9, 0.35, 0.4, 0.8)
 devices = [SubResource("Resource_dev_shields")]
+power_mw = -40.0
 
 [sub_resource type="Resource" id="Resource_dpc7b"]
 script = ExtResource("4_dev_script")
@@ -772,6 +826,7 @@ rect = Rect2(100, 200, 120, 75)
 color = Color(0.22, 0.22, 0.35, 0.5)
 border_color = Color(0.55, 0.55, 0.85, 0.8)
 devices = [SubResource("Resource_dpc7b")]
+power_mw = -10.0
 
 [sub_resource type="Resource" id="Resource_dev_drone_dock"]
 script = ExtResource("4_dev_script")
@@ -787,13 +842,15 @@ rect = Rect2(380, 200, 120, 75)
 color = Color(0.35, 0.28, 0.12, 0.5)
 border_color = Color(0.95, 0.75, 0.25, 0.8)
 devices = [SubResource("Resource_dev_drone_dock")]
+power_mw = -5.0
 
 [sub_resource type="Resource" id="Resource_dev_reactor"]
 script = ExtResource("4_dev_script")
 id = "reactor_main"
 name = "Reattore Principale"
-power_mw = 1200.0
+power_mw = 500.0
 category = "engineering"
+sector = "Nucleo Reattore & Fusione"
 
 [sub_resource type="Resource" id="Resource_dev_life_support"]
 script = ExtResource("4_dev_script")
@@ -801,6 +858,7 @@ id = "life_support_gen"
 name = "Generatore O2"
 power_mw = -30.0
 category = "life_support"
+sector = "Supporto vitale minimale"
 
 [sub_resource type="Resource" id="Resource_room_reactor"]
 script = ExtResource("2_r4o8m")
@@ -810,6 +868,7 @@ rect = Rect2(235, 215, 130, 80)
 color = Color(0.35, 0.12, 0.35, 0.55)
 border_color = Color(0.95, 0.35, 0.95, 0.9)
 devices = [SubResource("Resource_dev_reactor"), SubResource("Resource_dev_life_support")]
+power_mw = 470.0
 
 [sub_resource type="Resource" id="Resource_dev_engine_l"]
 script = ExtResource("4_dev_script")
@@ -825,6 +884,7 @@ id = "engine_right"
 name = "Motore Ionico DX"
 power_mw = -50.0
 category = "propulsion"
+sector = "Sala Motori Principale"
 
 [sub_resource type="Resource" id="Resource_room_engine"]
 script = ExtResource("2_r4o8m")
@@ -834,6 +894,7 @@ rect = Rect2(185, 315, 230, 85)
 color = Color(0.4, 0.2, 0.1, 0.55)
 border_color = Color(1, 0.5, 0.2, 0.85)
 devices = [SubResource("Resource_dev_engine_l"), SubResource("Resource_dev_engine_r")]
+power_mw = -100.0
 
 [sub_resource type="Resource" id="Resource_room_rcs_left"]
 script = ExtResource("2_r4o8m")
@@ -880,6 +941,7 @@ color = Color(0.2, 0.6, 0.2, 0.5)
 border_color = Color(0.4, 0.7, 0.9, 0.8)
 devices = [SubResource("Resource_7cvah"), SubResource("Resource_yjssc")]
 default_devices = Array[String](["purificatore", "caldaia"])
+power_mw = -20.0
 
 [sub_resource type="Resource" id="Resource_utpk4"]
 script = ExtResource("4_dev_script")
@@ -900,6 +962,7 @@ color = Color(0.3, 0.3, 0.6, 0.5)
 border_color = Color(0.4, 0.7, 0.9, 0.8)
 devices = [SubResource("Resource_utpk4")]
 default_devices = Array[String](["baia_ricarica_drone"])
+power_mw = -10.0
 
 [sub_resource type="Resource" id="Resource_0bbqr"]
 script = ExtResource("4_dev_script")
@@ -919,6 +982,7 @@ color = Color(0.4, 0.4, 0.4, 0.5)
 border_color = Color(0.4, 0.7, 0.9, 0.8)
 devices = [SubResource("Resource_0bbqr")]
 default_devices = Array[String](["sistema_difesa"])
+power_mw = -10.0
 
 [sub_resource type="Resource" id="Resource_bwtey"]
 script = ExtResource("4_dev_script")
@@ -938,6 +1002,7 @@ color = Color(0.4, 0.4, 0.4, 0.5)
 border_color = Color(0.4, 0.7, 0.9, 0.8)
 devices = [SubResource("Resource_bwtey")]
 default_devices = Array[String](["sistema_difesa"])
+power_mw = -10.0
 
 [resource]
 script = ExtResource("3_2ervp")
@@ -949,7 +1014,7 @@ drone_spawn_heading = -1.5708
 recharge_room_id = "cargo"
 rooms = [SubResource("Resource_room_bridge"), SubResource("Resource_room_sensors"), SubResource("Resource_room_comms"), SubResource("Resource_room_armory"), SubResource("Resource_room_quarters"), SubResource("Resource_room_cargo"), SubResource("Resource_room_reactor"), SubResource("Resource_room_engine"), SubResource("Resource_room_rcs_left"), SubResource("Resource_room_rcs_right"), SubResource("Resource_il41l"), SubResource("Resource_g5wjn"), SubResource("Resource_ube3p"), SubResource("Resource_u7ny8")]
 ducts = [SubResource("Resource_duct_1"), SubResource("Resource_duct_2"), SubResource("Resource_duct_3"), SubResource("Resource_duct_4"), SubResource("Resource_duct_5"), SubResource("Resource_duct_6"), SubResource("Resource_duct_7"), SubResource("Resource_duct_8"), SubResource("Resource_duct_9"), SubResource("Resource_duct_10"), SubResource("Resource_duct_11"), SubResource("Resource_duct_12"), SubResource("Resource_duct_13"), SubResource("Resource_duct_14"), SubResource("Resource_duct_15"), SubResource("Resource_duct_16"), SubResource("Resource_duct_17"), SubResource("Resource_hcilf"), SubResource("Resource_12irv"), SubResource("Resource_r8ubu"), SubResource("Resource_gm38s")]
-drive_files = [SubResource("Resource_2o3qs"), SubResource("Resource_0retm"), SubResource("Resource_5gyaf"), SubResource("Resource_6qj18"), SubResource("Resource_2vxcw"), SubResource("Resource_pv8qg"), SubResource("Resource_bkl24"), SubResource("Resource_i82pr"), SubResource("Resource_3i4yk"), SubResource("Resource_mbylt"), SubResource("Resource_gvkt0"), SubResource("Resource_tx7is"), SubResource("Resource_2wg3o"), SubResource("Resource_5uroj"), SubResource("Resource_0ttoj"), SubResource("Resource_bp_dat"), SubResource("Resource_hull_dat")]
+drive_files = [SubResource("Resource_2o3qs"), SubResource("Resource_0retm"), SubResource("Resource_5gyaf"), SubResource("Resource_6qj18"), SubResource("Resource_2vxcw"), SubResource("Resource_pv8qg"), SubResource("Resource_bkl24"), SubResource("Resource_i82pr"), SubResource("Resource_3i4yk"), SubResource("Resource_mbylt"), SubResource("Resource_gvkt0"), SubResource("Resource_tx7is"), SubResource("Resource_2wg3o"), SubResource("Resource_5uroj"), SubResource("Resource_0ttoj"), SubResource("Resource_bp_dat"), SubResource("Resource_hull_dat"), SubResource("Resource_vganl"), SubResource("Resource_gtdma")]
 drive_passwords = {
 "Ship Drive/Programs/Cams": "CAMS-7815",
 "Ship Drive/Programs/CargoBay": "CARG-7815",
@@ -970,4 +1035,4 @@ drive_passwords = {
 "Ship Drive/Programs/Weapons": "WEAP-7815",
 "Ship Drive/systems": "ROOT-7815"
 }
-installed_apps = [SubResource("Resource_app_flight"), SubResource("Resource_app_power"), SubResource("Resource_app_cams"), SubResource("Resource_app_life"), SubResource("Resource_app_diag"), SubResource("Resource_app_map"), SubResource("Resource_app_log"), SubResource("Resource_4iptn"), SubResource("Resource_bgbc1"), SubResource("Resource_dhb3i"), SubResource("Resource_d1s52"), SubResource("Resource_ac58n"), SubResource("Resource_y7fwl"), SubResource("Resource_ccqtn"), SubResource("Resource_vajca"), SubResource("Resource_kqfrg")]
+installed_apps = [SubResource("Resource_app_flight"), SubResource("Resource_app_power"), SubResource("Resource_app_cams"), SubResource("Resource_app_life"), SubResource("Resource_app_diag"), SubResource("Resource_app_map"), SubResource("Resource_app_log"), SubResource("Resource_4iptn"), SubResource("Resource_bgbc1"), SubResource("Resource_dhb3i"), SubResource("Resource_d1s52"), SubResource("Resource_ac58n"), SubResource("Resource_y7fwl"), SubResource("Resource_ccqtn"), SubResource("Resource_vajca"), SubResource("Resource_kqfrg"), SubResource("Resource_rpa3i")]

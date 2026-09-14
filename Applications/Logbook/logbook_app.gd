@@ -5,7 +5,8 @@ extends BaseApp
 ## Funge da registro di bordo ufficiale, diario delle operazioni, tracker contratti e scatola nera.
 
 const APP_TITLE: String = "REGISTRO DI BORDO & OBIETTIVI"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(600, 450)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(600, 480)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(600, 480)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/Logbook/logbook_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/Logbook/logbook_config.dat"
@@ -59,7 +60,7 @@ var active_contracts: Array[Dictionary] = []
 var black_box_events: Array[String] = []
 
 func _ready() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_connect_system_signals()
 	_connect_ui_signals()
 	_setup_initial_data()

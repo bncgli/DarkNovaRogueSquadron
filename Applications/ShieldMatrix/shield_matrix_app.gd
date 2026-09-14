@@ -8,7 +8,8 @@ extends BaseApp
 ## - Destra: Gestione dinamica dei dispositivi Point-Defense (Gatling e Lanciatori Flack Angel-Hair).
 
 const APP_TITLE: String = "Shield Matrix & Deflectors"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(800, 520)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(800, 550)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(800, 550)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/ShieldMatrix/shields_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/ShieldMatrix/shields_config.dat"
@@ -149,7 +150,7 @@ var active_config: Dictionary = {
 }
 
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_connect_system_signals()
 	_setup_ui_signals()
 	_rebuild_device_cards()

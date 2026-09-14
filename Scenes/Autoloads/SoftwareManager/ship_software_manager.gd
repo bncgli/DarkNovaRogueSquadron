@@ -267,6 +267,10 @@ func launch_app(app_id: String) -> FakeWindow:
 	var app_instance := scene.instantiate()
 	window.get_node("%ApplicationContents").add_child(app_instance)
 	window.title_text = app_res.title
+	if app_res.default_window_size != Vector2.ZERO:
+		window.size = app_res.default_window_size
+	if app_res.min_window_size != Vector2.ZERO:
+		window.custom_minimum_size = app_res.min_window_size
 	
 	var tree := get_tree()
 	if tree and tree.current_scene:

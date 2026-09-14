@@ -25,6 +25,7 @@ var _pending_file_action: String = ""
 # Toolbar Controlli
 @onready var lbl_current_file: Label = %LblCurrentFile
 @onready var btn_new: Button = %BtnNew
+@onready var btn_random: Button = %BtnRandom
 @onready var btn_open: Button = %BtnOpen
 @onready var btn_save: Button = %BtnSave
 @onready var btn_save_as: Button = %BtnSaveAs
@@ -72,7 +73,10 @@ var _pending_file_action: String = ""
 func _ready() -> void:
 	_ensure_undo_redo()
 	_connect_signals()
-	_load_initial_system()
+	if current_system != null:
+		load_star_system(current_system, current_file_path)
+	else:
+		_load_initial_system()
 
 func _ensure_undo_redo() -> void:
 	if undo_redo == null:
@@ -101,6 +105,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _connect_signals() -> void:
 	btn_new.pressed.connect(_on_btn_new_pressed)
+	btn_random.pressed.connect(_on_btn_random_pressed)
 	btn_open.pressed.connect(_on_btn_open_pressed)
 	btn_save.pressed.connect(_on_btn_save_pressed)
 	btn_save_as.pressed.connect(_on_btn_save_as_pressed)
@@ -137,6 +142,8 @@ func _connect_signals() -> void:
 	confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
 
 func _load_initial_system() -> void:
+	if current_system != null:
+		return
 	if ResourceLoader.exists(DEFAULT_SYSTEM_PATH):
 		var res := ResourceLoader.load(DEFAULT_SYSTEM_PATH)
 		if res is StarSystemData:
@@ -210,7 +217,7 @@ func load_star_system(sys: StarSystemData, path: String = "") -> void:
 	current_system = sys
 	current_file_path = path
 
-	if undo_redo:
+	if undo_redo and undo_redo.has_method("clear_history"):
 		undo_redo.clear_history()
 
 	if canvas:
@@ -219,7 +226,7 @@ func load_star_system(sys: StarSystemData, path: String = "") -> void:
 		canvas.reset_view()
 
 	if lbl_current_file:
-		lbl_current_file.text = path.get_file() if not path.is_empty() else "Nuovo Sistema Stellare (non salvato)"
+		lbl_current_file.text = path.get_file() if not path.is_empty() else ("%s (non salvato)" % sys.system_name if not sys.system_name.is_empty() else "Nuovo Sistema Stellare (non salvato)")
 		lbl_current_file.tooltip_text = path
 
 	_refresh_outliner()
@@ -254,6 +261,8 @@ func _refresh_outliner() -> void:
 	others_group.set_text(0, "🛰️ Stazioni, Asteroidi & Relitti")
 	
 	for body in current_system.celestial_bodies:
+		if not (body is CelestialBodyData):
+			continue
 		var b_type: String = body.type.to_upper()
 		var b_name: String = body.name
 		var b_id: String = body.id
@@ -410,7 +419,8 @@ func _add_float_field(label: String, obj: Object, prop: StringName, action_name:
 	prop_editor_vbox.add_child(h)
 
 func _add_vector3i_field(label: String, obj: Object, prop: StringName, action_name: String, extra_refresh: Callable = Callable()) -> void:
-	var val: Vector3i = obj.get(prop)
+	var raw_val = obj.get(prop)
+	var val: Vector3i = raw_val if raw_val is Vector3i else Vector3i.ZERO
 	var vbox := VBoxContainer.new()
 	var l := Label.new()
 	l.text = label
@@ -420,22 +430,22 @@ func _add_vector3i_field(label: String, obj: Object, prop: StringName, action_na
 	var baseline := {"value": val}
 	
 	var sb_x := SpinBox.new()
-	sb_x.min_value = -100
-	sb_x.max_value = 100
+	sb_x.min_value = -10000
+	sb_x.max_value = 10000
 	sb_x.value = val.x
 	sb_x.prefix = "X:"
 	h.add_child(sb_x)
 	
 	var sb_y := SpinBox.new()
-	sb_y.min_value = -100
-	sb_y.max_value = 100
+	sb_y.min_value = -10000
+	sb_y.max_value = 10000
 	sb_y.value = val.y
 	sb_y.prefix = "Y:"
 	h.add_child(sb_y)
 	
 	var sb_z := SpinBox.new()
-	sb_z.min_value = -100
-	sb_z.max_value = 100
+	sb_z.min_value = -10000
+	sb_z.max_value = 10000
 	sb_z.value = val.z
 	sb_z.prefix = "Z:"
 	h.add_child(sb_z)
@@ -828,6 +838,11 @@ func _on_btn_new_pressed() -> void:
 	confirm_dialog.dialog_text = "Creare un nuovo sistema stellare? Le modifiche non salvate andranno perse."
 	confirm_dialog.popup_centered()
 
+func _on_btn_random_pressed() -> void:
+	_pending_file_action = "random"
+	confirm_dialog.dialog_text = "Generare un nuovo sistema stellare casuale? Le modifiche non salvate andranno perse."
+	confirm_dialog.popup_centered()
+
 func _on_btn_open_pressed() -> void:
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	file_dialog.filters = ["*.tres, *.res ; Godot Resource"]
@@ -877,6 +892,12 @@ func _on_confirm_dialog_confirmed() -> void:
 	if _pending_file_action == "new":
 		var sys := StarSystemData.new("SYS-NEW", "Nuovo Sistema Stellare")
 		load_star_system(sys, "")
+	elif _pending_file_action == "random":
+		var sys := StarSystemData.new()
+		sys.generate_random_system()
+		load_star_system(sys, "")
+		_set_status_msg("Sistema stellare casuale '%s' (%s) generato con successo." % [sys.system_name, sys.system_id])
+	_pending_file_action = ""
 
 func _save_system_to_path(path: String) -> void:
 	if current_system == null:

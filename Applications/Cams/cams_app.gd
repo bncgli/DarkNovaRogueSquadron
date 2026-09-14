@@ -9,7 +9,8 @@ extends BaseApp
 
 ## Configurazione standard della finestra GodotOS
 const APP_TITLE: String = "Cams - Controllo Telecamere Esterne"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(520, 500)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(600, 560)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(520, 530)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/Cams/cams_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Ship Drive/Programs/Cam/cams_config.dat"
@@ -20,6 +21,8 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/Cam/optics_tuning.dat"
 @onready var status_summary_label: Label = get_node_or_null("%StatusSummaryLabel")
 @onready var active_count_badge: Label = get_node_or_null("%ActiveCountBadge")
 @onready var role_badge: Label = get_node_or_null("%RoleBadge")
+@onready var hyperdrive_transit_banner: PanelContainer = get_node_or_null("%HyperdriveTransitBanner")
+@onready var hyperdrive_crew_sync_label: Label = get_node_or_null("%HyperdriveCrewSyncLabel")
 
 # Configurazione .DAT e Ottiche
 @onready var dat_status_badge: Label = get_node_or_null("%DatStatusBadge")
@@ -63,6 +66,8 @@ var active_config: Dictionary = {
 
 func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_bind_parent_window()
+	tree_exiting.connect(_on_app_tree_exiting)
 	_map_camera_buttons()
 	_setup_ui_events()
 	load_dat_configuration()
@@ -71,15 +76,55 @@ func _ready() -> void:
 	_update_permissions()
 	_refresh_all_buttons_state()
 
-func _setup_parent_window(_title: String, _size: Vector2) -> void:
+func _setup_parent_window(_title: String, _size: Vector2, _min_size: Vector2 = Vector2.ZERO) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
-		parent_window.custom_minimum_size = Vector2(460, 420)
+		parent_window.custom_minimum_size = MIN_WINDOW_SIZE
 		parent_window.title_text = APP_TITLE
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
 			title_label.text = "[center]" + APP_TITLE
+		_bind_parent_window()
+
+func _bind_parent_window() -> void:
+	if not parent_window:
+		parent_window = _find_parent_window()
+	if parent_window and is_instance_valid(parent_window):
+		if parent_window.has_signal("deleted") and not parent_window.deleted.is_connected(_on_parent_window_deleted):
+			parent_window.deleted.connect(_on_parent_window_deleted)
+		if not parent_window.tree_exiting.is_connected(_on_parent_window_deleted):
+			parent_window.tree_exiting.connect(_on_parent_window_deleted)
+
+func _unbind_parent_window() -> void:
+	if parent_window and is_instance_valid(parent_window):
+		if parent_window.has_signal("deleted") and parent_window.deleted.is_connected(_on_parent_window_deleted):
+			parent_window.deleted.disconnect(_on_parent_window_deleted)
+		if parent_window.tree_exiting.is_connected(_on_parent_window_deleted):
+			parent_window.tree_exiting.disconnect(_on_parent_window_deleted)
+
+func _on_parent_window_deleted() -> void:
+	_close_all_camera_feed_windows()
+
+func _on_app_tree_exiting() -> void:
+	_close_all_camera_feed_windows()
+
+func _close_all_camera_feed_windows() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("close_all_camera_windows"):
+		SpaceWorldManager.close_all_camera_windows()
+	
+	var tree := get_tree()
+	if tree:
+		for win in tree.get_nodes_in_group("camera_feed_window"):
+			if win and is_instance_valid(win) and not win.is_queued_for_deletion():
+				if "is_being_deleted" in win and win.is_being_deleted:
+					continue
+				if win.has_method("close_window"):
+					win.close_window()
+				elif win.has_method("_on_close_button_pressed"):
+					win._on_close_button_pressed()
+				elif win.has_method("queue_free"):
+					win.queue_free()
 
 func _find_parent_window() -> FakeWindow:
 	var node: Node = get_parent()
@@ -126,6 +171,12 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 		if not SpaceWorldManager.camera_status_changed.is_connected(_on_camera_status_changed):
 			SpaceWorldManager.camera_status_changed.connect(_on_camera_status_changed)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_started") and not SpaceWorldManager.hyperdrive_transition_started.is_connected(_on_hyperdrive_transition_started):
+			SpaceWorldManager.hyperdrive_transition_started.connect(_on_hyperdrive_transition_started)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_progress") and not SpaceWorldManager.hyperdrive_transition_progress.is_connected(_on_hyperdrive_transition_progress):
+			SpaceWorldManager.hyperdrive_transition_progress.connect(_on_hyperdrive_transition_progress)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_ended") and not SpaceWorldManager.hyperdrive_transition_ended.is_connected(_on_hyperdrive_transition_ended):
+			SpaceWorldManager.hyperdrive_transition_ended.connect(_on_hyperdrive_transition_ended)
 	if NetworkManager:
 		if not NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.connect(_on_player_role_changed)
@@ -138,12 +189,21 @@ func _connect_system_signals() -> void:
 			sdm.ship_drive_mounted.connect(_on_ship_drive_mounted)
 
 func _exit_tree() -> void:
+	_close_all_camera_feed_windows()
+	_unbind_parent_window()
+	
 	# Disconnessione pulita di tutti i segnali
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 		if SpaceWorldManager.camera_status_changed.is_connected(_on_camera_status_changed):
 			SpaceWorldManager.camera_status_changed.disconnect(_on_camera_status_changed)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_started") and SpaceWorldManager.hyperdrive_transition_started.is_connected(_on_hyperdrive_transition_started):
+			SpaceWorldManager.hyperdrive_transition_started.disconnect(_on_hyperdrive_transition_started)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_progress") and SpaceWorldManager.hyperdrive_transition_progress.is_connected(_on_hyperdrive_transition_progress):
+			SpaceWorldManager.hyperdrive_transition_progress.disconnect(_on_hyperdrive_transition_progress)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_ended") and SpaceWorldManager.hyperdrive_transition_ended.is_connected(_on_hyperdrive_transition_ended):
+			SpaceWorldManager.hyperdrive_transition_ended.disconnect(_on_hyperdrive_transition_ended)
 	if NetworkManager:
 		if NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
 			NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
@@ -355,6 +415,25 @@ func _refresh_all_buttons_state() -> void:
 	
 	_update_status_summary()
 
+func _on_hyperdrive_transition_started(_target_coords: Vector3i) -> void:
+	if hyperdrive_transit_banner:
+		hyperdrive_transit_banner.visible = true
+	var prog: Dictionary = SpaceWorldManager.get_hyperdrive_loading_progress() if SpaceWorldManager else {"loaded": 1, "total": 1}
+	_on_hyperdrive_transition_progress(prog.get("loaded", 1), prog.get("total", 1))
+	_refresh_all_buttons_state()
+	_update_status_summary()
+
+func _on_hyperdrive_transition_progress(loaded: int, total: int) -> void:
+	if hyperdrive_crew_sync_label:
+		hyperdrive_crew_sync_label.text = "Sincronizzazione equipaggio: %d / %d membri pronti" % [loaded, total]
+	_update_status_summary()
+
+func _on_hyperdrive_transition_ended(_target_coords: Vector3i) -> void:
+	if hyperdrive_transit_banner:
+		hyperdrive_transit_banner.visible = false
+	_refresh_all_buttons_state()
+	_update_status_summary()
+
 func _update_button_visual(cam_id: String, is_active: bool) -> void:
 	if not cam_buttons.has(cam_id):
 		return
@@ -368,6 +447,17 @@ func _update_button_visual(cam_id: String, is_active: bool) -> void:
 	var dir_str: String = info.direction if info else "N/D"
 	var icon_str: String = info.icon if info else ""
 	
+	var in_hyperdrive := SpaceWorldManager.is_hyperdrive_transit_active() if (SpaceWorldManager and SpaceWorldManager.has_method("is_hyperdrive_transit_active")) else false
+	
+	if in_hyperdrive:
+		if is_active:
+			btn.text = "%s %s\n[%s]  ⚠️ SEGNALE PERSO" % [icon_str, name_str.to_upper(), dir_str]
+			btn.modulate = Color(1.0, 0.65, 0.2)
+		else:
+			btn.text = "%s %s\n[%s]  ○ SPENTA (TRANSITO)" % [icon_str, name_str.to_upper(), dir_str]
+			btn.modulate = Color(0.7, 0.7, 0.7)
+		return
+	
 	if is_active:
 		btn.text = "%s %s\n[%s]  ● ATTIVA" % [icon_str, name_str.to_upper(), dir_str]
 		btn.modulate = Color(0.4, 1.0, 0.6)
@@ -377,11 +467,30 @@ func _update_button_visual(cam_id: String, is_active: bool) -> void:
 
 func _update_status_summary() -> void:
 	var connected := SpaceWorldManager.is_ship_connected() if SpaceWorldManager else false
+	var in_hyperdrive := SpaceWorldManager.is_hyperdrive_transit_active() if (SpaceWorldManager and SpaceWorldManager.has_method("is_hyperdrive_transit_active")) else false
+	
+	if hyperdrive_transit_banner:
+		hyperdrive_transit_banner.visible = in_hyperdrive
+	
 	var active_count: int = 0
 	if SpaceWorldManager and connected:
 		for cam_id in cam_buttons:
 			if SpaceWorldManager.is_camera_window_open(cam_id):
 				active_count += 1
+	
+	if in_hyperdrive:
+		var prog: Dictionary = SpaceWorldManager.get_hyperdrive_loading_progress() if SpaceWorldManager else {"loaded": 1, "total": 1}
+		var loaded_count: int = prog.get("loaded", 1)
+		var total_count: int = prog.get("total", 1)
+		if active_count_badge:
+			active_count_badge.text = "IPERDRIVE"
+			active_count_badge.modulate = Color(1.0, 0.7, 0.2)
+		if status_summary_label:
+			status_summary_label.text = "⚠️ Salto Hyperdrive in corso. Telecamere esterne offline per distorsione tachionica. In attesa del caricamento della nuova zona (%d/%d pronti)." % [loaded_count, total_count]
+			status_summary_label.modulate = Color(1.0, 0.8, 0.3)
+		if hyperdrive_crew_sync_label:
+			hyperdrive_crew_sync_label.text = "Sincronizzazione equipaggio: %d / %d membri pronti" % [loaded_count, total_count]
+		return
 	
 	if active_count_badge:
 		if not connected:

@@ -18,6 +18,7 @@ menu_path = "Sistemi Nave"
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/CargoBay/cargo_bay_app.tscn"
 default_window_size = Vector2(760, 560)
+min_window_size = Vector2(600, 420)
 drive_folder = "Programs/CargoBay"
 default_password = "CARG-7815"
 default_files = Array[Dictionary]([{

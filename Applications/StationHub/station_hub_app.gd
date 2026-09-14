@@ -10,7 +10,8 @@ extends Control
 ## 5. Taverna Spaziale & Intercettazione Frequenze (Rumors, coordinate relitti)
 
 const APP_TITLE: String = "Station Services & Logistics Hub"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(780, 560)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(780, 590)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(780, 590)
 
 # Costanti di architettura e percorsi di storage diegetico
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/StationHub/station_hub_config.dat"
@@ -97,12 +98,22 @@ var cargo_mgr: CargoManagerSingleton = null
 var flux_mgr: FluxEconomyManagerSingleton = null
 
 func _ready() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
+	custom_minimum_size = Vector2(780, 560)
+	call_deferred("_setup_parent_window")
 	_init_managers()
 	_init_runtime_files()
 	_load_config()
 	_connect_signals()
 	_check_initial_state()
+
+func _setup_parent_window() -> void:
+	var curr: Node = get_parent()
+	while curr:
+		if curr is FakeWindow:
+			curr.size = DEFAULT_WINDOW_SIZE
+			curr.custom_minimum_size = MIN_WINDOW_SIZE
+			break
+		curr = curr.get_parent()
 
 func _init_managers() -> void:
 	# CargoManager

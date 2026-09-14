@@ -1,23 +1,23 @@
-[gd_resource type="Resource" script_class="AppResource" format=3]
+[gd_resource type="Resource" script_class="AppResource" format=3 uid="uid://co486ks8pqvo8"]
 
-[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_656yp"]
-[ext_resource type="Texture2D" path="res://Art/Icons/Apps/flux_wallet.svg" id="1_icon"]
+[ext_resource type="Script" uid="uid://bmipm38swvduc" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_656yp"]
+[ext_resource type="Texture2D" uid="uid://drsahepi22eg4" path="res://Art/Icons/Apps/flux_wallet.svg" id="1_icon"]
 
 [resource]
 script = ExtResource("1_656yp")
-icon = ExtResource("1_icon")
-roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
-power_draw_mw = 2.0
-required_subsystems = Array[String]([])
 app_id = "flux_wallet"
 title = "Flux Wallet"
 description = "Visualizzazione stato economico della nave e storico modificatori FLUX."
 developer = "VoidCore Solutions"
 category = "Sistemi Nave"
 menu_path = "Strumenti"
+icon = ExtResource("1_icon")
 icon_color = Color(0.95, 0.65, 0.15, 1)
 scene_path = "res://Applications/FluxWallet/flux_wallet.tscn"
-default_window_size = Vector2(550, 450)
+default_window_size = Vector2(550, 480)
+min_window_size = Vector2(550, 480)
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
+power_draw_mw = 2.0
 drive_folder = "Programs/FluxWallet"
 default_password = "FLUX-7815"
 default_files = Array[Dictionary]([{

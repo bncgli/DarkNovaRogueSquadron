@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_linear;
+uniform sampler2D feed_texture : repeat_disable, filter_linear;
 uniform float thermal_intensity : hint_range(0.0, 3.0) = 1.0;
 uniform float thermal_contrast : hint_range(0.5, 3.0) = 1.5;
 uniform float scanline_strength : hint_range(0.0, 1.0) = 0.08;
@@ -36,7 +36,7 @@ float pseudo_noise(vec2 co) {
 }
 
 void fragment() {
-	vec4 src = texture(screen_texture, SCREEN_UV);
+	vec4 src = texture(feed_texture, UV);
 	
 	// Calcolo luminosità standard
 	float lum = dot(src.rgb, vec3(0.299, 0.587, 0.114));
@@ -46,8 +46,8 @@ void fragment() {
 	float heat_val = clamp((lum + heat_boost) * thermal_contrast * thermal_intensity, 0.0, 1.0);
 	
 	// Micro disturbo sensore FLIR e linee di scansione termica
-	float noise = (pseudo_noise(SCREEN_UV + vec2(TIME * 0.05, 0.0)) - 0.5) * noise_grain;
-	float scanline = sin(SCREEN_UV.y * 400.0) * scanline_strength;
+	float noise = (pseudo_noise(UV + vec2(TIME * 0.05, 0.0)) - 0.5) * noise_grain;
+	float scanline = sin(UV.y * 400.0) * scanline_strength;
 	
 	float final_heat = clamp(heat_val + noise - scanline, 0.0, 1.0);
 	vec3 thermal_rgb = get_thermal_color(final_heat);

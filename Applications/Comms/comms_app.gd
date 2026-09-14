@@ -6,7 +6,8 @@ extends BaseApp
 ## Task TASK-036.
 
 const APP_TITLE: String = "Communications & Directional Antenna Array"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(680, 480)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(680, 510)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(680, 510)
 
 signal docking_clearance_requested(station_id: String)
 signal docking_clearance_granted(station_id: String, bay_id: int)
@@ -158,7 +159,7 @@ var available_signals: Array[Dictionary] = [
 ]
 
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_connect_system_signals()
 	_setup_ui_signals()
 	_update_connection_state()

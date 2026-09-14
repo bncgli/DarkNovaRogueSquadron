@@ -18,6 +18,7 @@ menu_path = "Strumenti"
 icon_color = Color(0.2, 0.9, 0.4, 1)
 scene_path = "res://Applications/Terminal/src/terminal_scene.tscn"
 default_window_size = Vector2(700, 450)
+min_window_size = Vector2(500, 350)
 drive_folder = "systems"
 default_password = "ROOT-7815"
 default_files = Array[Dictionary]([{

@@ -1,0 +1,2504 @@
+Godot Engine v4.7.2.stable.steam.ed1daf0bf - https://godotengine.org
+
+WARNING: res://addons/gut/gui/GutSceneTheme.tres:3 - ext_resource, invalid UID: uid://c6c7gnx36opr0 - using text path instead: res://addons/gut/fonts/AnonymousPro-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+WARNING: res://addons/gut/gui/NormalGui.tscn:5 - ext_resource, invalid UID: uid://bnh0lslf4yh87 - using text path instead: res://addons/gut/fonts/CourierPrime-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+WARNING: res://addons/gut/gui/MinGui.tscn:4 - ext_resource, invalid UID: uid://bnh0lslf4yh87 - using text path instead: res://addons/gut/fonts/CourierPrime-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+ERROR: Node not found: "/root/Control/BackgroundColor" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:6)
+ERROR: Node not found: "/root/Control/Wallpaper" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:7)
+default_values.gd: Couldn't find wallpaper (are you debugging a scene?)
+---  GUT  ---
+[1m[INFO]:  [0musing [C:/Users/User/AppData/Roaming/GodotOS] for temporary output.
+Godot version:  4.7.2
+GUT version:  9.7.1
+SCRIPT ERROR: Parse Error: Identifier "SoftwareManager" not declared in the current scope.
+   at: GDScript::reload (res://tests/gut/test_applications_min_size.gd:4)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:128)
+       [3] add_script (res://addons/gut/gut.gd:1070)
+       [4] add_directory (res://addons/gut/gut.gd:1093)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:239)
+       [9] main (res://addons/gut/cli/gut_cli.gd:297)
+       [10] _init (res://addons/gut/gut_cmdln.gd:39)
+ERROR: Failed to load script "res://tests/gut/test_applications_min_size.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:128)
+       [3] add_script (res://addons/gut/gut.gd:1070)
+       [4] add_directory (res://addons/gut/gut.gd:1093)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:239)
+       [9] main (res://addons/gut/cli/gut_cli.gd:297)
+       [10] _init (res://addons/gut/gut_cmdln.gd:39)
+[33m[GUT WARNING]:  [0mIgnoring script res://tests/gut/test_applications_min_size.gd because it does not extend GutTest
+SCRIPT ERROR: Parse Error: Could not find type "CruiseControlPanel" in the current scope.
+   at: GDScript::reload (res://tests/gut/test_cruise_drive.gd:139)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:128)
+       [3] add_script (res://addons/gut/gut.gd:1070)
+       [4] add_directory (res://addons/gut/gut.gd:1093)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:239)
+       [9] main (res://addons/gut/cli/gut_cli.gd:297)
+       [10] _init (res://addons/gut/gut_cmdln.gd:39)
+SCRIPT ERROR: Parse Error: Could not find type "CruiseControlPanel" in the current scope.
+   at: GDScript::reload (res://tests/gut/test_cruise_drive.gd:139)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:128)
+       [3] add_script (res://addons/gut/gut.gd:1070)
+       [4] add_directory (res://addons/gut/gut.gd:1093)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:239)
+       [9] main (res://addons/gut/cli/gut_cli.gd:297)
+       [10] _init (res://addons/gut/gut_cmdln.gd:39)
+ERROR: Failed to load script "res://tests/gut/test_cruise_drive.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:128)
+       [3] add_script (res://addons/gut/gut.gd:1070)
+       [4] add_directory (res://addons/gut/gut.gd:1093)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:239)
+       [9] main (res://addons/gut/cli/gut_cli.gd:297)
+       [10] _init (res://addons/gut/gut_cmdln.gd:39)
+[33m[GUT WARNING]:  [0mIgnoring script res://tests/gut/test_cruise_drive.gd because it does not extend GutTest
+[4m
+
+res://tests/gut/test_cams_system.gd
+[0m* test_space_world_manager_has_world_and_six_cameras
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_spaceship_camera_mounts_and_transforms_exist_after_mission_start
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_window_cannot_open_while_ship_disconnected
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_camera_window_open_close_lifecycle_when_connected
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_cams_app_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_cams_app_mini_panel_buttons_map_to_all_six_cameras
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_cams_app_button_toggle_opens_and_closes_camera_windows
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_cams_app_open_all_and_close_all_buttons
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_default_dat_configuration_matches_ship_drive_factory_values
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_cams_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_reload_updates_open_feed_windows_at_runtime
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_reset_optics_restores_configured_fov_on_all_open_windows
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_solo_mode_grants_full_control
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_for_valid_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[NetworkManager] Sessione in Singolo terminata.
+* test_terminal_cat_command_rejects_reading_cams_dat_files
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_headlights_toggle_and_sync_with_spaceship
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_filter_cycle_normal_thermal_lidar
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_closing_cams_app_closes_camera_feed_windows
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_closing_cams_app_parent_window_closes_camera_feed_windows
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_shader_multi_window_independence
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[31m    [Failed]:  [0mARRAY([]) == ARRAY([])  I punti Lidar delle due finestre devono essere memorizzati in array distinti
+      at line 385
+[NetworkManager] Sessione in Singolo terminata.
+* test_lidar_depth_color_gradient
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_lidar_obstacle_detection_and_ship_exclusion
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_lidar_multi_window_direction_independence
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[31m    [Failed]:  [0m[-1.0] expected to be > than [40.0]:  La telecamera Posteriore non deve rilevare l'ostacolo anteriore ravvicinato
+      at line 479
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_feed_window_saves_and_restores_layout_across_sessions
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_feed_windows_independent_layouts
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_camera_feed_window_maximized_saves_unmaximized_size
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_lidar_fixed_spacing_independent_of_window_size
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m25/27 passed.
+[0m[4m
+
+res://tests/gut/test_combat_dogfight.gd
+[0m* test_enemy_ai_state_machine
+* test_enemy_ai_electronic_warfare
+* test_systemic_damage_and_quadrant_shields
+* test_alarm_level_triggers
+* test_combat_director_waves_and_coordination
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_comms_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_comms_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[NetworkManager] Disconnesso dalla rete.
+* test_radio_tuner_sos_subspace_pirate_frequencies_and_listen_log
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_antenna_manual_pointing_auto_rotate_and_frequency_lock_tracking
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_reception_cone_and_signal_strength_falloff
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_station_docking_request_menu
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ew_drive_connect_enabled_only_for_strong_aligned_signal
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    91 Orphans[0m
+[33m        * [Window:<Panel#1494128529533>(window.gd)] + 81[0m
+* test_power_grid_sublayer_registers_comms_device
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_blueprint_flags_comms_dat_file_as_protected
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m91 orphans[0m
+[1m12/12 passed.
+[0m[4m
+
+res://tests/gut/test_desktop_default_folders.gd
+[0m* test_ensure_default_files_creates_default_folders_and_files
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_ensure_default_files_creates_default_folders_and_files (res://tests/gut/test_desktop_default_folders.gd:20)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line -1
+[1m0/1 passed.
+[0m[4m
+
+res://tests/gut/test_diagnostics_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_diagnostics_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Stagista
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[NetworkManager] Disconnesso dalla rete.
+* test_threat_scanner_detection_and_quarantine_purge
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ice_firewall_defense_panel_attack_reinforce_and_flush
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_factory_reset_restores_dat_firmware_to_defaults
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_blueprint_and_sublayer_integration
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m9/9 passed.
+[0m[4m
+
+res://tests/gut/test_duct_drone_node.gd
+[0m[NetworkManager] Disconnesso dalla rete.
+* test_disconnected_overlay_blocks_app
+* test_mission_start_enables_operational_app
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+* test_ship_drive_protected_folder_and_dat_files
+* test_dat_configuration_dynamic_reload
+* test_rbac_role_restrictions
+[Chat][[SISTEMA]]: Ingegnere ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Ingegnere ha preso la postazione: Tattico
+[Chat][[SISTEMA]]: Ingegnere ha preso la postazione: Ingegnere
+* test_tank_controls_lights_sonar_and_repairs
+* test_terminal_cat_command_blocks_dat_read
+* test_blueprint_alignment_radar_key_and_emergency_recovery
+* test_fire_damage_type
+* test_sealed_room_collision_barriers
+* test_default_light_off_and_strict_blueprint_spawn
+[33m[GUT WARNING]:  [0mTest script has 2 unfreed children.  Increase log level for more details.
+[1m11/11 passed.
+[0m[4m
+
+res://tests/gut/test_file_manager_navigation.gd
+[0m* test_back_button_returns_to_root_from_top_level_folder
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:23)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [7] _run_test (res://addons/gut/gut.gd:650)
+       [8] test_default_light_off_and_strict_blueprint_spawn (res://tests/gut/test_duct_drone_node.gd:397)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] reload_window (res://Scenes/Window/File Manager/file_manager_window.gd:21)
+       [3] _on_back_button_pressed (res://Scenes/Window/File Manager/file_manager_window.gd:39)
+       [4] test_back_button_returns_to_root_from_top_level_folder (res://tests/gut/test_file_manager_navigation.gd:28)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [13] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [14] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [15] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [16] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [17] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [18] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [19] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [20] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [21] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [22] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [23] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [24] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line 32
+* test_new_folder_at_root_does_not_duplicate_folder
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Window/File Manager/file_manager_window.gd:7)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:37)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] new_folder (res://Scenes/Main/BaseFileManager.gd:89)
+       [2] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:42)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] new_folder (res://Scenes/Main/BaseFileManager.gd:89)
+       [2] test_new_folder_at_root_does_not_duplicate_folder (res://tests/gut/test_file_manager_navigation.gd:42)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [13] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [14] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line 52
+[1m0/2 passed.
+[0m[4m
+
+res://tests/gut/test_flight_control_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Sessione in Singolo terminata.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1802644755880>]
+        * [<Button#1802594424847>][0m
+* test_ship_drive_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1828733323514>]
+        * [<Button#1828682994609>][0m
+* test_rbac_pilot_can_control_engineer_cannot
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1843346282328>]
+        * [<Button#1843396614487>][0m
+* test_six_dof_translation_and_rotation_input
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1858630324448>]
+        * [<Button#1858579994567>][0m
+* test_inertia_dampening_toggle_and_newtonian_drift
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1872689630338>]
+        * [<Button#1872639301773>][0m
+* test_cruise_speed_toggle_and_forward_movement
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1886396614679>]
+        * [<Button#1886346287398>][0m
+* test_speed_multiplier_adjustment_with_r_and_f_keys
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1900791468132>]
+        * [<Button#1900741137657>][0m
+* test_terminal_cat_command_rejects_reading_flight_dat_files
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_hyperdrive_alignment_and_engage_transit
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1928708755214>]
+        * [<Button#1928759087906>][0m
+* test_align_to_hyperdrive_vector_locks_and_restores_user_controls
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1945804737860>]
+        * [<Button#1945855072451>][0m
+* test_system_map_index_and_flight_control_heading_coherence
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    2 Orphans[0m
+[33m        * [<Button#1963118828173>]
+        * [<Button#1963068496533>][0m
+[33m20 orphans[0m
+[1m12/12 passed.
+[0m[4m
+
+res://tests/gut/test_flux_economy_cargo.gd
+[0m* test_cargo_mass_volume_and_inventory_calculation
+* test_cargo_overload_prevention_mass_and_volume
+* test_cargo_transfer_ship_drone_and_station
+* test_flux_rating_scale_and_port_discounts
+* test_flux_insolvency_penalty_and_impound_sequence
+* test_flux_snet_ice_hack_and_credit_injection
+* test_cargo_bay_app_ui_and_app_resource_integrity
+[1m7/7 passed.
+[0m[4m
+
+res://tests/gut/test_folder_password_node.gd
+[0m* test_folder_password_manager_core_logic
+* test_dialog_logic_and_signals
+* test_folder_node_lock_icon_updates
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_folder_node_lock_icon_updates (res://tests/gut/test_folder_password_node.gd:133)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_folder_node_lock_icon_updates (res://tests/gut/test_folder_password_node.gd:133)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line -1
+* test_terminal_cd_command_with_password
+* test_restrictions_on_password_protected_folders
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_restrictions_on_password_protected_folders (res://tests/gut/test_folder_password_node.gd:170)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_restrictions_on_password_protected_folders (res://tests/gut/test_folder_password_node.gd:170)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line -1
+[1m3/5 passed.
+[0m[4m
+
+res://tests/gut/test_folder_rename_multidot.gd
+[0m* test_rename_field_truncates_only_last_extension
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_rename_field_truncates_only_last_extension (res://tests/gut/test_folder_rename_multidot.gd:8)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_rename_field_truncates_only_last_extension (res://tests/gut/test_folder_rename_multidot.gd:8)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line 20
+[1m0/1 passed.
+[0m[4m
+
+res://tests/gut/test_gut_smoke.gd
+[0m* test_gut_is_working
+* test_basic_math
+* test_failure_detection_is_reliable
+* test_can_access_project_autoload
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_hack_exploits_node.gd
+[0m[NetworkManager] Disconnesso dalla rete.
+* test_disconnected_state_shows_overlay_and_blocks_operations
+* test_mission_start_unlocks_operational_state
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+* test_rbac_role_based_access_control
+[Chat][[SISTEMA]]: Hacker ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Hacker ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Hacker ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Hacker ha preso la postazione: Hacker
+* test_app_resource_registered_in_ship_software_manager
+* test_mount_target_drive_creates_subfolders_and_dat_files
+* test_exploit_spammer_password_sentinel_and_neutralization
+* test_exploit_blind_eye_password_key_and_neutralization
+* test_exploit_8loops_multi_key_and_enemy_ai_reaction
+* test_exploit_gout_password_and_neutralization
+* test_cli_command_parser_status_help_run_and_abort
+* test_unmount_target_drive_cleans_up_files_and_passwords
+[NetworkManager] Sessione in Singolo terminata.
+[1m11/11 passed.
+[0m[4m
+
+res://tests/gut/test_headless_auto_rehost_node.gd
+[0m* test_start_headless_server
+[NetworkManager] Stanza creata. Sei l'Host.
+* test_simulate_clients_connecting
+* test_disconnect_one_of_two_clients_should_not_rehost_yet
+[Chat][[SISTEMA]]: Pilota Alpha ha abbandonato l'astronave.
+[NetworkManager] Pilota Alpha si è disconnesso.
+[Chat][[SISTEMA]]: Tutti i membri sono pronti! Decollo tra 3...
+* test_disconnect_last_client_triggers_auto_rehost
+[Chat][[SISTEMA]]: Ingegnere Beta ha abbandonato l'astronave.
+[NetworkManager] Ingegnere Beta si è disconnesso.
+[Chat][[SISTEMA]]: Countdown decollo annullato: l'equipaggio non è più pronto.
+[NetworkManager] Tutti i giocatori si sono disconnessi dal server headless.
+[NetworkManager] Riavvio e ri-hosting della stanza 'Incrociatore Stellare 42' sulla porta 7999...
+[NetworkManager] Connessione persa.
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Stanza creata. Sei l'Host.
+[NetworkManager] Server headless riavviato con successo. Nuova stanza 'Incrociatore Stellare 42' attiva in attesa di connessioni.
+* test_rehost_with_active_mission_ends_mission_and_resets_ship
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Hacker Gamma ha abbandonato l'astronave.
+[NetworkManager] Hacker Gamma si è disconnesso.
+[NetworkManager] Tutti i giocatori si sono disconnessi dal server headless.
+[NetworkManager] Riavvio e ri-hosting della stanza 'Incrociatore Stellare 42' sulla porta 7999...
+[NetworkManager] Connessione persa.
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Stanza creata. Sei l'Host.
+[NetworkManager] Server headless riavviato con successo. Nuova stanza 'Incrociatore Stellare 42' attiva in attesa di connessioni.
+[NetworkManager] Connessione persa.
+[NetworkManager] Disconnesso dalla rete.
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_hyperdrive_3d_zone_loading.gd
+[0m* test_initial_state_has_station_in_adjacent_sector
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_hyperdrive_transit_to_deep_space_unloads_station_and_resets_ship
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[33m    2 Orphans[0m
+[33m        * [<Button#2059403268712>]
+        * [<Button#2059453600369>][0m
+* test_hyperdrive_transit_to_derelict_sector_loads_wreck_3d
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_hyperdrive_return_to_station_sector_reloads_station_3d
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[33m2 orphans[0m
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_hyperdrive_cams_transition.gd
+[0m* test_hyperdrive_transition_activates_cams_signal_loss
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_camera_window_opened_during_hyperdrive_shows_signal_loss
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_cams_app_ui_tracks_multiplayer_crew_zone_loading_progress
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_player_leaving_during_transit_triggers_completion_if_others_ready
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_initial_spawn_adjacent_station.gd
+[0m* test_identifies_primary_station_and_adjacent_spawn_sector
+* test_star_system_grid_manager_positions_at_adjacent_sector
+* test_space_world_manager_configures_3d_space_ship_and_sensors
+* test_docking_clearance_and_alternate_route_planning
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_life_support_app_node.gd
+[0m* test_disconnected_overlay_lifecycle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Stagista
+[NetworkManager] Sessione in Singolo terminata.
+* test_app_resource_registered_in_ship_software_manager
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_dat_configuration_default_values_and_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_bulkhead_seal_and_fire_suppression_controls
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_room_data_structure_and_public_telemetry_methods
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_breach_rapid_decompression_extinguishes_fire
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_vacuum_thermal_decay_below_one_kpa
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_short_circuit_disables_heater_and_cools_room
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_fire_dynamics_and_critical_thermal_peak
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_atmosphere_anomaly_signal_emission
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_room_atmo_card_widget_telemetry_and_alarm_badges
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_blueprint_canvas_and_interactive_room_selection
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[NetworkManager] Sessione in Singolo terminata.
+[1m14/14 passed.
+[0m[4m
+
+res://tests/gut/test_logbook_app_node.gd
+[0m* test_disconnected_overlay_lifecycle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_contracts_and_notes
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Stagista
+[NetworkManager] Disconnesso dalla rete.
+* test_dat_configuration_parsing_and_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_contract_management_lifecycle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_black_box_event_logging
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_bridge_notes_save_writes_file_to_ship_drive
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_app_resource_registered_in_ship_software_manager
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m8/8 passed.
+[0m[4m
+
+res://tests/gut/test_mining_scavenging.gd
+[0m* test_spectrometry_and_asteroid_state
+* test_asteroid_damage_and_fragment_generation
+* test_mineral_deposit_collection_and_cargo_storage
+* test_derelict_laser_cutting_and_bulkhead
+* test_derelict_ice_hacking_and_salvage
+* test_derelict_duct_drone_infiltration
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_notification_system_node.gd
+[0m* test_singleton_and_notification_container_structure
+* test_multiple_notifications_stack_vertically
+* test_notification_control_has_mouse_filter_ignore
+* test_joystick_connection_produces_green_notification
+* test_joystick_disconnection_produces_orange_notification
+* test_send_notification_formats_title_in_bold
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_pod_info_vitals_spatial_audio.gd
+[0m* test_real_vital_signs_synchronization
+* test_bridge_virtual_microphone_and_distance_attenuation
+* test_physiological_state_asphyxia_and_blackout
+* test_physiological_state_hyperthermia_and_combustion
+* test_physiological_state_hypothermia_and_freezing
+* test_g_force_dynamics_gloc_blackout_and_redout
+* test_screen_overlays_and_game_over_panel
+[1m7/7 passed.
+[0m[4m
+
+res://tests/gut/test_power_grid_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_engineer_can_control_unauthorized_role_cannot
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[NetworkManager] Sessione in Singolo terminata.
+* test_power_monitoring_totals
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_room_power_entry_color_states
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_room_inspector_populates_selected_room_details
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_mini_terminal_commands_execute_without_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m9/9 passed.
+[0m[4m
+
+res://tests/gut/test_rbac_start_menu_filter.gd
+[0m* test_offline_state_has_no_ship_apps_in_start_menu
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Main/Boot Splash/boot_splash.tscn:3 - ext_resource, invalid UID: uid://b7m5up7nr6tko - using text path instead: res://Art/Godot Logo.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[33m    225 Orphans[0m
+[33m        * [Start Menu Option:<Panel#2746665142524>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2739266391467>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2740625345979>(start_menu_option.gd)] + 6
+        * [CrewVitalsOverlayLayer:<CanvasLayer#2737907437071>] + 8
+        * [Start Menu Option:<Panel#2741178994256>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2738461085290>(start_menu_option.gd)] + 6
+        * [@Panel@4951:<Panel#2741581647468>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2742554726043>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2748024098769>(start_menu_option.gd)] + 6
+        * [@Panel@4979:<Panel#2747067797602>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2743913681004>(start_menu_option.gd)] + 6
+        * [@Panel@4972:<Panel#2745708843343>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2746111496684>(start_menu_option.gd)] + 6
+        * [@Panel@4986:<Panel#2748426752511>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2744718988013>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2747470451687>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2743360033876>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2741984302207>(start_menu_option.gd)] + 6
+        * [@Panel@4937:<Panel#2738863740303>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2739820041675>(start_menu_option.gd)] + 6
+        * [@Panel@4944:<Panel#2740222695441>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2748829407469>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2745306192426>(start_menu_option.gd)] + 6
+        * [@Panel@4965:<Panel#2744316336708>(start_menu_option.gd)] + 6
+        * [@Panel@4958:<Panel#2742957382539>(start_menu_option.gd)] + 6[0m
+* test_rbac_filtering_by_role
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[33m    90 Orphans[0m
+[33m        * [@Panel@5026:<Panel#2759734594916>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2757972988005>(start_menu_option.gd)] + 6
+        * [CrewVitalsOverlayLayer:<CanvasLayer#2755993276584>] + 8
+        * [Start Menu Option:<Panel#2756614033919>(start_menu_option.gd)] + 6
+        * [@Panel@5012:<Panel#2757016687257>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2760137249552>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2759331943571>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2758778296117>(start_menu_option.gd)] + 6
+        * [@Panel@5019:<Panel#2758375643692>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2757419342676>(start_menu_option.gd)] + 6[0m
+* test_dynamic_population_on_mission_start
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[33m    117 Orphans[0m
+[33m        * [Start Menu Option:<Panel#2784631983197>(start_menu_option.gd)] + 6
+        * [@Panel@5119:<Panel#2785034636397>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2783273028795>(start_menu_option.gd)] + 6
+        * [@Panel@5098:<Panel#2777786880043>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2777384227066>(start_menu_option.gd)] + 6
+        * [@Panel@5112:<Panel#2783675684079>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2784078337271>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2785990940207>(start_menu_option.gd)] + 6
+        * [@Panel@5101:<Panel#2778189534828>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2778592188379>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2786796247386>(start_menu_option.gd)] + 6
+        * [@Panel@5126:<Panel#2786393594409>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2785437293231>(start_menu_option.gd)] + 6[0m
+* test_runtime_role_switch_updates_menu
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[33m    117 Orphans[0m
+[33m        * [Start Menu Option:<Panel#2811962068489>(start_menu_option.gd)] + 6
+        * [@Panel@5241:<Panel#2816626134547>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2817582435972>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2817028788233>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2818941390984>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2813170028780>(start_menu_option.gd)] + 6
+        * [@Panel@5231:<Panel#2812767375613>(start_menu_option.gd)] + 6
+        * [@Panel@5248:<Panel#2817985089796>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2818387743081>(start_menu_option.gd)] + 6
+        * [@Panel@5228:<Panel#2812364723326>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2816223483277>(start_menu_option.gd)] + 6
+        * [@Panel@5255:<Panel#2819344046632>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2819746699953>(start_menu_option.gd)] + 6[0m
+* test_disconnected_overlay_and_menu_clear_on_end_mission
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] before_each (res://tests/gut/test_rbac_start_menu_filter.gd:25)
+       [1] _run_test (res://addons/gut/gut.gd:612)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[33m    110 Orphans[0m
+[33m        * [TermApp_lobby:<Panel#2850465777704>(start_menu_option.gd)] + 6
+        * [<Button#2842932808926>]
+        * [Start Menu Option:<Panel#2853603118347>(start_menu_option.gd)] + 6
+        * [@Panel@5363:<Panel#2850063126359>(start_menu_option.gd)] + 6
+        * [@Panel@5377:<Panel#2854005772154>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2853049470885>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2855767380026>(start_menu_option.gd)] + 6
+        * [@Panel@5384:<Panel#2855364726947>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2854962073855>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2849660473909>(start_menu_option.gd)] + 6
+        * [Start Menu Option:<Panel#2852244166414>(start_menu_option.gd)] + 6
+        * [@Panel@5370:<Panel#2852646819792>(start_menu_option.gd)] + 6
+        * [TermApp_lobby:<Panel#2854408427766>(start_menu_option.gd)] + 6
+        * [<Button#2842983143673>][0m
+[33m110 orphans[0m
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_sensors_app_node.gd
+[0m* test_disconnected_overlay_lifecycle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Stagista
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_radar_range_calibration_constants
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_radar_contact_selection_and_diegetic_telemetry
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_target_lock_and_release
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_waypoint_transmission_and_clear
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_line_of_sight_occlusion_geometry
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_telemetry_probe_feed_integration
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_active_ping_gated_by_power
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m11/11 passed.
+[0m[4m
+
+res://tests/gut/test_service_drone_app_node.gd
+[0m* test_disconnected_overlay_lifecycle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Stagista
+[NetworkManager] Sessione in Singolo terminata.
+* test_app_resource_registered_in_ship_software_manager
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_dat_configuration_parsing_and_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_drone_entity_collider_and_collision_mask
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_launch_and_thruster_physics
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_arrow_key_pitch_and_yaw_controls
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_welder_tool_repairs_hull_breach
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_cargo_bay_collection_and_drop
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_auto_docking_completes
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m11/11 passed.
+[0m[4m
+
+res://tests/gut/test_shield_matrix_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Hacker
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[NetworkManager] Disconnesso dalla rete.
+* test_quadrant_balance_reset_slider_and_vector_pad
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_emergency_boost_and_cooldown
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_phase_sync_harmonics_toggle
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_terminal_cat_command_rejects_reading_shield_dat_files
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_split_view_default_defense_devices
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dynamic_device_registration_and_sector_reassignment
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[33m    84 Orphans[0m
+[33m        * [@PanelContainer@6747:<PanelContainer#3327509141870>(defense_device_card.gd)] + 14
+        * [@PanelContainer@6758:<PanelContainer#3329153309808>(defense_device_card.gd)] + 14
+        * [DefenseDeviceCard:<PanelContainer#3325864975603>(defense_device_card.gd)] + 14[0m
+* test_gatling_interception_and_directional_sector_constraint
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_flack_countermeasures_deflect_homing_missile
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_combat_director_defense_evaluation_integration
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m14/14 passed.
+[0m[4m
+
+res://tests/gut/test_ship_blueprint_node.gd
+[0m* test_default_ship_blueprint_structure
+* test_quick_query_methods
+* test_serialization_to_dict_and_from_dict
+* test_json_export_and_import
+* test_deep_clone_and_isolation
+* test_space_world_manager_integration
+* test_power_grid_app_integration
+* test_duct_drone_app_integration
+* test_ship_sublayer_editor_integration
+* test_ship_drive_manager_mount_integration
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_mainframe_apps_role_filter_start_menu
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_mainframe_apps_role_filter_start_menu (res://tests/gut/test_ship_blueprint_node.gd:321)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_mainframe_apps_role_filter_start_menu (res://tests/gut/test_ship_blueprint_node.gd:321)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_mainframe_apps_role_filter_start_menu (res://tests/gut/test_ship_blueprint_node.gd:321)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[Chat][[SISTEMA]]: GiocatoreTest ha preso la postazione: Pilota
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: GiocatoreTest ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: GiocatoreTest ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: GiocatoreTest ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: GiocatoreTest ha preso la postazione: Hacker
+[NetworkManager] Disconnesso dalla rete.
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+    [2] <engine-1>res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+    [3] <engine-1>res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+      at line 429
+[1m10/11 passed.
+[0m[4m
+
+res://tests/gut/test_ship_connection_solo_node.gd
+[0m* test_initial_state_is_disconnected
+* test_flight_control_and_cams_overlay_when_disconnected
+* test_solo_mode_lobby_and_mission_start
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+* test_disconnecting_from_solo_mode
+[NetworkManager] Sessione in Singolo terminata.
+* test_multiplayer_host_connection_and_mission_start
+[NetworkManager] Stanza creata. Sei l'Host.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Connessione persa.
+[NetworkManager] Disconnesso dalla rete.
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_ship_drive_node.gd
+[0m* test_initial_state_disconnected
+* test_mount_on_mission_launch_solo
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+* test_decryption_keys_in_default_dat_files_and_base_app_parser
+* test_create_modify_rename_delete_inside_ship_drive
+* test_folder_password_synchronization
+* test_drive_snapshot_for_join_sync
+* test_unmount_on_disconnect
+[NetworkManager] Sessione in Singolo terminata.
+* test_multiplayer_lobby_vs_mission_start
+[NetworkManager] Stanza creata. Sei l'Host.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Connessione persa.
+[NetworkManager] Disconnesso dalla rete.
+* test_leftover_directory_cleanup_and_window_close_when_disconnected
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] _ready (res://Scenes/Main/desktop_file_manager.gd:20)
+       [3] add_child_autofree (res://addons/gut/test.gd:2784)
+       [4] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:198)
+       [5] _run_test (res://addons/gut/gut.gd:622)
+       [6] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+WARNING: res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] instantiate_file (res://Scenes/Main/BaseFileManager.gd:37)
+       [1] populate_file_manager (res://Scenes/Main/BaseFileManager.gd:20)
+       [2] test_leftover_directory_cleanup_and_window_close_when_disconnected (res://tests/gut/test_ship_drive_node.gd:199)
+       [3] _run_test (res://addons/gut/gut.gd:622)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:835)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+      at line 217
+[1m8/9 passed.
+[0m[4m
+
+res://tests/gut/test_star_system_editor_gut.gd
+[0m* test_star_system_editor_instantiation_and_rendering
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+* test_star_system_editor_body_operations
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+* test_star_system_editor_plugin_and_load
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+* test_star_system_editor_generate_random_system
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+    [DEPRECATED]:  wait_frames has been replaced with wait_physics_frames which is counted in _physics_process.  wait_process_frames has also been added which is counted in _process.
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_star_system_grid.gd
+[0m* test_sector_coordinate_formatting_and_parsing
+* test_adjacent_sector_transitions_and_deterministic_data
+* test_kinematic_distances_routes_and_no_ftl_constraint
+* test_planetary_occlusion_shadow_cones_and_solar_blackout
+* test_scalar_entity_visibility_on_diegetic_skybox
+* test_dynamic_space_skybox_integration
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_start_menu_icons.gd
+[0m* test_option_dimensions_reduced_by_20_percent
+* test_only_title_is_visible
+* test_tooltip_shows_description
+* test_app_resource_has_icon_property
+* test_icon_fallback_behavior
+* test_all_24_system_apps_have_valid_icons
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_start_menu_scrollbar.gd
+[0m* test_taskbar_start_menu_scroll_structure_and_population
+WARNING: res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_taskbar_start_menu_scroll_structure_and_population (res://tests/gut/test_start_menu_scrollbar.gd:11)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [3] _run_test (res://addons/gut/gut.gd:650)
+       [4] test_dynamic_space_skybox_integration (res://tests/gut/test_star_system_grid.gd:167)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_taskbar_start_menu_scroll_structure_and_population (res://tests/gut/test_start_menu_scrollbar.gd:11)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [3] _run_test (res://addons/gut/gut.gd:650)
+       [4] test_dynamic_space_skybox_integration (res://tests/gut/test_star_system_grid.gd:167)
+WARNING: res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] test_taskbar_start_menu_scroll_structure_and_population (res://tests/gut/test_start_menu_scrollbar.gd:11)
+       [1] _run_test (res://addons/gut/gut.gd:622)
+       [2] _test_the_scripts (res://addons/gut/gut.gd:835)
+       [3] _run_test (res://addons/gut/gut.gd:650)
+       [4] test_dynamic_space_skybox_integration (res://tests/gut/test_star_system_grid.gd:167)
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+    [2] <engine-1>res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+    [3] <engine-1>res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+      at line -1
+[33m    9 Orphans[0m
+[33m        * [CrewVitalsOverlayLayer:<CanvasLayer#3859548216586>] + 8[0m
+[33m9 orphans[0m
+[1m0/1 passed.
+[0m[4m
+
+res://tests/gut/test_station_services_hub.gd
+[0m* test_docking_undocking_procedure_and_is_docked_signal
+* test_cargo_market_trading_and_flux_rating
+* test_contract_acceptance_and_logbook_sync
+* test_software_repository_purchase_writes_ship_drive_file
+* test_shipyard_hull_repair_clears_breaches_and_alarms
+* test_undocking_restores_free_flight
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_stations_docking.gd
+[0m* test_radio_iff_protocol_and_bay_assignment
+* test_telemetry_guidance_and_magnetic_lock
+* test_station_hub_ui_and_port_services
+* test_undocking_and_magnetic_release
+* test_software_manager_dat_files_and_rbac
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_system_map_hyperdrive.gd
+[0m* test_star_system_data_loaded_with_celestial_bodies
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_select_sector_calculates_preliminary_route
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_route_transmission_signal_to_flight_control
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_flight_control_receives_route_and_aligns
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[33m    2 Orphans[0m
+[33m        * [<Button#3925180682215>]
+        * [<Button#3925130352399>][0m
+* test_hyperdrive_engage_transitions_sector
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[33m    2 Orphans[0m
+[33m        * [<Button#3929777639226>]
+        * [<Button#3929827971644>][0m
+* test_zoom_controls_and_centered_mouse_wheel_input
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_async_route_plot_sequence_and_feedback
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+* test_grid_rendering_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Disconnesso dalla rete.
+[33m4 orphans[0m
+[1m8/8 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_autocomplete_and_history.gd
+[0m* test_longest_common_prefix
+* test_autocomplete_commands
+* test_autocomplete_paths
+* test_history_navigation_and_draft
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_commands_worm_decript_dataread_node.gd
+[0m* test_command_registration
+* test_worm_command
+* test_decript_command
+* test_dataread_and_text_editor
+* test_terminal_interactive_flow
+[1m5/5 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_drive_node.gd
+[0m* test_terminal_drive_manager_autoload_exists
+* test_terminal_drive_folder_created_on_startup
+* test_default_configuration_files_exist
+* test_get_setting_parses_configuration
+* test_ship_drive_manager_does_not_sync_terminal_drive
+* test_is_path_in_terminal_drive_helper
+* test_local_file_manipulation_inside_terminal_drive
+[1m7/7 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_multi_instance.gd
+[0m* test_multiple_instances_have_unique_ids
+* test_dynamic_window_title_updates
+* test_instance_isolation
+* test_terminal_command_registration_and_alias
+[1m4/4 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_regex_commands.gd
+[0m* test_parser_quotes_and_flags
+* test_parser_command_chaining_with_quotes
+* test_regex_command_matching_and_dispatch
+[1m3/3 passed.
+[0m[4m
+
+res://tests/gut/test_terminal_tui_framework.gd
+[0m* test_tui_button
+* test_tui_options_single_selection
+* test_tui_options_multi_selection
+* test_tui_card
+* test_tui_overlay_and_terminal_integration
+* test_clickable_ls_output
+[1m6/6 passed.
+[0m[4m
+
+res://tests/gut/test_weapons_node.gd
+[0m* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_ship_drive_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_rbac_permissions_matrix_for_crew_roles
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Capitano
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Soldato
+[NetworkManager] Disconnesso dalla rete.
+* test_heavy_mg_fire_consumes_ammo_and_generates_heat
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_heavy_cannon_fire_consumes_capacitor_and_ammo
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_missile_fire_requires_target_lock
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_probe_launch_decrements_ammo_and_registers_active_probe
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_overheat_lockout_and_emergency_thermal_vent
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_radar_target_lock_and_lead_indicator
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_armory_power_integration
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_terminal_cat_command_rejects_reading_weapons_dat_files
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_optical_aim_camera_and_subviewport
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_mouse_aim_capture_space_escape_and_focus_loss
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_numeric_key_ammo_selection
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_missile_optical_lock_accumulation_and_trajectory_hud
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_queue_free_cleanup_does_not_error
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+[1m17/17 passed.
+[0m[4m
+
+res://tests/gut/test_window_management.gd
+[0m* test_top_bar_z_index_in_window_scene
+* test_background_window_opacity_stays_full
+* test_full_surface_window_selection_and_overlap_handling
+[1m3/3 passed.
+[0m
+
+
+
+[33m==============================================[0m
+[33m= 121 Orphans[0m
+[33m==============================================[0m
+test_comms_node.gd
+    - test_ew_drive_connect_enabled_only_for_strong_aligned_signal
+[33m        * [Window:<Panel#1494128529533>(window.gd)] + 81[0m
+test_flight_control_node.gd
+    - test_disconnected_overlay_and_operational_state
+[33m        * [<Button#1802644755880>]
+        * [<Button#1802594424847>][0m
+    - test_dat_configuration_default_values_and_runtime_hot_reload
+[33m        * [<Button#1828733323514>]
+        * [<Button#1828682994609>][0m
+    - test_rbac_pilot_can_control_engineer_cannot
+[33m        * [<Button#1843346282328>]
+        * [<Button#1843396614487>][0m
+    - test_six_dof_translation_and_rotation_input
+[33m        * [<Button#1858630324448>]
+        * [<Button#1858579994567>][0m
+    - test_inertia_dampening_toggle_and_newtonian_drift
+[33m        * [<Button#1872689630338>]
+        * [<Button#1872639301773>][0m
+    - test_cruise_speed_toggle_and_forward_movement
+[33m        * [<Button#1886396614679>]
+        * [<Button#1886346287398>][0m
+    - test_speed_multiplier_adjustment_with_r_and_f_keys
+[33m        * [<Button#1900791468132>]
+        * [<Button#1900741137657>][0m
+    - test_hyperdrive_alignment_and_engage_transit
+[33m        * [<Button#1928708755214>]
+        * [<Button#1928759087906>][0m
+    - test_align_to_hyperdrive_vector_locks_and_restores_user_controls
+[33m        * [<Button#1945804737860>]
+        * [<Button#1945855072451>][0m
+    - test_system_map_index_and_flight_control_heading_coherence
+[33m        * [<Button#1963118828173>]
+        * [<Button#1963068496533>][0m
+test_hyperdrive_3d_zone_loading.gd
+    - test_hyperdrive_transit_to_deep_space_unloads_station_and_resets_ship
+[33m        * [<Button#2059403268712>]
+        * [<Button#2059453600369>][0m
+test_rbac_start_menu_filter.gd
+    - test_disconnected_overlay_and_menu_clear_on_end_mission
+[33m        * [<Button#2842932808926>]
+        * [<Button#2842983143673>][0m
+res://tests/gut/test_ship_connection_solo_node.gd
+    - Outside Tests
+[33m        * [<Button#3605826378801>]
+        * [<Button#3605876710453>][0m
+test_system_map_hyperdrive.gd
+    - test_flight_control_receives_route_and_aligns
+[33m        * [<Button#3925180682215>]
+        * [<Button#3925130352399>][0m
+    - test_hyperdrive_engage_transitions_sector
+[33m        * [<Button#3929777639226>]
+        * [<Button#3929827971644>][0m
+
+
+[33m==============================================
+[0m[33m= Run Summary
+[0m[33m==============================================
+[0m[4m
+res://tests/gut/test_cams_system.gd
+[0m- test_camera_shader_multi_window_independence
+[31m    [Failed]:  [0mARRAY([]) == ARRAY([])  I punti Lidar delle due finestre devono essere memorizzati in array distinti
+          at line 385
+- test_lidar_multi_window_direction_independence
+[31m    [Failed]:  [0m[-1.0] expected to be > than [40.0]:  La telecamera Posteriore non deve rilevare l'ostacolo anteriore ravvicinato
+          at line 479
+[4m
+res://tests/gut/test_desktop_default_folders.gd
+[0m- test_ensure_default_files_creates_default_folders_and_files
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line -1
+[4m
+res://tests/gut/test_file_manager_navigation.gd
+[0m- test_back_button_returns_to_root_from_top_level_folder
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [13] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [14] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [15] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [16] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [17] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [18] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [19] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [20] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [21] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [22] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [23] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [24] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line 32
+- test_new_folder_at_root_does_not_duplicate_folder
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [13] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [14] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line 52
+[4m
+res://tests/gut/test_folder_password_node.gd
+[0m- test_folder_node_lock_icon_updates
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line -1
+- test_restrictions_on_password_protected_folders
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line -1
+[4m
+res://tests/gut/test_folder_rename_multidot.gd
+[0m- test_rename_field_truncates_only_last_extension
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line 20
+[4m
+res://tests/gut/test_ship_blueprint_node.gd
+[0m- test_mainframe_apps_role_filter_start_menu
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+    [2] <engine-1>res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+    [3] <engine-1>res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+          at line 429
+[4m
+res://tests/gut/test_ship_drive_node.gd
+[0m- test_leftover_directory_cleanup_and_window_close_when_disconnected
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [2] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [3] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [4] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [5] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [6] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [7] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [8] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [9] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [10] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+    [11] <engine-1>res://Scenes/Desktop/folder.tscn:4 - ext_resource, invalid UID: uid://cjve37ywrq6qo - using text path instead: res://Art/Folder Icons/folder.png
+    [12] <engine-1>res://Scenes/Desktop/folder.tscn:6 - ext_resource, invalid UID: uid://cqajaj7jxwxg3 - using text path instead: res://Art/Folder Icons/lock.svg
+          at line 217
+[4m
+res://tests/gut/test_start_menu_scrollbar.gd
+[0m- test_taskbar_start_menu_scroll_structure_and_population
+[31m    [Failed]:  [0mUnexpected Errors:
+    [1] <engine-1>res://Scenes/Taskbar/taskbar.tscn:5 - ext_resource, invalid UID: uid://dyucn32xje8bj - using text path instead: res://Art/Icons/Start Menu Button.png
+    [2] <engine-1>res://Scenes/Taskbar/taskbar.tscn:6 - ext_resource, invalid UID: uid://dnvmy7l1wrerh - using text path instead: res://Art/Icons/power-button.png
+    [3] <engine-1>res://Scenes/Taskbar/taskbar.tscn:8 - ext_resource, invalid UID: uid://cwnaaut64gd15 - using text path instead: res://Art/Icons/cog.png
+          at line -1
+
+Totals
+------
+Warnings              3
+Deprecated            6
+
+Scripts              45
+Tests               325
+Passing Tests       314
+Failing Tests        11
+Asserts           2664/2675
+Orphans             121
+Time              34.021s
+
+
+[31m---- 11 failing tests ----
+[0m
+ERROR: 28 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 168 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 2 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
+ERROR: 1 RID allocations of type 'PN13RichTextLabel4ItemE' were leaked at exit.
+WARNING: 119 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 483 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 22 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

@@ -509,6 +509,8 @@ func _update_sector_environmental_state(sec_data: SectorData) -> void:
 func _sync_with_space_world_manager(sec_data: SectorData) -> void:
 	var swm := get_node_or_null("/root/SpaceWorldManager")
 	if swm and is_instance_valid(swm):
+		if swm.has_method("load_sector_zone"):
+			swm.load_sector_zone(sec_data)
 		# Se SpaceWorldManager ha metodi o segnali dedicati, li notifica
 		if swm.has_signal("sensors_scan_completed"):
 			var visible_contacts := get_visible_system_entities(sec_data.coordinates)

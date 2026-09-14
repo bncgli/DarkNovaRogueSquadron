@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_linear;
+uniform sampler2D feed_texture : repeat_disable, filter_linear;
 uniform float sweep_speed : hint_range(0.1, 2.0) = 0.4;
 uniform float grid_density : hint_range(20.0, 200.0) = 90.0;
 uniform float edge_threshold : hint_range(0.02, 0.5) = 0.08;
@@ -8,14 +8,14 @@ uniform vec3 lidar_color_cyan : source_color = vec3(0.0, 0.92, 1.0);
 uniform vec3 lidar_color_green : source_color = vec3(0.1, 1.0, 0.35);
 
 void fragment() {
-	vec2 uv = SCREEN_UV;
-	vec2 texel_size = 1.0 / vec2(textureSize(screen_texture, 0));
+	vec2 uv = UV;
+	vec2 texel_size = 1.0 / vec2(textureSize(feed_texture, 0));
 	
-	vec4 center = texture(screen_texture, uv);
-	vec4 c_left = texture(screen_texture, uv - vec2(texel_size.x * 1.5, 0.0));
-	vec4 c_right = texture(screen_texture, uv + vec2(texel_size.x * 1.5, 0.0));
-	vec4 c_top = texture(screen_texture, uv - vec2(0.0, texel_size.y * 1.5));
-	vec4 c_bottom = texture(screen_texture, uv + vec2(0.0, texel_size.y * 1.5));
+	vec4 center = texture(feed_texture, uv);
+	vec4 c_left = texture(feed_texture, uv - vec2(texel_size.x * 1.5, 0.0));
+	vec4 c_right = texture(feed_texture, uv + vec2(texel_size.x * 1.5, 0.0));
+	vec4 c_top = texture(feed_texture, uv - vec2(0.0, texel_size.y * 1.5));
+	vec4 c_bottom = texture(feed_texture, uv + vec2(0.0, texel_size.y * 1.5));
 	
 	// Calcolo bordi geometrie (Sobel / Laplacian Edge Detection)
 	float lum_c = dot(center.rgb, vec3(0.299, 0.587, 0.114));

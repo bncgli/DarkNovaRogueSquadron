@@ -6,7 +6,8 @@ extends BaseApp
 ## Task TASK-031: Weapons Turret Overhaul, Mouse Aiming & Ammo Types.
 
 const APP_TITLE: String = "Tactical Weapons & Point Defense"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 520)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 550)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(720, 550)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/Weapons/weapons_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/Weapons/weapons_config.dat"
@@ -176,11 +177,11 @@ func _ready() -> void:
 	_update_ui_displays()
 	_update_turret_camera_feed()
 
-func _setup_parent_window(_title: String, _size: Vector2) -> void:
+func _setup_parent_window(_title: String, _size: Vector2, _min_size: Vector2 = Vector2.ZERO) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
-		parent_window.custom_minimum_size = Vector2(620, 460)
+		parent_window.custom_minimum_size = MIN_WINDOW_SIZE
 		parent_window.title_text = APP_TITLE
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:

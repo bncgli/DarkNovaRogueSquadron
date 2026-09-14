@@ -30,6 +30,15 @@ signal electrical_short_sparked(pos: Vector2)
 signal duct_drone_position_updated(pos: Vector2)
 signal g_force_updated(g_force: float)
 signal crew_game_over(reason: String)
+signal sector_zone_loaded(sector_data: SectorData)
+signal hyperdrive_transition_started(target_coords: Vector3i)
+signal hyperdrive_transition_progress(loaded_count: int, total_count: int)
+signal hyperdrive_transition_ended(target_coords: Vector3i)
+
+# --- HYPERDRIVE TRANSITION & MULTIPLAYER CREW SYNC ---
+var is_hyperdrive_transition_active: bool = false
+var hyperdrive_target_coords: Vector3i = Vector3i.ZERO
+var _hyperdrive_pending_players: Dictionary = {} # peer_id (int) -> bool
 
 # --- SHIP DAMAGE TYPES & CONSTANTS ---
 const DAMAGE_TYPE_BREACH: String = "breach"
@@ -55,6 +64,7 @@ func _ready() -> void:
 	duct_drone_lights = false
 	generate_initial_ship_damages()
 	call_deferred("_connect_network_signals")
+	call_deferred("_connect_grid_manager")
 
 func _connect_submanagers() -> void:
 	drone_manager.state_changed.connect(func(p, h, s, b, l, sa, sr):
@@ -133,6 +143,11 @@ var active_star_system: StarSystemData = null
 var primary_station_instance: SpaceStationEntity = null
 var default_station_approach_distance: float = 1800.0 # Metri dallo scalo portuale (1000-2500m)
 
+# Settore corrente e istanza 3D relitto spaziale
+var current_sector_data: SectorData = null
+var primary_derelict_instance: DerelictShipEntity = null
+var _last_loaded_sector_coords: Vector3i = Vector3i(-999999, -999999, -999999)
+
 var _last_sent_drone_linear_in: float = 0.0
 var _last_sent_drone_angular_in: float = 0.0
 var _last_sent_drone_speed_mult: float = 1.0
@@ -161,10 +176,178 @@ func _connect_network_signals() -> void:
 			nm.mission_ended.connect(_on_network_mission_ended)
 		if nm.has_signal("player_joined") and not nm.player_joined.is_connected(_on_network_player_joined):
 			nm.player_joined.connect(_on_network_player_joined)
+		if nm.has_signal("player_left") and not nm.player_left.is_connected(_on_network_player_left):
+			nm.player_left.connect(_on_network_player_left)
 		if nm.has_method("is_ship_connected") and nm.is_ship_connected():
 			_on_network_mission_started()
 		elif nm.get("is_connected_to_network"):
 			_on_network_connection_state_changed(true, nm.get("is_host"))
+
+func _connect_grid_manager() -> void:
+	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr:
+			if grid_mgr.has_signal("sector_changed") and not grid_mgr.sector_changed.is_connected(_on_grid_sector_changed):
+				grid_mgr.sector_changed.connect(_on_grid_sector_changed)
+			if grid_mgr.has_signal("hyperdrive_transit_started") and not grid_mgr.hyperdrive_transit_started.is_connected(_on_grid_hyperdrive_transit_started):
+				grid_mgr.hyperdrive_transit_started.connect(_on_grid_hyperdrive_transit_started)
+			if grid_mgr.has_signal("hyperdrive_transit_completed") and not grid_mgr.hyperdrive_transit_completed.is_connected(_on_hyperdrive_transit_completed):
+				grid_mgr.hyperdrive_transit_completed.connect(_on_hyperdrive_transit_completed)
+
+func _on_grid_sector_changed(_old_coords: Vector3i, _new_coords: Vector3i, sec_data: SectorData) -> void:
+	load_sector_zone(sec_data)
+
+func _on_grid_hyperdrive_transit_started(dest: Vector3i) -> void:
+	start_hyperdrive_transition(dest)
+
+func _on_hyperdrive_transit_completed(target_coords: Vector3i) -> void:
+	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("get_or_generate_sector_data"):
+			var sec_data: SectorData = grid_mgr.get_or_generate_sector_data(target_coords)
+			load_sector_zone(sec_data)
+
+## Avvia la transizione Hyperdrive coordinata per l'equipaggio e oscura i flussi video esterni
+func start_hyperdrive_transition(target_coords: Vector3i) -> void:
+	if is_hyperdrive_transition_active and hyperdrive_target_coords == target_coords:
+		return
+	is_hyperdrive_transition_active = true
+	hyperdrive_target_coords = target_coords
+	_hyperdrive_pending_players.clear()
+	
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and nm.players.size() > 0:
+		for p_id in nm.players.keys():
+			_hyperdrive_pending_players[int(p_id)] = false
+	else:
+		var local_id: int = nm.local_peer_id if (nm and "local_peer_id" in nm) else 1
+		_hyperdrive_pending_players[local_id] = false
+		
+	camera_manager.set_hyperdrive_transition(true, get_hyperdrive_loading_progress())
+	for cam_id in _active_camera_windows:
+		var win: FakeWindow = _active_camera_windows[cam_id]
+		if win and is_instance_valid(win) and win.has_method("set_hyperdrive_transition"):
+			win.set_hyperdrive_transition(true, get_hyperdrive_loading_progress())
+	hyperdrive_transition_started.emit(target_coords)
+	_notify_hyperdrive_progress()
+	
+	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_client_start_hyperdrive_transition.rpc(target_coords)
+
+## Imposta manualmente i peer in attesa per test o simulazioni sincronizzate
+func set_pending_hyperdrive_players(player_ids: Array) -> void:
+	_hyperdrive_pending_players.clear()
+	for pid in player_ids:
+		_hyperdrive_pending_players[int(pid)] = false
+	_notify_hyperdrive_progress()
+
+## Notifica che un giocatore ha completato il caricamento del settore 3D
+func report_player_zone_loaded(peer_id: int, coords: Vector3i) -> void:
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and not nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer():
+			_rpc_server_report_zone_loaded.rpc_id(1, peer_id, coords)
+		_on_player_reported_zone_loaded(peer_id, coords)
+	else:
+		_on_player_reported_zone_loaded(peer_id, coords)
+
+func _on_player_reported_zone_loaded(peer_id: int, _coords: Vector3i) -> void:
+	if not is_hyperdrive_transition_active:
+		return
+	_hyperdrive_pending_players[peer_id] = true
+	_notify_hyperdrive_progress()
+	_check_all_players_zone_loaded()
+
+func _check_all_players_zone_loaded() -> void:
+	if not is_hyperdrive_transition_active:
+		return
+	var all_loaded := true
+	for p_id in _hyperdrive_pending_players:
+		if not _hyperdrive_pending_players[p_id]:
+			all_loaded = false
+			break
+			
+	if all_loaded and _hyperdrive_pending_players.size() > 0:
+		end_hyperdrive_transition()
+
+## Termina la transizione Hyperdrive e ripristina la visuale delle telecamere
+func end_hyperdrive_transition() -> void:
+	if not is_hyperdrive_transition_active:
+		return
+	is_hyperdrive_transition_active = false
+	var dest := hyperdrive_target_coords
+	camera_manager.set_hyperdrive_transition(false)
+	for cam_id in _active_camera_windows:
+		var win: FakeWindow = _active_camera_windows[cam_id]
+		if win and is_instance_valid(win) and win.has_method("set_hyperdrive_transition"):
+			win.set_hyperdrive_transition(false)
+	hyperdrive_transition_ended.emit(dest)
+	
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_client_end_hyperdrive_transition.rpc(dest)
+
+## Restituisce true se la transizione Hyperdrive è in corso
+func is_hyperdrive_transit_active() -> bool:
+	return is_hyperdrive_transition_active
+
+## Restituisce lo stato di avanzamento del caricamento della nuova zona da parte dell'equipaggio
+func get_hyperdrive_loading_progress() -> Dictionary:
+	var loaded_count := 0
+	var total_count := _hyperdrive_pending_players.size()
+	for p_id in _hyperdrive_pending_players:
+		if _hyperdrive_pending_players[p_id]:
+			loaded_count += 1
+	if total_count == 0:
+		total_count = 1
+		if not is_hyperdrive_transition_active:
+			loaded_count = 1
+	return {"loaded": loaded_count, "total": total_count}
+
+func _notify_hyperdrive_progress() -> void:
+	var prog := get_hyperdrive_loading_progress()
+	camera_manager.update_hyperdrive_progress(prog.loaded, prog.total)
+	for cam_id in _active_camera_windows:
+		var win: FakeWindow = _active_camera_windows[cam_id]
+		if win and is_instance_valid(win) and win.has_method("update_hyperdrive_progress"):
+			win.update_hyperdrive_progress(prog.loaded, prog.total)
+	hyperdrive_transition_progress.emit(prog.loaded, prog.total)
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
+			_rpc_client_sync_hyperdrive_progress.rpc(prog.loaded, prog.total)
+
+func _on_network_player_left(peer_id: int) -> void:
+	if is_hyperdrive_transition_active:
+		_hyperdrive_pending_players.erase(peer_id)
+		_notify_hyperdrive_progress()
+		_check_all_players_zone_loaded()
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_client_start_hyperdrive_transition(target_coords: Vector3i) -> void:
+	start_hyperdrive_transition(target_coords)
+	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("set_current_sector_coords"):
+			grid_mgr.set_current_sector_coords(target_coords)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _rpc_server_report_zone_loaded(peer_id: int, coords: Vector3i) -> void:
+	_on_player_reported_zone_loaded(peer_id, coords)
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_client_sync_hyperdrive_progress(loaded_count: int, total_count: int) -> void:
+	camera_manager.update_hyperdrive_progress(loaded_count, total_count)
+	hyperdrive_transition_progress.emit(loaded_count, total_count)
+
+@rpc("authority", "call_remote", "reliable")
+func _rpc_client_end_hyperdrive_transition(target_coords: Vector3i) -> void:
+	is_hyperdrive_transition_active = false
+	hyperdrive_target_coords = target_coords
+	camera_manager.set_hyperdrive_transition(false)
+	hyperdrive_transition_ended.emit(target_coords)
 
 func _on_network_connection_state_changed(is_connected: bool, is_host: bool) -> void:
 	var nm := _get_net_mgr()
@@ -416,6 +599,17 @@ func set_inertia_dampening(enabled: bool) -> void:
 	if ship and is_instance_valid(ship):
 		ship.inertia_dampening = enabled
 
+func set_ship_max_linear_speed(speed: float) -> void:
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and not nm.get("is_host"):
+		if is_inside_tree() and multiplayer.has_multiplayer_peer():
+			_rpc_client_set_max_linear_speed.rpc_id(1, speed)
+		return
+	
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.max_linear_speed = speed
+
 func get_inertia_dampening() -> bool:
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
@@ -493,6 +687,15 @@ func _rpc_client_set_inertia_dampening(enabled: bool) -> void:
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		ship.inertia_dampening = enabled
+
+@rpc("any_peer", "call_remote", "reliable")
+func _rpc_client_set_max_linear_speed(speed: float) -> void:
+	var nm := _get_net_mgr()
+	if nm == null or not nm.get("is_host"):
+		return
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.max_linear_speed = speed
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_client_reset_ship() -> void:
@@ -666,6 +869,7 @@ func set_star_system_data(sys: StarSystemData) -> void:
 		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
 		if grid_mgr and grid_mgr.has_method("load_star_system"):
 			grid_mgr.load_star_system(sys)
+	_connect_grid_manager()
 	configure_initial_station_spawn()
 
 ## Configura e posiziona la stazione orbitale primaria nello spazio 3D e orienta la nave per lo spawn iniziale
@@ -715,6 +919,7 @@ func configure_initial_station_spawn() -> void:
 			primary_station_instance.station_name = st_name
 			primary_station_instance.station_type = st_type
 			primary_station_instance.global_position = station_3d_pos
+			primary_station_instance.visible = true
 			
 	# Orienta la nave verso la stazione spaziale
 	var ship := get_spaceship()
@@ -733,8 +938,217 @@ func configure_initial_station_spawn() -> void:
 		"is_station": true
 	})
 	
+	if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("get_current_sector_data"):
+			current_sector_data = grid_mgr.get_current_sector_data()
+			if current_sector_data:
+				_last_loaded_sector_coords = current_sector_data.coordinates
+	
 	# Notifica diegetica di sistema
 	_send_spawn_notification("Posizionamento completato: Stazione Spaziale rilevata nel settore adiacente")
+
+## Ritorna true se la stazione è presente e attiva nel settore corrente
+func is_station_in_sector() -> bool:
+	return primary_station_instance != null and is_instance_valid(primary_station_instance) and primary_station_instance.visible
+
+## Verifica se le coordinate corrispondono al settore della stazione o a quello di spawn adiacente
+func is_sector_station_or_adjacent(coords: Vector3i) -> bool:
+	var sys := get_star_system_data()
+	var st_body: CelestialBodyData = null
+	if sys and sys.has_method("find_primary_station"):
+		st_body = sys.find_primary_station()
+	if st_body == null and is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+		var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+		if grid_mgr and grid_mgr.has_method("get_starting_station"):
+			st_body = grid_mgr.get_starting_station()
+	
+	if st_body != null:
+		if coords == st_body.coords:
+			return true
+		if sys and sys.has_method("find_adjacent_spawn_sector"):
+			var adj_spawn: Vector3i = sys.find_adjacent_spawn_sector(st_body.coords)
+			if coords == adj_spawn:
+				return true
+	return false
+
+## Carica l'ambiente 3D, le entità locali, riposiziona la nave e sincronizza sensori/waypoint per il settore specificato
+func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
+	if sec_data == null:
+		if is_inside_tree() and get_tree().root.has_node("StarSystemGridManager"):
+			var grid_mgr := get_node_or_null("/root/StarSystemGridManager")
+			if grid_mgr and grid_mgr.has_method("get_current_sector_data"):
+				sec_data = grid_mgr.get_current_sector_data()
+	if sec_data == null:
+		return
+		
+	if not force_reload and _last_loaded_sector_coords == sec_data.coordinates:
+		return
+	_last_loaded_sector_coords = sec_data.coordinates
+	current_sector_data = sec_data
+	
+	if _master_viewport == null or not is_instance_valid(_master_viewport):
+		_init_space_world()
+		
+	# 1. Ferma i motori e azzera cinematica nave
+	stop_spaceship_engines()
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		ship.global_position = Vector3.ZERO
+		if "linear_velocity" in ship:
+			ship.linear_velocity = Vector3.ZERO
+		if "angular_velocity" in ship:
+			ship.angular_velocity = Vector3.ZERO
+		if "flight_linear_input" in ship:
+			ship.flight_linear_input = Vector3.ZERO
+		if "flight_angular_input" in ship:
+			ship.flight_angular_input = Vector3.ZERO
+	
+	# 2. Verifica se il settore contiene o è adiacente alla stazione primaria
+	var has_station := false
+	if sec_data.has_entity_of_type("STATION") or sec_data.sector_type == "STATION_ORBIT":
+		has_station = true
+	elif is_sector_station_or_adjacent(sec_data.coordinates):
+		has_station = true
+		
+	var station_3d_pos := Vector3(0.0, 0.0, -default_station_approach_distance)
+	
+	if has_station:
+		if _space_scene_instance and is_instance_valid(_space_scene_instance):
+			if primary_station_instance == null or not is_instance_valid(primary_station_instance):
+				primary_station_instance = _space_scene_instance.get_node_or_null("SpaceStationEntity") as SpaceStationEntity
+				if primary_station_instance == null:
+					var station_scene := load("res://Outside/Stations/space_station_entity.tscn")
+					if station_scene:
+						primary_station_instance = station_scene.instantiate() as SpaceStationEntity
+					else:
+						primary_station_instance = SpaceStationEntity.new()
+					primary_station_instance.name = "SpaceStationEntity"
+					_space_scene_instance.add_child(primary_station_instance)
+			
+			if primary_station_instance and is_instance_valid(primary_station_instance):
+				var st_id := "STATION_VALKYRIE"
+				var st_name := "Stazione Valkyrie"
+				var st_type := "STATION"
+				var st_ents := sec_data.get_entities_by_type("STATION")
+				if st_ents.size() > 0:
+					st_id = st_ents[0].id
+					st_name = st_ents[0].name
+					st_type = st_ents[0].type
+				else:
+					var sys := get_star_system_data()
+					if sys and sys.has_method("find_primary_station"):
+						var st_body: CelestialBodyData = sys.find_primary_station()
+						if st_body:
+							st_id = st_body.id
+							st_name = st_body.name
+							st_type = st_body.type
+				
+				primary_station_instance.station_id = st_id
+				primary_station_instance.station_name = st_name
+				primary_station_instance.station_type = st_type
+				primary_station_instance.global_position = station_3d_pos
+				primary_station_instance.visible = true
+				
+		if ship and is_instance_valid(ship):
+			ship.look_at(station_3d_pos, Vector3.UP)
+			
+		set_active_waypoint({
+			"id": primary_station_instance.station_id if primary_station_instance else "STATION",
+			"name": primary_station_instance.station_name if primary_station_instance else "Stazione Orbitale",
+			"pos": station_3d_pos,
+			"type": "STATION",
+			"iff_tag": "FRIENDLY",
+			"distance_km": default_station_approach_distance / 1000.0,
+			"is_station": true
+		})
+	else:
+		if primary_station_instance and is_instance_valid(primary_station_instance):
+			primary_station_instance.visible = false
+			primary_station_instance.global_position = Vector3(0.0, -999999.0, 0.0)
+		if ship and is_instance_valid(ship):
+			ship.transform.basis = Basis.IDENTITY
+	
+	# 3. Gestione Relitti Spaziali (Wreck / Derelict)
+	var has_wreck: bool = sec_data.sector_type == "DERELICT_GRAVEYARD" or sec_data.has_entity_of_type("WRECK")
+	var wreck_3d_pos := Vector3(0.0, 0.0, -800.0)
+	if has_wreck:
+		if _space_scene_instance and is_instance_valid(_space_scene_instance):
+			if primary_derelict_instance == null or not is_instance_valid(primary_derelict_instance):
+				primary_derelict_instance = _space_scene_instance.get_node_or_null("DerelictShipEntity") as DerelictShipEntity
+				if primary_derelict_instance == null:
+					var derelict_scene := load("res://Outside/Mining/derelict_ship_entity.tscn")
+					if derelict_scene:
+						primary_derelict_instance = derelict_scene.instantiate() as DerelictShipEntity
+					else:
+						primary_derelict_instance = DerelictShipEntity.new()
+					primary_derelict_instance.name = "DerelictShipEntity"
+					_space_scene_instance.add_child(primary_derelict_instance)
+			
+			if primary_derelict_instance and is_instance_valid(primary_derelict_instance):
+				primary_derelict_instance.global_position = wreck_3d_pos
+				primary_derelict_instance.visible = true
+				var wreck_ents := sec_data.get_entities_by_type("WRECK")
+				if wreck_ents.size() > 0:
+					primary_derelict_instance.derelict_id = wreck_ents[0].id
+					primary_derelict_instance.ship_name = wreck_ents[0].name
+					
+		if not has_station:
+			if ship and is_instance_valid(ship):
+				ship.look_at(wreck_3d_pos, Vector3.UP)
+			set_active_waypoint({
+				"id": primary_derelict_instance.derelict_id if primary_derelict_instance else "WRECK",
+				"name": primary_derelict_instance.ship_name if primary_derelict_instance else "Relitto Spaziale",
+				"pos": wreck_3d_pos,
+				"type": "WRECK",
+				"iff_tag": "NEUTRAL",
+				"distance_km": 0.8,
+				"is_station": false
+			})
+	else:
+		if primary_derelict_instance and is_instance_valid(primary_derelict_instance):
+			primary_derelict_instance.visible = false
+			primary_derelict_instance.global_position = Vector3(0.0, -999999.0, 0.0)
+
+	# 4. Gestione campo asteroidi 3D
+	var is_asteroid_sector: bool = sec_data.sector_type == "ASTEROID_BELT" or sec_data.has_entity_of_type("ASTEROID_FIELD") or has_station
+	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
+		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
+		if asteroids_node and is_instance_valid(asteroids_node):
+			asteroids_node.visible = is_asteroid_sector
+			for ast in asteroids_node.get_children():
+				if ast is CollisionObject3D:
+					for col_child in ast.get_children():
+						if col_child is CollisionShape3D:
+							col_child.disabled = not is_asteroid_sector
+							
+	# 5. Gestione Waypoint in assenza di stazioni o relitti
+	if not has_station and not has_wreck:
+		if sec_data.macro_entities.size() > 0:
+			var primary_macro: CelestialBodyData = sec_data.macro_entities[0]
+			var macro_target_pos := Vector3(0.0, 0.0, -15000.0)
+			if ship and is_instance_valid(ship):
+				ship.look_at(macro_target_pos, Vector3.UP)
+			set_active_waypoint({
+				"id": primary_macro.id,
+				"name": primary_macro.name,
+				"pos": macro_target_pos,
+				"type": primary_macro.type,
+				"iff_tag": "NEUTRAL",
+				"distance_km": 15.0,
+				"is_station": false
+			})
+		else:
+			clear_active_waypoint()
+			
+	# 6. Notifica diegetica e segnale di completamento caricamento settore
+	_send_spawn_notification("Zona caricata: %s (%s)" % [sec_data.sector_id, sec_data.sector_name])
+	sector_zone_loaded.emit(sec_data)
+	
+	if is_hyperdrive_transition_active:
+		var nm := _get_net_mgr()
+		var local_id: int = nm.local_peer_id if (nm and "local_peer_id" in nm) else 1
+		report_player_zone_loaded(local_id, sec_data.coordinates)
 
 ## Invia una notifica di sistema diegetica a schermo
 func _send_spawn_notification(msg: String) -> void:
@@ -1183,6 +1597,9 @@ func open_camera_window(cam_id: String) -> FakeWindow:
 	
 	_active_camera_windows[cam_id] = win_instance
 	
+	if is_hyperdrive_transition_active and win_instance.has_method("set_hyperdrive_transition"):
+		win_instance.set_hyperdrive_transition(true, get_hyperdrive_loading_progress())
+	
 	win_instance.tree_exiting.connect(func() -> void:
 		_on_camera_window_closed(cam_id)
 	)
@@ -1265,8 +1682,13 @@ func _find_windows_container() -> Node:
 
 func _position_camera_window(win: FakeWindow, cam_id: String) -> void:
 	# Dimensioni predefinite della finestra feed
-	win.size = Vector2(460, 320)
 	win.custom_minimum_size = Vector2(360, 240)
+	
+	if win.has_method("has_saved_layout") and win.has_saved_layout():
+		if win.has_method("restore_window_layout") and win.restore_window_layout():
+			return
+	
+	win.size = Vector2(460, 320)
 	
 	# Posizioni logiche sullo schermo per le 6 telecamere
 	var viewport_size := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1920, 1080)
@@ -1515,9 +1937,9 @@ func get_sensor_entities() -> Array[Dictionary]:
 	
 	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
 		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
-		if asteroids_node and is_instance_valid(asteroids_node):
+		if asteroids_node and is_instance_valid(asteroids_node) and asteroids_node.visible:
 			for child in asteroids_node.get_children():
-				if child is Node3D:
+				if child is Node3D and child.visible:
 					var a_pos: Vector3 = child.global_position
 					var diff: Vector3 = a_pos - ship_pos
 					var dist: float = diff.length()
@@ -1553,8 +1975,8 @@ func get_sensor_entities() -> Array[Dictionary]:
 						"estimated_value_cr": 4500
 					})
 					
-	# Aggiungi l'entità della stazione orbitale primaria nello spazio se attiva
-	if primary_station_instance and is_instance_valid(primary_station_instance):
+	# Aggiungi l'entità della stazione orbitale primaria nello spazio se attiva e visibile
+	if primary_station_instance and is_instance_valid(primary_station_instance) and primary_station_instance.visible:
 		var st_pos: Vector3 = primary_station_instance.global_position
 		var diff: Vector3 = st_pos - ship_pos
 		var dist: float = diff.length()
@@ -1585,6 +2007,35 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"radiation_level": 0.15,
 			"signal_signature": 1.0,
 			"estimated_value_cr": 250000
+		})
+
+	# Aggiungi l'entità del relitto spaziale se attivo e visibile
+	if primary_derelict_instance and is_instance_valid(primary_derelict_instance) and primary_derelict_instance.visible:
+		var w_pos: Vector3 = primary_derelict_instance.global_position
+		var diff: Vector3 = w_pos - ship_pos
+		var dist: float = diff.length()
+		var local_diff: Vector3 = ship_basis.inverse() * diff
+		var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+		var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+		entities.append({
+			"id": primary_derelict_instance.derelict_id,
+			"name": primary_derelict_instance.ship_name,
+			"pos": w_pos,
+			"rel_pos": diff,
+			"distance": dist,
+			"velocity": Vector3.ZERO,
+			"bearing_deg": bearing_deg,
+			"elevation_deg": elevation_deg,
+			"type": "WRECK",
+			"iff_tag": "NEUTRAL",
+			"stealth_level": 0.20,
+			"radius_m": 45.0,
+			"composition": {"Blindatura Scafo": 55.0, "Elettronica Avionica": 25.0, "Leghe Rare": 20.0},
+			"integrity": 32.0,
+			"mass_tons": 12500.0,
+			"radiation_level": 0.45,
+			"signal_signature": 0.70,
+			"estimated_value_cr": 38000
 		})
 	
 	# Contatti diegetici aggiuntivi a lungo raggio / stazioni / relitti / sonde
@@ -1707,35 +2158,72 @@ func get_sensor_entities() -> Array[Dictionary]:
 	for e in entities:
 		existing_ids[e.get("id")] = true
 	
-	for lrd in long_range_defaults:
-		if not existing_ids.has(lrd["id"]):
-			var d_pos: Vector3 = lrd["pos"]
-			var diff: Vector3 = d_pos - ship_pos
-			var dist: float = diff.length()
-			var local_diff: Vector3 = ship_basis.inverse() * diff
-			var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
-			var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
-			
-			entities.append({
-				"id": lrd["id"],
-				"name": lrd["name"],
-				"pos": d_pos,
-				"rel_pos": diff,
-				"distance": dist,
-				"velocity": lrd["vel"],
-				"bearing_deg": bearing_deg,
-				"elevation_deg": elevation_deg,
-				"type": lrd["type"],
-				"iff_tag": lrd["iff_tag"],
-				"stealth_level": lrd["stealth"],
-				"radius_m": float(lrd.get("radius_m", 25.0)),
-				"composition": lrd["composition"],
-				"integrity": lrd["integrity"],
-				"mass_tons": lrd["mass_tons"],
-				"radiation_level": lrd["radiation"],
-				"signal_signature": lrd["signature"],
-				"estimated_value_cr": lrd["value"]
-			})
+	if current_sector_data != null:
+		var macro_idx := 0
+		for ent in current_sector_data.macro_entities:
+			var ent_id: String = ent.id if "id" in ent else "ENT_%d" % macro_idx
+			macro_idx += 1
+			if not existing_ids.has(ent_id):
+				var ent_type: String = ent.type.to_upper() if "type" in ent else "UNKNOWN"
+				var ent_name: String = ent.name if "name" in ent else ent_id
+				var d_pos := Vector3(0.0, 500.0 * macro_idx, -15000.0 - (macro_idx * 5000.0))
+				var diff: Vector3 = d_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				entities.append({
+					"id": ent_id,
+					"name": ent_name,
+					"pos": d_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": Vector3.ZERO,
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": ent_type,
+					"iff_tag": "FRIENDLY" if ent_type == "STATION" or ent_type == "BEACON" else "NEUTRAL",
+					"stealth_level": 0.0,
+					"radius_m": float(ent.get("radius_km", 10.0)) * 1000.0 if "radius_km" in ent else 50.0,
+					"composition": {},
+					"integrity": 100.0,
+					"mass_tons": 500000.0,
+					"radiation_level": 0.1,
+					"signal_signature": 1.0,
+					"estimated_value_cr": 10000
+				})
+				existing_ids[ent_id] = true
+	else:
+		for lrd in long_range_defaults:
+			if not existing_ids.has(lrd["id"]):
+				var d_pos: Vector3 = lrd["pos"]
+				var diff: Vector3 = d_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				
+				entities.append({
+					"id": lrd["id"],
+					"name": lrd["name"],
+					"pos": d_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": lrd["vel"],
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": lrd["type"],
+					"iff_tag": lrd["iff_tag"],
+					"stealth_level": lrd["stealth"],
+					"radius_m": float(lrd.get("radius_m", 25.0)),
+					"composition": lrd["composition"],
+					"integrity": lrd["integrity"],
+					"mass_tons": lrd["mass_tons"],
+					"radiation_level": lrd["radiation"],
+					"signal_signature": lrd["signature"],
+					"estimated_value_cr": lrd["value"]
+				})
+				existing_ids[lrd["id"]] = true
 	
 	if not active_waypoint.is_empty():
 		var wp_pos: Vector3 = active_waypoint.get("pos")

@@ -33,6 +33,7 @@ var selected_body_id: String = ""
 var is_dragging: bool = false
 var drag_body_id: String = ""
 var drag_start_coords: Vector3i = Vector3i.ZERO
+var _has_user_panned: bool = false
 
 # Colori entità per tipo
 const TYPE_COLORS := {
@@ -48,12 +49,13 @@ const TYPE_COLORS := {
 
 func reset_view() -> void:
 	zoom_level = 1.0
+	_has_user_panned = false
 	pan_offset = size * 0.5
 	queue_redraw()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
-		if pan_offset == Vector2.ZERO:
+		if not _has_user_panned:
 			pan_offset = size * 0.5
 		queue_redraw()
 
@@ -81,11 +83,13 @@ func _gui_input(event: InputEvent) -> void:
 			var mouse_world_before := screen_to_world(mb.position)
 			zoom_level = clampf(zoom_level * 1.15, 0.15, 5.0)
 			pan_offset = mb.position - (mouse_world_before * CELL_SIZE * zoom_level)
+			_has_user_panned = true
 			queue_redraw()
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			var mouse_world_before := screen_to_world(mb.position)
 			zoom_level = clampf(zoom_level / 1.15, 0.15, 5.0)
 			pan_offset = mb.position - (mouse_world_before * CELL_SIZE * zoom_level)
+			_has_user_panned = true
 			queue_redraw()
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
@@ -117,6 +121,7 @@ func _gui_input(event: InputEvent) -> void:
 		var mm := event as InputEventMouseMotion
 		if is_panning:
 			pan_offset = pan_start_offset + (mm.position - pan_start_pos)
+			_has_user_panned = true
 			queue_redraw()
 		elif is_dragging and not drag_body_id.is_empty() and system_data != null:
 			var new_coords := screen_to_grid_coords(mm.position)
@@ -132,7 +137,10 @@ func _find_body_at_pos(screen_pos: Vector2) -> CelestialBodyData:
 	if system_data == null:
 		return null
 	
-	for body in system_data.celestial_bodies:
+	for i in range(system_data.celestial_bodies.size() - 1, -1, -1):
+		var body = system_data.celestial_bodies[i]
+		if not (body is CelestialBodyData):
+			continue
 		var c: Vector3i = body.coords
 		var center := world_to_screen(Vector2(c.x, c.y))
 		var r := _get_body_render_radius(body)
@@ -141,6 +149,8 @@ func _find_body_at_pos(screen_pos: Vector2) -> CelestialBodyData:
 	return null
 
 func _get_body_render_radius(body: CelestialBodyData) -> float:
+	if body == null:
+		return 6.0 * clampf(zoom_level, 0.6, 2.5)
 	var t: String = body.type.to_upper()
 	var base_r: float = 6.0
 	match t:
@@ -210,13 +220,16 @@ func _draw_grid() -> void:
 		
 	# Coordinate sui settori se zoom adeguato
 	if show_sectors_id and zoom_level >= 0.7:
-		var font := ThemeDB.fallback_font
-		var font_size := int(clampi(int(9 * zoom_level), 8, 12))
-		for gx in range(min_x, max_x):
-			for gy in range(min_y, max_y):
-				var cell_center := world_to_screen(Vector2(gx, gy))
-				var sec_id := SectorData.format_coords_to_id(Vector3i(gx, gy, 0))
-				draw_string(font, cell_center + Vector2(-18 * zoom_level, 16 * zoom_level), sec_id, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color(0.3, 0.4, 0.5, 0.5))
+		var font: Font = get_theme_default_font()
+		if font == null:
+			font = ThemeDB.fallback_font
+		if font != null:
+			var font_size := int(clampi(int(9 * zoom_level), 8, 12))
+			for gx in range(min_x, max_x):
+				for gy in range(min_y, max_y):
+					var cell_center := world_to_screen(Vector2(gx, gy))
+					var sec_id := SectorData.format_coords_to_id(Vector3i(gx, gy, 0))
+					draw_string(font, cell_center + Vector2(-18 * zoom_level, 16 * zoom_level), sec_id, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color(0.3, 0.4, 0.5, 0.5))
 
 func _draw_orbits() -> void:
 	var star_coords :Vector3i = system_data.primary_star_coords
@@ -224,6 +237,8 @@ func _draw_orbits() -> void:
 	var orbit_color := Color(0.25, 0.35, 0.5, 0.3)
 	
 	for body in system_data.celestial_bodies:
+		if not (body is CelestialBodyData):
+			continue
 		var t: String = body.type.to_upper()
 		if t in ["PLANET", "GAS_GIANT", "ASTEROID_FIELD"]:
 			var c: Vector3i = body.coords
@@ -238,7 +253,7 @@ func _draw_shadow_cones() -> void:
 	var cone_color := Color(0.0, 0.0, 0.0, 0.45)
 	
 	for body in system_data.celestial_bodies:
-		if not body.occluding:
+		if not (body is CelestialBodyData) or not body.occluding:
 			continue
 		var c: Vector3i = body.coords
 		var b_pos := Vector2(c.x, c.y)
@@ -261,9 +276,13 @@ func _draw_shadow_cones() -> void:
 		draw_colored_polygon(poly, cone_color)
 
 func _draw_celestial_bodies() -> void:
-	var font := ThemeDB.fallback_font
+	var font: Font = get_theme_default_font()
+	if font == null:
+		font = ThemeDB.fallback_font
 	
 	for body in system_data.celestial_bodies:
+		if not (body is CelestialBodyData):
+			continue
 		var b_id: String = body.id
 		var b_name: String = body.name
 		var b_type: String = body.type.to_upper()
@@ -271,7 +290,7 @@ func _draw_celestial_bodies() -> void:
 		var center := world_to_screen(Vector2(c.x, c.y))
 		var radius := _get_body_render_radius(body)
 		var col: Color = TYPE_COLORS.get(b_type, Color.WHITE)
-		if body.color is Color:
+		if body.color != Color.WHITE and body.color != Color(0, 0, 0, 0):
 			col = body.color
 			
 		var is_selected := (b_id == selected_body_id)
@@ -295,7 +314,7 @@ func _draw_celestial_bodies() -> void:
 			draw_arc(center, radius + 5.0, 0.0, TAU, 32, Color(1.0, 1.0, 0.0, 0.9), 2.0)
 			
 		# Label diegetica nome corpo
-		if show_labels:
+		if show_labels and font != null:
 			var label_text := "%s" % b_name
 			var f_size := int(clampi(int(11 * clampf(zoom_level, 0.7, 1.4)), 9, 14))
 			var text_pos := center + Vector2(radius + 6.0, 4.0)

@@ -8,7 +8,8 @@ class_name SystemMapApp
 ## e il calcolo/invio di rotte di transito Hyperdrive verso Flight Control.
 
 const APP_TITLE: String = "System Map & Hyperdrive Navigation"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 520)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 550)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(720, 550)
 
 signal route_plotted(target_sector_coords: Vector3i, course_vector: Vector3)
 
@@ -80,11 +81,11 @@ func _configure_window() -> void:
 	custom_minimum_size = DEFAULT_WINDOW_SIZE
 	call_deferred("_setup_parent_window", APP_TITLE, DEFAULT_WINDOW_SIZE)
 
-func _setup_parent_window(_title: String, _size: Vector2) -> void:
+func _setup_parent_window(_title: String, _size: Vector2, _min_size: Vector2 = Vector2.ZERO) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
-		parent_window.custom_minimum_size = Vector2(600, 420)
+		parent_window.custom_minimum_size = MIN_WINDOW_SIZE
 		parent_window.title_text = APP_TITLE
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
@@ -197,9 +198,10 @@ func _update_system_info() -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
 		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
-			heading_deg = rad_to_deg(ship.rotation.y)
+			var ship_fwd := -ship.global_transform.basis.z.normalized()
+			heading_deg = fposmod(rad_to_deg(atan2(ship_fwd.x, -ship_fwd.z)), 360.0)
 	if ship_heading_label:
-		ship_heading_label.text = "PRUA: %03.0f°" % fposmod(heading_deg, 360.0)
+		ship_heading_label.text = "PRUA: %03.0f°" % heading_deg
 
 func _update_route_info() -> void:
 	if not has_selected_sector:
@@ -651,14 +653,15 @@ func _on_grid_display_draw() -> void:
 	canvas.draw_rect(cell_rect, Color(0.2, 0.8, 1.0, 0.8), false, 1.5)
 
 	# Icona e vettore di prua nave
-	var heading_deg: float = 0.0
+	var forward_vec := Vector2(0.0, -1.0)
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
 		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
-			heading_deg = rad_to_deg(ship.rotation.y)
+			var ship_fwd := -ship.global_transform.basis.z.normalized()
+			forward_vec = Vector2(ship_fwd.x, ship_fwd.z).normalized()
+			if forward_vec.length_squared() < 0.001:
+				forward_vec = Vector2(0.0, -1.0)
 
-	var heading_rad := deg_to_rad(heading_deg - 90.0) # -90 per allineare 0 deg a nord
-	var forward_vec := Vector2(cos(heading_rad), sin(heading_rad))
 	var arrow_len := 18.0 * zoom_level
 	canvas.draw_line(ship_pos, ship_pos + forward_vec * arrow_len, Color(0.2, 1.0, 0.5, 1.0), 2.5)
 	canvas.draw_circle(ship_pos, 4.0 * zoom_level, Color(0.2, 1.0, 0.5, 1.0))

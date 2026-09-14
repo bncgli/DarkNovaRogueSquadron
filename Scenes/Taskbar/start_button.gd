@@ -363,7 +363,17 @@ func _render_menu_tree(container: Control, level: Dictionary, _depth: int, inser
 			insert_idx += 1
 		
 		if opt.has_method("configure_option"):
-			opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, opt_icon, opt_dev, false, {}, is_game)
+			var opt_def_size := Vector2.ZERO
+			var opt_min_size := Vector2.ZERO
+			if app.has("default_window_size"):
+				var d: Variant = app.get("default_window_size")
+				if d is Vector2: opt_def_size = d
+				elif d is Array and d.size() >= 2: opt_def_size = Vector2(d[0], d[1])
+			if app.has("min_window_size"):
+				var m: Variant = app.get("min_window_size")
+				if m is Vector2: opt_min_size = m
+				elif m is Array and m.size() >= 2: opt_min_size = Vector2(m[0], m[1])
+			opt.configure_option(opt_title, opt_desc, opt_scene, opt_color, opt_icon, opt_dev, false, {}, is_game, opt_def_size, opt_min_size)
 		
 		_dynamic_ship_app_nodes.append(opt)
 	

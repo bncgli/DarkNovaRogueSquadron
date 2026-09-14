@@ -10,27 +10,12 @@ class_name FlightControlApp
 ## Configurazione standard della finestra GodotOS
 const APP_TITLE: String = "Flight Control - Guida Astronave"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(560, 530)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(500, 440)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/FlightControls/flight_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/flight_config.dat"
 const TUNING_PATH_PRIMARY: String = "Ship Drive/Programs/FlightControls/thrusters_tuning.dat"
 const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thrusters_tuning.dat"
-
-# Indicatori e Pulsanti di movimento
-@onready var btn_q: Button = %BtnQ
-@onready var btn_w: Button = %BtnW
-@onready var btn_e: Button = %BtnE
-@onready var btn_s: Button = %BtnS
-@onready var btn_a: Button = %BtnA
-@onready var btn_d: Button = %BtnD
-@onready var btn_space: Button = %BtnSpace
-@onready var btn_ctrl: Button = %BtnCtrl
-
-# Indicatori e Pulsanti di rotazione
-@onready var btn_pitch_up: Button = %BtnPitchUp
-@onready var btn_pitch_down: Button = %BtnPitchDown
-@onready var btn_yaw_left: Button = %BtnYawLeft
-@onready var btn_yaw_right: Button = %BtnYawRight
 
 # Badge e Telemetria
 @onready var thrusters_badge: Label = %ThrustersBadge
@@ -47,8 +32,19 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 
 # Azioni
 @onready var inertia_toggle_button: Button = %InertiaToggleButton
+@onready var cruise_toggle_button: Button = get_node_or_null("%CruiseToggleButton")
 @onready var disconnected_overlay: Control = get_node_or_null("%DisconnectedOverlay")
-@onready var cruise_control_panel: CruiseControlPanel = get_node_or_null("%CruiseControlPanel")
+
+var cruise_button: Button:
+	get:
+		return cruise_toggle_button
+var cruise_speed_button: Button:
+	get:
+		return cruise_toggle_button
+
+# Pulsanti di manovra (compatibilità UI/test)
+var btn_w: Button = null
+var btn_q: Button = null
 
 # Elementi UI Rotta Hyperdrive (da System Map)
 @onready var hyperdrive_card: PanelContainer = get_node_or_null("%HyperdriveCard")
@@ -57,8 +53,18 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/FlightControl/thruster
 @onready var btn_align_hyperdrive: Button = get_node_or_null("%BtnAlignHyperdrive")
 @onready var btn_engage_hyperdrive: Button = get_node_or_null("%BtnEngageHyperdrive")
 
+signal hyperdrive_alignment_started
+signal hyperdrive_alignment_completed
+
 var can_control_flight: bool = true
+var is_aligning_hyperdrive: bool = false
+var is_aligning: bool:
+	get:
+		return is_aligning_hyperdrive
+
+var _align_tween: Tween = null
 var active_hyperdrive_route: Dictionary = {}
+var _simulated_aligned: bool = false
 
 # Input da click su UI (permettono di controllare anche con il mouse/touch)
 var _ui_linear_input := Vector3.ZERO
@@ -69,6 +75,10 @@ var _speed_multiplier: float = 1.0
 
 # Smorzamento inerziale attivo di default
 var is_inertia_enabled: bool = true
+
+# Velocità di crociera attiva (aumenta velocità massima a x5 e si muove avanti nella direzione corrente)
+var is_cruise_enabled: bool = false
+const CRUISE_SPEED_MULTIPLIER: float = 5.0
 
 # Configurazione attiva di volo estratta dai file .dat o da valori di calibrazione di fabbrica
 var active_config: Dictionary = {
@@ -93,15 +103,16 @@ func _ready() -> void:
 	_setup_ui_events()
 	load_dat_configuration()
 	_update_inertia_button()
+	_update_cruise_button()
 	_connect_system_signals()
 	_update_connection_state()
 	_update_permissions()
 
-func _setup_parent_window(_title: String, _size: Vector2) -> void:
+func _setup_parent_window(_title: String, _size: Vector2, _min_size: Vector2 = Vector2.ZERO) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		parent_window.size = DEFAULT_WINDOW_SIZE
-		parent_window.custom_minimum_size = Vector2(500, 440)
+		parent_window.custom_minimum_size = MIN_WINDOW_SIZE
 		parent_window.title_text = APP_TITLE
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label:
@@ -134,6 +145,9 @@ func _connect_system_signals() -> void:
 			sdm.ship_drive_mounted.connect(_on_ship_drive_mounted)
 
 func _exit_tree() -> void:
+	cancel_hyperdrive_alignment()
+	if is_cruise_enabled:
+		set_cruise_enabled(false)
 	# Disconnessione segnali e pulizia risorse
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
@@ -170,6 +184,10 @@ func _on_system_power_changed(category: String, is_powered: bool) -> void:
 		if not is_powered:
 			# Disabilita controlli di volo
 			can_control_flight = false
+			if is_cruise_enabled:
+				set_cruise_enabled(false)
+			if is_aligning_hyperdrive:
+				cancel_hyperdrive_alignment()
 			_update_permissions()
 			if thrusters_badge:
 				thrusters_badge.text = "OFFLINE - NO POWER"
@@ -197,9 +215,12 @@ func _update_connection_state() -> void:
 	set_physics_process(op)
 	
 	if not op:
-		_clear_all_highlights()
 		_ui_linear_input = Vector3.ZERO
 		_ui_angular_input = Vector3.ZERO
+		if is_cruise_enabled:
+			set_cruise_enabled(false)
+		if is_aligning_hyperdrive:
+			cancel_hyperdrive_alignment()
 		if SpaceWorldManager:
 			SpaceWorldManager.stop_spaceship_engines()
 	else:
@@ -220,18 +241,19 @@ func _update_permissions() -> void:
 	can_control_flight = (my_role == NetworkManager.ROLE_PILOT or my_role == NetworkManager.ROLE_CAPTAIN or my_role == "" or my_role == NetworkManager.ROLE_UNASSIGNED or is_solo)
 	
 	# Aggiorna stato pulsanti di manovra
-	var btns := [
-		btn_q, btn_w, btn_e, btn_s, btn_a, btn_d, btn_space, btn_ctrl,
-		btn_pitch_up, btn_pitch_down, btn_yaw_left, btn_yaw_right,
-		inertia_toggle_button, reload_config_button
-	]
-	for b in btns:
-		if b:
-			b.disabled = not can_control_flight
+	if not can_control_flight and is_cruise_enabled:
+		set_cruise_enabled(false)
+	if not can_control_flight and is_aligning_hyperdrive:
+		cancel_hyperdrive_alignment()
 	
-	# Aggiorna badge/indicatori visivi
-	if cruise_control_panel and is_instance_valid(cruise_control_panel):
-		cruise_control_panel.set_permission_control(can_control_flight)
+	if cruise_toggle_button:
+		cruise_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive
+	if inertia_toggle_button:
+		inertia_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive
+	if btn_w:
+		btn_w.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive
+	if btn_q:
+		btn_q.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive
 	
 	if not can_control_flight and is_operational():
 		if thrusters_badge:
@@ -241,15 +263,34 @@ func _update_permissions() -> void:
 			status_summary_label.text = "Postazione in modalità osservatore (Ruolo: %s). Comandi di volo riservati al Pilota." % my_role
 	elif is_operational():
 		if thrusters_badge:
-			thrusters_badge.text = "PROPULSORI PRONTI"
-			thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
+			if is_aligning_hyperdrive:
+				thrusters_badge.text = "ALLINEAMENTO ROTTA"
+				thrusters_badge.modulate = Color(1.0, 0.8, 0.2)
+			elif is_cruise_enabled:
+				thrusters_badge.text = "CROCIERA ATTIVA"
+				thrusters_badge.modulate = Color(0.2, 1.0, 0.5)
+			else:
+				thrusters_badge.text = "PROPULSORI PRONTI"
+				thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
 		if status_summary_label:
-			status_summary_label.text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
+			if is_aligning_hyperdrive:
+				status_summary_label.text = "ALLINEAMENTO HYPERDRIVE AUTOMATICO (Controlli manuali temporaneamente bloccati)"
+			elif is_cruise_enabled:
+				status_summary_label.text = "VELOCITÀ DI CROCIERA ATTIVA (Rotta rettilinea bloccata - controlli manuali esclusi)"
+			else:
+				status_summary_label.text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
 
 func _setup_ui_events() -> void:
+	btn_w = Button.new()
+	btn_q = Button.new()
+	_bind_hold_button(btn_w, Vector3(0, 0, -1), Vector3.ZERO)
+	_bind_hold_button(btn_q, Vector3.ZERO, Vector3(0, 0, 1))
+
 	# Pulsanti ausiliari
 	if inertia_toggle_button:
 		inertia_toggle_button.pressed.connect(_on_inertia_toggle_pressed)
+	if cruise_toggle_button:
+		cruise_toggle_button.pressed.connect(_on_cruise_toggle_pressed)
 	if reload_config_button:
 		reload_config_button.pressed.connect(func() -> void:
 			load_dat_configuration()
@@ -261,21 +302,7 @@ func _setup_ui_events() -> void:
 		btn_align_hyperdrive.pressed.connect(align_to_hyperdrive_vector)
 	if btn_engage_hyperdrive:
 		btn_engage_hyperdrive.pressed.connect(engage_hyperdrive)
-	
-	# Mapping pulsanti UI con pressione mouse (button_down / button_up)
-	_bind_hold_button(btn_w, Vector3(0, 0, -1), Vector3.ZERO)
-	_bind_hold_button(btn_s, Vector3(0, 0, 1), Vector3.ZERO)
-	_bind_hold_button(btn_a, Vector3(-1, 0, 0), Vector3.ZERO)
-	_bind_hold_button(btn_d, Vector3(1, 0, 0), Vector3.ZERO)
-	_bind_hold_button(btn_q, Vector3.ZERO, Vector3(0, 0, 1))
-	_bind_hold_button(btn_e, Vector3.ZERO, Vector3(0, 0, -1))
-	_bind_hold_button(btn_space, Vector3(0, 1, 0), Vector3.ZERO)
-	_bind_hold_button(btn_ctrl, Vector3(0, -1, 0), Vector3.ZERO)
-	
-	_bind_hold_button(btn_pitch_up, Vector3.ZERO, Vector3(1, 0, 0))
-	_bind_hold_button(btn_pitch_down, Vector3.ZERO, Vector3(-1, 0, 0))
-	_bind_hold_button(btn_yaw_left, Vector3.ZERO, Vector3(0, 1, 0))
-	_bind_hold_button(btn_yaw_right, Vector3.ZERO, Vector3(0, -1, 0))
+
 
 func _bind_hold_button(btn: Button, linear_dir: Vector3, angular_dir: Vector3) -> void:
 	if btn == null:
@@ -353,14 +380,20 @@ func _apply_configuration_to_ship() -> void:
 	if SpaceWorldManager.has_method("get_spaceship"):
 		ship = SpaceWorldManager.get_spaceship()
 	
+	var rcs: float = active_config.get("rcs_power_rate", 1.0)
+	var cruise_mult: float = CRUISE_SPEED_MULTIPLIER if is_cruise_enabled else 1.0
+	var target_max_speed: float = active_config.get("max_linear_speed", 20.0) * rcs * cruise_mult
+	
 	if ship and is_instance_valid(ship):
-		var rcs: float = active_config.get("rcs_power_rate")
-		ship.max_linear_speed = active_config.get("max_linear_speed") * rcs
-		ship.linear_acceleration = active_config.get("linear_acceleration") * rcs
-		ship.linear_deceleration = active_config.get("linear_deceleration")
-		ship.max_angular_speed = active_config.get("max_angular_speed") * rcs
-		ship.angular_acceleration = active_config.get("angular_acceleration") * rcs
-		ship.angular_deceleration = active_config.get("angular_deceleration")
+		ship.max_linear_speed = target_max_speed
+		ship.linear_acceleration = active_config.get("linear_acceleration", 35.0) * rcs
+		ship.linear_deceleration = active_config.get("linear_deceleration", 20.0)
+		ship.max_angular_speed = active_config.get("max_angular_speed", 2.5) * rcs
+		ship.angular_acceleration = active_config.get("angular_acceleration", 8.0) * rcs
+		ship.angular_deceleration = active_config.get("angular_deceleration", 6.0)
+	
+	if SpaceWorldManager.has_method("set_ship_max_linear_speed"):
+		SpaceWorldManager.set_ship_max_linear_speed(target_max_speed)
 
 ## Parsifica un file .dat formato INI/Key-Value
 func _update_config_ui() -> void:
@@ -393,6 +426,8 @@ func is_control_active() -> bool:
 		return false
 	if not can_control_flight:
 		return false
+	if is_aligning_hyperdrive:
+		return false
 	if parent_window:
 		if parent_window.is_minimized or not parent_window.visible:
 			return false
@@ -400,6 +435,8 @@ func is_control_active() -> bool:
 
 func _input(event: InputEvent) -> void:
 	if not is_control_active():
+		return
+	if is_cruise_enabled or is_aligning_hyperdrive:
 		return
 	
 	if event is InputEventKey and event.pressed and not event.is_echo():
@@ -414,57 +451,50 @@ func _process(_delta: float) -> void:
 	var move_vec := Vector3.ZERO
 	var rot_vec := Vector3.ZERO
 	
-	if is_control_active():
-		# Input Traslazione Orizzontale & Longitudinale
-		if Input.is_key_pressed(KEY_W):
-			move_vec.z -= 1.0
-		if Input.is_key_pressed(KEY_S):
-			move_vec.z += 1.0
-		if Input.is_key_pressed(KEY_A):
-			move_vec.x -= 1.0
-		if Input.is_key_pressed(KEY_D):
-			move_vec.x += 1.0
-		
+	if is_cruise_enabled:
+		# In velocità di crociera i controlli di volo manuali sono esclusi:
+		# la nave ignora gli input di manovra e prosegue unicamente dritta lungo l'asse di prua (-Z)
+		move_vec = Vector3(0.0, 0.0, -1.0)
+		rot_vec = Vector3.ZERO
+	elif is_aligning_hyperdrive:
+		# Durante l'allineamento automatico i comandi utente sono esclusi
+		move_vec = Vector3.ZERO
+		rot_vec = Vector3.ZERO
+	elif is_control_active():
+		var input: Vector2 = Input.get_vector("ship_strife_left", "ship_strife_right", "ship_forward", "ship_backward").normalized()
+		move_vec.z = input.y
+		move_vec.x = input.x
+				
+		# Beccheggio (Frecce Su/Giu) & Imbardata (Frecce Sinistra/Destra)
+		input = Input.get_vector("ship_rotate_right", "ship_rotate_left" , "ship_rotate_down", "ship_rotate_up").normalized()
+		rot_vec.x = input.y * active_config.get("pitch_thrust_mult", 1.0)
+		rot_vec.y = input.x * active_config.get("yaw_thrust_mult", 1.0)
+
 		# Quota Verticale
-		if Input.is_key_pressed(KEY_SPACE):
-			move_vec.y += active_config.get("vertical_thrust_mult")
-		if Input.is_key_pressed(KEY_CTRL):
-			move_vec.y -= active_config.get("vertical_thrust_mult")
+		var input_axis: float = Input.get_axis("ship_vertical_down","ship_vertical_up")
+		move_vec.y = input_axis * active_config.get("vertical_thrust_mult", 1.0)
 		
 		# Rollio (Q / E)
-		if Input.is_key_pressed(KEY_Q):
-			rot_vec.z += active_config.get("roll_thrust_mult")
-		if Input.is_key_pressed(KEY_E):
-			rot_vec.z -= active_config.get("roll_thrust_mult")
-		
-		# Beccheggio (Frecce Su/Giu) & Imbardata (Frecce Sinistra/Destra)
-		if Input.is_key_pressed(KEY_UP):
-			rot_vec.x += active_config.get("pitch_thrust_mult")
-		if Input.is_key_pressed(KEY_DOWN):
-			rot_vec.x -= active_config.get("pitch_thrust_mult")
-		if Input.is_key_pressed(KEY_LEFT):
-			rot_vec.y += active_config.get("yaw_thrust_mult")
-		if Input.is_key_pressed(KEY_RIGHT):
-			rot_vec.y -= active_config.get("yaw_thrust_mult")
+		input_axis = Input.get_axis("ship_roll_right","ship_roll_left")
+		rot_vec.z = input_axis * active_config.get("roll_thrust_mult", 1.0)
 		
 		# Somma input da click UI
 		move_vec += _ui_linear_input
 		rot_vec += _ui_angular_input
 	
-	# Normalizzazione e applicazione moltiplicatore velocità
-	if move_vec.length_squared() > 1.0:
-		move_vec = move_vec.normalized()
-	move_vec *= _speed_multiplier
-	
-	if rot_vec.length_squared() > 1.0:
-		rot_vec = rot_vec.normalized()
+		# Normalizzazione e applicazione moltiplicatore velocità
+		if move_vec.length_squared() > 1.0:
+			move_vec = move_vec.normalized()
+		move_vec *= _speed_multiplier
+		
+		if rot_vec.length_squared() > 1.0:
+			rot_vec = rot_vec.normalized()
 	
 	# Invia input al gestore spaziale
 	if SpaceWorldManager:
 		SpaceWorldManager.set_ship_flight_input(move_vec, rot_vec)
 	
 	# Aggiorna evidenziazione pulsanti UI
-	_update_buttons_highlight(move_vec, rot_vec)
 	_update_hyperdrive_ui()
 
 func _physics_process(_delta: float) -> void:
@@ -482,38 +512,19 @@ func _physics_process(_delta: float) -> void:
 
 func _update_telemetry_display(speed: float, pos: Vector3, rot: Vector3) -> void:
 	if speed_value_label:
-		speed_value_label.text = "%.1f m/s (%.1fx)" % [speed, _speed_multiplier]
+		if is_cruise_enabled:
+			speed_value_label.text = "%.1f m/s (5.0x CROCIERA)" % [speed]
+		else:
+			speed_value_label.text = "%.1f m/s (%.1fx)" % [speed, _speed_multiplier]
 	if speed_progress_bar:
-		var max_s: float = active_config.get("max_linear_speed") * active_config.get("rcs_power_rate") * _speed_multiplier
+		var cruise_mult: float = CRUISE_SPEED_MULTIPLIER if is_cruise_enabled else 1.0
+		var max_s: float = active_config.get("max_linear_speed") * active_config.get("rcs_power_rate") * _speed_multiplier * cruise_mult
 		speed_progress_bar.max_value = max_s
 		speed_progress_bar.value = speed
 	if pos_value_label:
 		pos_value_label.text = "X: %+.1f  Y: %+.1f  Z: %+.1f" % [pos.x, pos.y, pos.z]
 	if rot_value_label:
 		rot_value_label.text = "P: %+.1f°  Y: %+.1f°  R: %+.1f°" % [rot.x, rot.y, rot.z]
-
-func _update_buttons_highlight(move: Vector3, rot: Vector3) -> void:
-	_set_btn_active(btn_w, move.z < -0.05)
-	_set_btn_active(btn_s, move.z > 0.05)
-	_set_btn_active(btn_a, move.x < -0.05)
-	_set_btn_active(btn_d, move.x > 0.05)
-	_set_btn_active(btn_space, move.y > 0.05)
-	_set_btn_active(btn_ctrl, move.y < -0.05)
-	
-	_set_btn_active(btn_q, rot.z > 0.05)
-	_set_btn_active(btn_e, rot.z < -0.05)
-	_set_btn_active(btn_pitch_up, rot.x > 0.05)
-	_set_btn_active(btn_pitch_down, rot.x < -0.05)
-	_set_btn_active(btn_yaw_left, rot.y > 0.05)
-	_set_btn_active(btn_yaw_right, rot.y < -0.05)
-	
-	if thrusters_badge and can_control_flight:
-		if move.length_squared() > 0.01 or rot.length_squared() > 0.01:
-			thrusters_badge.text = "● PROPULSORI ATTIVI"
-			thrusters_badge.modulate = Color(0.2, 1.0, 0.4)
-		else:
-			thrusters_badge.text = "○ IN VOLO D'INERZIA"
-			thrusters_badge.modulate = Color(0.4, 0.8, 1.0)
 
 func _set_btn_active(btn: Button, active: bool) -> void:
 	if btn == null:
@@ -523,14 +534,8 @@ func _set_btn_active(btn: Button, active: bool) -> void:
 	else:
 		btn.modulate = Color(1.0, 1.0, 1.0)
 
-func _clear_all_highlights() -> void:
-	var btns := [btn_q, btn_w, btn_e, btn_s, btn_a, btn_d, btn_space, btn_ctrl, btn_pitch_up, btn_pitch_down, btn_yaw_left, btn_yaw_right]
-	for b in btns:
-		if b:
-			b.modulate = Color(1.0, 1.0, 1.0)
-
 func _on_inertia_toggle_pressed() -> void:
-	if not can_control_flight:
+	if not can_control_flight or is_aligning_hyperdrive:
 		return
 	is_inertia_enabled = not is_inertia_enabled
 	_update_inertia_button()
@@ -546,11 +551,40 @@ func _update_inertia_button() -> void:
 			inertia_toggle_button.text = "INERZIA: OFF"
 			inertia_toggle_button.modulate = Color(1.0, 0.4, 0.2)
 
+func _on_cruise_toggle_pressed() -> void:
+	if not can_control_flight or is_aligning_hyperdrive:
+		return
+	set_cruise_enabled(not is_cruise_enabled)
+
+func set_cruise_enabled(enabled: bool) -> void:
+	if (not can_control_flight or is_aligning_hyperdrive) and enabled:
+		return
+	is_cruise_enabled = enabled
+	_ui_linear_input = Vector3.ZERO
+	_ui_angular_input = Vector3.ZERO
+	_update_cruise_button()
+	_update_permissions()
+	_apply_configuration_to_ship()
+	if is_cruise_enabled and SpaceWorldManager:
+		var ship = SpaceWorldManager.get_spaceship()
+		if ship and is_instance_valid(ship):
+			ship.angular_velocity = Vector3.ZERO
+
+func _update_cruise_button() -> void:
+	if cruise_toggle_button:
+		if is_cruise_enabled:
+			cruise_toggle_button.text = "VELOCITÀ CROCIERA: ON"
+			cruise_toggle_button.modulate = Color(0.2, 1.0, 0.5)
+		else:
+			cruise_toggle_button.text = "VELOCITÀ CROCIERA: OFF"
+			cruise_toggle_button.modulate = Color(1.0, 0.4, 0.2)
+
 # ==============================================================================
 # INTEGRAZIONE ROTTA SYSTEM MAP & INGAGGI HYPERDRIVE
 # ==============================================================================
 
 func _on_route_plotted(target_coords: Vector3i, course_vec: Vector3) -> void:
+	_simulated_aligned = false
 	active_hyperdrive_route = {
 		"target_coords": target_coords,
 		"target_sector_id": SectorData.format_coords_to_id(target_coords),
@@ -588,7 +622,10 @@ func _update_hyperdrive_ui() -> void:
 	var angle_diff := get_hyperdrive_alignment_angle_deg()
 
 	if hyperdrive_align_label:
-		if aligned:
+		if is_aligning_hyperdrive:
+			hyperdrive_align_label.text = "ALLINEAMENTO: 🔄 ROTAZIONE IN CORSO (Dev: %.1f°)" % angle_diff
+			hyperdrive_align_label.modulate = Color(0.4, 0.8, 1.0)
+		elif aligned:
 			hyperdrive_align_label.text = "ALLINEAMENTO: 🟢 AGGANCIATO (Dev: %.1f°)" % angle_diff
 			hyperdrive_align_label.modulate = Color(0.2, 1.0, 0.5)
 		else:
@@ -596,12 +633,12 @@ func _update_hyperdrive_ui() -> void:
 			hyperdrive_align_label.modulate = Color(1.0, 0.8, 0.3)
 
 	if btn_align_hyperdrive:
-		btn_align_hyperdrive.disabled = not can_control_flight or aligned
+		btn_align_hyperdrive.disabled = not can_control_flight or aligned or is_aligning_hyperdrive
 	if btn_engage_hyperdrive:
 		# Abilitato se can_control_flight, aligned, e distanza > 0
-		btn_engage_hyperdrive.disabled = not can_control_flight or not aligned or dist_sectors < 0.01
+		btn_engage_hyperdrive.disabled = not can_control_flight or not aligned or dist_sectors < 0.01 or is_aligning_hyperdrive
 
-## Calcola l'angolo in gradi tra la prua attuale della nave e il vettore rotta Hyperdrive
+## Calcola l'angolo in gradi tra la prua attuale della nave (-Z) e il vettore rotta Hyperdrive
 func get_hyperdrive_alignment_angle_deg() -> float:
 	if active_hyperdrive_route.is_empty():
 		return 0.0
@@ -610,18 +647,26 @@ func get_hyperdrive_alignment_angle_deg() -> float:
 	if course_vec.length_squared() < 0.0001:
 		return 0.0
 
+	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
+	if route_dir_2d.length_squared() < 0.001:
+		return 0.0
+
 	var ship_forward := Vector3.FORWARD
+	var has_ship := false
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
 		var ship := SpaceWorldManager.get_spaceship()
 		if ship and is_instance_valid(ship):
-			# Direzione di prua (-Z nello spazio locale della nave trasformato in globale)
 			ship_forward = -ship.global_transform.basis.z.normalized()
+			has_ship = true
 
-	# Proiezione sul piano XZ (griglia settori X-Y)
-	var route_dir_2d := Vector2(course_vec.x, course_vec.y).normalized()
-	var ship_dir_2d := Vector2(ship_forward.x, -ship_forward.z).normalized()
-	
-	if route_dir_2d.length_squared() < 0.001 or ship_dir_2d.length_squared() < 0.001:
+	if not has_ship and _simulated_aligned:
+		return 0.0
+
+	# Mappatura dello spazio 3D alla griglia settori 2D:
+	# 3D X -> Mappa X (Est / Ovest)
+	# 3D Z -> Mappa Y (Sud / Nord)
+	var ship_dir_2d := Vector2(ship_forward.x, ship_forward.z).normalized()
+	if ship_dir_2d.length_squared() < 0.001:
 		return 0.0
 
 	var dot_val := clampf(ship_dir_2d.dot(route_dir_2d), -1.0, 1.0)
@@ -634,8 +679,10 @@ func is_hyperdrive_aligned(tolerance_deg: float = 5.0) -> bool:
 	return get_hyperdrive_alignment_angle_deg() <= tolerance_deg
 
 ## Allinea automaticamente la prua dell'astronave verso il vettore rotta Hyperdrive
-func align_to_hyperdrive_vector() -> void:
+func align_to_hyperdrive_vector(custom_duration: float = -1.0) -> void:
 	if not can_control_flight or active_hyperdrive_route.is_empty():
+		return
+	if is_aligning_hyperdrive:
 		return
 	
 	var course_vec: Vector3 = active_hyperdrive_route.get("course_vector", Vector3.ZERO)
@@ -643,23 +690,107 @@ func align_to_hyperdrive_vector() -> void:
 	if route_dir_2d.length_squared() < 0.001:
 		return
 	
-	# Calcola angolo yaw desiderato
-	var target_angle_rad := atan2(route_dir_2d.y, route_dir_2d.x)
-	var target_yaw_deg := fposmod(rad_to_deg(target_angle_rad) - 90.0, 360.0)
-
-	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		var ship := SpaceWorldManager.get_spaceship()
-		if ship and is_instance_valid(ship):
-			ship.rotation_degrees = Vector3(0.0, target_yaw_deg, 0.0)
-			if "angular_velocity" in ship:
-				ship.angular_velocity = Vector3.ZERO
+	if is_cruise_enabled:
+		set_cruise_enabled(false)
 	
+	# Calcola angolo yaw desiderato nello spazio 3D (dove la prua è -Z)
+	var target_yaw_rad := atan2(-route_dir_2d.x, -route_dir_2d.y)
+	var target_yaw_deg := fposmod(rad_to_deg(target_yaw_rad), 360.0)
+
+	var ship: Spaceship = null
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
+		ship = SpaceWorldManager.get_spaceship()
+
+	# Blocca comandi utente e azzera input attuali
+	is_aligning_hyperdrive = true
+	_ui_linear_input = Vector3.ZERO
+	_ui_angular_input = Vector3.ZERO
+	if SpaceWorldManager:
+		SpaceWorldManager.set_ship_flight_input(Vector3.ZERO, Vector3.ZERO)
+	_update_permissions()
 	_update_hyperdrive_ui()
+	hyperdrive_alignment_started.emit()
+
+	# Se non c'è una nave 3D istanziata (es. test unitari isolati)
+	if ship == null or not is_instance_valid(ship):
+		_simulated_aligned = true
+		is_aligning_hyperdrive = false
+		_update_permissions()
+		_update_hyperdrive_ui()
+		hyperdrive_alignment_completed.emit()
+		return
+
+	var angle_diff := get_hyperdrive_alignment_angle_deg()
+	
+	# Se durata esplicitamente 0 o già allineati entro tolleranza minima
+	if custom_duration == 0.0 or angle_diff <= 0.5:
+		ship.rotation_degrees = Vector3(0.0, target_yaw_deg, 0.0)
+		if "angular_velocity" in ship:
+			ship.angular_velocity = Vector3.ZERO
+		_simulated_aligned = true
+		is_aligning_hyperdrive = false
+		_update_permissions()
+		_update_hyperdrive_ui()
+		hyperdrive_alignment_completed.emit()
+		return
+
+	var duration: float = custom_duration if custom_duration > 0.0 else clampf(angle_diff / 120.0, 0.5, 2.0)
+	
+	if "angular_velocity" in ship:
+		ship.angular_velocity = Vector3.ZERO
+
+	var start_rot := ship.rotation
+	
+	if _align_tween and _align_tween.is_valid():
+		_align_tween.kill()
+	_align_tween = create_tween()
+	_align_tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+	_align_tween.tween_method(func(t: float) -> void:
+		if not is_instance_valid(ship):
+			return
+		var cur_y := lerp_angle(start_rot.y, target_yaw_rad, t)
+		var cur_x := lerp_angle(start_rot.x, 0.0, t)
+		var cur_z := lerp_angle(start_rot.z, 0.0, t)
+		ship.rotation = Vector3(cur_x, cur_y, cur_z)
+		if "angular_velocity" in ship:
+			ship.angular_velocity = Vector3.ZERO
+		_update_hyperdrive_ui()
+	, 0.0, 1.0, duration)
+	
+	await _align_tween.finished
+	
+	if not is_aligning_hyperdrive:
+		return
+	
+	if is_instance_valid(ship):
+		ship.rotation_degrees = Vector3(0.0, target_yaw_deg, 0.0)
+		if "angular_velocity" in ship:
+			ship.angular_velocity = Vector3.ZERO
+	
+	_align_tween = null
+	_simulated_aligned = true
+	is_aligning_hyperdrive = false
+	_update_permissions()
+	_update_hyperdrive_ui()
+	hyperdrive_alignment_completed.emit()
+
+## Annulla l'allineamento automatico in corso e ripristina i controlli
+func cancel_hyperdrive_alignment() -> void:
+	if _align_tween and _align_tween.is_valid():
+		_align_tween.kill()
+	_align_tween = null
+	if is_aligning_hyperdrive:
+		_simulated_aligned = false
+		is_aligning_hyperdrive = false
+		_update_permissions()
+		_update_hyperdrive_ui()
 
 ## Attiva l'Hyperdrive transit verso il settore target della rotta
 func engage_hyperdrive() -> Dictionary:
 	if not can_control_flight:
 		return {"success": false, "reason": "Permesso di volo negato"}
+	if is_aligning_hyperdrive:
+		return {"success": false, "reason": "Allineamento Hyperdrive ancora in corso"}
 	
 	if active_hyperdrive_route.is_empty():
 		if StarSystemGridManager:
@@ -680,6 +811,7 @@ func engage_hyperdrive() -> Dictionary:
 			if SpaceWorldManager and SpaceWorldManager.has_method("stop_spaceship_engines"):
 				SpaceWorldManager.stop_spaceship_engines()
 			
+			_simulated_aligned = false
 			active_hyperdrive_route.clear()
 			_update_hyperdrive_ui()
 			

@@ -81,7 +81,7 @@ func test_flight_control_receives_route_and_aligns() -> void:
 	_flight_app._on_route_plotted(TARGET_COORDS, Vector3(0, 1, 0))
 	assert_false(_flight_app.active_hyperdrive_route.is_empty(), "Flight Control deve memorizzare la rotta Hyperdrive")
 	
-	_flight_app.align_to_hyperdrive_vector()
+	await _flight_app.align_to_hyperdrive_vector(0.05)
 	assert_true(_flight_app.is_hyperdrive_aligned(), "La nave deve risultare allineata al vettore di navigazione")
 
 func test_hyperdrive_engage_transitions_sector() -> void:
@@ -90,7 +90,7 @@ func test_hyperdrive_engage_transitions_sector() -> void:
 	await get_tree().process_frame
 	
 	_flight_app._on_route_plotted(TARGET_COORDS, Vector3(0, 1, 0))
-	_flight_app.align_to_hyperdrive_vector()
+	await _flight_app.align_to_hyperdrive_vector(0.05)
 	
 	var transit_status := {"started": false, "completed": false, "destination": Vector3i.ZERO}
 	StarSystemGridManager.hyperdrive_transit_started.connect(func(_dest: Vector3i) -> void:

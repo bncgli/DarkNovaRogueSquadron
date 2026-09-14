@@ -10,7 +10,6 @@ var bottom_panel_button: Button = null
 func _enter_tree() -> void:
 	var scene := load("res://addons/star_system_editor/star_system_editor.tscn")
 	editor_view = scene.instantiate() as StarSystemEditor
-	editor_view.undo_redo = get_undo_redo()
 	bottom_panel_button = add_control_to_bottom_panel(editor_view, "Star System")
 
 func _exit_tree() -> void:

@@ -13,6 +13,7 @@ const CAM_IDS: Array[String] = ["front", "rear", "left", "right", "top", "bottom
 var _cams_app: CamsApp = null
 
 func before_each() -> void:
+	CameraFeedWindow.clear_saved_camera_layouts()
 	NetworkManager.disconnect_game()
 	SpaceWorldManager.close_all_camera_windows()
 
@@ -21,6 +22,7 @@ func after_each() -> void:
 		_cams_app.queue_free()
 	_cams_app = null
 	SpaceWorldManager.close_all_camera_windows()
+	CameraFeedWindow.clear_saved_camera_layouts()
 	NetworkManager.disconnect_game()
 
 func _start_solo_mission() -> void:
@@ -248,12 +250,14 @@ func test_camera_headlights_toggle_and_sync_with_spaceship() -> void:
 	assert_not_null(feed_win.btn_headlights, "Il pulsante BtnHeadlights deve essere presente nella finestra feed")
 	
 	assert_false(SpaceWorldManager.is_camera_headlight_on("front"), "I fari devono essere spenti all'avvio")
-	assert_eq(feed_win.btn_headlights.text, "Fari: OFF", "Testo pulsante fari deve essere 'Fari: OFF'")
+	assert_eq(feed_win.btn_headlights.text, "💡", "Icona pulsante fari deve essere '💡'")
+	assert_eq(feed_win.btn_headlights.modulate, Color(0.6, 0.6, 0.6), "Modulate fari deve essere spento all'avvio")
 	
 	feed_win.btn_headlights.emit_signal("pressed")
 	await get_tree().process_frame
 	assert_true(SpaceWorldManager.is_camera_headlight_on("front"), "Dopo il toggle, i fari devono risultare accesi")
-	assert_eq(feed_win.btn_headlights.text, "Fari: ON", "Testo pulsante fari deve diventare 'Fari: ON'")
+	assert_eq(feed_win.btn_headlights.text, "💡", "Icona pulsante fari deve rimanere '💡'")
+	assert_eq(feed_win.btn_headlights.modulate, Color(1.0, 0.9, 0.3), "Modulate fari deve essere acceso dopo il toggle")
 	
 	var ship := SpaceWorldManager.get_spaceship()
 	assert_not_null(ship, "Spaceship deve essere disponibile")
@@ -262,31 +266,334 @@ func test_camera_headlights_toggle_and_sync_with_spaceship() -> void:
 	feed_win.btn_headlights.emit_signal("pressed")
 	await get_tree().process_frame
 	assert_false(SpaceWorldManager.is_camera_headlight_on("front"), "Dopo il secondo toggle, i fari devono risultare spenti")
-	assert_eq(feed_win.btn_headlights.text, "Fari: OFF", "Testo pulsante fari deve tornare 'Fari: OFF'")
+	assert_eq(feed_win.btn_headlights.text, "💡", "Icona pulsante fari deve essere '💡'")
+	assert_eq(feed_win.btn_headlights.modulate, Color(0.6, 0.6, 0.6), "Modulate fari deve tornare spento")
 
 func test_camera_filter_cycle_normal_thermal_lidar() -> void:
 	await _start_solo_mission()
 	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
 	assert_not_null(feed_win, "La finestra feed frontale deve aprirsi con successo")
 	assert_not_null(feed_win.filter_cycle_btn, "Il pulsante FilterCycleBtn deve essere presente nella finestra feed")
+	assert_not_null(feed_win.lidar_overlay, "Il nodo LidarOverlay deve essere presente nella finestra feed")
 	
+	# Modalita' 0: Normale
 	assert_eq(feed_win._filter_mode, 0, "Modalita' iniziale deve essere 0 (Normale)")
 	assert_false(feed_win.filter_rect.visible, "FilterColorRect deve essere nascosto in modalita' Normale")
+	assert_false(feed_win.lidar_overlay.visible, "LidarOverlay deve essere nascosto in modalita' Normale")
 	assert_eq(feed_win.filter_cycle_btn.text, "Filtro: Normale", "Pulsante filtro deve indicare 'Filtro: Normale'")
 	
+	# Modalita' 1: Termico
 	feed_win.filter_cycle_btn.emit_signal("pressed")
 	assert_eq(feed_win._filter_mode, 1, "Modalita' deve diventare 1 (Termico)")
 	assert_true(feed_win.filter_rect.visible, "FilterColorRect deve essere visibile in modalita' Termico")
 	assert_not_null(feed_win.filter_rect.material, "FilterColorRect deve avere uno ShaderMaterial assegnato in modalita' Termico")
+	assert_false(feed_win.lidar_overlay.visible, "LidarOverlay deve rimanere nascosto in modalita' Termico")
 	assert_eq(feed_win.filter_cycle_btn.text, "Filtro: Termico", "Pulsante filtro deve indicare 'Filtro: Termico'")
 	
+	# Modalita' 2: Lidar (Feed ottico normale visibile sotto, LidarOverlay attivo)
 	feed_win.filter_cycle_btn.emit_signal("pressed")
 	assert_eq(feed_win._filter_mode, 2, "Modalita' deve diventare 2 (Lidar)")
-	assert_true(feed_win.filter_rect.visible, "FilterColorRect deve essere visibile in modalita' Lidar")
-	assert_not_null(feed_win.filter_rect.material, "FilterColorRect deve avere lo ShaderMaterial Lidar assegnato")
+	assert_false(feed_win.filter_rect.visible, "FilterColorRect deve essere nascosto in modalita' Lidar")
+	assert_true(feed_win.lidar_overlay.visible, "LidarOverlay deve essere visibile in modalita' Lidar")
 	assert_eq(feed_win.filter_cycle_btn.text, "Filtro: Lidar", "Pulsante filtro deve indicare 'Filtro: Lidar'")
 	
+	# Ritorno a Modalita' 0: Normale
 	feed_win.filter_cycle_btn.emit_signal("pressed")
 	assert_eq(feed_win._filter_mode, 0, "Modalita' deve tornare a 0 (Normale)")
 	assert_false(feed_win.filter_rect.visible, "FilterColorRect deve tornare nascosto in modalita' Normale")
+	assert_false(feed_win.lidar_overlay.visible, "LidarOverlay deve tornare nascosto in modalita' Normale")
 	assert_eq(feed_win.filter_cycle_btn.text, "Filtro: Normale", "Pulsante filtro deve tornare 'Filtro: Normale'")
+
+func test_closing_cams_app_closes_camera_feed_windows() -> void:
+	_cams_app = await _create_cams_app()
+	await _start_solo_mission()
+	
+	var front_win = SpaceWorldManager.open_camera_window("front")
+	var rear_win = SpaceWorldManager.open_camera_window("rear")
+	assert_not_null(front_win, "La finestra front deve aprirsi")
+	assert_not_null(rear_win, "La finestra rear deve aprirsi")
+	assert_true(SpaceWorldManager.is_camera_window_open("front"), "La finestra front deve essere aperta")
+	assert_true(SpaceWorldManager.is_camera_window_open("rear"), "La finestra rear deve essere aperta")
+	
+	_cams_app.queue_free()
+	_cams_app = null
+	await get_tree().process_frame
+	
+	assert_false(SpaceWorldManager.is_camera_window_open("front"), "La finestra front deve risultare chiusa dopo l'uscita di CamsApp")
+	assert_false(SpaceWorldManager.is_camera_window_open("rear"), "La finestra rear deve risultare chiusa dopo l'uscita di CamsApp")
+
+func test_closing_cams_app_parent_window_closes_camera_feed_windows() -> void:
+	var app_win: FakeWindow = load("res://Scenes/Window/Application Window/application_window.tscn").instantiate()
+	add_child_autofree(app_win)
+	
+	var cams_app_res: PackedScene = load("res://Applications/Cams/cams_app.tscn")
+	_cams_app = cams_app_res.instantiate() as CamsApp
+	app_win.get_node("%ApplicationContents").add_child(_cams_app)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	
+	await _start_solo_mission()
+	
+	var left_win = SpaceWorldManager.open_camera_window("left")
+	assert_not_null(left_win, "La finestra left deve aprirsi")
+	assert_true(SpaceWorldManager.is_camera_window_open("left"), "La finestra left deve essere aperta")
+	
+	app_win._on_close_button_pressed()
+	await get_tree().process_frame
+	
+	assert_false(SpaceWorldManager.is_camera_window_open("left"), "La finestra left deve risultare chiusa dopo la chiusura della finestra padre dell'app Cams")
+
+func test_camera_shader_multi_window_independence() -> void:
+	await _start_solo_mission()
+	
+	var front_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	var rear_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("rear") as CameraFeedWindow
+	assert_not_null(front_win, "La finestra front deve aprirsi")
+	assert_not_null(rear_win, "La finestra rear deve aprirsi")
+	
+	# Attiva shader termico su entrambe le finestre
+	front_win.filter_cycle_btn.emit_signal("pressed") # 1 = Termico
+	rear_win.filter_cycle_btn.emit_signal("pressed") # 1 = Termico
+	
+	assert_eq(front_win._filter_mode, 1, "Front deve essere in modalita' Termica")
+	assert_eq(rear_win._filter_mode, 1, "Rear deve essere in modalita' Termica")
+	assert_true(front_win.filter_rect.visible, "FilterColorRect di Front deve essere visibile")
+	assert_true(rear_win.filter_rect.visible, "FilterColorRect di Rear deve essere visibile")
+	
+	var front_mat: ShaderMaterial = front_win.filter_rect.material as ShaderMaterial
+	var rear_mat: ShaderMaterial = rear_win.filter_rect.material as ShaderMaterial
+	assert_not_null(front_mat, "Front deve possedere uno ShaderMaterial")
+	assert_not_null(rear_mat, "Rear deve possedere uno ShaderMaterial")
+	assert_ne(front_mat, rear_mat, "I materiali delle due finestre devono essere istanze indipendenti")
+	
+	var front_tex = front_mat.get_shader_parameter("feed_texture")
+	var rear_tex = rear_mat.get_shader_parameter("feed_texture")
+	assert_not_null(front_tex, "Front material deve avere feed_texture impostata")
+	assert_not_null(rear_tex, "Rear material deve avere feed_texture impostata")
+	assert_eq(front_tex, front_win.feed_viewport.get_texture(), "Front material deve puntare alla texture del proprio feed_viewport")
+	assert_eq(rear_tex, rear_win.feed_viewport.get_texture(), "Rear material deve puntare alla texture del proprio feed_viewport")
+	assert_ne(front_tex, rear_tex, "Le texture campionate dalle due finestre devono essere distinte")
+	
+	# Passa Front e Rear a Lidar
+	front_win.filter_cycle_btn.emit_signal("pressed") # 2 = Lidar
+	rear_win.filter_cycle_btn.emit_signal("pressed") # 2 = Lidar
+	
+	assert_false(front_win.filter_rect.visible, "Front FilterColorRect deve essere nascosto in modalita' Lidar")
+	assert_false(rear_win.filter_rect.visible, "Rear FilterColorRect deve essere nascosto in modalita' Lidar")
+	assert_true(front_win.lidar_overlay.visible, "Front LidarOverlay deve essere visibile")
+	assert_true(rear_win.lidar_overlay.visible, "Rear LidarOverlay deve essere visibile")
+	assert_ne(front_win._lidar_points, rear_win._lidar_points, "I punti Lidar delle due finestre devono essere memorizzati in array distinti")
+
+func test_lidar_depth_color_gradient() -> void:
+	await _start_solo_mission()
+	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert_not_null(feed_win, "La finestra feed deve aprirsi")
+	
+	# Distanza ravvicinata (< 20m): rosso caldo dominante
+	var col_close: Color = feed_win._get_lidar_depth_color(12.0)
+	assert_gt(col_close.r, col_close.b, "A distanza ravvicinata (<20m) il rosso deve dominare sul blu")
+	assert_gt(col_close.r, 0.8, "A distanza ravvicinata (<20m) la componente rossa deve essere elevata")
+	
+	# Distanza intermedia (50-80m): transizione verde / giallo
+	var col_mid: Color = feed_win._get_lidar_depth_color(60.0)
+	assert_gt(col_mid.g, 0.5, "A distanza intermedia (60m) la componente verde deve essere presente")
+	
+	# Distanza elevata (> 120m): blu freddo dominante
+	var col_far: Color = feed_win._get_lidar_depth_color(150.0)
+	assert_gt(col_far.b, col_far.r, "A distanza elevata (>120m) il blu deve dominare sul rosso")
+	assert_gt(col_far.b, 0.7, "A distanza elevata (>120m) la componente blu deve essere elevata")
+
+func test_lidar_obstacle_detection_and_ship_exclusion() -> void:
+	await _start_solo_mission()
+	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert_not_null(feed_win, "La finestra front deve essere aperta")
+	
+	feed_win.filter_cycle_btn.emit_signal("pressed") # 1 = Termico
+	feed_win.filter_cycle_btn.emit_signal("pressed") # 2 = Lidar
+	assert_eq(feed_win._filter_mode, 2, "La telecamera deve essere in modalita' Lidar")
+	
+	# Creazione di un corpo fisico ostacolo nello spazio a 15m di fronte alla camera frontale
+	var obstacle := StaticBody3D.new()
+	var col_shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(10, 10, 2)
+	col_shape.shape = box
+	obstacle.add_child(col_shape)
+	obstacle.position = Vector3(0, 0.25, -15.0)
+	
+	var world_3d := SpaceWorldManager.get_world_3d()
+	assert_not_null(world_3d, "Il World3D condiviso deve esistere")
+	SpaceWorldManager._space_scene_instance.add_child(obstacle)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	
+	# Esecuzione scansione Lidar
+	feed_win._update_lidar_scan()
+	
+	assert_gt(feed_win._lidar_points.size(), 0, "Il Lidar deve rilevare punti di impatto contro l'ostacolo")
+	assert_between(feed_win._lidar_closest_distance, 10.0, 16.0, "La distanza minima rilevata deve corrispondere alla posizione dell'ostacolo")
+	
+	# Verifica che lo scafo della Spaceship non generi collisioni fantasma
+	var ship := SpaceWorldManager.get_spaceship()
+	assert_not_null(ship, "La nave del giocatore deve esistere")
+	var ship_rid := ship.get_rid()
+	for pt in feed_win._lidar_points:
+		assert_ne(pt.get("rid", RID()), ship_rid, "Nessun raggio Lidar deve collidere con lo scafo della nave madre")
+	
+	obstacle.queue_free()
+
+func test_lidar_multi_window_direction_independence() -> void:
+	await _start_solo_mission()
+	var front_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	var rear_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("rear") as CameraFeedWindow
+	assert_not_null(front_win, "La finestra front deve aprirsi")
+	assert_not_null(rear_win, "La finestra rear deve aprirsi")
+	
+	# Imposta entrambe le finestre su Lidar
+	front_win.filter_cycle_btn.emit_signal("pressed")
+	front_win.filter_cycle_btn.emit_signal("pressed")
+	rear_win.filter_cycle_btn.emit_signal("pressed")
+	rear_win.filter_cycle_btn.emit_signal("pressed")
+	
+	# Ostacolo ravvicinato posizionato solo davanti alla nave (visibile solo dalla camera Front)
+	var front_obstacle := StaticBody3D.new()
+	var col_shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(15, 15, 2)
+	col_shape.shape = box
+	front_obstacle.add_child(col_shape)
+	front_obstacle.position = Vector3(0, 0.25, -18.0)
+	SpaceWorldManager._space_scene_instance.add_child(front_obstacle)
+	
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	
+	front_win._update_lidar_scan()
+	rear_win._update_lidar_scan()
+	
+	# La telecamera Frontale deve rilevare l'ostacolo ravvicinato a ~15m
+	assert_gt(front_win._lidar_points.size(), 0, "La telecamera Frontale deve rilevare l'ostacolo anteriore")
+	assert_lt(front_win._lidar_closest_distance, 20.0, "La telecamera Frontale deve agganciare l'ostacolo anteriore a distanza ravvicinata")
+	
+	# La telecamera Posteriore punta all'indietro (+Z) e non deve vedere l'ostacolo anteriore (< 30m)
+	assert_gt(rear_win._lidar_closest_distance, 40.0, "La telecamera Posteriore non deve rilevare l'ostacolo anteriore ravvicinato")
+	
+	front_obstacle.queue_free()
+
+func test_camera_feed_window_saves_and_restores_layout_across_sessions() -> void:
+	await _start_solo_mission()
+	
+	# Apertura camera front senza layout precedente: default size 460x320
+	var front_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert_not_null(front_win, "La finestra feed deve aprirsi")
+	assert_eq(front_win.size, Vector2(460, 320), "Dimensione iniziale deve essere quella di default")
+	
+	# Modifica di posizione e dimensione (es. ridimensionata e spostata dall'utente)
+	var custom_pos := Vector2(250.0, 150.0)
+	var custom_size := Vector2(520.0, 380.0)
+	front_win.position = custom_pos
+	front_win.size = custom_size
+	front_win.save_window_layout()
+	
+	# Verifica che il layout sia stato salvato su file
+	assert_true(CameraFeedWindow.has_saved_camera_layout("front"), "Deve esserci un layout salvato per la camera front")
+	var saved_data := CameraFeedWindow.get_saved_camera_layout("front")
+	assert_eq(saved_data.get("width"), 520.0)
+	assert_eq(saved_data.get("height"), 380.0)
+	assert_eq(saved_data.get("x"), 250.0)
+	assert_eq(saved_data.get("y"), 150.0)
+	
+	# Chiusura finestra
+	SpaceWorldManager.close_camera_window("front")
+	assert_false(SpaceWorldManager.is_camera_window_open("front"))
+	
+	# Simulazione nuova sessione: ricarica dei layout da disco
+	CameraFeedWindow.reload_saved_layouts()
+	
+	# Riapertura finestra: deve ripristinare custom_pos e custom_size
+	var reopened_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert_not_null(reopened_win, "La finestra riaperta deve esistere")
+	assert_eq(reopened_win.size, custom_size, "La dimensione salvata deve essere ripristinata")
+	assert_eq(reopened_win.position, custom_pos, "La posizione salvata deve essere ripristinata")
+
+func test_camera_feed_windows_independent_layouts() -> void:
+	await _start_solo_mission()
+	
+	var front_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	var rear_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("rear") as CameraFeedWindow
+	assert_not_null(front_win)
+	assert_not_null(rear_win)
+	
+	# Imposta dimensioni e posizioni distinte
+	front_win.position = Vector2(100.0, 80.0)
+	front_win.size = Vector2(400.0, 300.0)
+	front_win.save_window_layout()
+	
+	rear_win.position = Vector2(550.0, 200.0)
+	rear_win.size = Vector2(500.0, 350.0)
+	rear_win.save_window_layout()
+	
+	SpaceWorldManager.close_all_camera_windows()
+	CameraFeedWindow.reload_saved_layouts()
+	
+	var reopened_front: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	var reopened_rear: CameraFeedWindow = SpaceWorldManager.open_camera_window("rear") as CameraFeedWindow
+	
+	assert_eq(reopened_front.position, Vector2(100.0, 80.0), "Front deve mantenere la sua posizione indipendente")
+	assert_eq(reopened_front.size, Vector2(400.0, 300.0), "Front deve mantenere la sua dimensione indipendente")
+	assert_eq(reopened_rear.position, Vector2(550.0, 200.0), "Rear deve mantenere la sua posizione indipendente")
+	assert_eq(reopened_rear.size, Vector2(500.0, 350.0), "Rear deve mantenere la sua dimensione indipendente")
+
+func test_camera_feed_window_maximized_saves_unmaximized_size() -> void:
+	await _start_solo_mission()
+	
+	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	var initial_size := Vector2(480.0, 340.0)
+	var initial_pos := Vector2(200.0, 100.0)
+	feed_win.position = initial_pos
+	feed_win.size = initial_size
+	feed_win.save_window_layout()
+	
+	# Massimizza la finestra
+	feed_win.maximize_window()
+	assert_true(feed_win.is_maximized, "La finestra deve risultare massimizzata")
+	
+	# Il salvataggio durante lo stato massimizzato deve salvare le dimensioni pre-massimizzazione
+	feed_win.save_window_layout()
+	var layout := CameraFeedWindow.get_saved_camera_layout("front")
+	assert_eq(layout.get("width"), 480.0, "La larghezza salvata non deve essere quella a tutto schermo")
+	assert_eq(layout.get("height"), 340.0, "L'altezza salvata non deve essere quella a tutto schermo")
+
+func test_lidar_fixed_spacing_independent_of_window_size() -> void:
+	await _start_solo_mission()
+	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
+	assert_not_null(feed_win)
+
+	# Verifica presenza e validità costanti spaziatura
+	assert_gt(CameraFeedWindow.LIDAR_COLS_SPACING, 0.0, "LIDAR_COLS_SPACING deve essere maggiore di zero")
+	assert_gt(CameraFeedWindow.LIDAR_ROWS_SPACING, 0.0, "LIDAR_ROWS_SPACING deve essere maggiore di zero")
+
+	# Modalità Lidar
+	feed_win._filter_mode = 2
+
+	# Posizioniamo un grande ostacolo davanti alla camera che copre il cono visivo
+	var obstacle := StaticBody3D.new()
+	var col_shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(100, 100, 2)
+	col_shape.shape = box
+	obstacle.add_child(col_shape)
+	obstacle.position = Vector3(0, 0, -10.0)
+	SpaceWorldManager._space_scene_instance.add_child(obstacle)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	feed_win._update_lidar_scan()
+	assert_gt(feed_win._lidar_points.size(), 1, "Devono essere rilevati più punti Lidar")
+
+	if feed_win._lidar_points.size() >= 2:
+		var p0: Vector2 = feed_win._lidar_points[0].pos
+		var p1: Vector2 = feed_win._lidar_points[1].pos
+		assert_almost_eq(absf(p1.y - p0.y), CameraFeedWindow.LIDAR_ROWS_SPACING, 0.01, "La spaziatura verticale tra punti consecutivi deve corrispondere a LIDAR_ROWS_SPACING")
+
+	obstacle.queue_free()

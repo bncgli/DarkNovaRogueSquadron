@@ -7,12 +7,17 @@ extends GutTest
 var _app: LifeSupportApp = null
 
 func before_each() -> void:
+	_app = null
+	if SpaceWorldManager and "sealed_rooms" in SpaceWorldManager:
+		SpaceWorldManager.sealed_rooms.clear()
 	NetworkManager.disconnect_game()
 
 func after_each() -> void:
 	if is_instance_valid(_app):
 		_app.queue_free()
 	_app = null
+	if SpaceWorldManager and "sealed_rooms" in SpaceWorldManager:
+		SpaceWorldManager.sealed_rooms.clear()
 	NetworkManager.disconnect_game()
 
 func _start_solo_mission(player_name: String = "Comandante Test") -> void:
@@ -336,3 +341,57 @@ func test_queue_free_cleanup_does_not_error() -> void:
 	await get_tree().process_frame
 	_app = null
 	assert_true(true, "La rimozione dell'app LifeSupport non deve generare errori di pulizia dei segnali")
+
+func test_ship_blueprint_canvas_and_interactive_room_selection() -> void:
+	_app = await _create_app()
+	await _start_solo_mission()
+	NetworkManager.request_role(NetworkManager.ROLE_ENGINEER)
+	await get_tree().process_frame
+	
+	assert_not_null(_app.map_canvas, "MapCanvas deve esistere nella scena LifeSupport")
+	assert_true(_app.rooms.size() > 0, "Le stanze blueprint devono essere caricate")
+	
+	# Verifica che ogni stanza sia selezionabile
+	var target_room: Dictionary = _app.rooms[1]
+	var target_id: String = str(target_room.get("id"))
+	var target_rect: Rect2 = target_room.get("rect")
+	
+	# Simula click del mouse al centro della stanza nel canvas blueprint
+	_app.map_canvas.custom_minimum_size = Vector2(600, 480)
+	_app.map_canvas.size = Vector2(600, 480)
+	
+	var click_event := InputEventMouseButton.new()
+	click_event.button_index = MOUSE_BUTTON_LEFT
+	click_event.pressed = true
+	click_event.position = target_rect.get_center()
+	
+	_app.handle_blueprint_gui_input(_app.map_canvas, click_event)
+	await get_tree().process_frame
+	
+	assert_eq(_app.selected_room_id, target_id, "La stanza cliccata deve diventare selected_room_id")
+	assert_true(target_room.get("name") in _app.selected_room_title.text, "Il pannello destro deve mostrare il nome della stanza selezionata")
+	
+	# Test selezione esplicita e verifica funzionalità del pannello di destra
+	var engines_room_id := ""
+	for r in _app.rooms:
+		if r.get("id") == "engines":
+			engines_room_id = "engines"
+			break
+	if engines_room_id.is_empty():
+		engines_room_id = str(_app.rooms[0].get("id"))
+	
+	_app.select_room(engines_room_id)
+	await get_tree().process_frame
+	assert_eq(_app.selected_room_id, engines_room_id, "select_room deve impostare la stanza selezionata")
+	assert_true(_app.can_control_life_support, "Controllo attivo abilitato")
+	
+	# Test azione di sigillatura dal pannello destro per la stanza selezionata
+	_app._on_toggle_seal_pressed()
+	await get_tree().process_frame
+	assert_true(_app.is_room_sealed(engines_room_id), "Il pulsante destro deve sigillare la stanza selezionata")
+	assert_eq(_app.btn_toggle_seal.text, "🔓 Apri Paratia", "Il testo del pulsante deve indicare 'Apri Paratia'")
+	
+	# Dissigilla
+	_app._on_toggle_seal_pressed()
+	await get_tree().process_frame
+	assert_false(_app.is_room_sealed(engines_room_id), "Il pulsante destro deve riaprire la paratia")

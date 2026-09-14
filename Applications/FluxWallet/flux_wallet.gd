@@ -2,7 +2,8 @@ extends Control
 
 ## Titolo e dimensioni preferite per la finestra di GodotOS
 const APP_TITLE: String = "FLUX WALLET"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(550, 450)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(550, 480)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(550, 480)
 
 ## Riferimenti ai nodi UI (utilizzando Unique Names %)
 @onready var flux_label: Label = %FluxLabel
@@ -16,11 +17,16 @@ func _ready() -> void:
 	_refresh_data()
 
 func _configure_window() -> void:
-	custom_minimum_size = DEFAULT_WINDOW_SIZE
+	custom_minimum_size = Vector2(550, 450)
 	# Se istanziata all'interno di una FakeWindow di GodotOS:
 	var parent_window := get_parent()
-	if parent_window and "window_title" in parent_window:
-		parent_window.window_title = APP_TITLE
+	while parent_window:
+		if parent_window is FakeWindow:
+			parent_window.title_text = APP_TITLE
+			parent_window.size = DEFAULT_WINDOW_SIZE
+			parent_window.custom_minimum_size = MIN_WINDOW_SIZE
+			break
+		parent_window = parent_window.get_parent()
 
 func _connect_system_signals() -> void:
 	# 1. Collegamento allo stato di connessione/missione della nave

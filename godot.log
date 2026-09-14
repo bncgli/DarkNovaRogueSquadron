@@ -1,0 +1,190 @@
+Godot Engine v4.7.2.stable.steam.ed1daf0bf - https://godotengine.org
+
+WARNING: res://addons/gut/gui/GutSceneTheme.tres:3 - ext_resource, invalid UID: uid://c6c7gnx36opr0 - using text path instead: res://addons/gut/fonts/AnonymousPro-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+WARNING: res://addons/gut/gui/NormalGui.tscn:5 - ext_resource, invalid UID: uid://bnh0lslf4yh87 - using text path instead: res://addons/gut/fonts/CourierPrime-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+WARNING: res://addons/gut/gui/MinGui.tscn:4 - ext_resource, invalid UID: uid://bnh0lslf4yh87 - using text path instead: res://addons/gut/fonts/CourierPrime-Regular.ttf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] @static_initializer (res://addons/gut/utils.gd:55)
+       [1] _static_init (res://addons/gut/gut_loader.gd:40)
+       [2] @static_initializer (res://addons/gut/gut_loader.gd:1)
+       [3] _init (res://addons/gut/gut_cmdln.gd:24)
+ERROR: Node not found: "/root/Control/BackgroundColor" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:6)
+ERROR: Node not found: "/root/Control/Wallpaper" (absolute path attempted from "/root/DefaultValues").
+   at: get_node (scene/main/node.cpp:1972)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://Scenes/Autoloads/Default Values/default_values.gd:7)
+default_values.gd: Couldn't find wallpaper (are you debugging a scene?)
+---  GUT  ---
+[INFO]:  using [C:/Users/User/AppData/Roaming/GodotOS] for temporary output.
+Godot version:  4.7.2
+GUT version:  9.7.1
+
+
+res://tests/gut/test_flight_control_node.gd
+* test_disconnected_overlay_and_operational_state
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#124302395891>]
+        * [<Button#124352727542>]
+* test_ship_drive_folder_is_protected_by_default_password
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_dat_configuration_default_values_and_runtime_hot_reload
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#150508407537>]
+        * [<Button#150558739188>]
+* test_rbac_pilot_can_control_engineer_cannot
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Ingegnere
+[Chat][[SISTEMA]]: Comandante Test ha preso la postazione: Pilota
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#164433496936>]
+        * [<Button#164483828587>]
+* test_six_dof_translation_and_rotation_input
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#178408917984>]
+        * [<Button#178459249635>]
+* test_inertia_dampening_toggle_and_newtonian_drift
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#191142825053>]
+        * [<Button#191193156704>]
+* test_cruise_speed_toggle_and_forward_movement
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#204380048592>]
+        * [<Button#204430380243>]
+* test_speed_multiplier_adjustment_with_r_and_f_keys
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#217315282264>]
+        * [<Button#217365613915>]
+* test_terminal_cat_command_rejects_reading_flight_dat_files
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+* test_hyperdrive_alignment_and_engage_transit
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#242246225475>]
+        * [<Button#242296557126>]
+* test_align_to_hyperdrive_vector_locks_and_restores_user_controls
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#258318798399>]
+        * [<Button#258369130050>]
+* test_align_to_hyperdrive_vector_aligns_minus_z_axis_not_plus_x
+[NetworkManager] Disconnesso dalla rete.
+[NetworkManager] Modalità Solo avviata. Configura la nave e premi Avvia Volo per decollare.
+[NetworkManager] 🚀 Missione Avviata! Tutti alle postazioni!
+[NetworkManager] Sessione in Singolo terminata.
+    2 Orphans
+        * [<Button#274693361452>]
+        * [<Button#274743693103>]
+20 orphans
+12/12 passed.
+
+
+
+
+==============================================
+= 20 Orphans
+==============================================
+test_flight_control_node.gd
+    - test_disconnected_overlay_and_operational_state
+        * [<Button#124302395891>]
+        * [<Button#124352727542>]
+    - test_dat_configuration_default_values_and_runtime_hot_reload
+        * [<Button#150508407537>]
+        * [<Button#150558739188>]
+    - test_rbac_pilot_can_control_engineer_cannot
+        * [<Button#164433496936>]
+        * [<Button#164483828587>]
+    - test_six_dof_translation_and_rotation_input
+        * [<Button#178408917984>]
+        * [<Button#178459249635>]
+    - test_inertia_dampening_toggle_and_newtonian_drift
+        * [<Button#191142825053>]
+        * [<Button#191193156704>]
+    - test_cruise_speed_toggle_and_forward_movement
+        * [<Button#204380048592>]
+        * [<Button#204430380243>]
+    - test_speed_multiplier_adjustment_with_r_and_f_keys
+        * [<Button#217315282264>]
+        * [<Button#217365613915>]
+    - test_hyperdrive_alignment_and_engage_transit
+        * [<Button#242246225475>]
+        * [<Button#242296557126>]
+    - test_align_to_hyperdrive_vector_locks_and_restores_user_controls
+        * [<Button#258318798399>]
+        * [<Button#258369130050>]
+    - test_align_to_hyperdrive_vector_aligns_minus_z_axis_not_plus_x
+        * [<Button#274693361452>]
+        * [<Button#274743693103>]
+
+
+==============================================
+= Run Summary
+==============================================
+
+Totals
+------
+Scripts               1
+Tests                12
+Passing Tests        12
+Asserts             110
+Orphans              20
+Time              2.15s
+
+
+---- All tests passed! ----
+

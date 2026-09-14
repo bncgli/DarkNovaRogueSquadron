@@ -6,7 +6,8 @@ extends BaseApp
 ## occlusione Line of Sight (LoS) da ostacoli, integrazione feed radar Probe e trasmissione waypoint.
 
 const APP_TITLE: String = "ARRAY SENSORI & RADAR"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(750, 550)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(750, 580)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(750, 580)
 const RADAR_STANDARD_RANGE: float = 1000.0 # 1 km
 const MAX_STANDARD_RANGE: float = 1000.0
 const ACTIVE_PING_RANGE: float = 2000.0 # 2 km
@@ -81,7 +82,7 @@ var is_radar_powered: bool = true
 var has_radar_damage: bool = false
 
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_init_ui_elements()
 	_connect_system_signals()
 	_connect_ui_signals()

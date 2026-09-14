@@ -23,6 +23,12 @@ extends Panel
 ## Whether to use a simple pause menu or not (spawned by pressing ESC or P)
 @export var use_generic_pause_menu: bool
 
+## Default window size for spawned window
+@export var default_window_size: Vector2 = Vector2.ZERO
+
+## Minimum window size for spawned window
+@export var min_window_size: Vector2 = Vector2.ZERO
+
 const DEFAULT_APP_ICON: Texture2D = preload("res://Art/Icons/Apps/standard_app.svg")
 const FOLDER_ICON: Texture2D = preload("res://Art/Folder Icons/folder.png")
 
@@ -47,12 +53,14 @@ func _ready() -> void:
 	if tex_rect and tex_rect.texture == null:
 		tex_rect.texture = DEFAULT_APP_ICON
 
-func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "", p_is_folder: bool = false, p_sub_tree: Dictionary = {}, p_is_game: bool = false) -> void:
+func configure_option(p_title: String, p_description: String, p_app_scene: String, p_color: Color = Color.WHITE, p_texture: Texture2D = null, p_developer: String = "", p_is_folder: bool = false, p_sub_tree: Dictionary = {}, p_is_game: bool = false, p_default_size: Vector2 = Vector2.ZERO, p_min_size: Vector2 = Vector2.ZERO) -> void:
 	title_text = p_title
 	description_text = p_description
 	developer_text = p_developer
 	is_folder = p_is_folder
 	sub_tree = p_sub_tree
+	default_window_size = p_default_size
+	min_window_size = p_min_size
 	if p_is_game:
 		game_scene = p_app_scene
 		application_scene = ""
@@ -130,6 +138,10 @@ func spawn_window() -> void:
 		window.get_node("%ApplicationContents").add_child(load(application_scene).instantiate())
 	
 	window.title_text = title_text if not title_text.is_empty() else %"Menu Title".text.replace("[center]", "").replace("[/center]", "")
+	if default_window_size != Vector2.ZERO:
+		window.size = default_window_size
+	if min_window_size != Vector2.ZERO:
+		window.custom_minimum_size = min_window_size
 	get_tree().current_scene.add_child(window)
 	
 	var taskbar_button: Control = load("res://Scenes/Taskbar/taskbar_button.tscn").instantiate()

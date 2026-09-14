@@ -1,5 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://dpurq16q71hq1"]
 
+[ext_resource type="FontFile" uid="uid://sbjgy50ujkqu" path="res://Applications/Terminal/Inconsolata-Regular.ttf" id="1_plvta"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_nkt1k"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_plvta"]
@@ -15,8 +17,10 @@ bg_color = Color(1, 1, 1, 0)
 [resource]
 Label/colors/font_color = Color(1, 1, 1, 1)
 Label/font_sizes/font_size = 18
+Label/fonts/font = ExtResource("1_plvta")
 LineEdit/colors/font_color = Color(1, 1, 1, 1)
 LineEdit/font_sizes/font_size = 18
+LineEdit/fonts/font = ExtResource("1_plvta")
 LineEdit/styles/focus = SubResource("StyleBoxEmpty_nkt1k")
 LineEdit/styles/normal = SubResource("StyleBoxEmpty_plvta")
 LineEdit/styles/read_only = SubResource("StyleBoxEmpty_r4lpi")

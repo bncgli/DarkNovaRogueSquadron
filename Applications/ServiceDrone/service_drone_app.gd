@@ -7,7 +7,8 @@ extends BaseApp
 ## Conforme allo standard architetturale di bordo (APP_ARCHITECTURE_STANDARD.md).
 
 const APP_TITLE: String = "DRONE DI SERVIZIO EVA"
-const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 520)
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(720, 550)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(720, 550)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/ServiceDrone/service_drone_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Ship Drive/Programs/ServiceDrone/config.dat"
@@ -62,7 +63,7 @@ var _is_boost: bool = false
 var _latest_telemetry: Dictionary = {}
 
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_connect_system_signals()
 	_connect_ui_signals()
 	_setup_viewport_world()

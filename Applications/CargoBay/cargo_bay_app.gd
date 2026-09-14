@@ -5,6 +5,10 @@ extends BaseApp
 ## Interfaccia diegetica a finestre di GodotOS per la gestione della Stiva Cargo:
 ## visualizzazione merci a bordo, monitoraggio capacità massa/volume ed espulsione carico.
 
+const APP_TITLE: String = "Cargo Bay - Gestione Stiva"
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(760, 560)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(600, 420)
+
 # Percorsi storage diegetico e file di configurazione
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/CargoBay/cargo_bay_config.dat"
 const CONFIG_PATH_FALLBACK: String = "Terminal Drive/Programs/CargoBay/cargo_bay_config.dat"
@@ -30,6 +34,7 @@ var selected_cargo_idx: int = -1
 var cargo_mgr: CargoManagerSingleton = null
 
 func _ready() -> void:
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_init_managers()
 	_init_runtime_files()
 	_load_config()

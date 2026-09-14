@@ -14,4 +14,5 @@ category = "Applicazioni"
 menu_path = ""
 icon_color = Color(0.2, 0.8, 1, 1)
 scene_path = "res://Applications/Lobby/lobby_app.tscn"
-default_window_size = Vector2(800, 600)
+default_window_size = Vector2(860, 610)
+min_window_size = Vector2(700, 530)

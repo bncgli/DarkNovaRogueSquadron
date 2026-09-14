@@ -1,70 +1,93 @@
 class_name TerminalInputHistoryManager
-## Utility class to handle input history.
-##
-## Uses a custom queue to store the data.
-## But is [b]not[/b] intended to be accessed directly, for this use [method push_to_history] or [method get_next].[br]
-## Go to [member _input_history] for more information.
+## Utility class to handle input history navigation and draft preservation.
 
-
-## The navigation direction on [member _input_history]
+## The navigation direction
 enum DIR {
-	UP, ## Go for the "past" and get older commands
-	DOWN ## Go for the "present" and get newer commands
+	UP,   ## Past / older commands
+	DOWN  ## Present / newer commands and current draft
 }
 
-## The maximum of inputs that will be saved.
-var max_history_size: int = 10
+## The maximum number of inputs saved in history.
+var max_history_size: int = 50
 
-## A custom queue to store the user input history.[br]
-## It follows 3 rules:[br]
-##- new input is appended to the front.[br]
-##- overflow input is removed from the back.[br]
-##- the first element is reserved to [param command_line.text] when the user starts to navigate history
-var _input_history: Array[String] = [""]
+## Chronological list of user commands (oldest at index 0, newest at back).
+var _history: Array[String] = []
 
-## Used and modified internally to get the data on [param _input_history].
-var _input_history_index: int = 0
+## Navigation pointer in history. Equals _history.size() when pointing to current draft.
+var _history_index: int = 0
 
-## Used when user starts to navigate history, to save the current typed command
+## The draft text typed by the user before starting history navigation.
+var _current_draft: String = ""
+
+## Reference to the terminal LineEdit.
 var cmd_line: LineEdit = null
 
 
-func _init(command_line: LineEdit, max_size: int = 10) -> void:
+func _init(command_line: LineEdit, max_size: int = 50) -> void:
 	cmd_line = command_line
 	max_history_size = max_size
+	_history_index = 0
+	_current_draft = ""
 
 
-## Append the given input to the front, don't interfering with the reserved first element.[br]
-## If [member _input_history] size exceeds [member max_history_size], removes the last element.
+## Adds a submitted command to history.
+## Ignores empty commands and consecutive duplicates.
 func push_to_history(input: String) -> void:
-	# Index 1 to not change the reserved first place
-	_input_history.insert(1, input)
+	var trimmed: String = input.strip_edges()
+	if trimmed.is_empty():
+		return
 	
-	if _input_history.size() > max_history_size:
-		_input_history.pop_back()
+	if not _history.is_empty() and _history.back() == trimmed:
+		# Don't add duplicate of previous command, just reset index
+		_history_index = _history.size()
+		_current_draft = ""
+		return
 	
-	# Sets to zero, so the next history navigation
-	# can start in the right place 
-	_input_history_index = 0
+	_history.append(trimmed)
+	if _history.size() > max_history_size:
+		_history.pop_front()
+	
+	_history_index = _history.size()
+	_current_draft = ""
 
 
-## Updates the [member _input_history_index] based on [param dir] and
-## returns input_history[_input_history_index].[br]
-## If [member _input_history_index] == 0 and going up, is the first move,
-## user is starting navigation, so we save the current typed command in the first position of the array,
-## so when it returns to 0 the command typed before is there.
+## Updates index based on direction and returns the command or draft.
 func get_next(dir: DIR) -> String:
-	if dir == DIR.UP and _input_history_index == 0:
-		_input_history[0] = cmd_line.text
+	if _history.is_empty():
+		return cmd_line.text if cmd_line != null else ""
+	
+	# If starting navigation from the bottom (draft position), save draft
+	if _history_index == _history.size() and dir == DIR.UP:
+		_current_draft = cmd_line.text if cmd_line != null else ""
 	
 	if dir == DIR.UP:
-		_input_history_index += 1
+		if _history_index > 0:
+			_history_index -= 1
+		return _history[_history_index]
+	
 	elif dir == DIR.DOWN:
-		_input_history_index -= 1
+		if _history_index < _history.size() - 1:
+			_history_index += 1
+			return _history[_history_index]
+		else:
+			_history_index = _history.size()
+			return _current_draft
 	
-	_input_history_index = clamp(
-		_input_history_index,
-		0, _input_history.size() - 1
-	)
-	
-	return _input_history[_input_history_index]
+	return ""
+
+
+## Returns all history entries.
+func get_history() -> Array[String]:
+	return _history.duplicate()
+
+
+## Clears all history entries and resets navigation.
+func clear_history() -> void:
+	_history.clear()
+	_history_index = 0
+	_current_draft = ""
+
+
+## Returns the active draft.
+func get_current_draft() -> String:
+	return _current_draft

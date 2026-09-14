@@ -9,6 +9,7 @@ const RoomPowerEntry = preload("res://Applications/PowerGrid/Components/room_pow
 
 const APP_TITLE: String = "Power Grid - Rete Elettrica Nave"
 const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(980, 620)
+const MIN_WINDOW_SIZE: Vector2 = Vector2(850, 580)
 const BLUEPRINT_SIZE: Vector2 = Vector2(600, 450)
 
 const CONFIG_PATH_PRIMARY: String = "Ship Drive/Programs/PowerGrid/power_grid_config.dat"
@@ -75,7 +76,7 @@ var net_power_mw: float = 0.0
 signal system_power_changed(category: String, is_powered: bool)
 
 func _ready() -> void:
-	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE)
+	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
 	_connect_system_signals()

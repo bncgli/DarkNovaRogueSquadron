@@ -48,11 +48,11 @@ func _parse_dat_file(rel_path: String) -> Dictionary:
 	return result
 
 ## Configura le proprietà della finestra genitore
-func _configure_window(title: String, size: Vector2) -> void:
+func _configure_window(title: String, size: Vector2, min_size: Vector2 = Vector2.ZERO) -> void:
 	custom_minimum_size = size
-	call_deferred("_setup_parent_window", title, size)
+	call_deferred("_setup_parent_window", title, size, min_size)
 
-func _setup_parent_window(title: String, size: Vector2) -> void:
+func _setup_parent_window(title: String, size: Vector2, min_size: Vector2 = Vector2.ZERO) -> void:
 	parent_window = _find_parent_window()
 	if parent_window:
 		if "title_text" in parent_window:
@@ -61,6 +61,22 @@ func _setup_parent_window(title: String, size: Vector2) -> void:
 		var title_label := parent_window.get_node_or_null("Top Bar/Title Text")
 		if title_label and "text" in title_label:
 			title_label.text = "[center]" + title
+		
+		var eff_min := min_size
+		if eff_min == Vector2.ZERO:
+			if custom_minimum_size != Vector2.ZERO:
+				eff_min = Vector2(custom_minimum_size.x, custom_minimum_size.y + 30.0)
+			elif size != Vector2.ZERO:
+				eff_min = Vector2(size.x, size.y + 30.0)
+		
+		if eff_min != Vector2.ZERO:
+			parent_window.custom_minimum_size = eff_min
+		
+		if size != Vector2.ZERO:
+			var target_w := maxf(size.x, eff_min.x)
+			var target_h := maxf(size.y, eff_min.y)
+			if parent_window.size.x < target_w or parent_window.size.y < target_h:
+				parent_window.size = Vector2(target_w, target_h)
 
 func _find_parent_window() -> FakeWindow:
 	var node: Node = get_parent()
