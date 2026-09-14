@@ -1,7 +1,16 @@
 [gd_scene format=3 uid="uid://b00g4u5x2cam1"]
 
 [ext_resource type="PackedScene" uid="uid://cojrqff5vocjv" path="res://Scenes/Window/Window.tscn" id="1_window_base"]
-[ext_resource type="Script" path="res://Applications/Cams/CameraFeed/camera_feed_window.gd" id="2_cam_feed_script"]
+[ext_resource type="Script" uid="uid://cp8gcmemasb13" path="res://Applications/Cams/CameraFeed/camera_feed_window.gd" id="2_cam_feed_script"]
+[ext_resource type="Shader" path="res://Applications/Cams/CameraFeed/Shaders/hyperdrive_loss.gdshader" id="3_hyperloss"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hyperdrive_loss"]
+shader = ExtResource("3_hyperloss")
+shader_parameter/noise_intensity = 0.85
+shader_parameter/glitch_intensity = 0.75
+shader_parameter/scanline_strength = 0.25
+shader_parameter/static_color = Color(0.2, 0.75, 0.95, 1)
+shader_parameter/background_color = Color(0.03, 0.05, 0.08, 0.96)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cam_window"]
 bg_color = Color(0.06, 0.08, 0.12, 0.85)
@@ -36,6 +45,13 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_btn_pressed"]
+bg_color = Color(0.2, 0.4, 0.6, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_btn_hover"]
 bg_color = Color(0.15, 0.28, 0.42, 0.9)
 border_width_left = 1
@@ -48,14 +64,7 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_btn_pressed"]
-bg_color = Color(0.2, 0.4, 0.6, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[node name="CameraFeedWindow" instance=ExtResource("1_window_base")]
+[node name="CameraFeedWindow" unique_id=1200901321 instance=ExtResource("1_window_base")]
 offset_left = -230.0
 offset_top = -160.0
 offset_right = 230.0
@@ -63,7 +72,7 @@ offset_bottom = 160.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_cam_window")
 script = ExtResource("2_cam_feed_script")
 
-[node name="ViewportContainerWrapper" type="Control" parent="." index="1"]
+[node name="ViewportContainerWrapper" type="Control" parent="." index="1" unique_id=1177171042]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -76,7 +85,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="ViewportContainerWrapper" index="0"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="ViewportContainerWrapper" index="0" unique_id=1583397627]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -86,18 +95,17 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="FeedViewport" type="SubViewport" parent="ViewportContainerWrapper/SubViewportContainer" index="0"]
+[node name="FeedViewport" type="SubViewport" parent="ViewportContainerWrapper/SubViewportContainer" index="0" unique_id=932309040]
 unique_name_in_owner = true
 handle_input_locally = false
 size = Vector2i(454, 286)
 render_target_update_mode = 4
 
-[node name="FeedCamera3D" type="Camera3D" parent="ViewportContainerWrapper/SubViewportContainer/FeedViewport" index="0"]
+[node name="FeedCamera3D" type="Camera3D" parent="ViewportContainerWrapper/SubViewportContainer/FeedViewport" index="0" unique_id=715067281]
 unique_name_in_owner = true
 current = true
-fov = 75.0
 
-[node name="FilterColorRect" type="ColorRect" parent="ViewportContainerWrapper" index="1"]
+[node name="FilterColorRect" type="ColorRect" parent="ViewportContainerWrapper" index="1" unique_id=1016185095]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -109,7 +117,18 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.1, 0.8, 0.2, 0.15)
 
-[node name="CrosshairOverlay" type="Control" parent="ViewportContainerWrapper" index="2"]
+[node name="LidarOverlay" type="Control" parent="ViewportContainerWrapper" index="2" unique_id=280795856]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CrosshairOverlay" type="Control" parent="ViewportContainerWrapper" index="3" unique_id=280795854]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -119,7 +138,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="CenterCrosshair" type="Control" parent="ViewportContainerWrapper/CrosshairOverlay" index="0"]
+[node name="CenterCrosshair" type="Control" parent="ViewportContainerWrapper/CrosshairOverlay" index="0" unique_id=1085653288]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -129,7 +148,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LineH1" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="0"]
+[node name="LineH1" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="0" unique_id=441807506]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -144,7 +163,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.8, 1, 0.6)
 
-[node name="LineH2" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="1"]
+[node name="LineH2" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="1" unique_id=2034125605]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -159,7 +178,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.8, 1, 0.6)
 
-[node name="LineV1" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="2"]
+[node name="LineV1" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="2" unique_id=1660515206]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -174,7 +193,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.8, 1, 0.6)
 
-[node name="LineV2" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="3"]
+[node name="LineV2" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="3" unique_id=486337111]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -189,7 +208,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.8, 1, 0.6)
 
-[node name="CenterDot" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="4"]
+[node name="CenterDot" type="ColorRect" parent="ViewportContainerWrapper/CrosshairOverlay/CenterCrosshair" index="4" unique_id=1909249203]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -204,7 +223,66 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.8, 1, 0.9)
 
-[node name="HudHeader" type="PanelContainer" parent="ViewportContainerWrapper" index="3"]
+[node name="HyperdriveLossOverlay" type="Control" parent="ViewportContainerWrapper" index="4" unique_id=280795855]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StaticColorRect" type="ColorRect" parent="ViewportContainerWrapper/HyperdriveLossOverlay" index="0" unique_id=280795857]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_hyperdrive_loss")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="ViewportContainerWrapper/HyperdriveLossOverlay" index="1" unique_id=280795858]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="ViewportContainerWrapper/HyperdriveLossOverlay/CenterContainer" index="0" unique_id=280795859]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="HyperdriveLossLabel" type="Label" parent="ViewportContainerWrapper/HyperdriveLossOverlay/CenterContainer/VBox" index="0" unique_id=280795860]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "[ ! ] SEGNALE VIDEO PERSO - SALTO HYPERDRIVE"
+horizontal_alignment = 1
+
+[node name="HyperdriveSubLabel" type="Label" parent="ViewportContainerWrapper/HyperdriveLossOverlay/CenterContainer/VBox" index="1" unique_id=280795861]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "CAMPO TACHIONICO: SENSORI OTTICI CIECHI"
+horizontal_alignment = 1
+
+[node name="HyperdriveSyncLabel" type="Label" parent="ViewportContainerWrapper/HyperdriveLossOverlay/CenterContainer/VBox" index="2" unique_id=280795862]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 0.9)
+theme_override_font_sizes/font_size = 11
+text = "SINCRONIZZAZIONE EQUIPAGGIO: IN ATTESA..."
+horizontal_alignment = 1
+
+[node name="HudHeader" type="PanelContainer" parent="ViewportContainerWrapper" index="5" unique_id=20325310]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -216,16 +294,16 @@ grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_bar")
 
-[node name="Margin" type="MarginContainer" parent="ViewportContainerWrapper/HudHeader" index="0"]
+[node name="Margin" type="MarginContainer" parent="ViewportContainerWrapper/HudHeader" index="0" unique_id=1886868920]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_right = 8
 
-[node name="HBox" type="HBoxContainer" parent="ViewportContainerWrapper/HudHeader/Margin" index="0"]
+[node name="HBox" type="HBoxContainer" parent="ViewportContainerWrapper/HudHeader/Margin" index="0" unique_id=1717669987]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CamCodeLabel" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="0"]
+[node name="CamCodeLabel" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="0" unique_id=551825976]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -233,21 +311,21 @@ theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "● CAM 01 [PRUA] - VISUALE ANTERIORE"
 
-[node name="LiveBadge" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="1"]
+[node name="LiveBadge" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="1" unique_id=1819534784]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
 theme_override_font_sizes/font_size = 11
 text = "● REC LIVE"
 
-[node name="StatusInfoLabel" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="2"]
+[node name="StatusInfoLabel" type="Label" parent="ViewportContainerWrapper/HudHeader/Margin/HBox" index="2" unique_id=714356509]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.85, 0.95, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "60 FPS • SEGNALE 99.4%"
 
-[node name="HudFooter" type="PanelContainer" parent="ViewportContainerWrapper" index="4"]
+[node name="HudFooter" type="PanelContainer" parent="ViewportContainerWrapper" index="6" unique_id=634867081]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -261,26 +339,26 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_bar")
 
-[node name="Margin" type="MarginContainer" parent="ViewportContainerWrapper/HudFooter" index="0"]
+[node name="Margin" type="MarginContainer" parent="ViewportContainerWrapper/HudFooter" index="0" unique_id=1142596201]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 2
 
-[node name="HBox" type="HBoxContainer" parent="ViewportContainerWrapper/HudFooter/Margin" index="0"]
+[node name="HBox" type="HBoxContainer" parent="ViewportContainerWrapper/HudFooter/Margin" index="0" unique_id=153086828]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="TelemetryLabel" type="Label" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="0"]
+[node name="TelemetryLabel" type="Label" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="0" unique_id=1031055822]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.6, 0.8, 0.9, 0.9)
 theme_override_font_sizes/font_size = 10
-text = "ORIENTAMENTO: Y: +0.0° P: +0.0° R: +0.0° | FOV: 75.0°"
+text = "FOV: 75.0°"
 
-[node name="ZoomInBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="1"]
+[node name="ZoomInBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="1" unique_id=1330253681]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 20)
 layout_mode = 2
@@ -288,11 +366,11 @@ focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 11
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 text = "+"
 
-[node name="ZoomOutBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="2"]
+[node name="ZoomOutBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="2" unique_id=1212379998]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 20)
 layout_mode = 2
@@ -300,11 +378,11 @@ focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 11
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 text = "-"
 
-[node name="ZoomResetBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="3"]
+[node name="ZoomResetBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="3" unique_id=955072899]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 20)
 layout_mode = 2
@@ -312,23 +390,23 @@ focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 text = "1x"
 
-[node name="BtnHeadlights" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="4"]
+[node name="BtnHeadlights" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="4" unique_id=293925329]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 20)
+custom_minimum_size = Vector2(32, 20)
 layout_mode = 2
 focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
-text = "Fari: OFF"
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
+text = "💡"
 
-[node name="FilterCycleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="5"]
+[node name="FilterCycleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="5" unique_id=327659914]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(85, 20)
 layout_mode = 2
@@ -336,11 +414,11 @@ focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 text = "Filtro: Normale"
 
-[node name="GridToggleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="6"]
+[node name="GridToggleBtn" type="Button" parent="ViewportContainerWrapper/HudFooter/Margin/HBox" index="6" unique_id=678690805]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 20)
 layout_mode = 2
@@ -348,6 +426,6 @@ focus_mode = 0
 theme_override_colors/font_color = Color(0.8, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_hud_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hud_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hud_btn_hover")
 text = "Reticolo: ON"

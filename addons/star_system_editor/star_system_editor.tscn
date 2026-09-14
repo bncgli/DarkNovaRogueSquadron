@@ -35,6 +35,12 @@ layout_mode = 2
 tooltip_text = "Crea un nuovo sistema stellare vuoto"
 text = "Nuovo"
 
+[node name="BtnRandom" type="Button" parent="MainVBox/TopToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Genera un nuovo sistema stellare procedurale casuale"
+text = "🎲 Casuale"
+
 [node name="BtnOpen" type="Button" parent="MainVBox/TopToolbar"]
 unique_name_in_owner = true
 layout_mode = 2

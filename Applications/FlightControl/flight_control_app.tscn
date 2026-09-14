@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://cseqo2t1ppp2w"]
 
-[ext_resource type="Script" path="res://Applications/FlightControl/flight_control_app.gd" id="1_flight_script"]
-[ext_resource type="PackedScene" path="res://Applications/FlightControl/Componenti/cruise_control_panel.tscn" id="2_cruise_panel"]
+[ext_resource type="Script" uid="uid://fnmnmmxwdoq7" path="res://Applications/FlightControl/flight_control_app.gd" id="1_flight_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.05, 0.07, 0.1, 0.8)
@@ -51,7 +50,7 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[node name="FlightControlApp" type="Control"]
+[node name="FlightControlApp" type="Control" unique_id=1141278800]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -60,7 +59,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_flight_script")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1863580727]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -69,7 +68,7 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer" unique_id=1555406673]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -78,355 +77,82 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin" unique_id=1962810001]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=324555954]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard" unique_id=1503341605]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin" unique_id=946840474]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TitleVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="TitleVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=126915319]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox" unique_id=1914742130]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 13
 text = "🚀 CONTROLLO DI VOLO ASTRONAVE"
 
-[node name="SubTitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox"]
+[node name="SubTitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox/TitleVBox" unique_id=32398301]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 0.8)
 theme_override_font_sizes/font_size = 11
 text = "Sistema Manovre 6-DOF & Propulsori RCS"
 
-[node name="ThrustersBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="ThrustersBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=1345581135]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "○ IN VOLO D'INERZIA"
 
-[node name="ControlsRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="MoveCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ControlsRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="SectionLabel" type="Label" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.9, 1, 0.9)
-theme_override_font_sizes/font_size = 11
-text = "TRASLAZIONE & ROLLIO"
-horizontal_alignment = 1
-
-[node name="WASDGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox"]
-layout_mode = 2
-size_flags_horizontal = 4
-columns = 3
-
-[node name="BtnQ" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "Q
-↺"
-
-[node name="BtnW" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "W
-▲"
-
-[node name="BtnE" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "E
-↻"
-
-[node name="BtnA" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "A
-◄"
-
-[node name="BtnS" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "S
-▼"
-
-[node name="BtnD" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/WASDGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "D
-►"
-
-[node name="VerticalRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="BtnSpace" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/VerticalRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "Spazio: Quota +"
-
-[node name="BtnCtrl" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/MoveCard/Margin/VBox/VerticalRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "Ctrl: Quota -"
-
-[node name="RotCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ControlsRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="SectionLabel" type="Label" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.9, 1, 0.9)
-theme_override_font_sizes/font_size = 11
-text = "BECCHEGGIO & IMBARDATA"
-horizontal_alignment = 1
-
-[node name="ArrowGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox"]
-layout_mode = 2
-size_flags_horizontal = 4
-columns = 3
-
-[node name="Empty1" type="Control" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-
-[node name="BtnPitchUp" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "▲
-Pitch+"
-
-[node name="Empty2" type="Control" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-
-[node name="BtnYawLeft" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "◄
-Yaw L"
-
-[node name="BtnPitchDown" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "▼
-Pitch-"
-
-[node name="BtnYawRight" type="Button" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox/ArrowGrid"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(46, 32)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-text = "►
-Yaw R"
-
-[node name="RotDescLabel" type="Label" parent="ScrollContainer/Margin/VBox/ControlsRow/RotCard/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 0.7)
-theme_override_font_sizes/font_size = 9
-text = "Frecce Direzionali da tastiera"
-horizontal_alignment = 1
-
-[node name="TelemetryCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="ConfigCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=923058313]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ConfigCard" unique_id=757642790]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="SpeedRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SpeedTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 11
-text = "Velocità Relativa:"
-
-[node name="SpeedProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 14)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-show_percentage = false
-
-[node name="SpeedValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
-theme_override_font_sizes/font_size = 11
-text = "0.0 m/s"
-
-[node name="TelemetryGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox"]
-layout_mode = 2
-columns = 2
-
-[node name="PosTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 0.8)
-theme_override_font_sizes/font_size = 10
-text = "Posizione:"
-
-[node name="PosValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 10
-text = "X: +0.0  Y: +0.0  Z: +0.0"
-
-[node name="RotTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 0.8)
-theme_override_font_sizes/font_size = 10
-text = "Orientamento:"
-
-[node name="RotValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 10
-text = "P: +0.0°  Y: +0.0°  R: +0.0°"
-
-[node name="ConfigCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
-
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ConfigCard"]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
-
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin" unique_id=1820675438]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox"]
+[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox" unique_id=602370909]
 layout_mode = 2
 
-[node name="ConfigTitle" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+[node name="ConfigTitle" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox" unique_id=1110911650]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
 theme_override_font_sizes/font_size = 11
 text = "⚙️ PARAMETRI DI VOLO (.DAT RUNTIME)"
 
-[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox" unique_id=1168489815]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
 theme_override_font_sizes/font_size = 10
 text = "● .DAT ATTIVO"
 
-[node name="ReloadConfigButton" type="Button" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox"]
+[node name="ReloadConfigButton" type="Button" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox/HeaderHBox" unique_id=2067751783]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
@@ -435,18 +161,91 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "🔄 Ricarica .DAT"
 
-[node name="DatConfigSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox"]
+[node name="DatConfigSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox/ConfigCard/Margin/VBox" unique_id=455370202]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.85)
 theme_override_font_sizes/font_size = 10
 text = "File: Ship Drive/Programs/FlightControls/flight_config.dat | VMax: 20 m/s | Accel: 35 m/s² | RCS: 1.0x"
 
-[node name="ActionsRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="TelemetryCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=1823246366]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard" unique_id=82922123]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin" unique_id=1332100674]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="InertiaToggleButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow"]
+[node name="SpeedRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox" unique_id=1847955033]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeedTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow" unique_id=1591163111]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Velocità Relativa:"
+
+[node name="SpeedProgressBar" type="ProgressBar" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow" unique_id=1992778550]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 14)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="SpeedValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/SpeedRow" unique_id=1284412875]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "0.0 m/s"
+
+[node name="TelemetryGrid" type="GridContainer" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox" unique_id=370339037]
+layout_mode = 2
+columns = 2
+
+[node name="PosTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid" unique_id=914445070]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "Posizione:"
+
+[node name="PosValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid" unique_id=392500791]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "X: +0.0  Y: +0.0  Z: +0.0"
+
+[node name="RotTag" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid" unique_id=993936891]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "Orientamento:"
+
+[node name="RotValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TelemetryCard/Margin/VBox/TelemetryGrid" unique_id=1258555831]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "P: +0.0°  Y: +0.0°  R: +0.0°"
+
+[node name="ActionsRow" type="HBoxContainer" parent="ScrollContainer/Margin/VBox" unique_id=1110975043]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InertiaToggleButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow" unique_id=1447821396]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -457,7 +256,18 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "INERZIA: ON"
 
-[node name="StatusSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox"]
+[node name="CruiseToggleButton" type="Button" parent="ScrollContainer/Margin/VBox/ActionsRow" unique_id=2147112233]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 0.4, 0.2, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "VELOCITÀ CROCIERA: OFF"
+
+[node name="StatusSummaryLabel" type="Label" parent="ScrollContainer/Margin/VBox" unique_id=408078460]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.65, 0.8, 0.8)
@@ -465,56 +275,51 @@ theme_override_font_sizes/font_size = 10
 text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
 horizontal_alignment = 1
 
-[node name="CruiseControlPanel" parent="ScrollContainer/Margin/VBox" instance=ExtResource("2_cruise_panel")]
+[node name="HyperdriveCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=1029877009]
 unique_name_in_owner = true
-layout_mode = 2
-
-[node name="HyperdriveCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
-unique_name_in_owner = true
-visible = false
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard" unique_id=49755141]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin" unique_id=1062985662]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+[node name="HeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox" unique_id=999948849]
 layout_mode = 2
 
-[node name="HyperdriveTitle" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HeaderHBox"]
+[node name="HyperdriveTitle" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HeaderHBox" unique_id=1239953866]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "🌌 ROTTA HYPERDRIVE (SYSTEM MAP)"
 
-[node name="HyperdriveTargetLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+[node name="HyperdriveTargetLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox" unique_id=1457006438]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 10
 text = "DESTINAZIONE: SEC-04-12"
 
-[node name="HyperdriveAlignLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+[node name="HyperdriveAlignLabel" type="Label" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox" unique_id=1174101510]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "ALLINEAMENTO: 🟢 AGGANCIATO (Dev: 0.0°)"
 
-[node name="HyperdriveButtons" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox"]
+[node name="HyperdriveButtons" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox" unique_id=255128026]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BtnAlignHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons"]
+[node name="BtnAlignHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons" unique_id=883182929]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -524,7 +329,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "🎯 Allinea a Vettore Hyperdrive"
 
-[node name="BtnEngageHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons"]
+[node name="BtnEngageHyperdrive" type="Button" parent="ScrollContainer/Margin/VBox/HyperdriveCard/Margin/VBox/HyperdriveButtons" unique_id=2133621490]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -534,8 +339,9 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "⚡ Attiva Hyperdrive"
 
-[node name="DisconnectedOverlay" type="PanelContainer" parent="."]
+[node name="DisconnectedOverlay" type="PanelContainer" parent="." unique_id=1575869412]
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -544,29 +350,29 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
 
-[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay" unique_id=448722262]
 layout_mode = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center" unique_id=1932157478]
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="WarnIcon" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="WarnIcon" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=263535575]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "⚠️"
 horizontal_alignment = 1
 
-[node name="DisconnectedTitle" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="DisconnectedTitle" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1654007600]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 16
 text = "⚠️ SISTEMI OFFLINE"
 horizontal_alignment = 1
 
-[node name="DisconnectedSubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="DisconnectedSubLabel" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=669712285]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.9)

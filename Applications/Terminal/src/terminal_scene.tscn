@@ -68,5 +68,16 @@ deselect_on_focus_loss_enabled = false
 caret_blink = true
 caret_force_displayed = true
 
+[node name="tui_overlay_host" type="Control" parent="." unique_id=1798894330]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
 [connection signal="gui_input" from="scroll_container/contents_container/HBoxContainer/command_line" to="." method="_on_command_line_gui_input"]
 [connection signal="text_submitted" from="scroll_container/contents_container/HBoxContainer/command_line" to="." method="_on_command_line_text_submitted"]

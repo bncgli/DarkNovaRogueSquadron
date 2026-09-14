@@ -1,7 +1,19 @@
 [gd_scene format=3 uid="uid://byvroa54c42sn"]
 
 [ext_resource type="Script" path="res://Applications/LifeSupport/life_support_app.gd" id="1_lifesup_script"]
-[ext_resource type="Script" path="res://Applications/LifeSupport/life_support_map_canvas.gd" id="2_mapcanvas_script"]
+[ext_resource type="Script" path="res://Applications/LifeSupport/life_support_map_canvas.gd" id="2_canvas_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_bg"]
+bg_color = Color(0.02, 0.04, 0.08, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.4, 0.6, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.04, 0.07, 0.11, 0.9)
@@ -52,7 +64,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="LifeSupportApp" type="Control"]
-custom_minimum_size = Vector2(700, 500)
+custom_minimum_size = Vector2(850, 560)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -165,22 +177,22 @@ script = ExtResource("2_mapcanvas_script")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "📊 MONITORAGGIO COMPARTO & STANZE NAVE"
+text = "🗺️ BLUEPRINT STRUTTURALE & CONTROLLO COMPARTO"
 
-[node name="RoomsScroll" type="ScrollContainer" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel"]
-custom_minimum_size = Vector2(0, 310)
+[node name="MapPanel" type="PanelContainer" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel"]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 360)
+theme_override_styles/panel = SubResource("StyleBoxFlat_map_bg")
 
-[node name="RoomCardsContainer" type="GridContainer" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel/RoomsScroll"]
+[node name="MapCanvas" type="Control" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel/MapPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
-columns = 2
+mouse_filter = 0
+script = ExtResource("2_canvas_script")
 
 [node name="GlobalActionsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel"]
 layout_mode = 2
@@ -417,3 +429,12 @@ theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 13
 text = "In attesa di connessione alla nave / Avvio missione..."
 horizontal_alignment = 1
+
+[node name="HiddenCards" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 0
+
+[node name="RoomCardsContainer" type="GridContainer" parent="HiddenCards"]
+unique_name_in_owner = true
+layout_mode = 0

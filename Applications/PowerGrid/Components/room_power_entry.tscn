@@ -1,37 +1,37 @@
 [gd_scene format=3 uid="uid://b8x2yq4j5w7k1"]
 
-[ext_resource type="Script" path="res://Applications/PowerGrid/Components/room_power_entry.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b7n663vywtnln" path="res://Applications/PowerGrid/Components/room_power_entry.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
 bg_color = Color(0.1, 0.12, 0.15, 0.8)
 border_width_left = 2
 border_color = Color(0.2, 0.5, 0.8, 0.6)
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
-content_margin_left = 10.0
-content_margin_top = 8.0
-content_margin_right = 10.0
-content_margin_bottom = 8.0
 
-[node name="RoomPowerEntry" type="PanelContainer"]
+[node name="RoomPowerEntry" type="PanelContainer" unique_id=619427714]
 offset_right = 400.0
 offset_bottom = 50.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_script")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1957784275]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="VBox" type="VBoxContainer" parent="HBox"]
+[node name="VBox" type="VBoxContainer" parent="HBox" unique_id=133083032]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 
-[node name="HBoxTitle" type="HBoxContainer" parent="HBox/VBox"]
+[node name="HBoxTitle" type="HBoxContainer" parent="HBox/VBox" unique_id=187155964]
 layout_mode = 2
 
-[node name="RoomNameLabel" type="Label" parent="HBox/VBox/HBoxTitle"]
+[node name="RoomNameLabel" type="Label" parent="HBox/VBox/HBoxTitle" unique_id=1586864540]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -39,14 +39,14 @@ theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "Nome Stanza"
 
-[node name="CategoryLabel" type="Label" parent="HBox/VBox/HBoxTitle"]
+[node name="CategoryLabel" type="Label" parent="HBox/VBox/HBoxTitle" unique_id=1344950205]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.7, 0.9, 0.7)
 theme_override_font_sizes/font_size = 10
 text = "CATEGORY"
 
-[node name="PowerBar" type="ProgressBar" parent="HBox/VBox"]
+[node name="PowerBar" type="ProgressBar" parent="HBox/VBox" unique_id=378520637]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
@@ -54,7 +54,7 @@ max_value = 1200.0
 step = 1.0
 show_percentage = false
 
-[node name="PowerStatusLabel" type="Label" parent="HBox"]
+[node name="PowerStatusLabel" type="Label" parent="HBox" unique_id=577731061]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -63,7 +63,7 @@ theme_override_font_sizes/font_size = 14
 text = "0.0 MW"
 horizontal_alignment = 2
 
-[node name="PowerSwitch" type="CheckButton" parent="HBox"]
+[node name="PowerSwitch" type="CheckButton" parent="HBox" unique_id=1872051451]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0

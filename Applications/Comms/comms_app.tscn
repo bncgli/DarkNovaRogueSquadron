@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cx6y8v2u0comm"]
 
-[ext_resource type="Script" path="res://Applications/Comms/comms_app.gd" id="1_comms_script"]
-[ext_resource type="Script" path="res://Applications/Comms/comms_waterfall_canvas.gd" id="2_waterfall_script"]
+[ext_resource type="Script" uid="uid://cj48wmu8o865p" path="res://Applications/Comms/comms_app.gd" id="1_comms_script"]
+[ext_resource type="Script" uid="uid://cvgfb1fov3wp6" path="res://Applications/Comms/comms_waterfall_canvas.gd" id="2_waterfall_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.04, 0.07, 0.12, 0.85)
@@ -39,7 +39,7 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[node name="CommsApp" type="Control"]
+[node name="CommsApp" type="Control" unique_id=1056053322]
 custom_minimum_size = Vector2(680, 480)
 layout_mode = 3
 anchors_preset = 15
@@ -49,7 +49,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_comms_script")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=604440141]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -58,7 +58,7 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer" unique_id=126472869]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -67,102 +67,102 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin" unique_id=544371456]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=136791646]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard" unique_id=1834358486]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=538358617]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "📡 COMMS & DIRECTIONAL ANTENNA ARRAY"
 
-[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1900305527]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "● STANDBY / IN ASCOLTO"
 
-[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1818608177]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "👤 RUOLO: HACKER"
 
-[node name="PowerBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="PowerBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=803612978]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 11
 text = "⚡ 50 MW"
 
-[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="DatStatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=1821927437]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "✔ .DAT ATTIVO"
 
-[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox"]
+[node name="ReloadDatButton" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/HBox" unique_id=29258784]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "🔄 Ricarica .DAT"
 
-[node name="TunerCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="TunerCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=704552071]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard" unique_id=1531311010]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="CardTitleHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox"]
+[node name="CardTitleHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox" unique_id=251402818]
 layout_mode = 2
 
-[node name="CardTitle" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/CardTitleHBox"]
+[node name="CardTitle" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/CardTitleHBox" unique_id=1038412423]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.75, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "📻 SINTONIZZATORE RADIO SUBSPAZIALE & WATERFALL DISPLAY"
 
-[node name="SignalLockBadge" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/CardTitleHBox"]
+[node name="SignalLockBadge" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/CardTitleHBox" unique_id=448953588]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "⚪ RUMORE BIANCO / NESSUN AGGANCIO"
 
-[node name="WaterfallCanvas" type="Control" parent="ScrollContainer/Margin/VBox/TunerCard/VBox"]
+[node name="WaterfallCanvas" type="Control" parent="ScrollContainer/Margin/VBox/TunerCard/VBox" unique_id=282789238]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("2_waterfall_script")
 
-[node name="TunerControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox"]
+[node name="TunerControlsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox" unique_id=775666148]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FreqLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox"]
+[node name="FreqLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox" unique_id=984773265]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Frequenza:"
 
-[node name="FreqSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox"]
+[node name="FreqSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox" unique_id=1590357087]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -172,7 +172,7 @@ max_value = 3000.0
 step = 0.1
 value = 1420.0
 
-[node name="FreqValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox"]
+[node name="FreqValueLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/TunerControlsHBox" unique_id=2141843736]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
@@ -181,29 +181,29 @@ theme_override_font_sizes/font_size = 11
 text = "1420.0 MHz"
 horizontal_alignment = 2
 
-[node name="QuickTuneHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox"]
+[node name="QuickTuneHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/TunerCard/VBox" unique_id=1215131656]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BtnTuneSos" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox"]
+[node name="BtnTuneSos" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox" unique_id=1697411741]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "🚨 SOS (850.5 MHz)"
 
-[node name="BtnTuneSubspace" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox"]
+[node name="BtnTuneSubspace" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox" unique_id=517856384]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "🌐 Subspazio (1420.0 MHz)"
 
-[node name="BtnTunePirate" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox"]
+[node name="BtnTunePirate" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox" unique_id=1243872825]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "🏴‍☠️ Canale Pirata (2185.2 MHz)"
 
-[node name="SignalInfoLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox"]
+[node name="SignalInfoLabel" type="Label" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox" unique_id=1201794213]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -212,54 +212,51 @@ theme_override_font_sizes/font_size = 10
 text = "Scorrere il cursore per agganciare trasmissioni attive."
 text_overrun_behavior = 3
 
-[node name="BtnListenSignal" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox"]
+[node name="BtnListenSignal" type="Button" parent="ScrollContainer/Margin/VBox/TunerCard/VBox/QuickTuneHBox" unique_id=1937985195]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 disabled = true
 text = "📥 Registra Trascrizione"
 
-[node name="BottomSplit" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="BottomSplit" type="HBoxContainer" parent="ScrollContainer/Margin/VBox" unique_id=121218164]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="AntennaSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit"]
+[node name="AntennaSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit" unique_id=863306643]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector" unique_id=799203965]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="AntennaTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+[node name="AntennaTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox" unique_id=476764816]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "🧭 CONTROLLI ANTENNA DIREZIONALE"
 
-[node name="HeadingHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+[node name="HeadingHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox" unique_id=1101702243]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeadingLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
+[node name="HeadingLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox" unique_id=44895663]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Azimut:"
 
-[node name="AntennaHeadingSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
+[node name="AntennaHeadingSlider" type="HSlider" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox" unique_id=1630803270]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 360.0
-step = 1.0
-value = 0.0
 
-[node name="AntennaHeadingValue" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox"]
+[node name="AntennaHeadingValue" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/HeadingHBox" unique_id=453895353]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
@@ -268,11 +265,11 @@ theme_override_font_sizes/font_size = 10
 text = "000°"
 horizontal_alignment = 2
 
-[node name="AntennaButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+[node name="AntennaButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox" unique_id=1742477553]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BtnAutoRotate" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox"]
+[node name="BtnAutoRotate" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox" unique_id=1708825390]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -280,7 +277,7 @@ theme_override_font_sizes/font_size = 10
 toggle_mode = true
 text = "🔄 Auto-Rotate"
 
-[node name="BtnFreqLock" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox"]
+[node name="BtnFreqLock" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox/AntennaButtonsHBox" unique_id=1888530544]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -288,7 +285,7 @@ theme_override_font_sizes/font_size = 10
 toggle_mode = true
 text = "🔒 Freq Lock"
 
-[node name="AntennaStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+[node name="AntennaStatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox" unique_id=92351263]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
@@ -296,30 +293,30 @@ theme_override_font_sizes/font_size = 9
 text = "🧭 PUNTAMENTO MANUALE: 000° (Cono ±25°)"
 text_overrun_behavior = 3
 
-[node name="AntennaGainLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox"]
+[node name="AntennaGainLabel" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/AntennaSector/VBox" unique_id=565796590]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 9
 text = "Guadagno antenna: 100% | Cono di focalizzazione attivo"
 
-[node name="SignalInteractionSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit"]
+[node name="SignalInteractionSector" type="PanelContainer" parent="ScrollContainer/Margin/VBox/BottomSplit" unique_id=4917825]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector" unique_id=581841894]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="InteractionTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+[node name="InteractionTitle" type="Label" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox" unique_id=475227994]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
 theme_override_font_sizes/font_size = 11
 text = "📡 RICEZIONE & INTERAZIONE FREQUENZA"
 
-[node name="SignalDetailLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+[node name="SignalDetailLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox" unique_id=1925025872]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
@@ -329,73 +326,73 @@ bbcode_enabled = true
 text = "[color=#7799aa]Nessuna trasmissione agganciata.[/color]"
 scroll_following = true
 
-[node name="StationActionsBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+[node name="StationActionsBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox" unique_id=867389159]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="BtnRequestDocking" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+[node name="BtnRequestDocking" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox" unique_id=359830480]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 9
 text = "🛬 Richiedi Attracco"
 
-[node name="BtnStationEmergency" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+[node name="BtnStationEmergency" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox" unique_id=1736624534]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 9
 text = "🚨 Emergenza"
 
-[node name="BtnStationTrade" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox"]
+[node name="BtnStationTrade" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox/StationActionsBox" unique_id=166888932]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 9
 text = "💼 Mercantile"
 
-[node name="BtnConnectDrive" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox"]
+[node name="BtnConnectDrive" type="Button" parent="ScrollContainer/Margin/VBox/BottomSplit/SignalInteractionSector/VBox" unique_id=1963869944]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
 theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
 disabled = true
 text = "🔗 CONNETTI A DRIVE BERSAGLIO"
 
-[node name="LogCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="LogCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=2109263817]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/LogCard"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/LogCard" unique_id=1246989070]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="LogHeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/LogCard/VBox"]
+[node name="LogHeaderHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/LogCard/VBox" unique_id=1702746623]
 layout_mode = 2
 
-[node name="LogTitle" type="Label" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox"]
+[node name="LogTitle" type="Label" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox" unique_id=648884875]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.4, 0.75, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "📜 REGISTRO COMUNICAZIONI & INTERCETTAZIONI"
 
-[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox"]
+[node name="ActionLogLabel" type="Label" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox" unique_id=648036485]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "▶ Pronto"
 
-[node name="BtnClearLog" type="Button" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox"]
+[node name="BtnClearLog" type="Button" parent="ScrollContainer/Margin/VBox/LogCard/VBox/LogHeaderHBox" unique_id=717359593]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Pulisci Log"
 
-[node name="CommsLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/LogCard/VBox"]
+[node name="CommsLogText" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/LogCard/VBox" unique_id=230580936]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
@@ -405,8 +402,9 @@ theme_override_font_sizes/normal_font_size = 10
 bbcode_enabled = true
 scroll_following = true
 
-[node name="DisconnectedOverlay" type="Panel" parent="."]
+[node name="DisconnectedOverlay" type="Panel" parent="." unique_id=1929825100]
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -415,7 +413,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
 
-[node name="CenterContainer" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="CenterContainer" type="CenterContainer" parent="DisconnectedOverlay" unique_id=89352403]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -423,25 +421,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="DisconnectedOverlay/CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="DisconnectedOverlay/CenterContainer" unique_id=298350671]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+[node name="WarningIcon" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer" unique_id=1774042658]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 theme_override_font_sizes/font_size = 28
 text = "⚠️"
 horizontal_alignment = 1
 
-[node name="DisconnectedLabel" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+[node name="DisconnectedLabel" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer" unique_id=1036379520]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.45, 0.45, 1)
 theme_override_font_sizes/font_size = 16
 text = "SISTEMI COMUNICAZIONE & EW OFFLINE"
 horizontal_alignment = 1
 
-[node name="SubLabel" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer"]
+[node name="SubLabel" type="Label" parent="DisconnectedOverlay/CenterContainer/VBoxContainer" unique_id=2121164395]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 0.85)
 theme_override_font_sizes/font_size = 12
