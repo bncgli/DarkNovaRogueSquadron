@@ -23,6 +23,7 @@ var systemic_damage_handler: SystemicDamageHandler = null
 var player_ship_node: Node3D = null
 
 func _ready() -> void:
+	add_to_group("combat_directors")
 	if not systemic_damage_handler:
 		systemic_damage_handler = get_node_or_null("SystemicDamageHandler") as SystemicDamageHandler
 		if not systemic_damage_handler:

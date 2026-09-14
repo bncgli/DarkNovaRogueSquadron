@@ -165,6 +165,7 @@ func _ready() -> void:
 	_update_connection_state()
 	load_dat_configuration()
 	_update_permissions()
+	_refresh_signals()
 	_refresh_ui_display()
 	_log_comms_message("[color=#64c8ff][SISTEMA][/color] Suite Ricezione Comms & Antenna Direzionale inizializzata.")
 
@@ -257,6 +258,8 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if not _is_ship_operational():
 		return
+	
+	_refresh_signals()
 	
 	# 1. Auto-rotazione continua antenna a 360°
 	if is_auto_rotating and not is_frequency_locked:
@@ -462,12 +465,21 @@ func _get_locked_signal() -> Variant:
 			return sig
 	return null
 
+func _refresh_signals() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_comms_transmissions"):
+		var live_transmissions: Array[Dictionary] = SpaceWorldManager.get_comms_transmissions()
+		if not live_transmissions.is_empty():
+			available_signals = live_transmissions
+
 # --- CALCOLI ANTENNA DIREZIONALE & MATEMATICA SEGNALE ---
 func get_angular_difference(a_deg: float, b_deg: float) -> float:
 	var diff := fposmod(a_deg - b_deg + 180.0, 360.0) - 180.0
 	return absf(diff)
 
 func _get_signal_bearing(sig: Dictionary) -> float:
+	if sig.has("bearing_deg"):
+		return float(sig.get("bearing_deg", 0.0))
+	
 	var sig_id: String = str(sig.get("id", ""))
 	var target_id: String = str(sig.get("target_ship_id", sig.get("station_id", sig_id)))
 	
@@ -479,9 +491,12 @@ func _get_signal_bearing(sig: Dictionary) -> float:
 				var raw_bearing: float = float(e.get("bearing_deg", 0.0))
 				return fposmod(raw_bearing, 360.0)
 	
-	return float(sig.get("bearing_deg", 0.0))
+	return 0.0
 
 func _get_signal_distance(sig: Dictionary) -> float:
+	if sig.has("distance"):
+		return float(sig.get("distance", 1000.0))
+	
 	var sig_id: String = str(sig.get("id", ""))
 	var target_id: String = str(sig.get("target_ship_id", sig.get("station_id", sig_id)))
 	
@@ -492,7 +507,7 @@ func _get_signal_distance(sig: Dictionary) -> float:
 			if e_id == target_id or e_id == sig_id:
 				return float(e.get("distance", 1000.0))
 	
-	return float(sig.get("distance", 1000.0))
+	return 1000.0
 
 func _get_signal_bearing_by_id(sig_id: String) -> float:
 	for sig in available_signals:
@@ -583,10 +598,13 @@ func _on_btn_request_docking_pressed() -> void:
 		return
 	var cur_sig: Variant = _get_locked_signal()
 	var station_id := ""
+	var target_st: SpaceStationEntity = null
 	if cur_sig != null and cur_sig.get("type", "").to_upper() == "STATION":
 		station_id = str(cur_sig.get("station_id", "STATION-FRECCIA"))
+		if cur_sig.get("node_ref") is SpaceStationEntity:
+			target_st = cur_sig.get("node_ref") as SpaceStationEntity
 	docking_clearance_requested.emit(station_id)
-	request_station_docking()
+	request_station_docking(target_st)
 
 func _on_btn_station_emergency_pressed() -> void:
 	if not can_control_comms:

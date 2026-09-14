@@ -161,6 +161,18 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.2
 theme_override_constants/separation = 6
 
+[node name="MapContainer" type="PanelContainer" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel"]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="MapCanvas" type="Control" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel/MapContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_mapcanvas_script")
+
 [node name="RoomsTitle" type="Label" parent="ScrollContainer/Margin/MainLayout/ContentContainer/ContentHBox/LeftPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)

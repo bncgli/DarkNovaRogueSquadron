@@ -338,7 +338,33 @@ func _infer_room_category(r_id: String) -> String:
 func _init_rooms_state() -> void:
 	rooms_state.clear()
 	var loaded_rooms: Array = []
-	if SpaceWorldManager and SpaceWorldManager.has_method("get_duct_rooms"):
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
+		var bp := SpaceWorldManager.get_ship_blueprint()
+		if bp and bp.rooms.size() > 0:
+			for r in bp.rooms:
+				var r_rect: Rect2 = Rect2(r.rect_pos, r.rect_size) if ("rect_pos" in r and "rect_size" in r) else (r.rect if "rect" in r else Rect2())
+				var r_col: Color = r.color if "color" in r else Color(0.15, 0.35, 0.55, 0.65)
+				var r_border: Color = r.border_color if "border_color" in r else Color(0.3, 0.7, 1.0, 0.9)
+				var r_cat: String = r.category if "category" in r else _infer_room_category(r.id)
+				loaded_rooms.append({
+					"id": r.id,
+					"name": r.name,
+					"rect": r_rect,
+					"color": r_col,
+					"border_color": r_border,
+					"category": r_cat
+				})
+			if bp.ducts.size() > 0:
+				ducts.clear()
+				for d in bp.ducts:
+					ducts.append({
+						"from": d.from,
+						"to": d.to,
+						"width": d.width if "width" in d else 14.0,
+						"name": d.name if "name" in d else "Condotto"
+					})
+	
+	if loaded_rooms.is_empty() and SpaceWorldManager and SpaceWorldManager.has_method("get_duct_rooms"):
 		var mgr_rooms: Array = SpaceWorldManager.get_duct_rooms()
 		for r in mgr_rooms:
 			if r is DuctRoomData:

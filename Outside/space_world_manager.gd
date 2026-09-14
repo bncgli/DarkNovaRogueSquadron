@@ -30,6 +30,8 @@ signal electrical_short_sparked(pos: Vector2)
 signal duct_drone_position_updated(pos: Vector2)
 signal g_force_updated(g_force: float)
 signal crew_game_over(reason: String)
+signal combat_engagement_started()
+signal combat_engagement_ended(victory: bool)
 signal sector_zone_loaded(sector_data: SectorData)
 signal hyperdrive_transition_started(target_coords: Vector3i)
 signal hyperdrive_transition_progress(loaded_count: int, total_count: int)
@@ -147,6 +149,43 @@ var default_station_approach_distance: float = 1800.0 # Metri dallo scalo portua
 var current_sector_data: SectorData = null
 var primary_derelict_instance: DerelictShipEntity = null
 var _last_loaded_sector_coords: Vector3i = Vector3i(-999999, -999999, -999999)
+var combat_director: CombatDirector = null
+
+func get_combat_director() -> CombatDirector:
+	if combat_director and is_instance_valid(combat_director):
+		return combat_director
+	var root_cd := get_node_or_null("/root/CombatDirector") as CombatDirector
+	if root_cd:
+		combat_director = root_cd
+		_connect_combat_director()
+		return combat_director
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		var sc_cd := _space_scene_instance.get_node_or_null("CombatDirector") as CombatDirector
+		if sc_cd:
+			combat_director = sc_cd
+			_connect_combat_director()
+			return combat_director
+	var tree := get_tree()
+	if tree:
+		var directors := tree.get_nodes_in_group("combat_directors")
+		if not directors.is_empty() and directors[0] is CombatDirector:
+			combat_director = directors[0] as CombatDirector
+			_connect_combat_director()
+			return combat_director
+	return null
+
+func _connect_combat_director() -> void:
+	if combat_director and is_instance_valid(combat_director):
+		if not combat_director.combat_engagement_started.is_connected(_on_combat_engagement_started):
+			combat_director.combat_engagement_started.connect(_on_combat_engagement_started)
+		if not combat_director.combat_engagement_ended.is_connected(_on_combat_engagement_ended):
+			combat_director.combat_engagement_ended.connect(_on_combat_engagement_ended)
+
+func _on_combat_engagement_started() -> void:
+	combat_engagement_started.emit()
+
+func _on_combat_engagement_ended(victory: bool) -> void:
+	combat_engagement_ended.emit(victory)
 
 var _last_sent_drone_linear_in: float = 0.0
 var _last_sent_drone_angular_in: float = 0.0
@@ -1764,30 +1803,74 @@ func get_weapon_targets() -> Array[Dictionary]:
 	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
 	var ship_vel := ship.linear_velocity if ship and is_instance_valid(ship) else Vector3.ZERO
 	
-	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
-		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
-		if asteroids_node and is_instance_valid(asteroids_node):
-			for child in asteroids_node.get_children():
-				if child is Node3D:
-					var a_pos: Vector3 = child.global_position
-					var diff: Vector3 = a_pos - ship_pos
-					var dist: float = diff.length()
-					var local_diff: Vector3 = ship_basis.inverse() * diff
-					var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
-					var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
-					
-					targets.append({
-						"id": child.name,
-						"name": child.name.replace("_", " "),
-						"pos": a_pos,
-						"rel_pos": diff,
-						"distance": dist,
-						"velocity": Vector3(0.1, 0.0, 0.2),
-						"bearing_deg": bearing_deg,
-						"elevation_deg": elevation_deg,
-						"type": "ASTEROID",
-						"threat_level": "NEUTRAL" if dist > 60.0 else "HAZARD"
-					})
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		var asteroids: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_all_asteroids"):
+			asteroids = _space_scene_instance.get_all_asteroids()
+		elif _space_scene_instance.has_method("get_asteroids"):
+			var ast_node := _space_scene_instance.get_asteroids()
+			if ast_node and is_instance_valid(ast_node):
+				for ch in ast_node.get_children():
+					if ch is Node3D and ch.visible:
+						asteroids.append(ch)
+		
+		for child in asteroids:
+			if child and is_instance_valid(child) and child.visible:
+				var a_pos: Vector3 = child.global_position
+				var diff: Vector3 = a_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				
+				targets.append({
+					"id": child.name,
+					"name": child.name.replace("_", " "),
+					"pos": a_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": child.rotation_speed if "rotation_speed" in child else Vector3(0.1, 0.0, 0.2),
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": "ASTEROID",
+					"threat_level": "NEUTRAL" if dist > 60.0 else "HAZARD",
+					"node_ref": child
+				})
+		
+		# Bersagli ostili da CombatDirector o SpaceScene
+		var hostiles: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_hostile_ships"):
+			hostiles = _space_scene_instance.get_hostile_ships()
+		var cd := get_combat_director()
+		if cd:
+			for foe in cd.active_enemies:
+				if foe and is_instance_valid(foe) and foe.visible and not hostiles.has(foe):
+					hostiles.append(foe)
+		
+		for foe in hostiles:
+			if foe and is_instance_valid(foe) and foe.visible:
+				var f_pos: Vector3 = foe.global_position
+				var diff: Vector3 = f_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				var f_vel: Vector3 = foe.velocity if "velocity" in foe else Vector3.ZERO
+				var f_id: String = foe.ship_id if "ship_id" in foe else foe.name
+				var f_name: String = foe.ship_name if "ship_name" in foe else foe.name
+				targets.append({
+					"id": f_id,
+					"name": f_name,
+					"pos": f_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": f_vel,
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": "SHIP_HOSTILE",
+					"threat_level": "HOSTILE",
+					"node_ref": foe
+				})
 	
 	# Fallback se non ci sono nodi attivi (es. test headless)
 	if targets.is_empty():
@@ -1935,45 +2018,109 @@ func get_sensor_entities() -> Array[Dictionary]:
 	var ship_pos := ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
 	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
 	
-	if _space_scene_instance and is_instance_valid(_space_scene_instance) and _space_scene_instance.has_method("get_asteroids"):
-		var asteroids_node: Node3D = _space_scene_instance.get_asteroids()
-		if asteroids_node and is_instance_valid(asteroids_node) and asteroids_node.visible:
-			for child in asteroids_node.get_children():
-				if child is Node3D and child.visible:
-					var a_pos: Vector3 = child.global_position
-					var diff: Vector3 = a_pos - ship_pos
-					var dist: float = diff.length()
-					var local_diff: Vector3 = ship_basis.inverse() * diff
-					var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
-					var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
-					
-					var is_hazard := dist < 60.0
-					var mass_val: float = 2400.0
-					entities.append({
-						"id": child.name,
-						"name": child.name.replace("_", " "),
-						"pos": a_pos,
-						"rel_pos": diff,
-						"distance": dist,
-						"velocity": Vector3(0.1, 0.0, 0.2),
-						"bearing_deg": bearing_deg,
-						"elevation_deg": elevation_deg,
-						"type": "ASTEROID",
-						"iff_tag": "HAZARD" if is_hazard else "NEUTRAL",
-						"stealth_level": 0.0,
-						"radius_m": 30.0,
-						"composition": {
-							"Ferro (Fe)": 45.0,
-							"Nichel (Ni)": 28.0,
-							"Silicati": 18.0,
-							"Cobalto": 9.0
-						},
-						"integrity": 100.0,
-						"mass_tons": mass_val,
-						"radiation_level": 0.05,
-						"signal_signature": 0.85,
-						"estimated_value_cr": 4500
-					})
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		var asteroids: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_all_asteroids"):
+			asteroids = _space_scene_instance.get_all_asteroids()
+		elif _space_scene_instance.has_method("get_asteroids"):
+			var ast_node := _space_scene_instance.get_asteroids()
+			if ast_node and is_instance_valid(ast_node) and ast_node.visible:
+				for ch in ast_node.get_children():
+					if ch is Node3D and ch.visible:
+						asteroids.append(ch)
+		
+		for child in asteroids:
+			if child and is_instance_valid(child) and child.visible:
+				var a_pos: Vector3 = child.global_position
+				var diff: Vector3 = a_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				
+				var is_hazard := dist < 60.0
+				var mass_val: float = float(child.get("mass_tons")) if "mass_tons" in child else 2400.0
+				var r_m: float = float(child.get("radius_m")) if "radius_m" in child else 30.0
+				var comp: Dictionary = child.get("composition") if "composition" in child else {
+					"Ferro (Fe)": 45.0,
+					"Nichel (Ni)": 28.0,
+					"Silicati": 18.0,
+					"Cobalto": 9.0
+				}
+				var integ: float = float(child.get("integrity")) if "integrity" in child else 100.0
+				var sig: float = float(child.get("signal_signature")) if "signal_signature" in child else 0.85
+				var iff: String = str(child.get("iff_tag")) if "iff_tag" in child else ("HAZARD" if is_hazard else "NEUTRAL")
+				
+				entities.append({
+					"id": child.name,
+					"name": child.name.replace("_", " "),
+					"pos": a_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": child.rotation_speed if "rotation_speed" in child else Vector3(0.1, 0.0, 0.2),
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": "MINERAL_ASTEROID" if "MINERAL" in child.name.to_upper() else "ASTEROID",
+					"iff_tag": iff,
+					"stealth_level": 0.0,
+					"radius_m": r_m,
+					"composition": comp,
+					"integrity": integ,
+					"mass_tons": mass_val,
+					"radiation_level": 0.05,
+					"signal_signature": sig,
+					"estimated_value_cr": 4500,
+					"node_ref": child,
+					"radio_frequency": 0.0
+				})
+		
+		# Aggiungi navi ostili attive
+		var hostiles: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_hostile_ships"):
+			hostiles = _space_scene_instance.get_hostile_ships()
+		var cd := get_combat_director()
+		if cd:
+			for foe in cd.active_enemies:
+				if foe and is_instance_valid(foe) and foe.visible and not hostiles.has(foe):
+					hostiles.append(foe)
+		
+		for foe in hostiles:
+			if foe and is_instance_valid(foe) and foe.visible:
+				var f_pos: Vector3 = foe.global_position
+				var diff: Vector3 = f_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				var f_vel: Vector3 = foe.velocity if "velocity" in foe else Vector3.ZERO
+				var f_id: String = foe.ship_id if "ship_id" in foe else foe.name
+				var f_name: String = foe.ship_name if "ship_name" in foe else foe.name
+				var f_comp: Dictionary = foe.composition if "composition" in foe else {"Blindatura Composita": 45.0, "Reattore Subspaziale": 30.0, "Sistemi d'Arma": 25.0}
+				var f_integ: float = (foe.current_health / foe.max_health) * 100.0 if "max_health" in foe and foe.max_health > 0.0 else 100.0
+				var f_sig: float = foe.signal_signature if "signal_signature" in foe else 0.85
+				var f_freq: float = foe.comms_frequency if "comms_frequency" in foe else 2185.2
+				entities.append({
+					"id": f_id,
+					"name": f_name,
+					"pos": f_pos,
+					"rel_pos": diff,
+					"distance": dist,
+					"velocity": f_vel,
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": "SHIP_HOSTILE",
+					"iff_tag": "HOSTILE",
+					"stealth_level": 0.10,
+					"radius_m": 12.0,
+					"composition": f_comp,
+					"integrity": f_integ,
+					"mass_tons": 85.0,
+					"radiation_level": 0.60,
+					"signal_signature": f_sig,
+					"estimated_value_cr": 15000,
+					"radio_frequency": f_freq,
+					"node_ref": foe
+				})
 					
 	# Aggiungi l'entità della stazione orbitale primaria nello spazio se attiva e visibile
 	if primary_station_instance and is_instance_valid(primary_station_instance) and primary_station_instance.visible:
@@ -2006,7 +2153,9 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"mass_tons": 185000.0,
 			"radiation_level": 0.15,
 			"signal_signature": 1.0,
-			"estimated_value_cr": 250000
+			"estimated_value_cr": 250000,
+			"node_ref": primary_station_instance,
+			"radio_frequency": 1840.0
 		})
 
 	# Aggiungi l'entità del relitto spaziale se attivo e visibile
@@ -2035,7 +2184,9 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"mass_tons": 12500.0,
 			"radiation_level": 0.45,
 			"signal_signature": 0.70,
-			"estimated_value_cr": 38000
+			"estimated_value_cr": 38000,
+			"node_ref": primary_derelict_instance,
+			"radio_frequency": 850.5
 		})
 	
 	# Contatti diegetici aggiuntivi a lungo raggio / stazioni / relitti / sonde
@@ -2288,6 +2439,267 @@ func get_sensor_entities() -> Array[Dictionary]:
 		return float(a.get("distance", 0.0)) < float(b.get("distance", 0.0))
 	)
 	return entities
+
+## Ritorna tutte le trasmissioni subspaziali e radio intercettabili nello spazio circostante.
+func get_comms_transmissions() -> Array[Dictionary]:
+	var signals: Array[Dictionary] = []
+	var ship := get_spaceship()
+	var ship_pos := ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
+	var ship_basis := ship.global_transform.basis if ship and is_instance_valid(ship) and ship.is_inside_tree() else Basis.IDENTITY
+
+	if _space_scene_instance and is_instance_valid(_space_scene_instance):
+		# 1. Relitti spaziali (faro SOS di emergenza)
+		var derelicts: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_derelicts"):
+			derelicts = _space_scene_instance.get_derelicts()
+		elif primary_derelict_instance and is_instance_valid(primary_derelict_instance):
+			derelicts = [primary_derelict_instance]
+		
+		var found_derelict := false
+		for der in derelicts:
+			if der and is_instance_valid(der) and der.visible:
+				var beacon_on: bool = der.get("distress_beacon_active") if "distress_beacon_active" in der else true
+				if beacon_on:
+					var diff := der.global_position - ship_pos
+					var dist := diff.length()
+					var local_diff := ship_basis.inverse() * diff
+					var bearing_deg := rad_to_deg(atan2(local_diff.x, -local_diff.z))
+					if bearing_deg < 0.0: bearing_deg += 360.0
+					var d_id: String = der.derelict_id if "derelict_id" in der else der.name
+					var d_name: String = der.ship_name if "ship_name" in der else der.name
+					var d_freq: float = der.comms_frequency if "comms_frequency" in der else 850.5
+					var strength := clampf(1.0 - (dist / 8000.0), 0.1, 0.95)
+					signals.append({
+						"id": "sos_scout",
+						"freq": d_freq,
+						"strength": strength,
+						"name": "📡 [SOS EMERGENZA] %s" % d_name,
+						"desc": "Richiesta soccorso da vascello derelitto. Coordinate relitto.",
+						"source": "Beacon Automatico Mayday",
+						"bearing_deg": bearing_deg,
+						"distance": dist,
+						"type": "DERELICT",
+						"target_ship_id": d_id,
+						"unlocked": true,
+						"node_ref": der
+					})
+					found_derelict = true
+		
+		if not found_derelict:
+			signals.append({
+				"id": "sos_scout",
+				"freq": 850.5,
+				"strength": 0.95,
+				"name": "📡 [SOS EMERGENZA] Relitto Vascello Scout",
+				"desc": "Richiesta soccorso da corvetta derelitta in avaria. Coordinate settore 4.",
+				"source": "Beacon Automatico Mayday",
+				"bearing_deg": 45.0,
+				"distance": 650.0,
+				"type": "DERELICT",
+				"target_ship_id": "SCOUT-DERELICT-04",
+				"unlocked": true
+			})
+
+		# 2. Rete subspaziale / Relay standard
+		signals.append({
+			"id": "subspace_corp",
+			"freq": 1420.0,
+			"strength": 0.90,
+			"name": "🌐 [RETE SUBSPAZIALE] Weyland-Yutani Corp Relay",
+			"desc": "Bollettino commerciale e direttive corporative di settore. Canale idrogeno attivo.",
+			"source": "Mainframe Subspazio",
+			"bearing_deg": 180.0,
+			"distance": 3200.0,
+			"type": "RELAY",
+			"unlocked": true
+		})
+
+		# 3. Stazioni orbitali
+		var stations: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_stations"):
+			for st in _space_scene_instance.get_stations():
+				if st != primary_station_instance:
+					stations.append(st)
+		
+		var found_station := false
+		for st in stations:
+			if st and is_instance_valid(st) and st.visible:
+				var diff := st.global_position - ship_pos
+				var dist := diff.length()
+				var local_diff := ship_basis.inverse() * diff
+				var bearing_deg := rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				if bearing_deg < 0.0: bearing_deg += 360.0
+				var st_id: String = st.station_id if "station_id" in st else "STATION"
+				var st_name: String = st.station_name if "station_name" in st else st.name
+				var st_freq: float = st.comms_frequency if "comms_frequency" in st else 1840.0
+				var strength := clampf(1.0 - (dist / 10000.0), 0.1, 1.0)
+				signals.append({
+					"id": "station_trading",
+					"freq": st_freq,
+					"strength": strength,
+					"name": "📻 [CANALE CIVILE] %s" % st_name,
+					"desc": "Autorizzazione attracco, scalo merci e bollettino commerciale.",
+					"source": st_name,
+					"bearing_deg": bearing_deg,
+					"distance": dist,
+					"type": "STATION",
+					"station_id": st_id,
+					"unlocked": true,
+					"node_ref": st
+				})
+				found_station = true
+		
+		if not found_station:
+			signals.append({
+				"id": "station_trading",
+				"freq": 1840.0,
+				"strength": 0.85,
+				"name": "📻 [CANALE CIVILE] Stazione Spaziale Freccia",
+				"desc": "Aggiornamento prezzi combustibile e disponibilità baia d'attracco.",
+				"source": "Torre di Controllo Freccia",
+				"bearing_deg": 270.0,
+				"distance": 1100.0,
+				"type": "STATION",
+				"station_id": "STATION-FRECCIA",
+				"unlocked": true
+			})
+
+		# 4. Navi nemiche (comunicazioni tattiche pirata)
+		var enemies: Array[Node3D] = []
+		if _space_scene_instance.has_method("get_hostile_ships"):
+			enemies = _space_scene_instance.get_hostile_ships()
+		var cd := get_combat_director()
+		if cd:
+			for foe in cd.active_enemies:
+				if foe and is_instance_valid(foe) and foe.visible and not enemies.has(foe):
+					enemies.append(foe)
+		
+		var found_enemy := false
+		for enm in enemies:
+			if enm and is_instance_valid(enm) and enm.visible:
+				var diff := enm.global_position - ship_pos
+				var dist := diff.length()
+				var local_diff := ship_basis.inverse() * diff
+				var bearing_deg := rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				if bearing_deg < 0.0: bearing_deg += 360.0
+				var e_id: String = enm.ship_id if "ship_id" in enm else enm.name
+				var e_name: String = enm.ship_name if "ship_name" in enm else enm.name
+				var e_freq: float = enm.comms_frequency if "comms_frequency" in enm else 2185.2
+				var strength := clampf(1.0 - (dist / 6000.0), 0.1, 0.9)
+				signals.append({
+					"id": "pirate_encrypted",
+					"freq": e_freq,
+					"strength": strength,
+					"name": "🏴‍☠️ [BURST CRITTOGRAFATO] %s" % e_name,
+					"desc": "Canale pirata tattico cifrato. Intercettazione drive e firmware.",
+					"source": e_name,
+					"bearing_deg": bearing_deg,
+					"distance": dist,
+					"type": "CORVETTE",
+					"target_ship_id": e_id,
+					"unlocked": true,
+					"node_ref": enm
+				})
+				found_enemy = true
+		
+		if not found_enemy:
+			signals.append({
+				"id": "pirate_encrypted",
+				"freq": 2185.2,
+				"strength": 0.80,
+				"name": "🏴‍☠️ [BURST CRITTOGRAFATO] Canale Pirata Clandestino",
+				"desc": "Trasmissione da corvetta da guerra corsara. Intercettazione telemetria e drive bersaglio.",
+				"source": "Predoni della Cintura",
+				"bearing_deg": 120.0,
+				"distance": 950.0,
+				"type": "CORVETTE",
+				"target_ship_id": "PIRATE-CORVETTE-01",
+				"unlocked": true
+			})
+
+		# 5. Faro di radionavigazione
+		signals.append({
+			"id": "deep_space_beacon",
+			"freq": 2750.0,
+			"strength": 0.60,
+			"name": "🛰️ [RADIONAVIGAZIONE] Faro Deep Space Alpha",
+			"desc": "Sincronizzazione orologio atomico e dati gravitazionali di settore.",
+			"source": "Faro Navigazione Stella 78",
+			"bearing_deg": 315.0,
+			"distance": 4500.0,
+			"type": "BEACON",
+			"unlocked": true
+		})
+
+	# Se non è presente la scena 3D o non sono stati trovati segnali, usa i fallback sintetici
+	if signals.is_empty():
+		signals = [
+			{
+				"id": "sos_scout",
+				"freq": 850.5,
+				"strength": 0.95,
+				"name": "📡 [SOS EMERGENZA] Relitto Vascello Scout",
+				"desc": "Richiesta soccorso da corvetta derelitta in avaria. Coordinate settore 4.",
+				"source": "Beacon Automatico Mayday",
+				"bearing_deg": 45.0,
+				"distance": 650.0,
+				"type": "DERELICT",
+				"target_ship_id": "SCOUT-DERELICT-04",
+				"unlocked": true
+			},
+			{
+				"id": "subspace_corp",
+				"freq": 1420.0,
+				"strength": 0.90,
+				"name": "🌐 [RETE SUBSPAZIALE] Weyland-Yutani Corp Relay",
+				"desc": "Bollettino commerciale e direttive corporative di settore. Canale idrogeno attivo.",
+				"source": "Mainframe Subspazio",
+				"bearing_deg": 180.0,
+				"distance": 3200.0,
+				"type": "RELAY",
+				"unlocked": true
+			},
+			{
+				"id": "station_trading",
+				"freq": 1840.0,
+				"strength": 0.85,
+				"name": "📻 [CANALE CIVILE] Stazione Spaziale Freccia",
+				"desc": "Aggiornamento prezzi combustibile e disponibilità baia d'attracco.",
+				"source": "Torre di Controllo Freccia",
+				"bearing_deg": 270.0,
+				"distance": 1100.0,
+				"type": "STATION",
+				"station_id": "STATION-FRECCIA",
+				"unlocked": true
+			},
+			{
+				"id": "pirate_encrypted",
+				"freq": 2185.2,
+				"strength": 0.80,
+				"name": "🏴‍☠️ [BURST CRITTOGRAFATO] Canale Pirata Clandestino",
+				"desc": "Trasmissione da corvetta da guerra corsara. Intercettazione telemetria e drive bersaglio.",
+				"source": "Predoni della Cintura",
+				"bearing_deg": 120.0,
+				"distance": 950.0,
+				"type": "CORVETTE",
+				"target_ship_id": "PIRATE-CORVETTE-01",
+				"unlocked": true
+			},
+			{
+				"id": "deep_space_beacon",
+				"freq": 2750.0,
+				"strength": 0.60,
+				"name": "🛰️ [RADIONAVIGAZIONE] Faro Deep Space Alpha",
+				"desc": "Sincronizzazione orologio atomico e dati gravitazionali di settore.",
+				"source": "Faro Navigazione Stella 78",
+				"bearing_deg": 315.0,
+				"distance": 4500.0,
+				"type": "BEACON",
+				"unlocked": true
+			}
+		]
+
+	return signals
 
 # --- SERVICE DRONE (EVA OPERATIONS) API ---
 

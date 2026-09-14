@@ -13,6 +13,8 @@ signal derelict_fully_salvaged()
 @export var derelict_id: String = "derelict_alpha"
 @export var ship_name: String = "Relitto Cargo 'Nostromo-IV'"
 @export var ship_class: String = "Freighter" # Freighter, Corvette, Gunship, ScienceVessel
+@export var comms_frequency: float = 850.5 # MHz SOS Distress Beacon
+@export var distress_beacon_active: bool = true
 
 # Sicurezza & ICE
 @export var ice_locked: bool = true

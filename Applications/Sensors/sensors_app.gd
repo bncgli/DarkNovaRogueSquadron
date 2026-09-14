@@ -469,6 +469,21 @@ func _refresh_entities() -> void:
 		radar_display.selected_entity_id = selected_entity_id
 		radar_display.locked_entity_id = locked_entity_id
 
+	if target_option:
+		var prev_sel := target_option.selected
+		target_option.clear()
+		target_option.add_item("-- NESSUN CONTATTO --", 0)
+		var sel_idx := 0
+		for i in range(detected_entities.size()):
+			var ent := detected_entities[i]
+			target_option.add_item("ECO #%s (%s)" % [ent.get("id"), ent.get("name")], i + 1)
+			if str(ent.get("id")) == selected_entity_id:
+				sel_idx = i + 1
+		if sel_idx > 0:
+			target_option.selected = sel_idx
+		elif prev_sel >= 0 and prev_sel < target_option.item_count:
+			target_option.selected = prev_sel
+
 func _update_telemetry_ui() -> void:
 	var cur_entity := _get_entity_data(selected_entity_id)
 	
@@ -495,12 +510,37 @@ func _update_telemetry_ui() -> void:
 			if e_type == "WAYPOINT": title_str = "WAYPOINT TATTICO"
 			elif e_type == "PROBE": title_str = "SONDA TELEMETRICA"
 			
+			var comp: Dictionary = cur_entity.get("composition", {})
+			var comp_str := ""
+			if not comp.is_empty():
+				var comp_lines: Array[String] = []
+				for elem in comp.keys():
+					comp_lines.append("%s: %.0f%%" % [elem, float(comp[elem])])
+				comp_str = "\n[b]Spettrometria:[/b] " + ", ".join(comp_lines)
+			
+			var integ_val: float = float(cur_entity.get("integrity", 100.0))
+			var rad_val: float = float(cur_entity.get("radiation_level", 0.0))
+			var deep_scan_str := "\n[b]Integrità:[/b] %.0f%% | [b]Radiazione:[/b] %.2f Sv/h" % [integ_val, rad_val]
+			
 			target_details_label.text = (
 				"[b]Identificativo Eco:[/b] %s%s\n" % [title_str, lock_txt] +
 				"[b]Distanza Scanner:[/b] %s | [b]Azimut:[/b] %.1f° | [b]Elevazione:[/b] %.1f°\n" % [dist_str, bearing, elev] +
 				"[b]Velocità Relativa:[/b] %.1f m/s\n" % vel.length() +
-				"[b]Massa Stimata:[/b] %.0f tonnellate | [b]Segnatura EM:[/b] %.0f%%%s" % [mass, sig * 100.0, probe_txt]
+				"[b]Massa Stimata:[/b] %.0f tonnellate | [b]Segnatura EM:[/b] %.0f%%%s%s%s" % [mass, sig * 100.0, probe_txt, comp_str, deep_scan_str]
 			)
+	
+	if spectrometry_label:
+		if cur_entity.is_empty():
+			spectrometry_label.text = "[color=#7799aa]Nessun dato spettrale.[/color]"
+		else:
+			var sp_comp: Dictionary = cur_entity.get("composition", {})
+			if sp_comp.is_empty():
+				spectrometry_label.text = "[color=#7799aa]Nessuna firma spettrale rilevata.[/color]"
+			else:
+				var sp_lines: Array[String] = []
+				for elem in sp_comp.keys():
+					sp_lines.append("[b]%s:[/b] %.1f%%" % [elem, float(sp_comp[elem])])
+				spectrometry_label.text = "\n".join(sp_lines)
 	
 	if probe_status_label:
 		var active_probe: Dictionary = {}
