@@ -715,7 +715,9 @@ func _update_target_info() -> void:
 			var proj_vel := _get_active_projectile_velocity()
 			var dist: float = float(t.get("distance", 0.0))
 			var t_hit := dist / maxf(proj_vel, 1.0)
-			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_PROIETTILE: %.0f m/s | RETICOLO PRONTO" % [t_hit, proj_vel]
+			var t_vel: Vector3 = t.get("velocity", Vector3.ZERO)
+			var speed_str := "%.1f m/s" % t_vel.length()
+			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_BERSAGLIO: %s | VEL_PROIETTILE: %.0f m/s" % [t_hit, speed_str, proj_vel]
 		else:
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): STANDBY (AGGANCIARE BERSAGLIO)"
 	

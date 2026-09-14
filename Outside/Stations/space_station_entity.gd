@@ -12,7 +12,7 @@ signal station_scanned(station_data: Dictionary)
 @export var station_name: String = "Stazione Orbitale 'Aegis Outpost'"
 @export var station_type: String = "Military / Trade Hub"
 @export var faction_iff: String = "SOL-NAV-DEFENSE"
-@export var comms_frequency: float = 142.85 # MHz diegetica per autorizzazione
+@export var comms_frequency: float = 1840.0 # MHz diegetica per autorizzazione
 @export var security_clearance_required: int = 1
 
 # Telemetria & Parametri Cono di Cattura Magnetica
@@ -64,6 +64,8 @@ signal station_scanned(station_data: Dictionary)
 @export var warehouse_cargo: Array[Dictionary] = []
 
 func _ready() -> void:
+	add_to_group("stations")
+	add_to_group("scannable_entities")
 	_init_station_defaults()
 
 func _init_station_defaults() -> void:

@@ -36,6 +36,14 @@ enum ShipType {
 @export var max_shield: float = 50.0
 @export var current_shield: float = 50.0
 @export var shield_regen_rate: float = 4.0
+@export var comms_frequency: float = 2185.2
+@export var signal_signature: float = 0.85
+@export var iff_tag: String = "HOSTILE"
+@export var composition: Dictionary = {
+	"Blindatura Composita": 45.0,
+	"Reattore Subspaziale": 30.0,
+	"Sistemi d'Arma": 25.0
+}
 
 # --- PARAMETRI DI MOVIMENTO & MANOVRA ---
 @export var max_speed: float = 35.0
@@ -82,6 +90,8 @@ var g_force_accumulated: float = 1.0
 var is_crew_blackout: bool = false
 
 func _ready() -> void:
+	add_to_group("enemy_ships")
+	add_to_group("scannable_entities")
 	if ship_id.is_empty():
 		ship_id = "ENEMY_" + str(get_instance_id())
 	_setup_ship_parameters()

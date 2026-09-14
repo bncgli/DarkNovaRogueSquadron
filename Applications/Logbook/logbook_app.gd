@@ -85,6 +85,16 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.mission_started.connect(_on_mission_started)
 		if SpaceWorldManager.has_signal("mission_ended") and not SpaceWorldManager.mission_ended.is_connected(_on_mission_ended):
 			SpaceWorldManager.mission_ended.connect(_on_mission_ended)
+		if SpaceWorldManager.has_signal("ship_damage_taken") and not SpaceWorldManager.ship_damage_taken.is_connected(_on_ship_damage_taken):
+			SpaceWorldManager.ship_damage_taken.connect(_on_ship_damage_taken)
+		if SpaceWorldManager.has_signal("combat_engagement_started") and not SpaceWorldManager.combat_engagement_started.is_connected(_on_combat_engagement_started):
+			SpaceWorldManager.combat_engagement_started.connect(_on_combat_engagement_started)
+		if SpaceWorldManager.has_signal("combat_engagement_ended") and not SpaceWorldManager.combat_engagement_ended.is_connected(_on_combat_engagement_ended):
+			SpaceWorldManager.combat_engagement_ended.connect(_on_combat_engagement_ended)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_started") and not SpaceWorldManager.hyperdrive_transition_started.is_connected(_on_hyperdrive_transition_started):
+			SpaceWorldManager.hyperdrive_transition_started.connect(_on_hyperdrive_transition_started)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_ended") and not SpaceWorldManager.hyperdrive_transition_ended.is_connected(_on_hyperdrive_transition_ended):
+			SpaceWorldManager.hyperdrive_transition_ended.connect(_on_hyperdrive_transition_ended)
 
 	if NetworkManager:
 		if NetworkManager.has_signal("player_role_changed") and not NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
@@ -108,6 +118,16 @@ func _disconnect_system_signals() -> void:
 			SpaceWorldManager.mission_started.disconnect(_on_mission_started)
 		if SpaceWorldManager.has_signal("mission_ended") and SpaceWorldManager.mission_ended.is_connected(_on_mission_ended):
 			SpaceWorldManager.mission_ended.disconnect(_on_mission_ended)
+		if SpaceWorldManager.has_signal("ship_damage_taken") and SpaceWorldManager.ship_damage_taken.is_connected(_on_ship_damage_taken):
+			SpaceWorldManager.ship_damage_taken.disconnect(_on_ship_damage_taken)
+		if SpaceWorldManager.has_signal("combat_engagement_started") and SpaceWorldManager.combat_engagement_started.is_connected(_on_combat_engagement_started):
+			SpaceWorldManager.combat_engagement_started.disconnect(_on_combat_engagement_started)
+		if SpaceWorldManager.has_signal("combat_engagement_ended") and SpaceWorldManager.combat_engagement_ended.is_connected(_on_combat_engagement_ended):
+			SpaceWorldManager.combat_engagement_ended.disconnect(_on_combat_engagement_ended)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_started") and SpaceWorldManager.hyperdrive_transition_started.is_connected(_on_hyperdrive_transition_started):
+			SpaceWorldManager.hyperdrive_transition_started.disconnect(_on_hyperdrive_transition_started)
+		if SpaceWorldManager.has_signal("hyperdrive_transition_ended") and SpaceWorldManager.hyperdrive_transition_ended.is_connected(_on_hyperdrive_transition_ended):
+			SpaceWorldManager.hyperdrive_transition_ended.disconnect(_on_hyperdrive_transition_ended)
 
 	if NetworkManager:
 		if NetworkManager.has_signal("player_role_changed") and NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
@@ -166,6 +186,21 @@ func _on_mission_started(_role: String = "", _is_solo: bool = false) -> void:
 func _on_mission_ended() -> void:
 	_update_connection_state()
 	log_event("MISSIONE TERMINATA - Connessione telemetrica interrotta.")
+
+func _on_ship_damage_taken(pos: Vector2, type: String) -> void:
+	log_event("ALLERTA DANNO: Impatto scafo tipo '%s' alle coordinate (%.1f, %.1f)." % [type, pos.x, pos.y])
+
+func _on_combat_engagement_started() -> void:
+	log_event("ALLARME ROSSO: Ingaggio tattico iniziato! Sistemi d'arma abilitati.")
+
+func _on_combat_engagement_ended(victory: bool) -> void:
+	log_event("COMBATTIMENTO CONCLUSO: Esito scontro %s." % ("VITTORIA" if victory else "RITIRATA"))
+
+func _on_hyperdrive_transition_started(target_coords: Vector3i) -> void:
+	log_event("NAVIGAZIONE: Inizio sequenza salto iperspaziale verso settore %s." % str(target_coords))
+
+func _on_hyperdrive_transition_ended(target_coords: Vector3i) -> void:
+	log_event("NAVIGAZIONE: Uscita da iperspazio completata. Settore %s raggiunto." % str(target_coords))
 
 # -----------------------------------------------------------------------------
 # RBAC (Role-Based Access Control)
@@ -255,24 +290,39 @@ func _on_reload_dat_pressed() -> void:
 # Logica Contratti & Obiettivi
 # -----------------------------------------------------------------------------
 func _setup_initial_data() -> void:
-	active_contracts = [
-		{
-			"id": "CTR-01",
-			"title": "Pattugliamento Settore K-7",
-			"description": "Eseguire scansione dei detriti e ripulire minacce ostili.",
-			"reward_flux": 1500,
-			"reward_credits": 300,
-			"status": "IN_PROGRESS"
-		},
-		{
-			"id": "CTR-02",
-			"title": "Recupero Dati Relitto Orion",
-			"description": "Scaricare i file di telemetria dal mainframe del relitto.",
-			"reward_flux": 2200,
-			"reward_credits": 500,
-			"status": "IN_PROGRESS"
-		}
-	]
+	active_contracts.clear()
+	if SpaceWorldManager and SpaceWorldManager.primary_station_instance and is_instance_valid(SpaceWorldManager.primary_station_instance):
+		var st := SpaceWorldManager.primary_station_instance
+		if st.active_contracts.size() > 0:
+			for sc in st.active_contracts:
+				active_contracts.append({
+					"id": str(sc.get("contract_id", sc.get("id", "CTR-01"))),
+					"title": str(sc.get("title", "Contratto Stazione")),
+					"description": str(sc.get("description", "")),
+					"reward_flux": int(sc.get("reward_flux", 1500)),
+					"reward_credits": int(sc.get("payout_credits", sc.get("reward_credits", 300))),
+					"status": str(sc.get("status", "IN_PROGRESS"))
+				})
+	
+	if active_contracts.is_empty():
+		active_contracts = [
+			{
+				"id": "CTR-01",
+				"title": "Pattugliamento Settore K-7",
+				"description": "Eseguire scansione dei detriti e ripulire minacce ostili.",
+				"reward_flux": 1500,
+				"reward_credits": 300,
+				"status": "IN_PROGRESS"
+			},
+			{
+				"id": "CTR-02",
+				"title": "Recupero Dati Relitto Orion",
+				"description": "Scaricare i file di telemetria dal mainframe del relitto.",
+				"reward_flux": 2200,
+				"reward_credits": 500,
+				"status": "IN_PROGRESS"
+			}
+		]
 	
 	black_box_events = [
 		"[%s] REGISTRO INIZIALIZZATO: Sistemi di bordo operativi." % _get_formatted_timestamp(),

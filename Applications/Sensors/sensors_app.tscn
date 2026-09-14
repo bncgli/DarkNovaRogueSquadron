@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cx6y8v2u0sens"]
 
-[ext_resource type="Script" path="res://Applications/Sensors/sensors_app.gd" id="1_sensors_script"]
+[ext_resource type="Script" uid="uid://gamjoaein3in" path="res://Applications/Sensors/sensors_app.gd" id="1_sensors_script"]
 [ext_resource type="PackedScene" uid="uid://b82ns5q14yv6u" path="res://Applications/Sensors/Components/radar_display.tscn" id="2_radar_scene"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
@@ -51,7 +51,7 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[node name="SensorsApp" type="Control"]
+[node name="SensorsApp" type="Control" unique_id=957899815]
 custom_minimum_size = Vector2(750, 550)
 layout_mode = 3
 anchors_preset = 15
@@ -61,7 +61,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_sensors_script")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1857429311]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,7 +70,7 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer" unique_id=2004912945]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -79,88 +79,88 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin" unique_id=1679299522]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="HeaderCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=361792966]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/HeaderCard" unique_id=1918706214]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin" unique_id=1116981473]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="Title" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=507987225]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 13
 text = "📡 ARRAY SENSORI & MAPPA TATTICA (1 KM)"
 
-[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="RoleBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=1690373983]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
 theme_override_font_sizes/font_size = 11
 text = "RUOLO: SOLDATO"
 
-[node name="DatBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="DatBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=1799078598]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
 theme_override_font_sizes/font_size = 11
 text = "DAT: ATTIVO (FIRMWARE V1.0.0)"
 
-[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="StatusBadge" type="Label" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=102390464]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 11
 text = "STATO: OPERATIVO"
 
-[node name="BtnReloadDat" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox"]
+[node name="BtnReloadDat" type="Button" parent="ScrollContainer/Margin/VBox/HeaderCard/Margin/HBox" unique_id=1496011361]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(110, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "🔄 Ricarica .DAT"
 
-[node name="ContentHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="ContentHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox" unique_id=845279317]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="RadarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox"]
+[node name="RadarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox" unique_id=1530998779]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.25
 theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard" unique_id=1127713924]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin" unique_id=1608825241]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ToolbarHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+[node name="ToolbarHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox" unique_id=790402173]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="OptionDisplayMode" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+[node name="OptionDisplayMode" type="OptionButton" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=2109222809]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -174,7 +174,7 @@ popup/item_1/id = 1
 popup/item_2/text = "Elevazione Spaziale 3D"
 popup/item_2/id = 2
 
-[node name="RangeIndicatorLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox"]
+[node name="RangeIndicatorLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/ToolbarHBox" unique_id=933658685]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -183,28 +183,28 @@ theme_override_font_sizes/font_size = 11
 text = "📡 SCANNER: 1000m | PING: 2000m"
 horizontal_alignment = 2
 
-[node name="RadarContainer" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+[node name="RadarContainer" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox" unique_id=216634443]
 custom_minimum_size = Vector2(380, 360)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="RadarDisplay" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarContainer" instance=ExtResource("2_radar_scene")]
+[node name="RadarDisplay" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarContainer" unique_id=460337287 instance=ExtResource("2_radar_scene")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="RadarActionsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox"]
+[node name="RadarActionsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox" unique_id=1485902772]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BtnSweepToggle" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox"]
+[node name="BtnSweepToggle" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox" unique_id=1149821596]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 text = "📡 Sweep: ATTIVO"
 
-[node name="BtnActivePing" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox"]
+[node name="BtnActivePing" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/RadarCard/Margin/VBox/RadarActionsHBox" unique_id=558760228]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -212,41 +212,41 @@ theme_override_font_sizes/font_size = 11
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_ping")
 text = "💥 PING ATTIVO (2km - 120 MW)"
 
-[node name="TelemetryPanel" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox"]
+[node name="TelemetryPanel" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox" unique_id=958700035]
 custom_minimum_size = Vector2(290, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel" unique_id=323944815]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin" unique_id=19972484]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ContactSelectionLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+[node name="ContactSelectionLabel" type="Label" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox" unique_id=1710797204]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "🎯 CONTATTO SELEZIONATO (RADAR):"
 
-[node name="TargetDetailsCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+[node name="TargetDetailsCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox" unique_id=2020219207]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard" unique_id=74973857]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="TargetDetailsLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard/Margin"]
+[node name="TargetDetailsLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TargetDetailsCard/Margin" unique_id=1048491563]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
@@ -256,19 +256,19 @@ bbcode_enabled = true
 text = "Nessun bersaglio selezionato."
 scroll_active = false
 
-[node name="ProbeFeedCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+[node name="ProbeFeedCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox" unique_id=1345901617]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_radar_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard" unique_id=1389238845]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="ProbeStatusLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard/Margin"]
+[node name="ProbeStatusLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/ProbeFeedCard/Margin" unique_id=1638975564]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -277,50 +277,50 @@ theme_override_font_sizes/bold_font_size = 10
 bbcode_enabled = true
 text = "[color=#557788]Nessuna sonda telemetrica attiva in volo.[/color]"
 
-[node name="TacticalActionsVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox"]
+[node name="TacticalActionsVBox" type="VBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox" unique_id=1276772634]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ActionButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox"]
+[node name="ActionButtonsHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox" unique_id=1202577007]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BtnLockTarget" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox"]
+[node name="BtnLockTarget" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox" unique_id=993122017]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 text = "🎯 Lock Bersaglio"
 
-[node name="BtnTransmitWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox"]
+[node name="BtnTransmitWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox/ActionButtonsHBox" unique_id=65771499]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 text = "🛰️ Invia Waypoint"
 
-[node name="BtnClearWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox"]
+[node name="BtnClearWaypoint" type="Button" parent="ScrollContainer/Margin/VBox/ContentHBox/TelemetryPanel/Margin/VBox/TacticalActionsVBox" unique_id=1727075580]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "❌ Rimuovi Waypoint Attivo"
 
-[node name="StatusBarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox"]
+[node name="StatusBarCard" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=1279675500]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard"]
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard" unique_id=551018347]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 4
 
-[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin"]
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin" unique_id=1101603165]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+[node name="StatusLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox" unique_id=2053181241]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -328,35 +328,35 @@ theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "STATO RADAR: SCANSIONE OPERATIVA"
 
-[node name="PowerLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+[node name="PowerLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox" unique_id=710844426]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "PWR: 40 MW (SWEEP)"
 
-[node name="SweepLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+[node name="SweepLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox" unique_id=958147540]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 10
 text = "SWEEP: 12.0 Hz"
 
-[node name="PingLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+[node name="PingLabel" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox" unique_id=1282560281]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 10
 text = "PING: PRONTO (2 km)"
 
-[node name="RadarDamageBadge" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox"]
+[node name="RadarDamageBadge" type="Label" parent="ScrollContainer/Margin/VBox/StatusBarCard/Margin/HBox" unique_id=2107634604]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 10
 text = "RADAR: INTEGRITÀ 100%"
 
-[node name="DisconnectedOverlay" type="Panel" parent="."]
+[node name="DisconnectedOverlay" type="Panel" parent="." unique_id=989913374]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -366,7 +366,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
 
-[node name="Center" type="CenterContainer" parent="DisconnectedOverlay"]
+[node name="Center" type="CenterContainer" parent="DisconnectedOverlay" unique_id=987255462]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -374,18 +374,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center"]
+[node name="VBox" type="VBoxContainer" parent="DisconnectedOverlay/Center" unique_id=1983113353]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="Title" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=1794357068]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "⚠️ SISTEMI RADAR OFFLINE"
 horizontal_alignment = 1
 
-[node name="Desc" type="Label" parent="DisconnectedOverlay/Center/VBox"]
+[node name="Desc" type="Label" parent="DisconnectedOverlay/Center/VBox" unique_id=218888068]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.8)
 theme_override_font_sizes/font_size = 12
