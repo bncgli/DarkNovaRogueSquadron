@@ -1,0 +1,291 @@
+[gd_scene load_steps=5 format=3 uid="uid://sysdiscover_app_01"]
+
+[ext_resource type="Script" path="res://Applications/SystemDiscover/system_discover_app.gd" id="1_discover_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.04, 0.07, 0.1, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.15, 0.35, 0.5, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.06, 0.1, 0.14, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.32, 0.45, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_bg"]
+bg_color = Color(0.02, 0.03, 0.06, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.12, 0.28, 0.42, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SystemDiscoverApp" type="Control"]
+custom_minimum_size = Vector2(760, 520)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_discover_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxMain" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TopHeader" type="PanelContainer" parent="Margin/VBoxMain"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBoxMain/TopHeader"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="Margin/VBoxMain/TopHeader/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AppTitle" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15, 0.85, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "🔭 SYSTEM DISCOVER v1.0"
+
+[node name="SystemTitleLabel" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "Sistema Inesplorato"
+
+[node name="SystemInfoLabel" type="Label" parent="Margin/VBoxMain/TopHeader/Margin/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Astrometria: In attesa di generazione"
+
+[node name="HBoxSplit" type="HBoxContainer" parent="Margin/VBoxMain"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="LeftPanel" type="PanelContainer" parent="Margin/VBoxMain/HBoxSplit"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBoxMain/HBoxSplit/LeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxControls" type="VBoxContainer" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SeedHeader" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "SEED ASTRONOMICO"
+
+[node name="HBoxSeed" type="HBoxContainer" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SeedInput" type="LineEdit" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxSeed"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Es. NOVA-7721"
+
+[node name="BtnRerollSeed" type="Button" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxSeed"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🎲"
+
+[node name="HSep1" type="HSeparator" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+
+[node name="ArchHeader" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "ARCHETIPO GALATTICO"
+
+[node name="ArchetypeOption" type="OptionButton" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ArchetypeDescLabel" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 0.9)
+theme_override_font_sizes/font_size = 10
+autowrap_mode = 2
+
+[node name="HSep2" type="HSeparator" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+
+[node name="ParamHeader" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "PARAMETRI VOLUMETRICI"
+
+[node name="HBoxPlanets" type="HBoxContainer" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxPlanets"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Pianeti (0 = Auto):"
+
+[node name="SpinPlanets" type="SpinBox" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxPlanets"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+
+[node name="HBoxSpreadZ" type="HBoxContainer" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxSpreadZ"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Dispersione 3D (Z):"
+
+[node name="SpinSpreadZ" type="SpinBox" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls/HBoxSpreadZ"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 6.0
+value = 3.0
+
+[node name="Spacer" type="Control" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BtnGenerate" type="Button" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "🔭 Rigenera Sistema"
+
+[node name="BtnSave" type="Button" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "💾 Salva su Terminal Drive"
+
+[node name="BtnSendLobby" type="Button" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+text = "🚀 Usa nella Lobby"
+
+[node name="StatusLabel" type="Label" parent="Margin/VBoxMain/HBoxSplit/LeftPanel/Margin/VBoxControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Pronto."
+autowrap_mode = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="Margin/VBoxMain/HBoxSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="MapContainer" type="PanelContainer" parent="Margin/VBoxMain/HBoxSplit/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_map_bg")
+
+[node name="HolographicMap" type="Control" parent="Margin/VBoxMain/HBoxSplit/RightPanel/MapContainer"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+
+[node name="MapControlsOverlay" type="HBoxContainer" parent="Margin/VBoxMain/HBoxSplit/RightPanel/MapContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="BtnZoomIn" type="Button" parent="Margin/VBoxMain/HBoxSplit/RightPanel/MapContainer/MapControlsOverlay"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+text = "+"
+
+[node name="BtnZoomOut" type="Button" parent="Margin/VBoxMain/HBoxSplit/RightPanel/MapContainer/MapControlsOverlay"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+text = "-"
+
+[node name="BtnZoomReset" type="Button" parent="Margin/VBoxMain/HBoxSplit/RightPanel/MapContainer/MapControlsOverlay"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+text = "⊙"
+
+[node name="InspectorPanel" type="PanelContainer" parent="Margin/VBoxMain/HBoxSplit/RightPanel"]
+custom_minimum_size = Vector2(0, 95)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBoxMain/HBoxSplit/RightPanel/InspectorPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="BodyInspectorLabel" type="RichTextLabel" parent="Margin/VBoxMain/HBoxSplit/RightPanel/InspectorPanel/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+text = "[b]Riepilogo Sistema:[/b]
+Inizializzazione astrometrica in corso..."

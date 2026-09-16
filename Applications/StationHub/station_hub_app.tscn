@@ -209,6 +209,22 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Vendi al Porto (Scarica)"
 
+[node name="ScavengeBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ScavengeStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel/ScavengeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.95, 0.75, 0.2, 1)
+text = "Bottino Scavenging: 0 oggetti rilevati"
+
+[node name="BtnSellAllScavenged" type="Button" parent="MainLayout/ContentMargin/TabContainer/📦 Logistica & Cargo Market/CargoMarketVBox/MarketSplitHBox/ShipCargoPanel/ScavengeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "⚡ Vendi Tutto il Bottino Scavenging"
+
 [node name="📜 Bacheca Contratti" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 visible = false
 layout_mode = 2
@@ -237,12 +253,31 @@ size_flags_vertical = 3
 bbcode_enabled = true
 text = "Seleziona un contratto disponibile dall'elenco per visualizzare requisiti e ricompensa."
 
-[node name="BtnAcceptContract" type="Button" parent="MainLayout/ContentMargin/TabContainer/📜 Bacheca Contratti/HBox/DetailsVBox"]
+[node name="CompletedContractsSummaryLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/📜 Bacheca Contratti/HBox/DetailsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
+text = "Nessun contratto in attesa di liquidazione."
+
+[node name="ContractActionsHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/📜 Bacheca Contratti/HBox/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnAcceptContract" type="Button" parent="MainLayout/ContentMargin/TabContainer/📜 Bacheca Contratti/HBox/DetailsVBox/ContractActionsHBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
+size_flags_horizontal = 3
 disabled = true
-text = "Accetta Contratto e Sincronizza con Logbook"
+text = "Accetta Incarico / Riscuoti"
+
+[node name="BtnClaimAllContracts" type="Button" parent="MainLayout/ContentMargin/TabContainer/📜 Bacheca Contratti/HBox/DetailsVBox/ContractActionsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💰 Riscuoti Tutti i Contratti"
 
 [node name="💾 Software & Firmware Repository" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 visible = false
@@ -342,6 +377,61 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Acquisto 25x Naniti di Saldatura (200 CR)"
+
+[node name="RentServiceVBox" type="VBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HSeparatorRent" type="HSeparator" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox"]
+layout_mode = 2
+
+[node name="RentTitleLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Gestione Canone Noleggio Scafo (Ship Rent Service)"
+
+[node name="RentStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.4, 0.4, 1)
+text = "Debito Noleggio Residuo: 700 FLUX (Modificatore passivo vincolato)"
+
+[node name="RentActionsHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnPayRent100" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox/RentActionsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Paga Quota Canone (100 FLUX)"
+
+[node name="BtnPayRentAll" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox/RentActionsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Estingui Saldo Noleggio"
+
+[node name="SaveSessionHBox" type="HBoxContainer" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnSaveShipState" type="Button" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox/SaveSessionHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💾 Salva Stato Nave & Blueprint (user://)"
+
+[node name="SaveStatusLabel" type="Label" parent="MainLayout/ContentMargin/TabContainer/🔧 Cantiere e Riparazioni/ShipyardVBox/RentServiceVBox/SaveSessionHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.3, 0.8, 0.9, 1)
+text = "Stato pronto per la persistenza."
 
 [node name="🍸 Taverna Spaziale" type="MarginContainer" parent="MainLayout/ContentMargin/TabContainer"]
 visible = false

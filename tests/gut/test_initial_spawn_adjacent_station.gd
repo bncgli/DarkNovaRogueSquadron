@@ -85,8 +85,9 @@ func test_space_world_manager_configures_3d_space_ship_and_sensors() -> void:
 		add_child(world_mgr)
 		local_world_mgr = true
 
+	world_mgr.set_initial_spawn_docked(false)
 	world_mgr.set_star_system_data(sys_data)
-	world_mgr.start_mission()
+	world_mgr.start_mission(null, false)
 
 	station_entity = world_mgr.get_primary_station_entity()
 	assert_not_null(station_entity, "SpaceWorldManager deve istanziare l'entità 3D della stazione primaria")

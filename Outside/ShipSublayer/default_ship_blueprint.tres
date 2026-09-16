@@ -1008,6 +1008,7 @@ power_mw = -10.0
 script = ExtResource("3_2ervp")
 ship_id = "dark_nova_corvette"
 ship_name = "Dark Nova Corvette"
+flux = 300
 ship_bounds = Rect2(21, 11, 560, 420)
 drone_spawn_pos = Vector2(400, 260)
 drone_spawn_heading = -1.5708

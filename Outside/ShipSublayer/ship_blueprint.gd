@@ -51,7 +51,7 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 		drone_spawn_heading = val
 		emit_changed()
 
-@export var flux: int = 100:
+@export var flux: int = 300:
 	set(val):
 		flux = val
 		emit_changed()
@@ -60,6 +60,71 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 	set(val):
 		flux_modifiers = _ensure_objects(val, ShipFluxModifier)
 		emit_changed()
+
+## Configura la condizione economica Freemium-punk di partenza:
+## - 300 FLUX liquidi disponibili
+## - Modificatore passivo vincolato di -700 FLUX ("Ship Rent Service") per canone noleggio scafo
+func setup_default_freemium_debt() -> void:
+	if flux == 100:
+		flux = 300
+	for mod in flux_modifiers:
+		if mod is ShipFluxModifier and mod.owner == "Ship Rent Service":
+			return
+	var rent_mod := ShipFluxModifier.new(-700, "Ship Rent Service", "Canone noleggio scafo")
+	flux_modifiers.append(rent_mod)
+	emit_changed()
+
+## Ritorna il debito residuo del canone noleggio scafo
+func get_rent_debt() -> int:
+	var total_rent: int = 0
+	for mod in flux_modifiers:
+		if mod is ShipFluxModifier and mod.owner == "Ship Rent Service":
+			total_rent += absi(mod.value)
+	return total_rent
+
+## Ripiana una quota del debito di noleggio scalando dal saldo liquido disponibile
+func repay_rent_debt(amount: int) -> int:
+	if amount <= 0 or flux <= 0:
+		return 0
+	var current_debt := get_rent_debt()
+	if current_debt <= 0:
+		return 0
+	var to_pay := mini(amount, mini(flux, current_debt))
+	var remaining_to_pay := to_pay
+	var mods_to_remove: Array = []
+	for mod in flux_modifiers:
+		if mod is ShipFluxModifier and mod.owner == "Ship Rent Service":
+			var debt_val: int = absi(mod.value)
+			if debt_val <= remaining_to_pay:
+				remaining_to_pay -= debt_val
+				mods_to_remove.append(mod)
+			else:
+				mod.value += remaining_to_pay
+				remaining_to_pay = 0
+				break
+	for m in mods_to_remove:
+		flux_modifiers.erase(m)
+	var actually_paid: int = to_pay - remaining_to_pay
+	flux -= actually_paid
+	emit_changed()
+	return actually_paid
+
+## Salva lo stato corrente della blueprint su file persistente (user://blueprints/active_corvette_session.tres)
+func save_blueprint_state(file_path: String = "") -> Error:
+	if file_path.is_empty():
+		file_path = "user://blueprints/active_corvette_session.tres"
+	
+	var dir_path := file_path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(dir_path):
+		var err := DirAccess.make_dir_recursive_absolute(dir_path)
+		if err != OK:
+			push_error("ShipBlueprint: Impossibile creare directory per blueprint persistente: %s" % dir_path)
+			return err
+			
+	var save_err := ResourceSaver.save(self, file_path)
+	if save_err != OK:
+		push_error("ShipBlueprint: Errore durante il salvataggio persistente su %s (Codice: %d)" % [file_path, save_err])
+	return save_err
 
 
 # --- TASK-019: Zona Ricarica ---
@@ -798,10 +863,13 @@ func _init_default_damages() -> void:
 
 static func get_default_blueprint() -> ShipBlueprint:
 	const PATH := "res://Outside/ShipSublayer/default_ship_blueprint.tres"
+	var bp: ShipBlueprint = null
 	if ResourceLoader.exists(PATH):
 		var res := ResourceLoader.load(PATH)
 		if res is ShipBlueprint:
-			return res as ShipBlueprint
-	var bp := ShipBlueprint.new()
-	bp.create_default_ship()
+			bp = res as ShipBlueprint
+	if bp == null:
+		bp = ShipBlueprint.new()
+		bp.create_default_ship()
+	bp.setup_default_freemium_debt()
 	return bp

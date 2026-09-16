@@ -868,7 +868,7 @@ func _passes_filter(e: Dictionary) -> bool:
 	
 	match filter_category:
 		"MINERALS":
-			return t in ["ASTEROID", "MINERAL_ASTEROID"]
+			return t in ["ASTEROID", "MINERAL_ASTEROID", "MINERAL_DEPOSIT"]
 		"WRECKS":
 			return t in ["WRECK", "DERELICT"]
 		"THREATS":

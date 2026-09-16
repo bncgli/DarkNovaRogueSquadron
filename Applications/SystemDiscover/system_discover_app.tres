@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="AppResource" format=3]
+
+[ext_resource type="Script" path="res://Scenes/Autoloads/SoftwareManager/app_resource.gd" id="1_app"]
+[ext_resource type="Texture2D" path="res://Art/Icons/Apps/system_discover.svg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_app")
+icon = ExtResource("2_icon")
+app_id = "system_discover"
+title = "System Discover"
+description = "Generatore ed esploratore procedurale di sistemi stellari volumetrici con esportazione diegetica per la Lobby."
+developer = "Nova Cartography Group"
+category = "Astrometria / Utility"
+menu_path = "Sistemi Nave/Astrometria"
+icon_color = Color(0.15, 0.85, 0.8, 1)
+scene_path = "res://Applications/SystemDiscover/system_discover_app.tscn"
+default_window_size = Vector2(800, 560)
+min_window_size = Vector2(760, 520)
+roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista"])
+power_draw_mw = 12.0
+required_subsystems = Array[String](["navigation_computer", "astrometrics_array"])
+drive_folder = "Programs/SystemDiscover"
+default_password = "SYS-DISCOVER-01"
+default_files = Array[Dictionary]([{
+"content": "# SYSTEM DISCOVER CONFIGURATION & ASTRONOMICAL PARAMETERS
+[SYSTEM]
+app_name=SystemDiscoverApp
+version=1.0.0
+status=OPERATIONAL
+
+[ASTRONOMY]
+default_archetype=FRONTIER_EXPANSE
+vertical_elevation_enabled=true
+max_vertical_spread=3
+export_format=tres
+",
+"desc": "Parametri di astrometria e preferenze di generazione procedurale dei sistemi.",
+"is_protected": false,
+"path": "Ship Drive/Programs/SystemDiscover/system_discover_config.dat"
+}])

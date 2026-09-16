@@ -53,6 +53,7 @@ var repair_progress: float = 0.0
 # Stiva Cargo
 var cargo_items: Array[Dictionary] = []
 var cargo_weight_kg: float = 0.0
+var latched_container: CargoContainerEntity = null
 
 # Posizione di aggancio relativa all'astronave
 const DOCK_OFFSET_LOCAL: Vector3 = Vector3(0.0, -1.8, 2.5)
@@ -121,6 +122,7 @@ func dock() -> void:
 	is_tool_active = false
 	if laser_mesh:
 		laser_mesh.visible = false
+	_transfer_cargo_to_ship()
 	docking_completed.emit()
 
 func start_auto_dock() -> void:
@@ -143,6 +145,8 @@ func set_tool_trigger(active: bool, target_id: String = "") -> void:
 		target_object_id = target_id
 	if laser_mesh:
 		laser_mesh.visible = is_tool_active and (active_tool == "laser" or active_tool == "welder")
+	if not active and active_tool == "magnet":
+		unlatch_cargo()
 
 func _physics_process(delta: float) -> void:
 	var ship := _get_spaceship()
@@ -170,13 +174,17 @@ func _physics_process(delta: float) -> void:
 		active_drain_mult += 0.15
 	if is_tool_active:
 		active_drain_mult += 0.6
+	if latched_container != null and is_instance_valid(latched_container):
+		active_drain_mult += (latched_container.mass_kg / 100.0) * 0.9
 	
 	battery = maxf(0.0, battery - drain_per_sec * active_drain_mult * delta)
 	if battery <= 0.0:
-		# Batteria esaurita: niente spinta attiva, deriva inerziale o rientro di emergenza
+		# Batteria esaurita: niente spinta attiva, rilascio harpoon ed emergenza
 		input_move = Vector3.ZERO
 		input_rot = Vector3.ZERO
 		is_tool_active = false
+		if latched_container != null:
+			unlatch_cargo()
 		if laser_mesh:
 			laser_mesh.visible = false
 	
@@ -202,10 +210,15 @@ func _physics_process(delta: float) -> void:
 		if is_boost_active:
 			thrust_power *= 1.8
 		
+		# Modulazione dell'inerzia e della velocità in base alla massa rimorchiata
+		var tow_mass := latched_container.mass_kg if (latched_container and is_instance_valid(latched_container)) else 0.0
+		var inertia_mult := 1.0 / (1.0 + (tow_mass / 180.0))
+		thrust_power *= inertia_mult
+		
 		# Movimento in coordinate locali del drone
 		var local_move := input_move.normalized() if input_move.length() > 1.0 else input_move
 		var target_vel := (global_basis * local_move) * thrust_power
-		current_linear_velocity = current_linear_velocity.move_toward(target_vel, 25.0 * delta)
+		current_linear_velocity = current_linear_velocity.move_toward(target_vel, 25.0 * inertia_mult * delta)
 		
 		# Rotazione angolare con smorzamento diegetico
 		var target_rot_y := input_rot.y * max_rot_speed
@@ -291,9 +304,109 @@ func _process_laser(delta: float) -> void:
 
 func _process_magnet(_delta: float) -> void:
 	# Harpoon magnetico per la raccolta di rottami o capsule cargo nello spazio
-	if cargo_weight_kg < cargo_capacity_kg:
-		# Trova o raccoglie materiale
-		pass
+	if latched_container != null and is_instance_valid(latched_container):
+		return
+
+	var best_target: CargoContainerEntity = null
+	var min_dist: float = magnet_range
+	
+	# Scansione dei container nel gruppo
+	var containers := get_tree().get_nodes_in_group("cargo_containers")
+	for c in containers:
+		if c is CargoContainerEntity and is_instance_valid(c) and not c.is_latched and not c.is_collected:
+			var d := global_position.distance_to(c.global_position)
+			if d <= min_dist:
+				min_dist = d
+				best_target = c
+				
+	# Fallback a SpaceWorldManager active_debris_containers
+	if best_target == null and SpaceWorldManager and SpaceWorldManager.has_method("get_active_debris_containers"):
+		for c in SpaceWorldManager.get_active_debris_containers():
+			if c and is_instance_valid(c) and not c.is_latched and not c.is_collected:
+				var d := global_position.distance_to(c.global_position)
+				if d <= min_dist:
+					min_dist = d
+					best_target = c
+					
+	if best_target != null:
+		latch_cargo(best_target)
+		return
+		
+	# Se nessun container è agganciato o nelle vicinanze, ricerca nodi mineral_deposits
+	var deposits := get_tree().get_nodes_in_group("mineral_deposits")
+	var best_deposit: MineralDepositEntity = null
+	var min_dep_dist: float = magnet_range
+	for dep in deposits:
+		if dep is MineralDepositEntity and is_instance_valid(dep) and not dep.is_collected:
+			var d := global_position.distance_to(dep.global_position)
+			if d <= min_dep_dist:
+				min_dep_dist = d
+				best_deposit = dep
+				
+	if best_deposit != null:
+		if min_dep_dist <= 2.5:
+			if cargo_weight_kg + best_deposit.mass_kg <= cargo_capacity_kg:
+				best_deposit.collect_into_drone(self)
+			else:
+				best_deposit.start_magnetic_attraction(self, 14.0)
+		else:
+			best_deposit.start_magnetic_attraction(self, 14.0)
+
+## Scarica il carico stivato nel drone verso la corvetta madre o CargoManager
+func _transfer_cargo_to_ship() -> void:
+	if cargo_items.is_empty():
+		return
+	var ship := _get_spaceship()
+	var cargo_mgr: Node = null
+	if ship and is_instance_valid(ship) and "cargo_manager" in ship and ship.cargo_manager:
+		cargo_mgr = ship.cargo_manager
+	elif is_inside_tree():
+		var nodes := get_tree().get_nodes_in_group("cargo_managers")
+		if not nodes.is_empty():
+			cargo_mgr = nodes[0]
+			
+	for item in cargo_items:
+		var item_id: String = str(item.get("id", "ore_fragment"))
+		var item_name: String = str(item.get("name", "Frammento Minerale"))
+		var mass: float = float(item.get("weight_kg", 25.0))
+		if cargo_mgr and cargo_mgr.has_method("add_item"):
+			cargo_mgr.add_item({
+				"id": item_id,
+				"name": item_name,
+				"category": "MINERAL",
+				"unit_mass_kg": mass,
+				"unit_volume_m3": 0.5,
+				"unit_base_value": 200.0,
+				"quantity": 1,
+				"is_scavenged": false
+			}, 1)
+	cargo_items.clear()
+	cargo_weight_kg = 0.0
+
+## Aggancia un container cargo tramite harpoon
+func latch_cargo(container: CargoContainerEntity) -> bool:
+	if container == null or not is_instance_valid(container) or container.is_collected:
+		return false
+	latched_container = container
+	cargo_weight_kg = container.mass_kg
+	container.latch(self, Vector3(0.0, -1.2, -2.8))
+	return true
+
+## Sgancia il container rimorchiato
+func unlatch_cargo() -> void:
+	if latched_container != null and is_instance_valid(latched_container):
+		latched_container.unlatch()
+		cargo_dropped.emit(latched_container.get_cargo_item_dict())
+	latched_container = null
+	cargo_weight_kg = 0.0
+
+## Verifica se un container è attualmente vincolato all'harpoon
+func is_cargo_latched() -> bool:
+	return latched_container != null and is_instance_valid(latched_container) and latched_container.is_latched
+
+## Restituisce il container attualmente vincolato all'harpoon
+func get_latched_container() -> CargoContainerEntity:
+	return latched_container
 
 func collect_cargo_item(item_id: String, item_name: String, weight_kg: float) -> bool:
 	if cargo_weight_kg + weight_kg > cargo_capacity_kg:
@@ -349,11 +462,20 @@ func get_telemetry(dist: float = -1.0) -> Dictionary:
 		"cargo_count": cargo_items.size(),
 		"cargo_weight": cargo_weight_kg,
 		"max_cargo_weight": cargo_capacity_kg,
+		"is_latched": is_cargo_latched(),
+		"latched_container_id": latched_container.container_id if latched_container and is_instance_valid(latched_container) else "",
 		"tether_range": tether_range,
 		"tether_pct": clampf((cur_dist / maxf(tether_range, 1.0)) * 100.0, 0.0, 100.0)
 	}
 
 func _get_spaceship() -> Spaceship:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship"):
-		return SpaceWorldManager.get_spaceship()
+		var s: Spaceship = SpaceWorldManager.get_spaceship()
+		if s and is_instance_valid(s):
+			return s
+	if is_inside_tree():
+		var ships := get_tree().get_nodes_in_group("spaceship")
+		for s in ships:
+			if s is Spaceship and is_instance_valid(s):
+				return s
 	return null

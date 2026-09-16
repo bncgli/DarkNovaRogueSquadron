@@ -39,6 +39,8 @@ var initial_transform: Transform3D = Transform3D.IDENTITY
 # Sistema di Propulsione a Velocità di Crociera (Cruise Mode)
 var cruise_controller: Node = null
 var current_g_force: float = 1.0
+var cyber_drift_intensity: float = 0.0
+var _cyber_drift_noise_timer: float = 0.0
 
 func get_current_g_force() -> float:
 	return current_g_force
@@ -57,10 +59,18 @@ var target_synced_angular_velocity: Vector3 = Vector3.ZERO
 var movement_locked: bool = false
 
 signal ship_connection_changed(is_connected: bool)
+signal cargo_stowed_in_ship(item_data: Dictionary)
+
+var cargo_hatch_area: Area3D = null
+var cargo_manager: Node = null
+const CARGO_HATCH_OFFSET_LOCAL: Vector3 = Vector3(0.0, -1.8, 3.2)
+const CARGO_HATCH_RADIUS: float = 8.0
 
 func _ready() -> void:
+	add_to_group("spaceship")
 	initial_transform = transform
 	_init_camera_mounts()
+	_init_cargo_hatch()
 
 func _init_camera_mounts() -> void:
 	var mounts_parent := get_node_or_null("CameraMounts")
@@ -157,6 +167,117 @@ func get_cruise_controller() -> Node:
 func set_cruise_controller(controller: Node) -> void:
 	cruise_controller = controller
 
+func _init_cargo_hatch() -> void:
+	if cargo_hatch_area != null and is_instance_valid(cargo_hatch_area):
+		return
+	cargo_hatch_area = get_node_or_null("CargoHatchArea3D") as Area3D
+	if cargo_hatch_area == null:
+		cargo_hatch_area = Area3D.new()
+		cargo_hatch_area.name = "CargoHatchArea3D"
+		cargo_hatch_area.position = CARGO_HATCH_OFFSET_LOCAL
+		
+		var col := CollisionShape3D.new()
+		col.name = "CollisionShape3D"
+		var sphere := SphereShape3D.new()
+		sphere.radius = CARGO_HATCH_RADIUS
+		col.shape = sphere
+		cargo_hatch_area.add_child(col)
+		add_child(cargo_hatch_area)
+		
+	if not cargo_hatch_area.body_entered.is_connected(_on_cargo_hatch_body_entered):
+		cargo_hatch_area.body_entered.connect(_on_cargo_hatch_body_entered)
+
+func get_cargo_hatch() -> Area3D:
+	if cargo_hatch_area == null:
+		_init_cargo_hatch()
+	return cargo_hatch_area
+
+func _on_cargo_hatch_body_entered(body: Node3D) -> void:
+	if body is CargoContainerEntity and is_instance_valid(body) and not body.is_collected:
+		intake_cargo_container(body)
+	elif body is MineralDepositEntity and is_instance_valid(body) and not body.is_collected:
+		intake_mineral_deposit(body)
+
+func get_cargo_manager() -> Node:
+	if cargo_manager and is_instance_valid(cargo_manager):
+		return cargo_manager
+	if is_inside_tree():
+		var cm = get_node_or_null("/root/CargoManager")
+		if cm:
+			return cm
+		var cms := get_tree().get_nodes_in_group("cargo_managers")
+		if not cms.is_empty():
+			return cms[0]
+	return null
+
+## Prende in carico un deposito minerario, verificando la capienza in CargoManager
+func intake_mineral_deposit(deposit: MineralDepositEntity) -> bool:
+	if deposit == null or not is_instance_valid(deposit) or deposit.is_collected:
+		return false
+		
+	var res_dict: Dictionary = deposit.get_resource_dict()
+	var cm = get_cargo_manager()
+	
+	var success := false
+	if cm and cm.has_method("add_item"):
+		success = cm.add_item(res_dict, 1)
+	else:
+		success = true # Fallback se CargoManager non presente nell'albero
+		
+	if success:
+		deposit.stop_magnetic_attraction()
+		deposit.complete_collection(self)
+		cargo_stowed_in_ship.emit(res_dict)
+		if SpaceWorldManager and SpaceWorldManager.has_signal("cargo_stowed_in_ship"):
+			SpaceWorldManager.cargo_stowed_in_ship.emit(res_dict)
+		if SpaceWorldManager and SpaceWorldManager.has_method("_send_spawn_notification"):
+			SpaceWorldManager._send_spawn_notification("Minerale stivato: %s (%.1f kg)" % [res_dict.get("name", "Minerale"), float(res_dict.get("mass_kg", 25.0))])
+		return true
+	else:
+		if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
+			SpaceWorldManager.report_system_alert("ALLARME: Stiva satura, impossibile imbarcare minerale %s" % res_dict.get("name", "Minerale"))
+		return false
+
+## Prende in carico un container cargo, verificando la capienza in CargoManager
+func intake_cargo_container(container: CargoContainerEntity) -> bool:
+	if container == null or not is_instance_valid(container) or container.is_collected:
+		return false
+		
+	var item_dict: Dictionary = container.get_cargo_item_dict()
+	var qty: int = int(item_dict.get("quantity", 1))
+	
+	# Verifica e inserimento in CargoManager
+	var cm = get_cargo_manager()
+		
+	var success := false
+	if cm and cm.has_method("add_item"):
+		success = cm.add_item(item_dict, qty)
+	else:
+		success = true # Fallback se CargoManager non presente nell'albero
+		
+	if success:
+		# Sgancio del drone se rimorchiato
+		if container.latched_to != null and is_instance_valid(container.latched_to):
+			if container.latched_to.has_method("unlatch_cargo"):
+				container.latched_to.unlatch_cargo()
+			else:
+				container.unlatch()
+		else:
+			container.unlatch()
+			
+		container.mark_collected(self)
+		cargo_stowed_in_ship.emit(item_dict)
+		if SpaceWorldManager and SpaceWorldManager.has_signal("cargo_stowed_in_ship"):
+			SpaceWorldManager.cargo_stowed_in_ship.emit(item_dict)
+		if SpaceWorldManager and SpaceWorldManager.has_method("_send_spawn_notification"):
+			SpaceWorldManager._send_spawn_notification("Carico stivato: %s (%d u.)" % [item_dict.get("name", "Container"), qty])
+		return true
+	else:
+		# Stiva satura: allarme diegetico e carico mantenuto
+		if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
+			SpaceWorldManager.report_system_alert("ALLARME: Stiva satura, impossibile imbarcare %s" % item_dict.get("name", "Carico"))
+		return false
+
 func get_camera_global_transform(cam_id: String) -> Transform3D:
 	var mount: Marker3D = get_camera_mount(cam_id)
 	if mount and is_instance_valid(mount) and mount.is_inside_tree():
@@ -231,6 +352,9 @@ func set_movement_locked(locked: bool) -> void:
 		stop_engines()
 
 func get_movement_locked() -> bool:
+	return movement_locked
+
+func is_movement_locked() -> bool:
 	return movement_locked
 
 func set_ship_connected(connected: bool) -> void:
@@ -329,6 +453,39 @@ func _apply_flight_physics(delta: float) -> void:
 		angular_velocity = angular_velocity.move_toward(target_global_ang, angular_acceleration * delta)
 	else:
 		angular_velocity = angular_velocity.move_toward(Vector3.ZERO, angular_deceleration * delta)
+
+	# Se PROPULSION_WORM o drift cyber è attivo, applica la perturbazione
+	if cyber_drift_intensity > 0.0:
+		apply_cyber_drift(delta, cyber_drift_intensity)
+	elif is_inside_tree():
+		var cd = get_tree().get_first_node_in_group("combat_directors")
+		if cd and cd.has_method("is_exploit_active") and cd.is_exploit_active("PROPULSION_WORM"):
+			apply_cyber_drift(delta, 1.0)
+
+## Applica una perturbazione/deriva cyber incontrollata ai controlli di volo (PROPULSION_WORM)
+func apply_cyber_drift(delta: float, intensity: float = 1.0) -> void:
+	cyber_drift_intensity = intensity
+	_cyber_drift_noise_timer += delta
+	var cur_basis := global_transform.basis if is_inside_tree() else transform.basis
+	# Coppia di deriva angolare erratica
+	var drift_torque := Vector3(
+		sin(_cyber_drift_noise_timer * 2.3) * 0.8,
+		cos(_cyber_drift_noise_timer * 1.7) * 0.9,
+		sin(_cyber_drift_noise_timer * 3.1) * 0.4
+	) * intensity * max_angular_speed * 0.6
+	
+	# Forza lineare di deriva erratica
+	var drift_force := Vector3(
+		cos(_cyber_drift_noise_timer * 1.5) * 0.5,
+		sin(_cyber_drift_noise_timer * 2.0) * 0.3,
+		sin(_cyber_drift_noise_timer * 1.1) * 0.7
+	) * intensity * max_linear_speed * 0.4
+	
+	angular_velocity += (cur_basis * drift_torque) * delta
+	linear_velocity += (cur_basis * drift_force) * delta
+
+func set_cyber_drift_active(active: bool, intensity: float = 1.0) -> void:
+	cyber_drift_intensity = intensity if active else 0.0
 
 func set_inertia_dampening(enabled: bool) -> void:
 	inertia_dampening = enabled

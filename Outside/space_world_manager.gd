@@ -37,6 +37,7 @@ signal sector_zone_loaded(sector_data: SectorData)
 signal hyperdrive_transition_started(target_coords: Vector3i)
 signal hyperdrive_transition_progress(loaded_count: int, total_count: int)
 signal hyperdrive_transition_ended(target_coords: Vector3i)
+signal cargo_stowed_in_ship(item_data: Dictionary)
 
 # --- HYPERDRIVE TRANSITION & MULTIPLAYER CREW SYNC ---
 var is_hyperdrive_transition_active: bool = false
@@ -145,12 +146,128 @@ var active_star_system: StarSystemData = null
 # Istanza 3D della stazione orbitale primaria nello spazio
 var primary_station_instance: SpaceStationEntity = null
 var default_station_approach_distance: float = 1800.0 # Metri dallo scalo portuale (1000-2500m)
+var default_spawn_docked: bool = true
+var docking_manager: DockingManager = null
+
+func get_docking_manager() -> DockingManager:
+	if docking_manager == null or not is_instance_valid(docking_manager):
+		var st_mgr := get_node_or_null("/root/StationManager")
+		if st_mgr is DockingManager:
+			docking_manager = st_mgr
+		else:
+			docking_manager = DockingManager.new()
+			docking_manager.name = "WorldDockingManager"
+			add_child(docking_manager)
+	return docking_manager
+
+func set_initial_spawn_docked(docked: bool) -> void:
+	default_spawn_docked = docked
+
+func is_ship_docked() -> bool:
+	var dm := get_docking_manager()
+	if dm:
+		return dm.is_docked
+	return false
+
+func request_undock() -> void:
+	var dm := get_docking_manager()
+	if dm:
+		dm.request_undock()
 
 # Settore corrente e istanza 3D relitto spaziale
 var current_sector_data: SectorData = null
 var primary_derelict_instance: DerelictShipEntity = null
+var active_debris_containers: Array[CargoContainerEntity] = []
 var _last_loaded_sector_coords: Vector3i = Vector3i(-999999, -999999, -999999)
 var combat_director: CombatDirector = null
+
+## Ritorna l'elenco dei container cargo galleggianti nel campo detriti attivo
+func get_active_debris_containers() -> Array[CargoContainerEntity]:
+	return active_debris_containers
+
+## Rimuove tutti i container cargo del campo detriti attivo
+func clear_debris_field() -> void:
+	for c in active_debris_containers:
+		if c and is_instance_valid(c):
+			c.queue_free()
+	active_debris_containers.clear()
+
+## Genera un campo detriti volumetrico 3D con container galleggianti attorno a una posizione
+func spawn_debris_field(center_pos: Vector3, container_count: int = 4) -> Array[CargoContainerEntity]:
+	clear_debris_field()
+	var count: int = clampi(container_count, 3, 8)
+	var parent_node: Node = _space_scene_instance if _space_scene_instance and is_instance_valid(_space_scene_instance) else self
+	
+	var cargo_templates: Array[Dictionary] = [
+		{
+			"id": "alloys_durasteel",
+			"name": "Leghe Raffinate Durasteel",
+			"category": "ALLOY",
+			"unit_mass_kg": 40.0,
+			"unit_volume_m3": 0.5,
+			"unit_base_value": 350.0,
+			"quantity": 2
+		},
+		{
+			"id": "energy_cell",
+			"name": "Celle Energetiche al Plasma",
+			"category": "ENERGY_CELL",
+			"unit_mass_kg": 10.0,
+			"unit_volume_m3": 0.3,
+			"unit_base_value": 180.0,
+			"quantity": 5
+		},
+		{
+			"id": "ammo_railgun",
+			"name": "Munizioni Sabot Railgun",
+			"category": "AMMO",
+			"unit_mass_kg": 15.0,
+			"unit_volume_m3": 0.2,
+			"unit_base_value": 220.0,
+			"quantity": 4
+		},
+		{
+			"id": "nanites_medical",
+			"name": "Naniti Medici Avanzati",
+			"category": "NANITES",
+			"unit_mass_kg": 5.0,
+			"unit_volume_m3": 0.1,
+			"unit_base_value": 450.0,
+			"quantity": 1
+		},
+		{
+			"id": "minerals_titanium",
+			"name": "Titanio Grezzo",
+			"category": "MINERAL",
+			"unit_mass_kg": 25.0,
+			"unit_volume_m3": 0.8,
+			"unit_base_value": 120.0,
+			"quantity": 3
+		}
+	]
+	
+	for i in range(count):
+		var container := CargoContainerEntity.new()
+		container.name = "CargoContainer_%d" % (i + 1)
+		container.container_id = "CONTAINER_%02d" % (i + 1)
+		
+		# Offset volumetrico 3D completo: coordinate X, Y, Z variabili
+		var angle := (float(i) / float(count)) * TAU
+		var radius := 50.0 + float((i * 23) % 45)
+		var off_x := cos(angle) * radius
+		var off_z := sin(angle) * radius
+		var off_y := float(((i * 71) % 240) - 120) # Quote variabili disallineate dall'eclittica
+		
+		var spawn_pos := center_pos + Vector3(off_x, off_y, off_z)
+		container.item_data = cargo_templates[i % cargo_templates.size()].duplicate(true)
+		container.container_name = "Container [%s]" % container.item_data.get("name", "Merci")
+		container.mass_kg = float(container.item_data.get("unit_mass_kg", 30.0)) * float(container.item_data.get("quantity", 1))
+		
+		parent_node.add_child(container)
+		container.global_position = spawn_pos
+		active_debris_containers.append(container)
+		
+	return active_debris_containers
 
 func get_combat_director() -> CombatDirector:
 	if combat_director and is_instance_valid(combat_director):
@@ -229,10 +346,28 @@ func _connect_grid_manager() -> void:
 		if grid_mgr:
 			if grid_mgr.has_signal("sector_changed") and not grid_mgr.sector_changed.is_connected(_on_grid_sector_changed):
 				grid_mgr.sector_changed.connect(_on_grid_sector_changed)
+			if grid_mgr.has_signal("sector_boundary_crossed") and not grid_mgr.sector_boundary_crossed.is_connected(_on_grid_sector_boundary_crossed):
+				grid_mgr.sector_boundary_crossed.connect(_on_grid_sector_boundary_crossed)
 			if grid_mgr.has_signal("hyperdrive_transit_started") and not grid_mgr.hyperdrive_transit_started.is_connected(_on_grid_hyperdrive_transit_started):
 				grid_mgr.hyperdrive_transit_started.connect(_on_grid_hyperdrive_transit_started)
 			if grid_mgr.has_signal("hyperdrive_transit_completed") and not grid_mgr.hyperdrive_transit_completed.is_connected(_on_hyperdrive_transit_completed):
 				grid_mgr.hyperdrive_transit_completed.connect(_on_hyperdrive_transit_completed)
+
+func _on_grid_sector_boundary_crossed(new_coords: Vector3i, entry_offset: Vector3) -> void:
+	var ship := get_spaceship()
+	if ship and is_instance_valid(ship):
+		var cur_vel := ship.linear_velocity
+		var cur_ang_vel := ship.angular_velocity
+		var cur_basis := ship.global_transform.basis
+		ship.global_position = entry_offset
+		ship.linear_velocity = cur_vel
+		ship.angular_velocity = cur_ang_vel
+		ship.transform.basis = cur_basis
+		
+	var grid_mgr = get_node_or_null("/root/StarSystemGridManager")
+	if grid_mgr and grid_mgr.has_method("get_current_sector_data"):
+		load_sector_zone(grid_mgr.get_current_sector_data())
+	_send_spawn_notification("Valico quadrante completato: %s" % (grid_mgr.format_sector_id(new_coords) if grid_mgr else "SEC"))
 
 func _on_grid_sector_changed(_old_coords: Vector3i, _new_coords: Vector3i, sec_data: SectorData) -> void:
 	load_sector_zone(sec_data)
@@ -461,10 +596,13 @@ func is_ship_connected() -> bool:
 	return false
 
 ## Avvia la sessione di missione nello spazio e attiva la connessione nave
-func start_mission(bp: ShipBlueprint = null) -> void:
+func start_mission(bp: ShipBlueprint = null, spawn_docked: Variant = null) -> void:
 	if bp != null:
 		set_ship_blueprint(bp)
-	configure_initial_station_spawn()
+	else:
+		get_ship_blueprint().setup_default_freemium_debt()
+	var should_dock: bool = default_spawn_docked if spawn_docked == null else bool(spawn_docked)
+	configure_initial_station_spawn(should_dock)
 	set_ship_connected(true)
 
 ## Termina la sessione di missione, disconnette la nave e resetta lo stato
@@ -578,10 +716,17 @@ func get_world_3d() -> World3D:
 		_init_space_world()
 	return _master_viewport.world_3d
 
+var current_ship: Spaceship = null
+
 func get_spaceship() -> Spaceship:
+	if current_ship != null and is_instance_valid(current_ship):
+		return current_ship
 	if _space_scene_instance and is_instance_valid(_space_scene_instance):
 		return _space_scene_instance.get_spaceship()
 	return null
+
+func set_spaceship(ship: Spaceship) -> void:
+	current_ship = ship
 
 func set_spaceship_inputs(move_vec: Vector3, rot_vec: Vector3) -> void:
 	if not is_ship_connected():
@@ -930,10 +1075,30 @@ func set_star_system_data(sys: StarSystemData) -> void:
 		if grid_mgr and grid_mgr.has_method("load_star_system"):
 			grid_mgr.load_star_system(sys)
 	_connect_grid_manager()
-	configure_initial_station_spawn()
+	configure_initial_station_spawn(default_spawn_docked)
+
+## Calcola la quota/elevazione altimetrica 3D Y (in metri) per un'entità di settore
+func calculate_entity_elevation(ent: Variant) -> float:
+	if ent == null:
+		return 0.0
+	if ent is CelestialBodyData:
+		if ent.local_elevation != 0.0:
+			return ent.local_elevation
+		if ent.has_meta("local_elevation"):
+			return float(ent.get_meta("local_elevation"))
+		if ent.coords.z != 0:
+			return float(ent.coords.z) * 350.0
+	elif ent is Dictionary:
+		if ent.has("local_elevation") and float(ent["local_elevation"]) != 0.0:
+			return float(ent["local_elevation"])
+		if ent.has("coords") and ent["coords"] is Array and ent["coords"].size() >= 3:
+			var z_coord := int(ent["coords"][2])
+			if z_coord != 0:
+				return float(z_coord) * 350.0
+	return 0.0
 
 ## Configura e posiziona la stazione orbitale primaria nello spazio 3D e orienta la nave per lo spawn iniziale
-func configure_initial_station_spawn() -> void:
+func configure_initial_station_spawn(spawn_docked: Variant = null) -> void:
 	var sys := get_star_system_data()
 	var station_data := {}
 	if sys != null and sys.has_method("find_primary_station"):
@@ -954,8 +1119,9 @@ func configure_initial_station_spawn() -> void:
 	var st_name: String = station_data.get("name")
 	var st_type: String = station_data.get("type")
 	
-	# Calcola la posizione 3D della stazione nel mondo di gioco (area perimetrale a 1800m dalla prua nave)
-	var station_3d_pos := Vector3(0.0, 0.0, -default_station_approach_distance)
+	# Calcola la posizione 3D volumetrica della stazione (quota Y variabile da coordinate o elevazione locale)
+	var station_elev_y: float = calculate_entity_elevation(station_data)
+	var station_3d_pos := Vector3(0.0, station_elev_y, -default_station_approach_distance)
 	
 	# Assicura il master viewport e space scene
 	if _master_viewport == null or not is_instance_valid(_master_viewport):
@@ -981,11 +1147,29 @@ func configure_initial_station_spawn() -> void:
 			primary_station_instance.global_position = station_3d_pos
 			primary_station_instance.visible = true
 			
-	# Orienta la nave verso la stazione spaziale
 	var ship := get_spaceship()
-	if ship and is_instance_valid(ship):
-		ship.global_position = Vector3.ZERO
-		ship.look_at(station_3d_pos, Vector3.UP)
+	var dm := get_docking_manager()
+	var should_dock: bool = default_spawn_docked if spawn_docked == null else bool(spawn_docked)
+
+	if should_dock and primary_station_instance and is_instance_valid(primary_station_instance):
+		var bay_trans := primary_station_instance.get_bay_global_transform(0)
+		if ship and is_instance_valid(ship):
+			if ship.is_inside_tree():
+				ship.global_transform = bay_trans
+			else:
+				ship.transform = bay_trans
+			ship.linear_velocity = Vector3.ZERO
+			ship.angular_velocity = Vector3.ZERO
+		lock_ship_movement(true)
+		if dm:
+			dm.force_complete_docking(primary_station_instance, 0)
+		_send_spawn_notification("Attracco completato: Corvetta agganciata alla Baia 0 di %s" % st_name)
+	else:
+		if ship and is_instance_valid(ship):
+			ship.global_position = Vector3.ZERO
+			ship.look_at(station_3d_pos, Vector3.UP)
+		lock_ship_movement(false)
+		_send_spawn_notification("Posizionamento completato: Stazione Spaziale rilevata nel settore adiacente")
 		
 	# Genera automaticamente un waypoint diegetico e segnale IFF identificativo
 	set_active_waypoint({
@@ -1071,9 +1255,21 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 	elif is_sector_station_or_adjacent(sec_data.coordinates):
 		has_station = true
 		
+	var station_elev_y: float = 0.0
 	var station_3d_pos := Vector3(0.0, 0.0, -default_station_approach_distance)
 	
 	if has_station:
+		var st_ents := sec_data.get_entities_by_type("STATION")
+		if st_ents.size() > 0:
+			station_elev_y = calculate_entity_elevation(st_ents[0])
+		else:
+			var sys_check := get_star_system_data()
+			if sys_check and sys_check.has_method("find_primary_station"):
+				var st_prim: CelestialBodyData = sys_check.find_primary_station()
+				if st_prim:
+					station_elev_y = calculate_entity_elevation(st_prim)
+		station_3d_pos = Vector3(0.0, station_elev_y, -default_station_approach_distance)
+		
 		if _space_scene_instance and is_instance_valid(_space_scene_instance):
 			if primary_station_instance == null or not is_instance_valid(primary_station_instance):
 				primary_station_instance = _space_scene_instance.get_node_or_null("SpaceStationEntity") as SpaceStationEntity
@@ -1090,7 +1286,6 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 				var st_id := "STATION_VALKYRIE"
 				var st_name := "Stazione Valkyrie"
 				var st_type := "STATION"
-				var st_ents := sec_data.get_entities_by_type("STATION")
 				if st_ents.size() > 0:
 					st_id = st_ents[0].id
 					st_name = st_ents[0].name
@@ -1131,8 +1326,17 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 	
 	# 3. Gestione Relitti Spaziali (Wreck / Derelict)
 	var has_wreck: bool = sec_data.sector_type == "DERELICT_GRAVEYARD" or sec_data.has_entity_of_type("WRECK")
-	var wreck_3d_pos := Vector3(0.0, 0.0, -800.0)
+	var wreck_elev_y: float = 0.0
+	var wreck_ents := sec_data.get_entities_by_type("WRECK")
+	if wreck_ents.size() > 0:
+		wreck_elev_y = calculate_entity_elevation(wreck_ents[0])
+	elif sec_data.sector_type == "DERELICT_GRAVEYARD":
+		wreck_elev_y = float(((abs(sec_data.coordinates.x * 79 + sec_data.coordinates.z * 31) % 1600) - 800))
+		if is_zero_approx(wreck_elev_y):
+			wreck_elev_y = 350.0
+	var wreck_3d_pos := Vector3(0.0, wreck_elev_y, -800.0)
 	if has_wreck:
+		clear_debris_field()
 		if _space_scene_instance and is_instance_valid(_space_scene_instance):
 			if primary_derelict_instance == null or not is_instance_valid(primary_derelict_instance):
 				primary_derelict_instance = _space_scene_instance.get_node_or_null("DerelictShipEntity") as DerelictShipEntity
@@ -1148,11 +1352,13 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 			if primary_derelict_instance and is_instance_valid(primary_derelict_instance):
 				primary_derelict_instance.global_position = wreck_3d_pos
 				primary_derelict_instance.visible = true
-				var wreck_ents := sec_data.get_entities_by_type("WRECK")
 				if wreck_ents.size() > 0:
 					primary_derelict_instance.derelict_id = wreck_ents[0].id
 					primary_derelict_instance.ship_name = wreck_ents[0].name
 					
+		# Genera campo detriti volumetrico 3D con container recuperabili
+		spawn_debris_field(wreck_3d_pos, 4)
+		
 		if not has_station:
 			if ship and is_instance_valid(ship):
 				ship.look_at(wreck_3d_pos, Vector3.UP)
@@ -1166,6 +1372,7 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 				"is_station": false
 			})
 	else:
+		clear_debris_field()
 		if primary_derelict_instance and is_instance_valid(primary_derelict_instance):
 			primary_derelict_instance.visible = false
 			primary_derelict_instance.global_position = Vector3(0.0, -999999.0, 0.0)
@@ -1226,6 +1433,10 @@ func get_primary_station_entity() -> SpaceStationEntity:
 	if primary_station_instance == null or not is_instance_valid(primary_station_instance):
 		configure_initial_station_spawn()
 	return primary_station_instance
+
+## Ritorna l'istanza DerelictShipEntity del relitto primario
+func get_primary_derelict_entity() -> DerelictShipEntity:
+	return primary_derelict_instance
 
 ## Alias per compatibilità con DockingManager
 func get_docking_station() -> SpaceStationEntity:
@@ -2110,6 +2321,37 @@ func clear_active_waypoint() -> void:
 	active_waypoint.clear()
 	waypoint_updated.emit({})
 
+var discovered_pois: Array[Dictionary] = []
+
+func register_discovered_poi(poi_data: Dictionary) -> void:
+	var poi_id := str(poi_data.get("id", poi_data.get("name", "POI_%d" % discovered_pois.size())))
+	for p in discovered_pois:
+		if str(p.get("id")) == poi_id:
+			# Aggiorna coordinate
+			p["pos"] = poi_data.get("coordinates", poi_data.get("pos", Vector3.ZERO))
+			set_active_waypoint({
+				"id": poi_id,
+				"name": str(poi_data.get("name", poi_data.get("discovered_poi", "Punto di Interesse"))),
+				"pos": p["pos"]
+			})
+			return
+			
+	var new_poi := poi_data.duplicate(true)
+	if not new_poi.has("id"):
+		new_poi["id"] = poi_id
+	if not new_poi.has("pos"):
+		new_poi["pos"] = poi_data.get("coordinates", Vector3.ZERO)
+	discovered_pois.append(new_poi)
+	
+	set_active_waypoint({
+		"id": poi_id,
+		"name": str(poi_data.get("name", poi_data.get("discovered_poi", "Punto di Interesse"))),
+		"pos": new_poi["pos"]
+	})
+
+func get_discovered_pois() -> Array[Dictionary]:
+	return discovered_pois
+
 func trigger_active_ping(radius: float = 50000.0) -> void:
 	var ship := get_spaceship()
 	var origin: Vector3 = ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
@@ -2142,6 +2384,12 @@ func has_radar_damage() -> bool:
 	return false
 
 ## Ritorna tutti i contatti telemetrici/radar a lungo raggio (fino a 50 km) con spettrometria e IFF.
+func get_all_spatial_entities() -> Array[Dictionary]:
+	return get_sensor_entities()
+
+func get_spatial_entities() -> Array[Dictionary]:
+	return get_sensor_entities()
+
 func get_sensor_entities() -> Array[Dictionary]:
 	var entities: Array[Dictionary] = []
 	var ship := get_spaceship()
@@ -2337,6 +2585,87 @@ func get_sensor_entities() -> Array[Dictionary]:
 			"node_ref": primary_derelict_instance,
 			"radio_frequency": 850.5
 		})
+	
+	# Aggiungi container cargo fisici galleggianti del campo detriti
+	for container in active_debris_containers:
+		if container and is_instance_valid(container) and container.visible and not container.is_collected:
+			var c_pos: Vector3 = container.global_position
+			var diff: Vector3 = c_pos - ship_pos
+			var dist: float = diff.length()
+			var local_diff: Vector3 = ship_basis.inverse() * diff
+			var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+			var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+			entities.append({
+				"id": container.container_id,
+				"name": container.container_name,
+				"pos": c_pos,
+				"rel_pos": local_diff,
+				"local_rel_pos": local_diff,
+				"world_rel_pos": diff,
+				"distance": dist,
+				"velocity": container.linear_velocity if "linear_velocity" in container else Vector3.ZERO,
+				"local_velocity": Vector3.ZERO,
+				"bearing_deg": bearing_deg,
+				"elevation_deg": elevation_deg,
+				"type": "CARGO_CONTAINER",
+				"iff_tag": "NEUTRAL",
+				"stealth_level": 0.05,
+				"radius_m": 2.5,
+				"composition": {"Contenuto Cargo": 80.0, "Blindatura Composita": 20.0},
+				"integrity": 100.0,
+				"mass_tons": container.mass_kg / 1000.0,
+				"radiation_level": 0.02,
+				"signal_signature": 0.50,
+				"estimated_value_cr": int(container.item_data.get("unit_base_value", 150.0) * container.item_data.get("quantity", 1)),
+				"node_ref": container
+			})
+	
+	# Aggiungi frammenti e nodi minerali galleggianti (MineralDepositEntity)
+	if is_inside_tree():
+		var mineral_nodes := get_tree().get_nodes_in_group("mineral_deposits")
+		for dep in mineral_nodes:
+			if dep and is_instance_valid(dep) and dep.visible and not bool(dep.get("is_collected")):
+				var m_pos: Vector3 = dep.global_position
+				var diff: Vector3 = m_pos - ship_pos
+				var dist: float = diff.length()
+				var local_diff: Vector3 = ship_basis.inverse() * diff
+				var bearing_deg: float = rad_to_deg(atan2(local_diff.x, -local_diff.z))
+				var elevation_deg: float = rad_to_deg(atan2(local_diff.y, Vector2(local_diff.x, local_diff.z).length()))
+				var m_id: String = dep.deposit_id if "deposit_id" in dep else dep.name
+				var m_name: String = dep.mineral_name if "mineral_name" in dep else dep.name
+				var m_res: String = dep.resource_type if "resource_type" in dep else "heavy_metals"
+				var m_mass: float = float(dep.mass_kg) if "mass_kg" in dep else 25.0
+				var m_purity: float = float(dep.purity) if "purity" in dep else 1.0
+				var m_val: int = int(dep.base_value_credits * m_purity) if "base_value_credits" in dep else 200
+				var m_flux: float = float(dep.flux_yield * m_purity) if "flux_yield" in dep else 1.0
+				var m_water: float = float(dep.life_support_water_units * m_purity) if "life_support_water_units" in dep else 0.0
+				
+				entities.append({
+					"id": m_id,
+					"name": m_name,
+					"pos": m_pos,
+					"rel_pos": local_diff,
+					"local_rel_pos": local_diff,
+					"world_rel_pos": diff,
+					"distance": dist,
+					"velocity": dep.linear_velocity if "linear_velocity" in dep else Vector3.ZERO,
+					"local_velocity": Vector3.ZERO,
+					"bearing_deg": bearing_deg,
+					"elevation_deg": elevation_deg,
+					"type": "MINERAL_DEPOSIT",
+					"iff_tag": "NEUTRAL",
+					"stealth_level": 0.05,
+					"radius_m": 1.5,
+					"composition": {m_res: 100.0},
+					"integrity": 100.0,
+					"mass_tons": m_mass / 1000.0,
+					"radiation_level": 0.02,
+					"signal_signature": 0.60,
+					"estimated_value_cr": m_val,
+					"flux_potential": m_flux,
+					"water_units": m_water,
+					"node_ref": dep
+				})
 	
 	# Contatti diegetici aggiuntivi a lungo raggio / stazioni / relitti / sonde
 	var long_range_defaults: Array[Dictionary] = [
@@ -3297,6 +3626,36 @@ func _update_ballistic_projectiles(delta: float) -> void:
 				projectile_impact.emit(p, e_id, applied_dmg, mult)
 				hit_target = true
 				break
+		
+		# Controllo collisioni verso asteroidi tramite sweep continuo
+		if not hit_target and is_inside_tree():
+			var asteroid_nodes := get_tree().get_nodes_in_group("asteroids")
+			for ast in asteroid_nodes:
+				if not ast or not is_instance_valid(ast):
+					continue
+				if "is_fractured" in ast and ast.is_fractured:
+					continue
+				var ast_pos: Vector3 = ast.global_position if "global_position" in ast else Vector3.ZERO
+				var ast_radius: float = float(ast.radius_m) if "radius_m" in ast else 4.0
+				var sweep_res := check_segment_sphere_collision(prev_pos, new_pos, ast_pos, ast_radius + proj_radius)
+				if sweep_res["hit"]:
+					var ast_vel: Vector3 = ast.linear_velocity if "linear_velocity" in ast else Vector3.ZERO
+					var v_rel := vel - ast_vel
+					var dmg_calc := calculate_relative_kinetic_damage(base_dmg, v_rel, muzzle_speed, is_kin)
+					var applied_dmg: float = float(dmg_calc["damage"])
+					var mult: float = float(dmg_calc["multiplier"])
+					
+					var hit_loc: Vector3 = sweep_res.get("closest_point", new_pos)
+					if ast.has_method("take_damage"):
+						ast.take_damage(applied_dmg, hit_loc)
+					elif ast.has_method("apply_mining_damage"):
+						ast.apply_mining_damage(applied_dmg, hit_loc)
+					
+					var ast_name: String = ast.name if "name" in ast else "Asteroid"
+					p["is_destroyed"] = true
+					projectile_impact.emit(p, ast_name, applied_dmg, mult)
+					hit_target = true
+					break
 		
 		if not hit_target:
 			remaining.append(p)

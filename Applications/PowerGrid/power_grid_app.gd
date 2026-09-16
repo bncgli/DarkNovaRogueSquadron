@@ -87,7 +87,16 @@ func _ready() -> void:
 	_print_terminal_welcome()
 
 func _process(_delta: float) -> void:
-	pass
+	if is_inside_tree():
+		var cd = get_tree().get_first_node_in_group("combat_directors")
+		if cd and cd.has_method("is_exploit_active"):
+			var overload_active: bool = cd.is_exploit_active("REACTOR_OVERLOAD")
+			if overload_active:
+				if status_badge:
+					status_badge.text = "⚠️ SOVRACCARICO CYBER (VIRUS ATTIVO)"
+					status_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25, 1.0))
+			elif status_badge and status_badge.text.begins_with("⚠️ SOVRACCARICO CYBER"):
+				_update_connection_state()
 
 func _setup_ui_events() -> void:
 	if terminal_input:
@@ -188,6 +197,14 @@ func _refresh_power_logic() -> void:
 				categories_present[cat] = true
 	
 	net_power_mw = total_gen_mw - total_cons_mw
+	
+	# Penalità anomalia cyber se REACTOR_OVERLOAD è attivo
+	if is_inside_tree():
+		var cd = get_tree().get_first_node_in_group("combat_directors")
+		if cd and cd.has_method("is_exploit_active") and cd.is_exploit_active("REACTOR_OVERLOAD"):
+			total_gen_mw *= 0.75
+			total_cons_mw += 200.0
+			net_power_mw = total_gen_mw - total_cons_mw
 	
 	_update_ui_telemetry()
 	_update_system_effects(categories_present)

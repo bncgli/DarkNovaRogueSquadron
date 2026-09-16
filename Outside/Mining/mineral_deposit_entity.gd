@@ -37,6 +37,43 @@ func _setup_collision() -> void:
 	linear_damp = 0.5
 	angular_damp = 0.8
 
+	# Configura CollisionShape3D programmatica se assente
+	var col_shape := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if col_shape == null:
+		col_shape = CollisionShape3D.new()
+		col_shape.name = "CollisionShape3D"
+		var sphere := SphereShape3D.new()
+		sphere.radius = maxf(0.5, pow(volume_m3 * 0.75 / PI, 1.0 / 3.0))
+		col_shape.shape = sphere
+		add_child(col_shape)
+
+	# Configura MeshInstance3D per resa grafica e sensori/LIDAR
+	var mesh_inst := get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if mesh_inst == null:
+		mesh_inst = MeshInstance3D.new()
+		mesh_inst.name = "MeshInstance3D"
+		var sphere_mesh := SphereMesh.new()
+		sphere_mesh.radius = 0.6
+		sphere_mesh.height = 1.2
+		mesh_inst.mesh = sphere_mesh
+		
+		var mat := StandardMaterial3D.new()
+		if resource_type in ["water_ice", "ice", "water"]:
+			mat.albedo_color = Color(0.3, 0.75, 1.0, 0.85) # Ghiaccio azzurro
+			mat.roughness = 0.1
+			mat.metallic = 0.1
+		elif resource_type in ["crystals", "exocrystal", "rare_alloys"]:
+			mat.albedo_color = Color(0.85, 0.2, 0.95) # Cristallo FLUX violaceo
+			mat.emission_enabled = true
+			mat.emission = Color(0.7, 0.1, 0.8)
+			mat.emission_energy_multiplier = 0.8
+		else:
+			mat.albedo_color = Color(0.65, 0.65, 0.7) # Metallo denso
+			mat.metallic = 0.8
+			mat.roughness = 0.4
+		mesh_inst.material_override = mat
+		add_child(mesh_inst)
+
 func _physics_process(delta: float) -> void:
 	if is_collected:
 		return

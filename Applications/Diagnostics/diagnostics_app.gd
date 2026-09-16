@@ -74,6 +74,8 @@ var reset_timer_target: float = 3.0
 
 var detected_threats: Array[Dictionary] = []
 var quarantined_threats: Array[Dictionary] = []
+var active_cyber_intrusions: Dictionary = {}
+var _combat_director: CombatDirector = null
 
 var ice_nodes_status: Dictionary = {
 	"avionics": {"name": "Avionica & Navigazione", "integrity": 100.0, "status": "SECURE"},
@@ -251,6 +253,21 @@ func _connect_system_signals() -> void:
 			sdm.ship_drive_mounted.connect(_on_drive_mounted)
 		if sdm.has_signal("ship_drive_unmounted") and not sdm.ship_drive_unmounted.is_connected(_on_drive_unmounted):
 			sdm.ship_drive_unmounted.connect(_on_drive_unmounted)
+	
+	call_deferred("_connect_combat_director")
+
+func _connect_combat_director() -> void:
+	if not is_inside_tree():
+		return
+	var cd = get_tree().get_first_node_in_group("combat_directors")
+	if cd:
+		_combat_director = cd
+		if cd.has_signal("cyber_intrusion_detected") and not cd.cyber_intrusion_detected.is_connected(_on_cyber_intrusion_detected):
+			cd.cyber_intrusion_detected.connect(_on_cyber_intrusion_detected)
+		if cd.has_signal("cyber_intrusion_cleared") and not cd.cyber_intrusion_cleared.is_connected(_on_cyber_intrusion_cleared):
+			cd.cyber_intrusion_cleared.connect(_on_cyber_intrusion_cleared)
+		if cd.has_signal("cyber_intrusion_detonated") and not cd.cyber_intrusion_detonated.is_connected(_on_cyber_intrusion_detonated):
+			cd.cyber_intrusion_detonated.connect(_on_cyber_intrusion_detonated)
 
 func _connect_ui_signals() -> void:
 	if btn_start_scan and not btn_start_scan.pressed.is_connected(_on_start_scan_pressed):
@@ -294,7 +311,28 @@ func _exit_tree() -> void:
 		if sdm.has_signal("ship_drive_unmounted") and sdm.ship_drive_unmounted.is_connected(_on_drive_unmounted):
 			sdm.ship_drive_unmounted.disconnect(_on_drive_unmounted)
 
+	if _combat_director and is_instance_valid(_combat_director):
+		if _combat_director.has_signal("cyber_intrusion_detected") and _combat_director.cyber_intrusion_detected.is_connected(_on_cyber_intrusion_detected):
+			_combat_director.cyber_intrusion_detected.disconnect(_on_cyber_intrusion_detected)
+		if _combat_director.has_signal("cyber_intrusion_cleared") and _combat_director.cyber_intrusion_cleared.is_connected(_on_cyber_intrusion_cleared):
+			_combat_director.cyber_intrusion_cleared.disconnect(_on_cyber_intrusion_cleared)
+		if _combat_director.has_signal("cyber_intrusion_detonated") and _combat_director.cyber_intrusion_detonated.is_connected(_on_cyber_intrusion_detonated):
+			_combat_director.cyber_intrusion_detonated.disconnect(_on_cyber_intrusion_detonated)
+
 func _process(delta: float) -> void:
+	# Aggiornamento countdown intrusioni cyber
+	if not active_cyber_intrusions.is_empty():
+		var min_rem: float = 9999.0
+		for intrusion_id in active_cyber_intrusions.keys():
+			var intrusion: Dictionary = active_cyber_intrusions[intrusion_id]
+			var rem: float = float(intrusion.get("remaining_time", 0.0)) - delta
+			intrusion["remaining_time"] = maxf(0.0, rem)
+			if rem < min_rem:
+				min_rem = rem
+		if status_badge and min_rem < 9000.0 and not is_scanning:
+			status_badge.text = "⚠️ INTRUSIONE CYBER ATTIVA - TIMEOUT: %ds" % int(ceil(min_rem))
+			status_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25, 1.0))
+
 	# Aggiornamento progress barra scansione
 	if is_scanning:
 		var speed_mult: float = float(active_config.get("scan_speed_multiplier"))
@@ -580,7 +618,7 @@ func _scan_directory_recursive(dir_path: String) -> void:
 				_scan_directory_recursive(full_path)
 			else:
 				var lower_name := item_name.to_lower()
-				if lower_name.ends_with(".miner") or lower_name.ends_with(".trojan") or lower_name.ends_with(".worm") or "malware" in lower_name or "exploit" in lower_name:
+				if lower_name.ends_with(".miner") or lower_name.ends_with(".trojan") or lower_name.ends_with(".worm") or "malware" in lower_name or "exploit" in lower_name or "virus" in lower_name or "jammer" in lower_name or "sentinel" in lower_name:
 					detected_threats.append({
 						"name": "Malware Rilevato: %s" % item_name,
 						"type": "TROJAN_VIRUS",
@@ -598,6 +636,40 @@ func _scan_directory_recursive(dir_path: String) -> void:
 					})
 		item_name = dir.get_next()
 	dir.list_dir_end()
+
+func _on_cyber_intrusion_detected(intrusion_id: String, exploit_type: String, file_path: String, timeout_sec: float) -> void:
+	active_cyber_intrusions[intrusion_id] = {
+		"id": intrusion_id,
+		"exploit_type": exploit_type,
+		"file_path": file_path,
+		"remaining_time": timeout_sec
+	}
+	inject_threat("⚠️ ATTACCO EW: %s" % exploit_type, "EXPLOIT_PAYLOAD", file_path, "CRITICAL", "Intrusione malware ostile in corso. Eliminare %s entro %.0fs!" % [file_path.get_file(), timeout_sec])
+	_log_audit("⚠️ ALLERTA CYBER: Intrusione %s rilevata in %s! Timer: %.0fs" % [exploit_type, file_path, timeout_sec])
+	_update_scan_ui()
+
+func _on_cyber_intrusion_cleared(intrusion_id: String, exploit_type: String) -> void:
+	if active_cyber_intrusions.has(intrusion_id):
+		var p: String = active_cyber_intrusions[intrusion_id].get("file_path", "")
+		active_cyber_intrusions.erase(intrusion_id)
+		var filtered: Array[Dictionary] = []
+		for t in detected_threats:
+			if t.get("path") != p:
+				filtered.append(t)
+		detected_threats = filtered
+	_log_audit("✔ Disinfezione completata per exploit %s." % exploit_type)
+	if active_cyber_intrusions.is_empty() and status_badge and not is_scanning:
+		status_badge.text = "● INTEGRITÀ 100% (SECURE)"
+		status_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+	_update_scan_ui()
+
+func _on_cyber_intrusion_detonated(intrusion_id: String, exploit_type: String) -> void:
+	active_cyber_intrusions.erase(intrusion_id)
+	_log_audit("💥 DETONAZIONE EXPLOIT %s: Danni critici registrati!" % exploit_type)
+	if active_cyber_intrusions.is_empty() and status_badge and not is_scanning:
+		status_badge.text = "⚠️ DANNO CRITICO REGISTRATO"
+		status_badge.add_theme_color_override("font_color", Color(0.95, 0.25, 0.25, 1.0))
+	_update_scan_ui()
 
 func inject_threat(threat_name: String, threat_type: String, file_path: String, severity: String = "HIGH", description: String = "") -> void:
 	var t: Dictionary = {
@@ -627,6 +699,12 @@ func purge_threats() -> void:
 		var abs_p := "user://files/%s" % p
 		if FileAccess.file_exists(abs_p):
 			DirAccess.remove_absolute(abs_p)
+		var sdm = get_node_or_null("/root/ShipDriveManager")
+		if sdm and sdm.has_signal("item_deleted"):
+			sdm.item_deleted.emit(p)
+		var cd = get_tree().get_first_node_in_group("combat_directors") if is_inside_tree() else null
+		if cd and cd.has_method("_on_ship_drive_item_deleted"):
+			cd._on_ship_drive_item_deleted(p)
 		quarantined_threats.append(threat)
 	
 	detected_threats.clear()

@@ -15,6 +15,51 @@ signal station_scanned(station_data: Dictionary)
 @export var comms_frequency: float = 1840.0 # MHz diegetica per autorizzazione
 @export var security_clearance_required: int = 1
 
+# Archetipo economico di stazione (stile X4)
+enum StationEconomyArchetype {
+	MINING_OUTPOST,
+	INDUSTRIAL_REFINERY,
+	HIGH_TECH_HUB,
+	AGRICULTURAL_DEPOT
+}
+
+@export var economy_archetype: StationEconomyArchetype = StationEconomyArchetype.MINING_OUTPOST
+
+const ARCHETYPE_MODIFIERS: Dictionary = {
+	StationEconomyArchetype.MINING_OUTPOST: {
+		"MINERAL": -0.35,
+		"ALLOY": 0.15,
+		"AMMO": 0.10,
+		"ENERGY_CELL": 0.25,
+		"NANITES": 0.40,
+		"FOOD": 0.30
+	},
+	StationEconomyArchetype.INDUSTRIAL_REFINERY: {
+		"MINERAL": 0.30,
+		"ALLOY": -0.25,
+		"AMMO": -0.20,
+		"ENERGY_CELL": 0.20,
+		"NANITES": 0.15,
+		"FOOD": 0.10
+	},
+	StationEconomyArchetype.HIGH_TECH_HUB: {
+		"MINERAL": 0.20,
+		"ALLOY": 0.30,
+		"AMMO": 0.10,
+		"ENERGY_CELL": -0.25,
+		"NANITES": -0.30,
+		"FOOD": 0.25
+	},
+	StationEconomyArchetype.AGRICULTURAL_DEPOT: {
+		"MINERAL": 0.10,
+		"ALLOY": 0.15,
+		"AMMO": 0.05,
+		"ENERGY_CELL": 0.30,
+		"NANITES": 0.25,
+		"FOOD": -0.35
+	}
+}
+
 # Telemetria & Parametri Cono di Cattura Magnetica
 @export var capture_radius: float = 45.0 # Raggio massimo di ingaggio guida
 @export var magnetic_lock_distance: float = 6.0 # Distanza di aggancio finale
@@ -209,8 +254,55 @@ func _init_station_defaults() -> void:
 				"unit_base_value": 180.0,
 				"quantity": 30,
 				"description": "Condensatori al plasma ad alta densità per ricarica sublayer e scudi."
+			},
+			{
+				"id": "nanites_medical",
+				"name": "Naniti Medici Avanzati",
+				"category": "NANITES",
+				"unit_mass_kg": 5.0,
+				"unit_volume_m3": 0.1,
+				"unit_base_value": 450.0,
+				"quantity": 20,
+				"description": "Micromacchine biomediche per manutenzione e filtri di bordo."
+			},
+			{
+				"id": "food_hydroponic",
+				"name": "Razioni Idroponiche Pure",
+				"category": "FOOD",
+				"unit_mass_kg": 8.0,
+				"unit_volume_m3": 0.2,
+				"unit_base_value": 80.0,
+				"quantity": 60,
+				"description": "Pacchetti nutrizionali ad alta conservazione per equipaggi spaziali."
 			}
 		]
+
+## Ottiene il modificatore percentuale di prezzo per categoria merceologica (-0.35 = -35%, +0.40 = +40%)
+func get_category_price_modifier(category: String) -> float:
+	var cat_upper := category.to_upper()
+	var mods: Dictionary = ARCHETYPE_MODIFIERS.get(economy_archetype, {})
+	return float(mods.get(cat_upper, 0.0))
+
+## Restituisce un'etichetta descrittiva del rating di mercato (Domanda/Offerta)
+func get_market_rating_label(category: String) -> String:
+	var mod := get_category_price_modifier(category)
+	var pct := int(round(mod * 100.0))
+	if pct > 0:
+		return "DOMANDA ELEVATA (+%d%%)" % pct
+	elif pct < 0:
+		return "SURPLUS OFFERTA (%d%%)" % pct
+	return "MERCATO STABILE (0%)"
+
+## Calcola il prezzo commerciale effettivo (con spread bid/ask per eliminare loop di profitto locale)
+func get_trade_price(category: String, base_price: float, is_player_buying: bool) -> float:
+	var mod := get_category_price_modifier(category)
+	var archetype_factor := maxf(0.2, 1.0 + mod)
+	if is_player_buying:
+		# Quando il giocatore acquista dalla stazione: moltiplicatore archetipo + margine dealer (+15%)
+		return maxf(1.0, round(base_price * archetype_factor * 1.15))
+	else:
+		# Quando il giocatore vende alla stazione: moltiplicatore archetipo - sconto dealer (-15%)
+		return maxf(1.0, round(base_price * archetype_factor * 0.85))
 
 ## Ritorna le info telematiche complete della stazione
 func get_telemetry_data() -> Dictionary:

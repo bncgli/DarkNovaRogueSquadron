@@ -10,6 +10,7 @@ extends Resource
 @export var unit_base_value: float = 0.0
 @export var is_contraband: bool = false
 @export var is_snet_disk: bool = false
+@export var is_scavenged: bool = false
 @export var description: String = ""
 @export var quantity: int = 0
 @export var metadata: Dictionary = {}
@@ -35,6 +36,7 @@ func to_dict() -> Dictionary:
 		"unit_base_value": unit_base_value,
 		"is_contraband": is_contraband,
 		"is_snet_disk": is_snet_disk,
+		"is_scavenged": is_scavenged,
 		"description": description,
 		"quantity": quantity,
 		"metadata": metadata.duplicate(true)
@@ -49,6 +51,7 @@ func from_dict(data: Dictionary) -> void:
 	unit_base_value = float(data.get("unit_base_value", unit_base_value))
 	is_contraband = bool(data.get("is_contraband", is_contraband))
 	is_snet_disk = bool(data.get("is_snet_disk", is_snet_disk))
+	is_scavenged = bool(data.get("is_scavenged", is_scavenged))
 	description = data.get("description", description)
 	quantity = int(data.get("quantity", quantity))
 	if data.has("metadata") and data["metadata"] is Dictionary:

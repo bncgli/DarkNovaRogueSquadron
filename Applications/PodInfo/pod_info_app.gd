@@ -20,6 +20,8 @@ signal vital_signs_updated(o2: float, temp: float, pressure: float, g_force: flo
 signal crew_state_changed(old_state: int, new_state: int)
 signal game_over_triggered(reason: String)
 signal spatial_sound_played(sound_name: String, event_pos: Vector2, distance: float, vol_db: float, is_lowpass: bool)
+signal biometric_pulse_updated(heart_rate: float, stress_level: float)
+signal screen_shake_triggered(intensity: float, duration: float)
 
 # --- RIFERIMENTI UI ---
 @onready var oxygen_label: Label = %OxygenLabel
@@ -39,6 +41,8 @@ var oxygen_value: float = 21.0
 var temp_value: float = 21.5
 var pressure_value: float = 101.3
 var g_force_value: float = 1.0
+var heart_rate: float = 75.0
+var stress_level: float = 0.0
 
 var current_state: CrewPhysiologicalState = CrewPhysiologicalState.NORMAL
 var blackout_intensity: float = 0.0
@@ -49,6 +53,13 @@ var game_over_reason: String = ""
 var high_g_timer: float = 0.0
 var negative_g_timer: float = 0.0
 var vocal_cooldown: float = 0.0
+
+# --- SCREEN SHAKE DIEGETICO ---
+var _shake_intensity: float = 0.0
+var _shake_duration: float = 0.0
+var _shake_timer: float = 0.0
+var _shake_offset: Vector2 = Vector2.ZERO
+var _target_shake_node: Control = null
 
 # --- MICROFONO VIRTUALE IN PLANCIA ---
 var bridge_pos: Vector2 = Vector2(300, 80)
@@ -78,6 +89,7 @@ func _exit_tree() -> void:
 		overlay_layer = null
 
 func _process(delta: float) -> void:
+	_process_screen_shake(delta)
 	if is_game_over:
 		return
 	_simulate_vital_signs(delta)
@@ -108,6 +120,11 @@ func _simulate_vital_signs(delta: float) -> void:
 		temp_value = float(atmo.get("temperature_c", 21.5))
 		pressure_value = float(atmo.get("pressure_kpa", 101.3))
 		g_force_value = SpaceWorldManager.get_ship_g_force()
+	
+	# Rientro graduale della frequenza cardiaca e dello stress
+	heart_rate = move_toward(heart_rate, 75.0, 15.0 * delta)
+	stress_level = move_toward(stress_level, 0.0, 0.25 * delta)
+	biometric_pulse_updated.emit(heart_rate, stress_level)
 
 # --- MACCHINA A STATI FISIOLOGICA DELL'EQUIPAGGIO ---
 
@@ -260,8 +277,31 @@ func _play_spatial_ship_sound(event_pos: Vector2, sfx_stream: AudioStream = null
 	spatial_sound_played.emit(sfx_name, event_pos, d, vol_db, is_lowpass)
 
 func _on_ship_damage_taken(pos: Vector2, type: String) -> void:
-	var s_name := "spark" if type == "short_circuit" else "impact"
+	var s_name := "impact"
+	match type:
+		"short_circuit", "spark":
+			s_name = "spark"
+		"breach", "decompression":
+			s_name = "decompression"
+		"fire", "fire_hiss":
+			s_name = "fire_hiss"
+		"impact", "ballistic", _:
+			s_name = "impact"
+	
 	_play_spatial_ship_sound(pos, null, 0.0, s_name)
+	
+	# Screen shake diegetico proporzionale alla violenza dell'impatto
+	var shake_power := 12.0
+	if type == "impact" or type == "ballistic":
+		shake_power = 18.0
+	elif type == "breach" or type == "decompression":
+		shake_power = 14.0
+	elif type == "short_circuit":
+		shake_power = 8.0
+	trigger_screen_shake(shake_power, 0.45)
+	
+	# Reattività biometrica: picco di battito cardiaco e stress claustrofobico
+	record_biometric_stress(25.0)
 
 func _on_electrical_short_sparked(pos: Vector2) -> void:
 	_play_spatial_ship_sound(pos, null, -2.0, "spark")
@@ -363,7 +403,8 @@ func _update_overlay_visuals() -> void:
 	if blackout_overlay:
 		blackout_overlay.color.a = clampf(blackout_intensity, 0.0, 1.0)
 	if redout_overlay:
-		redout_overlay.color.a = clampf(redout_intensity * 0.85, 0.0, 0.95)
+		var red_alpha := clampf(redout_intensity * 0.85 + (stress_level * 0.25), 0.0, 0.95)
+		redout_overlay.color.a = red_alpha
 
 func _trigger_game_over(reason: String) -> void:
 	if is_game_over:
@@ -406,6 +447,8 @@ func _init_procedural_audio() -> void:
 	_cached_audio_streams["impact"] = _create_impact_stream()
 	_cached_audio_streams["spark"] = _create_spark_stream()
 	_cached_audio_streams["drone_hum"] = _create_drone_hum_stream()
+	_cached_audio_streams["decompression"] = _create_decompression_stream()
+	_cached_audio_streams["fire_hiss"] = _create_fire_hiss_stream()
 
 static func _create_pcm_wav(duration: float, generator_fn: Callable, mix_rate: int = 22050) -> AudioStreamWAV:
 	var wav := AudioStreamWAV.new()
@@ -471,6 +514,78 @@ static func _create_drone_hum_stream() -> AudioStreamWAV:
 	)
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	return wav
+
+static func _create_decompression_stream() -> AudioStreamWAV:
+	return _create_pcm_wav(0.7, func(t: float, dur: float) -> float:
+		var noise := randf() * 2.0 - 1.0
+		var envelope := sin(PI * t / dur) * exp(-1.5 * t)
+		return noise * envelope * 0.8
+	)
+
+static func _create_fire_hiss_stream() -> AudioStreamWAV:
+	return _create_pcm_wav(0.6, func(t: float, dur: float) -> float:
+		var noise := randf() * 2.0 - 1.0
+		var crackle := 1.0 if fmod(t, 0.05) < 0.015 else 0.0
+		return (noise * 0.5 + crackle * 0.5) * sin(PI * t / dur)
+	)
+
+# --- SCREEN SHAKE & BIOMETRIC ACTIONS ---
+
+## Attiva lo scuotimento dello schermo (Screen Shake diegetico) con decadimento smorzato
+func trigger_screen_shake(intensity: float = 12.0, duration: float = 0.45) -> void:
+	_shake_intensity = maxf(_shake_intensity, intensity)
+	_shake_duration = maxf(_shake_duration, duration)
+	_shake_timer = _shake_duration
+	screen_shake_triggered.emit(intensity, duration)
+
+## Elabora il decadimento dello shake e ne applica l'offset al desktop
+func _process_screen_shake(delta: float) -> void:
+	if _shake_timer > 0.0:
+		_shake_timer = maxf(0.0, _shake_timer - delta)
+		var factor := _shake_timer / maxf(_shake_duration, 0.001)
+		var current_amp := _shake_intensity * (factor * factor)
+		_shake_offset = Vector2(
+			randf_range(-current_amp, current_amp),
+			randf_range(-current_amp, current_amp)
+		)
+		_apply_shake_offset(_shake_offset)
+	else:
+		if _shake_offset != Vector2.ZERO:
+			_shake_offset = Vector2.ZERO
+			_apply_shake_offset(Vector2.ZERO)
+			_shake_intensity = 0.0
+			_shake_duration = 0.0
+
+func _apply_shake_offset(offset: Vector2) -> void:
+	if not is_inside_tree():
+		return
+	if _target_shake_node == null or not is_instance_valid(_target_shake_node):
+		_target_shake_node = get_tree().get_first_node_in_group("desktop_root") as Control
+		if _target_shake_node == null:
+			var p := get_parent()
+			while p and not (p is Window or p == get_tree().root):
+				if p is Control and (p.get_parent() is Window or p.get_parent() == get_tree().root):
+					_target_shake_node = p as Control
+					break
+				p = p.get_parent()
+				
+	if _target_shake_node and is_instance_valid(_target_shake_node):
+		_target_shake_node.position = offset
+
+## Restituisce l'offset istantaneo dello shake
+func get_screen_shake_offset() -> Vector2:
+	return _shake_offset
+
+## Incrementa i parametri di stress e battito cardiaco all'impatto o guasto
+func record_biometric_stress(added_stress: float = 25.0) -> void:
+	heart_rate = minf(185.0, heart_rate + added_stress)
+	stress_level = minf(1.0, stress_level + (added_stress / 50.0))
+
+func get_heart_rate() -> float:
+	return heart_rate
+
+func get_stress_level() -> float:
+	return stress_level
 
 # --- AGGIORNAMENTO UI ---
 

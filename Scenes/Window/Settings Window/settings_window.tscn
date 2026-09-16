@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://c84pgsmltldk4" path="res://Scenes/Window/Settings Window/max_fps_options.gd" id="4_xp0bf"]
 [ext_resource type="Script" uid="uid://kmfv0m283o0l" path="res://Scenes/Window/Settings Window/remove_wallpaper.gd" id="5_p360g"]
 [ext_resource type="Script" uid="uid://bofup4ya34voc" path="res://Scenes/Window/Settings Window/stretch_wallpaper.gd" id="7_h8so0"]
+[ext_resource type="Script" path="res://Scenes/Window/Settings Window/input_settings_tab.gd" id="8_inputs"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g2ist"]
 bg_color = Color(0.2, 0.2, 0.2, 0.862745)
@@ -72,12 +73,17 @@ LineEdit/styles/normal = SubResource("StyleBoxFlat_3dvlq")
 [sub_resource type="ImageTexture" id="ImageTexture_xjfew"]
 
 [node name="Window" instance=ExtResource("1_rx4sm")]
+custom_minimum_size = Vector2(560, 420)
+offset_left = -280.0
+offset_top = -210.0
+offset_right = 280.0
+offset_bottom = 210.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_g2ist")
 
 [node name="Title Text" parent="Top Bar" index="0"]
 text = "[center]Settings"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="." index="1"]
+[node name="TabContainer" type="TabContainer" parent="." index="1"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -85,8 +91,13 @@ anchor_bottom = 1.0
 offset_top = 30.0
 grow_horizontal = 2
 grow_vertical = 2
+current_tab = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer" index="0"]
+[node name="Sistema & Grafica" type="ScrollContainer" parent="TabContainer" index="0"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Sistema & Grafica" index="0"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -94,17 +105,17 @@ theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer" index="0"]
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer" index="0"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="Screen Scaling" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="0"]
+[node name="Screen Scaling" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="0"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -112,12 +123,12 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Screen Scaling"
 
-[node name="Control" type="Control" parent="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling" index="1"]
+[node name="Control" type="Control" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling" index="1"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="IncrementScaling" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control" index="0"]
+[node name="IncrementScaling" type="Button" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control" index="0"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -135,7 +146,7 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_2u54r")
 theme_override_styles/normal = SubResource("StyleBoxFlat_txq2q")
 text = "+"
 
-[node name="DecrementScaling" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control" index="1"]
+[node name="DecrementScaling" type="Button" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control" index="1"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -154,7 +165,7 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_7822x")
 theme_override_styles/normal = SubResource("StyleBoxFlat_nenhp")
 text = "-"
 
-[node name="ScalingSpinbox" type="SpinBox" parent="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control" index="2"]
+[node name="ScalingSpinbox" type="SpinBox" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control" index="2"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -186,11 +197,11 @@ alignment = 1
 custom_arrow_step = 0.125
 script = ExtResource("2_a71vs")
 
-[node name="Window Mode" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="1"]
+[node name="Window Mode" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="1"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Window Mode" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Window Mode" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -198,7 +209,7 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Window Mode"
 
-[node name="WindowOptions" type="OptionButton" parent="ScrollContainer/MarginContainer/VBoxContainer/Window Mode" index="1"]
+[node name="WindowOptions" type="OptionButton" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Window Mode" index="1"]
 layout_mode = 2
 focus_mode = 0
 selected = 0
@@ -212,11 +223,11 @@ popup/item_2/text = "Exclusive Fullscreen"
 popup/item_2/id = 2
 script = ExtResource("3_7t58g")
 
-[node name="Max Framerate" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="2"]
+[node name="Max Framerate" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="2"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Max Framerate" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Max Framerate" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -224,7 +235,7 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Maximum FPS"
 
-[node name="WindowOptions" type="OptionButton" parent="ScrollContainer/MarginContainer/VBoxContainer/Max Framerate" index="1"]
+[node name="WindowOptions" type="OptionButton" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Max Framerate" index="1"]
 layout_mode = 2
 focus_mode = 0
 selected = 1
@@ -248,11 +259,11 @@ popup/item_7/text = "360"
 popup/item_7/id = 7
 script = ExtResource("4_xp0bf")
 
-[node name="Stretch Wallpaper" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="3"]
+[node name="Stretch Wallpaper" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="3"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Stretch Wallpaper" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Stretch Wallpaper" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -260,7 +271,7 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Wallpaper Stretching Mode"
 
-[node name="WindowOptions" type="OptionButton" parent="ScrollContainer/MarginContainer/VBoxContainer/Stretch Wallpaper" index="1"]
+[node name="WindowOptions" type="OptionButton" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Stretch Wallpaper" index="1"]
 layout_mode = 2
 focus_mode = 0
 selected = 0
@@ -276,11 +287,11 @@ popup/item_3/text = "Cover"
 popup/item_3/id = 3
 script = ExtResource("7_h8so0")
 
-[node name="Remove Wallpaper" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="4"]
+[node name="Remove Wallpaper" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="4"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Remove Wallpaper" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Remove Wallpaper" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -288,17 +299,17 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Remove Background"
 
-[node name="RemoveWallpaper" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/Remove Wallpaper" index="1"]
+[node name="RemoveWallpaper" type="Button" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Remove Wallpaper" index="1"]
 layout_mode = 2
 focus_mode = 0
 text = "Remove BG"
 script = ExtResource("5_p360g")
 
-[node name="Background Color" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer" index="5"]
+[node name="Background Color" type="HBoxContainer" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer" index="5"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="RichTextLabel" type="RichTextLabel" parent="ScrollContainer/MarginContainer/VBoxContainer/Background Color" index="0"]
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Background Color" index="0"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -306,7 +317,7 @@ mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 text = "Background Color"
 
-[node name="BackgroundColorPicker" type="ColorPickerButton" parent="ScrollContainer/MarginContainer/VBoxContainer/Background Color" index="1"]
+[node name="BackgroundColorPicker" type="ColorPickerButton" parent="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Background Color" index="1"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 8
@@ -314,13 +325,18 @@ focus_mode = 0
 edit_alpha = false
 script = ExtResource("4_vnxcp")
 
-[connection signal="pressed" from="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/IncrementScaling" to="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_increment_scaling_pressed"]
-[connection signal="pressed" from="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/DecrementScaling" to="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_decrement_scaling_pressed"]
-[connection signal="mouse_entered" from="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_mouse_entered"]
-[connection signal="mouse_exited" from="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_mouse_exited"]
-[connection signal="value_changed" from="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="ScrollContainer/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_value_changed"]
-[connection signal="item_selected" from="ScrollContainer/MarginContainer/VBoxContainer/Window Mode/WindowOptions" to="ScrollContainer/MarginContainer/VBoxContainer/Window Mode/WindowOptions" method="_on_item_selected"]
-[connection signal="item_selected" from="ScrollContainer/MarginContainer/VBoxContainer/Max Framerate/WindowOptions" to="ScrollContainer/MarginContainer/VBoxContainer/Max Framerate/WindowOptions" method="_on_item_selected"]
-[connection signal="item_selected" from="ScrollContainer/MarginContainer/VBoxContainer/Stretch Wallpaper/WindowOptions" to="ScrollContainer/MarginContainer/VBoxContainer/Stretch Wallpaper/WindowOptions" method="_on_item_selected"]
-[connection signal="pressed" from="ScrollContainer/MarginContainer/VBoxContainer/Remove Wallpaper/RemoveWallpaper" to="ScrollContainer/MarginContainer/VBoxContainer/Remove Wallpaper/RemoveWallpaper" method="_on_pressed"]
-[connection signal="color_changed" from="ScrollContainer/MarginContainer/VBoxContainer/Background Color/BackgroundColorPicker" to="ScrollContainer/MarginContainer/VBoxContainer/Background Color/BackgroundColorPicker" method="_on_color_changed"]
+[node name="Controlli & Periferiche" type="Control" parent="TabContainer" index="1"]
+layout_mode = 2
+script = ExtResource("8_inputs")
+metadata/_tab_index = 1
+
+[connection signal="pressed" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/IncrementScaling" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_increment_scaling_pressed"]
+[connection signal="pressed" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/DecrementScaling" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_decrement_scaling_pressed"]
+[connection signal="mouse_entered" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_mouse_exited"]
+[connection signal="value_changed" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Screen Scaling/Control/ScalingSpinbox" method="_on_value_changed"]
+[connection signal="item_selected" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Window Mode/WindowOptions" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Window Mode/WindowOptions" method="_on_item_selected"]
+[connection signal="item_selected" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Max Framerate/WindowOptions" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Max Framerate/WindowOptions" method="_on_item_selected"]
+[connection signal="item_selected" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Stretch Wallpaper/WindowOptions" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Stretch Wallpaper/WindowOptions" method="_on_item_selected"]
+[connection signal="pressed" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Remove Wallpaper/RemoveWallpaper" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Remove Wallpaper/RemoveWallpaper" method="_on_pressed"]
+[connection signal="color_changed" from="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Background Color/BackgroundColorPicker" to="TabContainer/Sistema & Grafica/MarginContainer/VBoxContainer/Background Color/BackgroundColorPicker" method="_on_color_changed"]

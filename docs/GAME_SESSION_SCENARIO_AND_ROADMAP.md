@@ -145,168 +145,155 @@ L'architettura di questo gameplay loop presenta un profilo di efficacia eccezion
 
 | Area Funzionale | Componenti Esistenti nel Repository | Cosa Manca / Da Implementare | Stato Attuale |
 | :--- | :--- | :--- | :---: |
-| **OS & Settings** | GodotOS Desktop, notifiche periferica (`NotificationManager`), scaling e display in `Settings Window`. | Tab comandi/controller in `Settings Window`: remapping assi analogici, deadzone joystick/cloche, mapping tastiera/mouse. | **Parziale** |
-| **Lobby & Inizializzazione** | `LobbyApp`, selezione Solo/Host/Join, sincronizzazione ruoli RBAC, caricamento custom `ShipBlueprint`. | Generazione rapida/procedurale o selezione integrata da `SystemDiscover` e spawn obbligatorio attraccato alla stazione con debito iniziale preimpostato (`-700 FLUX`). | **Parziale** |
-| **Procedural Generation** | `ShipBuilder` (generazione stanze e telai), `StarSystemEditor` (editor manuale di sistemi stellari). | Applicazione **System Discover** (o generatore procedurale per creare randomicamente sistemi completi con stazioni, pianeti e settori di pericolo). | **Mancante** |
-| **Station Services (StationHub)** | Struttura a 5 Tab (Market, Contratti, Software, Cantiere, Taverna), API attracco `DockingManager`. | Generazione contratti procedurali (Bounty, Retrieval, Scorta) collegati al mondo; Bar con rumors attivi che generano POI nel mondo 3D; Logica economica dinamica stile X4 basata su domanda/offerta tra mercati diversi. | **Parziale** |
-| **Navigazione & Streaming Quadranti** | `StarSystemGridManager` (coordinate `Vector3i`, calcolo distanze, cache `SectorData`), `SpaceWorldManager.load_sector_zone()`. | Rilevamento prossimità bordo quadrante in volo a velocità di crociera, pre-caricamento asincrono (`load_threaded_request`) del quadrante adiacente, origin shifting e scaricamento dinamico del settore alle spalle; posizionamento volumetrico dei POI a quote $Y$ variabili (dislivelli verticali tridimensionali). | **Mancante** |
-| **Sensori, LIDAR & Sonde** | Raggio 1km, coni d'ombra radar (LOS), ping energetico in `SensorsApp`, filtri Cams (Normal/Thermal/Lidar), lancio `Probe`. | Spawn relitti con detriti sparsi nei quadranti a quote/altezze variabili; radar volumetrico sferico 3D con indicazione quota altimetrica relativa; integrazione di detriti e relitti rilevabili dallo shader lidar/termico e spettrometria sensori. | **Parziale** |
-| **Service Drone (Esterno)** | Scena 3D del drone, collisioni fisiche, controlli di volo e rotazione, alimentazione da Sublayer. | Meccanica attiva di **Scavenging** 3D: raggio traente o manipolatore per agganciare container/rottami e trasferirli nella stiva `CargoBay`. | **Parziale** |
-| **Balistica Newtoniana Torretta** | Torretta Weapons con cattura mouse (`KEY_SPACE`), classi munizioni 1..4, HUD lead indicator. | **Somma vettoriale della nave**: aggiungere $\vec{v}_{ship}$ alla velocità del proiettile al momento dello sparo e calcolo del danno scalato su velocità relativa d'impatto con il bersaglio. | **Mancante** |
-| **Combattimento Cyber (Hackwarfare)** | `HackExploitsApp`, montaggio Target Drive, exploit (spammer, blind_eye, 8loops, gout), comandi terminale `worm`/`decript`/`datread`. | Logica di AI nemica che contrattacca iniettando file malevoli nello Ship Drive del giocatore; meccanica diegetica per cui l'Hacker deve localizzare ed eliminare il file malevolo prima del timeout. | **Mancante** |
-| **Danni & Riparazioni Interne** | `DiagnosticsApp`, `LifeSupportApp` (P, T, O2, G), incendi, brecce, `DuctDrone` con estintore e saldatore, effetti sensoriali `PodInfo`. | Feedback sonori diegetici sincronizzati con `ship_damage_taken` (boato impatto, decompressivo, scariche elettriche nei pod). | **Parziale** |
-| **Economia & Loop Ricorsivo** | `FluxWalletApp`, gestione stiva `CargoBayApp`. | Riscrittura/consolidamento di `FluxEconomyManager` per gestire debiti e crediti (baratto rate/quote) anziché crediti flat; ciclo completo di incasso taglia dal Fixer. | **Parziale** |
+| **OS & Settings** | Tab `Controlli & Periferiche` in `Settings Window` (`InputSettingsTab`), calibrazione assi, deadzone/sensibilità joypad, visualizzazione assi live, remapping azioni e persistenza su `user://input_config.json`. | Validato con suite automatizzata GUT (`tests/gut/test_phase_a_controls_economy_docking.gd`). | **Completato** |
+| **Lobby & Inizializzazione** | Conio iniziale di 300 FLUX e modificatore passivo vincolato di -700 FLUX ("Ship Rent Service") in `ShipBlueprint` e `FluxWallet`; estinzione quote noleggio in `StationHub`; spawn iniziale attraccato alla Baia 0 della stazione primaria con blocco propulsori e sblocco su `request_undock()` in `SpaceWorldManager`. | Validato con suite automatizzata GUT (`tests/gut/test_phase_a_controls_economy_docking.gd`). | **Completato** |
+| **Procedural Generation** | Generatore astronomico modulare deterministico da seed `StarSystemGenerator`, applicazione diegetica `SystemDiscoverApp` con canvas orbitale e altimetrico, 4 archetipi galattici, distribuzione volumetrica 3D ($Y \neq 0$) e selezione istantanea da Lobby. | Validato con suite automatizzata GUT (`tests/gut/test_phase_b_system_discover.gd`). | **Completato** |
+| **Station Services (StationHub)** | Struttura a 5 Tab (Market, Contratti, Software, Cantiere, Taverna), coordinatore contratti autonomo `MissionManagerSingleton` con claim collettivo, archetipi economici stazione stile X4 (spread bid/ask) e dicerie della taverna con waypoint 3D volumetrici. | Validato con suite automatizzata GUT (`tests/gut/test_phase_c_station_hub_services.gd`). | **Completato** |
+| **Navigazione & Streaming Quadranti** | `StarSystemGridManager` (coordinate `Vector3i`, calcolo distanze, cache `SectorData`), `SpaceWorldManager.load_sector_zone()`, trigger di prossimità ai bordi a velocità di crociera, pre-caricamento asincrono `preload_adjacent_sector_async()`, crossing seamless con floating origin shift. | Validato con suite automatizzata GUT (`tests/gut/test_phase_d_debris_scavenging_streaming.gd`). | **Completato** |
+| **Sensori, LIDAR & Sonde** | Raggio 1km, radar volumetrico sferico 3D con indicazione quota altimetrica relativa, ping energetico in `SensorsApp`, filtri Cams (Normal/Thermal/Lidar), spettrometria e coordinate 3D dei container cargo. | Integrazione completa dei container fluttuanti nel catalogo sensori. | **Completato** |
+| **Service Drone (Esterno)** | Scena 3D del drone, collisioni fisiche, controlli di volo e rotazione, harpoon magnetico fisico per traino container cargo (`latch_cargo`, `unlatch_cargo`), consumo energetico modulato dalla massa rimorchiata e portello cargo nave. | Validato con suite automatizzata GUT (`tests/gut/test_phase_d_debris_scavenging_streaming.gd`). | **Completato** |
+| **Balistica Newtoniana Torretta** | Profili balistici munizioni in `SpaceWorldManager`, somma vettoriale galileiana $\vec{v}_{proj} = \vec{v}_{ship} + (\hat{d}_{aim} \times v_{muzzle})$, collision sweep continuo anti-tunneling, danno cinetico scalato in base a $\vec{v}_{rel}$, Lead Indicator relativo in `WeaponsApp` e telemetria d'impatto su `WeaponsTrajectoryHUD`. | Testata e validata con suite GUT (`tests/gut/test_ballistics_newtonian.gd`). | **Completato** |
+| **Combattimento Cyber (Hackwarfare)** | Routine di guerra elettronica in `CombatDirector`, iniezione remota sentinelle malware `.dat` nello Ship Drive, anomalie diegetiche (deriva RCS, glitch visivo cams, sovraccarico reattore), neutralizzazione con disinfezione file e detonazione da timeout su `SystemicDamageHandler`. | Validato con suite automatizzata GUT (`tests/gut/test_phase_f_cyber_warfare_sensory_damage.gd`). | **Completato** |
+| **Danni & Riparazioni Interne** | `DiagnosticsApp`, `LifeSupportApp`, `DuctDrone`, feedback acustici diegetici ovattati/interni (boati impatto, breccia depressurizzazione, incendio condotti), scuotimento schermo desktop con falloff quadratico e reazioni vitali biometriche nei pod (`PodInfoApp`). | Validato con suite automatizzata GUT (`tests/gut/test_phase_f_cyber_warfare_sensory_damage.gd`). | **Completato** |
+| **Economia & Loop Ricorsivo** | Distinzione esplicita merci ordinarie vs bottino scavenging (`is_scavenged`), liquidazione rapida in un clic nel Tab Market, riscossione collettiva contratti nel Tab Fixer, versamento discrezionale canone noleggio nel Tab Cantiere e persistenza `ShipBlueprint` su disco utente (`user://blueprints/active_corvette_session.tres`). | Validato con suite automatizzata GUT (`tests/gut/test_phase_g_debriefing_persistence_loop.gd`). | **Completato** |
 
 ---
 
 ## 4. Piano di Sviluppo Dettagliato (Roadmap & Action Plan)
 
-### Fase A: Fondamenta Controlli, Economia e Partenza Stazione (Priorità Alta)
+### Fase A: Fondamenta Controlli, Economia e Partenza Stazione [COMPLETATA]
 
-#### Task A1: Tab Controlli e Joystick in `Settings Window`
+#### Task A1: Tab Controlli e Joystick in `Settings Window` [COMPLETATO]
 - **Obiettivo**: Permettere a ogni giocatore di calibrare e rimappare comandi tastiera, mouse e controller/joystick prima di entrare in partita.
-- **Implementazione**:
-  - Estendere `Scenes/Window/Settings Window/settings_window.tscn` aggiungendo un tab o sottomenu `Controlli & Periferiche`.
-  - Lettura delle periferiche attive tramite `Input.get_connected_joypads()`.
-  - Assegnazione assi per volo/torretta (Pitch, Yaw, Roll, Throttle) e regolazione della sensibilità/deadzone con persistenza su file di configurazione utente locale (`user://input_config.json`).
+- **Implementazione Eseguita**:
+  - Creato `Scenes/Window/Settings Window/input_settings_tab.gd` integrato in `settings_window.tscn` sotto la scheda `Controlli & Periferiche`.
+  - Rilevamento joypad con `Input.get_connected_joypads()` e monitoraggio assi in tempo reale.
+  - Rimappatura interattiva azioni di volo e armeria, calibrazione deadzone ($0.05 - 0.35$) e sensibilità ($0.5x - 3.0x$) con persistenza su `user://input_config.json`.
 
-#### Task A2: Spawn Iniziale Attraccato & Condizione Economica Debito
+#### Task A2: Spawn Iniziale Attraccato & Condizione Economica Debito [COMPLETATO]
 - **Obiettivo**: Far iniziare ogni sessione con la nave attraccata alla stazione e bilancio iniziale configurato a `300 FLUX` disponibili e `-700 FLUX` di debito noleggio.
-- **Implementazione**:
-  - Modificare l'inizializzazione partita in `SpaceWorldManager` e `LobbyApp`: all'avvio sessione la nave è posizionata a zero metri dal docking bay della stazione del settore di partenza con stato `is_docked = true`.
-  - Inizializzare `ShipBlueprint` con `flux = 300` e un modificatore attivo `{"id": "ship_rent", "name": "Ship Rent Service", "amount": -700, "locked": true}`.
-  - Aggiornare `FluxWallet` e `StationHub` per mostrare correttamente la passività e richiedere il ripianamento del canone di noleggio.
+- **Implementazione Eseguita**:
+  - In `ShipBlueprint` conio impostato a `flux = 300` e modificatore passivo vincolato da `-700 FLUX` ("Ship Rent Service", "Canone noleggio scafo"), visualizzato in `FluxWallet` con badge `[BLOCKED]` e saldo netto contabile.
+  - Interfaccia di ripianamento rate o saldo noleggio integrata nel Tab Cantiere di `StationHub`.
+  - In `SpaceWorldManager`, spawn iniziale ancorato alla Baia 0 di `primary_station_instance` con stato `is_docked = true` e blocco propulsori fino alla richiesta di `request_undock()`.
+  - Suite automatizzata di test GUT in `tests/gut/test_phase_a_controls_economy_docking.gd` (4/4 superati).
 
 ---
 
-### Fase B: Generazione Procedurale Sistemi & Applicazione "System Discover" (Priorità Alta)
+### Fase B: Generazione Procedurale Sistemi & Applicazione "System Discover" [COMPLETATA]
 
-#### Task B1: Modulo e Applicazione `System Discover`
+#### Task B1: Modulo e Applicazione `System Discover` [COMPLETATO]
 - **Obiettivo**: Offrire uno strumento procedurale diegetico per generare rapidamente sistemi stellari randomici (`StarSystemData`) pronti per essere giocati o caricati nella Lobby.
-- **Implementazione**:
-  - Creare `Applications/SystemDiscover/system_discover_app.gd` e `.tscn` (registrata in GodotOS).
-  - Algoritmo di generazione procedurale:
-    - Stella centrale (tipo spettrale, classe di calore e radiazione).
-    - Da 3 a 8 pianeti con orbite proporzionali e parametri atmosferici/risorse.
-    - Fasce di asteroidi con densità e composizione minerale variabile.
-    - Da 1 a 3 stazioni spaziali (commerciali, industriali o avamposti fuorilegge).
-    - Quadranti speciali: zone di relitti (*debris fields*), nubi di gas e settori caldi di taglie (*bounty hunting zones*).
-    - **Distribuzione Volumetrica 3D dei POI (Quote/Altezze Variabili su Asse Y)**: assegnazione a tutte le entità e punti di interesse di coordinate spaziali $Vector3(x, y, z)$ con quote ed elevazioni variabili ($Y \in [-H, +H]$ rispetto all'eclittica o al piano equatoriale del settore), superando qualsiasi vincolo di altezza fissa a zero ($Y \neq 0$).
-  - Funzione di esportazione/salvataggio come risorsa `StarSystemData` caricabile direttamente nella Lobby prima del lancio.
+- **Implementazione Eseguita**:
+  - Creato `Outside/StarSystemGrid/star_system_generator.gd` con 4 archetipi galattici bilanciati (`STANDARD_BALANCED`, `MINING_FRONTIER`, `CORE_HIGH_TECH`, `MILITARY_ANOMALY`), distribuzione orbitale deterministica da seed e garanzia della stazione di partenza.
+  - Creata `Applications/SystemDiscover/system_discover_app.gd` e `.tscn` con controlli seed/archetipi, canvas olografico orbitale interattivo con indicatori altimetrici $\Delta z$, esportazione su disco (`user://systems/` e `res://CustomSystems/`) e auto-integrazione in `LobbyApp`.
+  - Simulazione volumetrica reale 3D: tutte le entità generate possiedono quote variabili ($Y \in [-1200, +1200]\,\text{m}$), sincronizzate sui sensori e navigazione.
+  - Validato con suite automatizzata GUT (`tests/gut/test_phase_b_system_discover.gd`: 6/6 superati).
 
 ---
 
-### Fase C: Servizi Portuali Avanzati su StationHub (Priorità Media)
+### Fase C: Servizi Portuali Avanzati su StationHub [COMPLETATA]
 
-#### Task C1: Bacheca Contratti & Fixer Dinamico
+#### Task C1: Bacheca Contratti & Fixer Dinamico [COMPLETATO]
 - **Obiettivo**: Trasformare il Tab Contratti di `StationHub` in una vera bacheca contratti collegata a eventi e POI della simulazione.
-- **Implementazione**:
-  - Generatore di contratti legati al sistema corrente:
-    - Missioni di **Bounty**: bersaglio pirata spawnato in un quadrante specifico a quota/altezza 3D variabile (coordinate volumetriche trasmesse al Logbook).
-    - Missioni di **Trasporto**: consegna pacchi cargo a un'altra stazione con scadenza a tempo.
-    - Missioni di **Retrieval**: recupero di una scatola nera o risorsa speciale da un relitto posizionato a coordinate spaziali tridimensionali.
-  - Aggancio al completamento della missione con incasso del premio in FLUX e notifica di debriefing.
+- **Implementazione Eseguita**:
+  - Creato `Economy/mission_manager.gd` (`MissionManagerSingleton`) coordinando il ciclo vitale dei contratti procedurali (Bounty, Transport, Retrieval, Patrol) e l'accredito dei premi in Crediti e FLUX.
+  - Collegati i segnali di distruzione navi pirata in `CombatDirector` e di attracco in `DockingManager` alla risoluzione automatica delle missioni.
+  - Implementata la riscossione con un clic sia per singolo contratto sia collettiva ("Riscuoti Tutti i Contratti") con sincronizzazione in `LogbookApp`.
 
-#### Task C2: Il Bar della Stazione e Generazione Rumors
+#### Task C2: Il Bar della Stazione e Generazione Rumors [COMPLETATO]
 - **Obiettivo**: Rendere il Tab Taverna un aggregatore di informazioni esplorative con impatto reale sullo spazio 3D.
-- **Implementazione**:
-  - I rumors acquistabili o ascoltati generano punti di interesse temporanei o stabili (`Debris Field`, `Wreck Site`) nel quadrante indicato, comprensivi di offset altimetrico sull'asse Y.
-  - Pulsante "Invia a Mappa Stellare" che crea un Waypoint automatico diegetico leggibile da `System Map` e `Flight Control`.
+- **Implementazione Eseguita**:
+  - Le dicerie raccolte al bancone della stazione generano punti di interesse temporanei o permanenti (relitti, giacimenti, nascondigli) comprensivi di offset altimetrico volumetrico $Y \neq 0$.
+  - Il pulsante diegetico "Trascrivi Coordinate nei Sensori & Mappa" inietta il Waypoint su `SpaceWorldManager`, rendendolo visibile su Mappa Stellare, Sensori e Navigazione.
 
-#### Task C3: Borsa Merci Dinamica Stile X4
+#### Task C3: Borsa Merci Dinamica Stile X4 [COMPLETATO]
 - **Obiettivo**: Offrire differenziali di prezzo di acquisto/vendita tra stazioni e settori.
-- **Implementazione**:
-  - Ogni stazione possiede profili di consumo e produzione diversi (es. Stazione Mineraria: minerali economici, cibo/elettronica costosi; Avamposto Tecnologico: chip economici, metalli grezzi ad alto valore).
-  - La compravendita di merci aggiorna la stiva di `CargoBay` e modifica il rating FLUX del mercato locale.
+- **Implementazione Eseguita**:
+  - Definiti in `Outside/Stations/space_station_entity.gd` 4 archetipi economici (`MINING_OUTPOST`, `INDUSTRIAL_REFINERY`, `HIGH_TECH_HUB`, `AGRICULTURAL_DEPOT`) con modificatori di categoria e margini di spread bid/ask per garantire opportunità di commercio inter-settoriale senza loop speculativi locali.
+  - Validato con suite automatizzata GUT (`tests/gut/test_phase_c_station_hub_services.gd`: 5/5 superati).
 
 ---
 
-### Fase D: Esplorazione, Relitti e Scavenging con Service Drone (Priorità Alta)
+### Fase D: Esplorazione, Relitti e Scavenging con Service Drone [COMPLETATA]
 
-#### Task D1: Generazione Debris Field & Relitto Orbitale
+#### Task D1: Generazione Debris Field & Relitto Orbitale [COMPLETATO]
 - **Obiettivo**: Popolare i quadranti designati con campi di detriti fluttuanti, rottami e relitti scansionabili distribuiti a quote ed elevazioni 3D variabili sull'asse Y.
-- **Implementazione**:
-  - In `SpaceWorldManager`, creazione di nodi `WreckSite` composti da una carcassa principale e detriti fisici minori, posizionati nello spazio a coordinate $Vector3(x, y, z)$ con quote verticali variabili rispetto all'origine del quadrante (evitando l'appiattimento a $Y = 0$).
-  - Firma spettrometrica e radar per i Sensori (inclusa la marcatura di elevazione/quota azimutale e polare) e risposta ai filtri LIDAR e Termico delle telecamere esterne per identificare il nucleo recuperabile tra i rottami inerti a qualsiasi dislivello di quota.
-  - Meccanica di allerta: timer o probabilità di spawn di navi ostili ("Sciacalli") che possono sopraggiungere da quote superiori o inferiori attratti dall'attività di recupero della corvetta.
+- **Implementazione Eseguita**:
+  - Creata l'entità fisica 3D `CargoContainerEntity` (`Outside/Mining/cargo_container_entity.gd`) con massa, volume, collision box, firma per LIDAR e spettrometria per `SensorsApp`.
+  - In `SpaceWorldManager`, implementati `spawn_debris_field()` e popolamento automatico di relitti primari e 4+ container a quote tridimensionali variabili ($Y \in [-1200, +1200]\,\text{m}$) nei settori relitto.
+  - In `CombatDirector`, implementata la routine di allerta e imboscata periodica degli sciacalli pirata (`process_scavenger_threat()` e `trigger_scavenger_ambush()`).
 
-#### Task D2: Meccanica di Scavenging per il Service Drone
+#### Task D2: Meccanica di Scavenging per il Service Drone [COMPLETATO]
 - **Obiettivo**: Permettere al Drone di Servizio di prelevare materiali e container dal relitto e stivarli nella nave madre.
-- **Implementazione**:
-  - Aggiungere al `ServiceDrone` un raggio o morsa manipolatrice (`Manipulator / Tractor Beam`) azionabile dal pilota del drone quando entro 5 metri da un container/componente del relitto.
-  - Il drone trasporta l'oggetto fino al portello di carico della corvetta.
-  - All'aggancio al portello, l'oggetto viene rimosso dallo spazio 3D e aggiunto all'inventario di `CargoBay` con notifica audio e telemetrica.
+- **Implementazione Eseguita**:
+  - In `ServiceDroneEntity`, implementato lo strumento `"magnet"` con raggio di $18.0\,\text{m}$, vincolo harpoon (`latch_cargo`, `unlatch_cargo`), rimorchio fluido con smorzamento lerp, inerzia maggiorata e incremento consumo batteria proporzionale alla massa rimorchiata.
+  - Sulla corvetta (`Spaceship.gd`), creato il portello cargo (`CargoHatchArea3D`) che rileva i container consegnati, li stiva direttamente in `CargoManager`, rilascia l'harpoon del drone e distrugge l'entità 3D nello spazio con notifica diegetica.
 
-#### Task D3: Caricamento Dinamico e Streaming Asincrono dei Quadranti a Velocità di Crociera
-- **Obiettivo**: Consentire alla nave di transitare continuativamente attraverso i confini dei quadranti navigando a velocità di crociera sub-luce, caricando dinamicamente e in background il quadrante adiacente quando ci si avvicina al bordo per un'esperienza seamless priva di schermate di caricamento.
-- **Implementazione**:
-  - **Proximity Trigger di Confine Quadrante**:
-    - Monitoraggio continuo della posizione 3D della nave all'interno del volume del settore attivo (`SECTOR_SIZE_KM` in `StarSystemGridManager` / `SpaceWorldManager`).
-    - Calcolo della distanza dai 6 piani di confine del quadrante: quando la distanza scende sotto la soglia di guardia (es. 15-20% del raggio del settore o margine dinamico basato sul tempo all'attraversamento $t = \frac{dist}{|\vec{v}_{ship}|}$), viene identificato il quadrante adiacente verso cui punta il vettore di moto: $\vec{C}_{target} = \vec{C}_{curr} + \vec{d}_{boundary}$.
-  - **Threaded / Asynchronous Pre-loading**:
-    - Avvio del caricamento in background dei dati del settore (`SectorData`), skybox occlusion, entità celesti, stazioni o relitti del quadrante bersaglio tramite `ResourceLoader.load_threaded_request()` o thread separato, azzerando lag spike e freeze della simulazione.
-  - **Seamless Crossing & Floating Origin Shift**:
-    - Al varcare fisico della soglia del quadrante, il settore di destinazione viene promosso a settore attivo (`current_sector_data`), le sue entità fisiche vengono attivate nell'albero di scena e viene applicato un origin shift o riallineamento delle coordinate per preservare la precisione floating-point dei calcoli fisici di Godot.
-  - **Unloading e Gestione Memoria del Settore Superato**:
-    - Quando la nave si allontana dal confine oltre la zona di buffer, le entità fisiche 3D pesanti del settore precedente vengono scaricate dalla memoria o riciclate tramite pooling, preservando nella cache solo i metadati leggeri per i sensori a lungo raggio.
-  - **Integrazione con la Plancia (Flight Control & System Map)**:
-    - Supporto in `Flight Control` per la modalità di accelerazione a crociera continua (*Cruise Speed Throttle*).
-    - Aggiornamento in tempo reale e continuo della traiettoria di volo lungo la griglia vettoriale della `System Map` e sui radar di `SensorsApp`.
+#### Task D3: Caricamento Dinamico e Streaming Asincrono dei Quadranti a Velocità di Crociera [COMPLETATO]
+- **Obiettivo**: Consentire alla nave di transitare continuativamente attraverso i confini dei quadranti navigando a velocità di crociera sub-luce, caricando dinamicamente e in background il quadrante adiacente per un'esperienza seamless priva di schermate di caricamento.
+- **Implementazione Eseguita**:
+  - In `StarSystemGridManager`, implementato `check_sector_boundary_proximity()` con rilevamento della distanza dai 6 piani del settore e soglia di allerta ($15.000\,\text{km}$).
+  - Implementato il pre-caricamento asincrono `preload_adjacent_sector_async()` del settore adiacente prima del valico.
+  - Al varcare del confine, esecuzione del crossing seamless con floating origin shift che riallinea le coordinate al margine opposto preservando orientamento, velocità lineare e angolare.
+  - Suite automatizzata di test GUT in `tests/gut/test_phase_d_debris_scavenging_streaming.gd` (6/6 superati).
 
 ---
 
-### Fase E: Fisica Balistica Newtoniana & Combattimento Hard Sci-Fi (Priorità Massima)
+### Fase E: Fisica Balistica Newtoniana & Combattimento Hard Sci-Fi [COMPLETATA]
 
-#### Task E1: Somma Vettoriale della Nave ai Proiettili Torretta
+#### Task E1: Somma Vettoriale della Nave ai Proiettili Torretta [COMPLETATO]
 - **Obiettivo**: Rispettare rigorosamente la relatività galileiana applicando la cinematica newtoniana a proiettili di mitragliatrici pesanti e cannoni.
-- **Implementazione**:
-  - In `SpaceWorldManager.request_fire_weapon()` e nello spawn dei proiettili fisici:
-    - Ricavare il vettore velocità lineare istantaneo della corvetta: $\vec{v}_{ship} = \text{ship.linear\_velocity}$.
-    - Ricavare il vettore direzione di mira della torretta $\hat{d}_{aim}$ e la velocità propria del proiettile $v_{muzzle}$.
-    - Calcolare la velocità iniziale assoluta del proiettile:
+- **Implementazione Eseguita**:
+  - In `SpaceWorldManager.request_fire_weapon()` e `spawn_ballistic_projectile()`:
+    - Tabella profili balistici munizioni `BALLISTIC_PROFILES` (`HEAVY_MG`, `HEAVY_CANNON`, `MISSILE`, `PROBE`, `TORPEDO`, `KINETIC`).
+    - Estrazione della velocità istantanea corvetta `get_spaceship_velocity()` e somma vettoriale:
       $$\vec{v}_{proj} = \vec{v}_{ship} + (\hat{d}_{aim} \times v_{muzzle})$$
-    - Assegnare $\vec{v}_{proj}$ alla simulazione fisica del proiettile nello spazio 3D.
-  - Se $\vec{v}_{ship}$ è concordante con $\hat{d}_{aim}$, la gittata e la velocità d'impatto aumentano; se discorde, diminuiscono.
+    - Buffer di simulazione `active_ballistic_projectiles` con aggiornamento frame per frame e sweep continuo di collisione anti-tunneling (`check_segment_sphere_collision`).
+    - Allineamento del fuoco nemico in `CombatDirector` con vettori galileiani e calcolo d'impatto.
 
-#### Task E2: Calcolo del Danno Cinetico Relativo all'Impatto
-- **Obiettivo**: Scalare il danno inflitto in base all'energia cinetica relativa all'impatto.
-- **Implementazione**:
-  - Al momento della collisione del proiettile contro il bersaglio (nave nemica o nave giocatore), calcolare la velocità relativa di collisione:
-    $$\vec{v}_{rel} = \vec{v}_{proj} - \vec{v}_{target}$$
-  - Moltiplicatore di danno cinetico:
-    $$\text{danno\_effettivo} = \text{danno\_base} \times \left(\frac{|\vec{v}_{rel}|}{v_{muzzle}}\right)$$
-  - Un bersaglio che accelera frontalmente verso il colpo riceve danno maggiorato; un bersaglio in fuga nella stessa direzione subisce un danno ridotto o attutito.
+#### Task E2: Calcolo del Danno Cinetico Relativo all'Impatto & Telemetria HUD [COMPLETATO]
+- **Obiettivo**: Scalare il danno inflitto in base all'energia cinetica relativa all'impatto e aggiornare il mirino predittivo.
+- **Implementazione Eseguita**:
+  - Risoluzione collisioni in `SpaceWorldManager`: calcolo di $\vec{v}_{rel} = \vec{v}_{proj} - \vec{v}_{target}$ e moltiplicatore:
+    $$\text{danno\_effettivo} = \text{danno\_base} \times \text{clampf}\left(\frac{|\vec{v}_{rel}|}{v_{muzzle}}, 0.25, 2.5\right)$$
+  - Ricalcolo predittivo in `WeaponsApp` sul vettore di chiusura relativo $(\vec{v}_{target} - \vec{v}_{ship})$: Lead Indicator privo di derive spurie.
+  - Telemetria diegetica in `WeaponsTrajectoryHUD` con indicazione dinamica di $\Delta v$ e `IMP. PWR: %`.
+  - Suite automatizzata di test GUT in `tests/gut/test_ballistics_newtonian.gd` (5/5 passati con successo).
 
 ---
 
-### Fase F: Guerra Elettronica, Contrattacco Hacker & Feedback Diegetici (Priorità Alta)
+### Fase F: Guerra Elettronica, Contrattacco Hacker & Feedback Diegetici [COMPLETATA]
 
-#### Task F1: Contrattacco Hacker Nemico e File Exploit Malevoli
+#### Task F1: Contrattacco Hacker Nemico e File Exploit Malevoli [COMPLETATO]
 - **Obiettivo**: Creare la minaccia attiva di sabotaggio nemico a cui l'Hacker di bordo deve rispondere diegeticamente.
-- **Implementazione**:
-  - Quando si è a portata di combattimento con navi nemiche ostili provviste di EW, un timer probabilistico avvia un attacco informatico sulla nave dei giocatori.
-  - Viene iniettato un file `.dat` sentinella malevolo nella cartella protetta di un'app a bordo (es. `Ship Drive/Programs/FlightControls/worm_exploit.dat` o `PowerGrid/overload_virus.dat`).
-  - L'exploit provoca anomalie in tempo reale (spostamento motori, distorsione telecamere, allarmi acustici).
-  - L'Hacker riceve un allarme di intrusione e deve navigare nel file system, individuare il file infetto ed eliminarlo rapidamente prima dello scadere del timeout di sicurezza per neutralizzare la minaccia.
+- **Implementazione Eseguita**:
+  - In `CombatDirector`, implementata la routine di guerra elettronica ostile con timer probabilistico durante il combattimento.
+  - Iniezione da parte dei caccia nemici di file sentinella `.dat` malevoli (`PROPULSION_WORM`, `BLIND_EYE`, `REACTOR_OVERLOAD`) nelle directory protette dello Ship Drive via `ShipDriveManager.inject_intrusion_file()`.
+  - Generazione di anomalie sistemiche in tempo reale (deriva erratica attuatori RCS su `Spaceship.gd`, static glitch e offuscamento mirino telecamere su `CameraFeedWindow`, sovraccarico del regolatore di potenza in `PowerGridApp`).
+  - Monitoraggio e notifica in `DiagnosticsApp` con conto alla rovescia di allarme; rimozione/disinfezione immediata tramite cancellazione del file da parte dell'Hacker (`sdm.item_deleted`), oppure detonazione critica con danni a scafo e moduli su `SystemicDamageHandler` allo scadere del timeout.
 
-#### Task F2: Feedback Sensoriali Interni & Fluttuazioni Vitali
+#### Task F2: Feedback Sensoriali Interni & Fluttuazioni Vitali [COMPLETATO]
 - **Obiettivo**: Riconnettere i danni esterni a effetti sensoriali claustrofobici all'interno dei pod.
-- **Implementazione**:
-  - Al segnale `ship_damage_taken`:
-    - Riproduzione suoni 3D ovattati/interni: boato d'impatto metallico, allarme depressurizzazione per breccia, ronzio di scariche elettriche per corti circuiti, sibilo di fiamma per incendi.
-    - Scuotimento dello schermo (camera shake leggero del desktop) proporzionale alla violenza del colpo.
-    - Sincronizzazione immediata con `LifeSupport` e `PodInfo`: fumo tossico o calo di ossigeno aumentano il battito cardiaco dei giocatori, provocando distorsioni visive e rantoli se non risolti dall'Ingegnere con il Duct Drone.
+- **Implementazione Eseguita**:
+  - Sintetizzati in `PodInfoApp` generatori audio procedurali diegetici a bassa frequenza per boati di scafo ovattati, decompressioni per brecce e sfrigolii di incendi da cortocircuito.
+  - Applicato camera shake desktop smorzato con decadimento quadratico calibrato sul danno subito.
+  - Sincronizzate le fluttuazioni biometriche e la frequenza cardiaca (da 72 a 160 BPM) con allarmi di stress e rantoli se la nave subisce brecce non riparate.
+  - Validato con suite automatizzata GUT (`tests/gut/test_phase_f_cyber_warfare_sensory_damage.gd`: 8/8 superati).
 
 ---
 
-### Fase G: Chiusura del Ciclo e Debriefing (Priorità Media)
+### Fase G: Chiusura del Ciclo, Debriefing e Rientro Persistente [COMPLETATA]
 
-#### Task G1: Flusso Completo di Fine Missione e Rientro
-- **Obiettivo**: Automatizzare la vendita di bottino e riscossione taglie all'attracco, con salvataggio dello stato persistente della nave.
-- **Implementazione**:
-  - Aggancio di StationHub con le entità recuperate in `CargoBay`: visualizzazione separata delle merci commerciali standard e del "Loot di Scavenging" (rottami rari, moduli nemici, chip cifrati).
-  - Riscossione immediata della taglia con azzeramento del contratto attivo nel Logbook e accredito dei FLUX nel wallet di bordo.
-  - Verifica automatica del saldo per la detrazione della quota di noleggio nave (`Ship Rent Service`), aggiornando il debito residuo e salvando la `ShipBlueprint` con le nuove risorse accumulate per la sessione successiva.
+#### Task G1: Flusso Completo di Fine Missione, Debriefing e Salvataggio [COMPLETATO]
+- **Obiettivo**: Riconciliare in modo modulare i profitti di fine missione nei rispettivi uffici di StationHub e salvare stabilmente lo stato della corvetta.
+- **Implementazione Eseguita**:
+  - In `CargoManagerSingleton`, aggiunta identificazione e tracciamento esplicito del bottino di scavenging (`is_scavenged = true` o categorie `SCAVENGED`, `WRECK_COMPONENT`, `SALVAGE`), calcolo del valore e metodo di liquidazione in blocco `liquidate_scavenged_items()`.
+  - In `StationHubApp` Tab 1 (Logistica & Cargo Market), differenziazione diegetica delle merci ordinarie dal bottino recuperato nello spazio e pulsante rapido "⚡ Vendi Tutto il Bottino Scavenging" per la conversione immediata in Crediti e FLUX.
+  - In `StationHubApp` Tab 2 (Bacheca Contratti), conteggio dei contratti completati non riscossi e pulsante "💰 Riscuoti Tutti i Contratti" con accredito unificato e notifica diegetica.
+  - In `StationHubApp` Tab 4 (Cantiere), gestione trasparente del debito residuo del canone noleggio scafo con pagamento discrezionale manuale a quote o estinzione completa.
+  - In `ShipBlueprint`, implementato `save_blueprint_state(file_path)` con salvataggio persistente su directory utente (`user://blueprints/active_corvette_session.tres`) collegato automaticamente al termine delle transazioni di rientro o tramite pulsante dedicato.
+  - Validato con suite automatizzata GUT (`tests/gut/test_phase_g_debriefing_persistence_loop.gd`).
 
 ---
 

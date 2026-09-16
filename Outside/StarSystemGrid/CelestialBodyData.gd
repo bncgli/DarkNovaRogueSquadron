@@ -14,12 +14,22 @@ extends Resource
 @export var temperature: float = 20.0 # Celsius
 @export var atmosphere: String = "none"
 @export var resources: Array[String] = []
+@export var local_elevation: float = 0.0 # Quota altimetrica 3D locale Y (metri) rispetto al piano del settore
 
-func _init(p_id: String = "", p_name: String = "", p_type: String = "planet", p_coords: Vector3i = Vector3i.ZERO) -> void:
+func _init(p_id: String = "", p_name: String = "", p_type: String = "planet", p_coords: Vector3i = Vector3i.ZERO, p_elevation: float = 0.0) -> void:
 	id = p_id
 	name = p_name
 	type = p_type
 	coords = p_coords
+	local_elevation = p_elevation
+
+## Calcola l'elevazione effettiva in metri (da local_elevation o da coords.z)
+func get_effective_elevation() -> float:
+	if local_elevation != 0.0:
+		return local_elevation
+	if coords.z != 0:
+		return float(coords.z) * 350.0
+	return 0.0
 
 ## Serializzazione in dizionario
 func to_dict() -> Dictionary:
@@ -28,6 +38,7 @@ func to_dict() -> Dictionary:
 		"name": name,
 		"type": type,
 		"coords": [coords.x, coords.y, coords.z],
+		"local_elevation": local_elevation,
 		"radius_km": radius_km,
 		"mass_tons": mass_tons,
 		"luminosity": luminosity,
@@ -44,6 +55,7 @@ func from_dict(data: Dictionary) -> void:
 	id = data.get("id", id)
 	name = data.get("name", name)
 	type = data.get("type", type)
+	local_elevation = float(data.get("local_elevation", local_elevation))
 	
 	if data.has("coords"):
 		var c: Variant = data["coords"]

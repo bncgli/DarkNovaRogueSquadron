@@ -5,220 +5,241 @@ sessionId: session-260915-141146-3p3m
 # Requirements
 
 ### Overview & Goals
-In accordo con la visione delineata in `docs/GAME_SESSION_SCENARIO_AND_ROADMAP.md` e con le preferenze espresse dall'utente, questo piano sviluppa il blocco a **priorità massima** della roadmap: **Fase E (Fisica Balistica Newtoniana & Combattimento Hard Sci-Fi)**.
+In accordo con la decisione di design consolidata in `DESIGN_DECISIONS_PENDING.md` (Punto 6) e con le preferenze architetturali dell'utente (**Riscrittura Flux Economy** e modello a **Baratto Titoli Debito**), questo piano operativo definisce la riscrittura integrale del motore economico di *Dark Nova: Rogue Squadron*.
 
-L'obiettivo è trasformare il combattimento spaziale di *Dark Nova Rogue Squadron* in una simulazione hard sci-fi autentica basata sul principio di relatività galileiana:
-1. I proiettili fisici non viaggiano a velocità assoluta slegata dalla nave, ma ereditano per intero il vettore di moto dell'astronave da cui vengono sparati ($\vec{v}_{proj} = \vec{v}_{ship} + \hat{d}_{aim} \times v_{muzzle}$).
-2. Il danno da impatto cinetico scala in tempo reale in funzione della velocità relativa di collisione col bersaglio: un colpo frontale contro un bersaglio in avvicinamento infligge danni devastanti per via dell'alta energia cinetica relativa, mentre colpire un bersaglio in fuga nella stessa direzione attutisce il danno.
-3. Il Lead Indicator (mirino predittivo) e l'HUD di telemetria dell'applicazione `Weapons` tengono conto della velocità relativa $\vec{v}_{target} - \vec{v}_{ship}$, offrendo al soldato/artigliere dati affidabili di ingaggio e stima del moltiplicatore di impatto.
+Nel contesto satirico e distopico **Freemium-punk** dell'ambientazione:
+1. **Eliminazione Radicale della Valuta Fiat Standard**: Non esistono "Crediti" generici (CR) o monete cartacee statiche. L'intera economia opera tramite il **FLUX**, concepito come liquidità di conio e indice dinamico di rating.
+2. **Baratto di Debiti e Crediti Corporativi**: Le transazioni si svolgono come uno scambio di rate e titoli di debito/credito circolanti (analogia: *"scambiarsi le rate della macchina venduta per pagare le rate di una moto"*). Comprare forniture, navi o servizi implica cedere titoli di credito attivi, versare FLUX liquido o accollarsi quote/tranche di debito passivo verso le stazioni o corporazioni locali.
+3. **Rating Creditizio Dinamico e Rischio Sequestro**: Il rating FLUX della nave (S, A, B, C, D, F) riflette il rapporto tra liquidità e debito complessivo e la regolarità delle transazioni, determinando agevolazioni commerciali o sovraccosti da rischio insolvenza e blocco delle licenze software.
+4. **Armonizzazione Sistemica**: `FluxEconomyManager`, `StationHubApp`, `MissionManagerSingleton`, `CargoManager` e `FluxWallet` operano all'unisono basandosi sulla fonte di verità dello scafo (`ShipBlueprint` e `ShipFluxModifier`).
 
 ### Scope
 - **In Scope**:
-  - Modello cinematico galileiano centralizzato in `SpaceWorldManager` per tutti i proiettili fisici (mitragliatrice pesante, cannoni, torpedini).
-  - Tracciamento della velocità lineare della nave (`Spaceship.linear_velocity`) e delle navi nemiche (`EnemyShipAI.velocity`).
-  - Calcolo del danno cinetico d'impatto scalato: $\text{danno\_effettivo} = \text{danno\_base} \times \frac{|\vec{v}_{rel}|}{v_{muzzle}}$ per colpi inferti e subiti.
-  - Correzione del calcolo del punto di lead in `WeaponsApp` sul vettore di chiusura relativo $(\vec{v}_{target} - \vec{v}_{ship})$.
-  - Telemetria diegetica del fattore di impatto stimato e della velocità di chiusura in `WeaponsTrajectoryHUD`.
-  - Suite di collaudo automatizzata in `tests/gut/test_ballistics_newtonian.gd`.
-- **Out of Scope (fasi successive della roadmap)**:
-  - Generazione procedurale di sistemi stellari e applicazione `System Discover` (Fase B).
-  - Contratti della stazione e borsa merci X4 in `StationHub` (Fase C).
-  - Meccanica di scavenging con braccio manipolatore per il `ServiceDrone` (Fase D).
-  - Contrattacchi cyber dell'IA nemica tramite iniezione file (Fase F).
+  - Riscrittura completa di `Economy/flux_economy_manager.gd`: rimozione della proprietà legacy `credits` e di tutte le API basate su crediti; introduzione della gestione di titoli di debito (`DEBT`) e titoli di credito (`CREDIT_TITLE`) rappresentati tramite `ShipFluxModifier`.
+  - Calcolo contabile del saldo netto:
+    $$\text{Net FLUX} = \text{Liquid FLUX} + \sum \text{Modifier Values}$$
+  - Metodi transazionali per il baratto:
+    - `pay_with_flux(amount: int, allow_debt_issuance: bool, creditor: String)`
+    - `transact_barter(required_cost: int, offered_liquid: int, transferred_titles: Array, accepted_debts: Array)`
+    - `receive_flux_reward(liquid_amount: int, debt_relief_target: String)`
+    - `repay_debt_tranche(debt_owner: String, amount: int)`
+  - Adeguamento di `Applications/StationHub/station_hub_app.gd`: sostituzione dell'indicatore `Crediti: %d CR` con la telemetria diegetica di FLUX Netto, Liquido e Debito; adeguamento degli acquisti/vendite nel Cargo Market, delle riparazioni al Cantiere e del saldo rate al modello a baratto titoli e FLUX.
+  - Adeguamento di `Economy/mission_manager.gd`: riconversione dei compensi dei contratti in FLUX liquido, sgravio di rate di debito pregresse e titoli di credito corporativi commerciabili.
+  - Adeguamento di `Economy/cargo_manager.gd`: valutazione del valore merci (`unit_base_value`) e del bottino in unità di valore FLUX.
+  - Aggiornamento di `Applications/FluxWallet/flux_wallet.gd`: supporto completo all'elenco espanso dei titoli di credito e debito corporativi con opzioni di trasferimento e cessione.
+  - Creazione della suite di test GUT `tests/gut/test_flux_economy_barter_system.gd` e allineamento dei test preesistenti.
+- **Out of Scope**:
+  - Aste multiplayer in tempo reale tra giocatori su diversi server (verranno affrontate con l'integrazione lobby avanzata).
+  - Mercati neri fisici clandestini con contrabbando fuorilegge all'interno delle stazioni (Fase futura).
 
 ### User Stories
-- **Come Soldato / Cannoniere alla plancia Weapons**, voglio che i miei colpi tengano conto del vettore di navigazione della nave madre, in modo da coordinarmi col Pilota per effettuare passaggi di tiro ad alta velocità ed infliggere il massimo danno cinetico all'impatto.
-- **Come Cannoniere**, voglio che il mirino di anticipo (Lead Indicator) calcoli esattamente la deviazione basandosi sulla velocità relativa tra la mia nave e il bersaglio, così da non sbagliare il tiro mentre manovriamo.
-- **Come Pilota**, voglio che le mie manovre evasive (es. accelerare via dal caccia ostile che mi insegue) riducano l'energia d'impatto e il danno dei colpi nemici che colpiscono la poppa.
+- **Come Equipaggio**, voglio poter fare rifornimento, riparare lo scafo o acquistare merci anche a corto di FLUX liquido, accollandomi una tranche di debito verso la corporazione portuale o cedendo un titolo di credito guadagnato in precedenza.
+- **Come Commerciante**, voglio vendere le merci della stiva o i minerali estratti per ripianare direttamente le rate di debito che gravano sul noleggio della nave ("Ship Rent Service") oppure per ottenere conio FLUX spendibile.
+- **Come Cacciatore di Taglie**, voglio che i contratti del Fixer mi ricompensino con un mix di liquidità immediata e sgravi di debito corporativo, aumentando il rating creditizio della corvetta.
+- **Come Capitano alla plancia FluxWallet**, voglio monitorare con precisione la composizione del portafoglio titoli (debiti passivi vs crediti attivi) e il credit score per prevenire l'impound della nave.
 
 ### Functional Requirements
-- **FR-E1 (Somma Vettoriale al Lancio)**: Al momento dello sparo in `request_fire_weapon()`, il proiettile deve ricevere una velocità iniziale $\vec{v}_{proj} = \vec{v}_{ship} + (\hat{d}_{aim} \times v_{muzzle})$. Se la torretta spara in avanti mentre la nave viaggia a $20\,\text{m/s}$ e la volata è $100\,\text{m/s}$, il proiettile deve viaggiare a $120\,\text{m/s}$. Se spara all'indietro, viaggia a $80\,\text{m/s}$.
-- **FR-E2 (Tracciamento e Collisione Proiettili)**: `SpaceWorldManager` aggiorna in tempo reale la posizione dei proiettili attivi e calcola l'intersezione con il raggio di collisione delle entità bersaglio (`EnemyShipAI`).
-- **FR-E3 (Danno Cinetico Scalato)**: All'impatto contro un'entità (o contro la corvetta per proiettili nemici), il danno base viene moltiplicato per $\frac{|\vec{v}_{rel}|}{v_{muzzle}}$, con un clamp di sicurezza per il gameplay ($[0.25, 2.5]$).
-- **FR-E4 (Lead Indicator Dinamico)**: Il calcolo dell'anticipo in `WeaponsApp` deve usare il vettore di velocità relativa del bersaglio rispetto alla corvetta $(\vec{v}_{target} - \vec{v}_{ship})$ moltiplicato per il tempo stimato di intercettazione.
-- **FR-E5 (HUD Telemetria Balistica)**: `WeaponsTrajectoryHUD` deve visualizzare la velocità di chiusura ($\Delta v$) e la percentuale di impatto attesa (es. `IMP. PWR: 120%`).
+- **FR-FLUX1 (Rimozione Totale Crediti Legacy)**: Nessun componente dell'economia deve fare affidamento su valuta fiat generica (`credits: int`). `FluxEconomyManager` diventa l'autorità unica per la contabilità FLUX liquida e dei titoli.
+- **FR-FLUX2 (Gestione Titoli e Modificatori Scafo)**: I titoli di debito (es. `-700 FLUX` per Ship Rent Service, `-150 FLUX` per anticipo riparazioni) e i titoli di credito (es. `+200 FLUX` buono corporativo minerario) sono memorizzati come `ShipFluxModifier` e sincronizzati con `ShipBlueprint`.
+- **FR-FLUX3 (Baratto e Transazioni Flessibili)**: Nei servizi di stazione (`StationHub`), se il costo $C$ supera il FLUX liquido disponibile $L$, il giocatore autorizzato (RBAC) può:
+  - Salpare o procedere indebitandosi con emissione automatica di un nuovo `ShipFluxModifier` passivo (fino al tetto massimo di debito consentito dal rating creditizio).
+  - Cedere uno o più titoli di credito attivi in portafoglio per coprire la differenza.
+- **FR-FLUX4 (Liquidazione Bottino e Rimborso Debiti)**: La vendita rapida del carico e del bottino di scavenging permette di scegliere se ricevere conio liquido o applicare l'intero importo ad abbattere prioritariamente il debito di noleggio scafo o debiti ad alto tasso di penalità.
+- **FR-FLUX5 (Contratti Fixer a Ricompensa Mista)**: I contratti di `MissionManager` generano ricompense strutturate in `reward_liquid_flux` e `reward_debt_relief` (con applicazione automatica alla fazione/corporazione creditrice o rilascio di un titolo di credito negoziabile).
+- **FR-FLUX6 (Rating Dinamico e Penalità Insolvenza)**: Il credit score FLUX oscilla da 0 a 1000:
+  - *Rating S (≥900)* / *A (≥750)*: sconti portuali (-20%, -10%), spread favorevole di baratto, sblocco contratti di prestigio.
+  - *Rating B (≥600)* / *C (≥450)*: condizioni standard.
+  - *Rating D (≥300)* / *F (<300)*: sovraccosti di rischio (+15%, +35%), rifiuto di apertura nuove linee di debito, disattivazione remota licenze software e avvio timer di sequestro forzato (Impound).
 
 ### Non-Functional Requirements
-- **Zero Overhead Fisico Eccessivo**: La simulazione centralizzata vettoriale evita l'allocazione pesante di dozzine di nodi fisici complessi per colpi a raffica, preservando 60+ FPS anche con raffiche sostenute.
-- **Precisione Numerica**: Tutti i calcoli balistici utilizzano la precisione floating point nativa di Godot 4.x in coordinate vettoriali 3D cartesiane.
+- **Integrità Contabile**: Nessuna operazione di baratto o transazione può produrre valori `NaN`, corrompere la consistenza di `ShipBlueprint.flux_modifiers` o disallineare lo stato su disco rispetto alla memoria.
+- **Retrocompatibilità di Segnali**: Aggiornare i segnali economici (`flux_balance_changed`, `debt_tranche_added`, `debt_tranche_repaid`, `rating_changed`) garantendo al contempo bridge di compatibilità per eventuali listener legacy.
 
 # Technical Design
 
 ### Current Implementation
-- **Astronave Giocatore (`Outside/spaceship.gd`)**:
-  - Estende `RigidBody3D`. Espone `linear_velocity: Vector3` calcolato dalla simulazione fisica di Godot, oltre a `linear_input` e controlli di manovra.
-- **IA Nemica (`Outside/Combat/enemy_ship_ai.gd`)**:
-  - Estende `CharacterBody3D` / `Node3D`. Espone `velocity: Vector3` calcolato a ogni frame durante il pattern di volo (`SWARM_CHASE`, `EVASIVE_STRAFE`, `TORPEDO_BOMBING`). Espone `take_damage(amount, is_emp)`.
-- **Coordinatore Spazio & Armi (`Outside/space_world_manager.gd`)**:
-  - Dispone del metodo `request_fire_weapon(weapon_type, target_id, manual_aim_dir)`. Attualmente emette il segnale `weapon_fired`, ma non istanzia proiettili fisici per il giocatore né calcola la somma vettoriale newtoniana.
-  - Per i nemici dispone di `spawn_incoming_projectile()`, memorizzando proiettili in un array `incoming_projectiles` con posizione e velocità fissa.
-- **Plancia Armeria (`Applications/Weapons/weapons_app.gd` & `WeaponsTrajectoryHUD`)**:
-  - Calcola l'anticipo `lead_world_pos = t_pos + t_vel * flight_time` ignorando la velocità propria della nave madre (`Spaceship.linear_velocity`), rendendo il mirino impreciso durante traslazioni o manovre a velocità sostenuta.
+- **`Economy/flux_economy_manager.gd`**:
+  - Contiene ancora residui della vecchia logica basata su `credits: int = 5000`, `credits_changed(new_credits, delta)` e abbonamenti a tempo legati a crediti standard.
+  - Possiede già il calcolo del `flux_score` (0-1000), le lettere di rating (S, A, B, C, D, F) e il timer di rischio impound.
+- **`Outside/ShipSublayer/ShipFluxModifier.gd`**:
+  - Risorsa `@tool` esportabile con `value: int`, `owner: String`, `reason: String`, `to_dict()` e `from_dict()`.
+- **`Outside/ShipSublayer/ship_blueprint.gd`**:
+  - Gestisce `flux: int` (300 di default), `flux_modifiers: Array[ShipFluxModifier]` (con -700 per Ship Rent Service), `get_rent_debt()` e `repay_rent_debt()`.
+- **`Applications/StationHub/station_hub_app.gd`**:
+  - Contiene gli helper `_get_credits()`, `_spend_credits()`, `_add_credits()` che leggono e scrivono su `flux_mgr.credits`.
+  - La UI mostra un label per crediti (`%CreditsLabel`) e uno per FLUX (`%FluxRatingLabel`).
+- **`Economy/mission_manager.gd`**:
+  - Ogni contratto definisce `reward_credits` e `reward_flux`. All'incasso, accredita crediti su `FluxEconomyManager`.
 
 ### Key Decisions
-1. **Simulatore Vettoriale Centralizzato in `SpaceWorldManager`**:
-   - *Scelta*: Gestire l'array di proiettili e la cinematica newtoniana all'interno di `SpaceWorldManager` (struttura analoga e unificata a `incoming_projectiles`).
-   - *Motivazione*: Massime prestazioni computazionali, assenza di leak di nodi 3D, perfetta sincronizzazione con lo stato globale di rete e con le query dei sistemi di bordo (`ShieldMatrix`, `SensorsApp`, `WeaponsApp`).
-2. **Normalizzazione del Fattore Cinetico con Clamp Sicuro**:
-   - *Scelta*: Fattore cinetico $K = \text{clampf}\left(\frac{|\vec{v}_{rel}|}{v_{muzzle}}, 0.25, 2.5\right)$.
-   - *Motivazione*: Impedisce sia danni nulli/negativi in condizioni estreme (se il bersaglio vola via velocissimo, il proiettile fa comunque almeno il 25% del danno nominale), sia picchi incontrollati di one-shot in caso di impatti supersonici accidentali.
-3. **Calcolo Relativo Galileiano del Lead Indicator**:
-   - *Scelta*: Calcolare il tempo di volo e l'anticipo considerando $\vec{v}_{closing} = (\vec{v}_{ship} + \hat{d}_{aim} \times v_{muzzle}) - \vec{v}_{target}$.
-   - *Motivazione*: Il reticolo predittivo rimane stabile e perfettamente allineato indipendentemente dalla velocità e direzione di crociera della nave del giocatore.
-
-### Proposed Changes
-
-#### 1. Estensione di `Outside/space_world_manager.gd`
-- Aggiunta tabella profili balistici delle munizioni:
-  ```gdscript
-  const BALLISTIC_PROFILES := {
-      "HEAVY_MG": {"muzzle_speed": 180.0, "base_damage": 12.0, "radius": 2.5, "lifetime": 3.0, "is_kinetic": true},
-      "HEAVY_CANNON": {"muzzle_speed": 120.0, "base_damage": 65.0, "radius": 3.5, "lifetime": 4.0, "is_kinetic": true},
-      "MISSILE": {"muzzle_speed": 75.0, "base_damage": 140.0, "radius": 4.0, "lifetime": 6.0, "is_kinetic": false},
-      "PROBE": {"muzzle_speed": 35.0, "base_damage": 0.0, "radius": 2.0, "lifetime": 15.0, "is_kinetic": false}
-  }
-  ```
-- Struttura `active_ballistic_projectiles: Array[Dictionary]`:
-  - Traccia ogni proiettile: `id`, `weapon_type`, `position`, `velocity`, `muzzle_speed`, `base_damage`, `is_kinetic`, `source ("PLAYER" / "ENEMY")`, `target_id`, `lifetime`.
-- Aggiornamento in `_process` / `_physics_process`:
-  - `proj.position += proj.velocity * delta`
-  - Controllo collisioni verso `CombatDirector.active_enemies` (per colpi player) e verso la corvetta giocatore (per colpi nemici).
-  - All'impatto:
-    $$\vec{v}_{rel} = \vec{v}_{proj} - \vec{v}_{target}$$
-    $$\text{dmg} = \text{base\_damage} \times (\text{clampf}(|\vec{v}_{rel}| / v_{muzzle}, 0.25, 2.5) \text{ if is\_kinetic else } 1.0)$$
-    Chiamata diretta di applicazione danno su bersaglio (`take_damage`).
-
-#### 2. Integrazione con `Applications/Weapons/weapons_app.gd`
-- Recupero della velocità corvetta: `var ship_vel: Vector3 = SpaceWorldManager.get_spaceship_velocity()`.
-- Ricalcolo predittivo:
-  ```gdscript
-  var rel_target_vel: Vector3 = target_vel - ship_vel
-  var flight_time: float = target_dist / muzzle_speed
-  var lead_world_pos: Vector3 = target_pos + rel_target_vel * flight_time
-  ```
-- Calcolo telemetrico della velocità di chiusura e percentuale di impatto attesa trasmessa a `WeaponsTrajectoryHUD`.
-
-#### 3. Estensione di `Applications/Weapons/weapons_trajectory_hud.gd`
-- Aggiunta indicatore telemetrico:
-  - `closing_speed: float` ($\text{m/s}$)
-  - `expected_kinetic_pct: float` (es. `115%`)
-  - Rendering diegetico nel box bersaglio o nell'angolo dell'HUD mirino: `IMP. PWR: 115% (Δv: +24 m/s)`.
+1. **Unificazione della Fonte di Verità Economica**:
+   - *Scelta*: `FluxEconomyManager` diventa il proxy contabile centrale che legge e scrive direttamente sul saldo `flux` e sull'array `flux_modifiers` della `ShipBlueprint` attiva.
+   - *Motivazione*: Elimina ogni duplicazione o disallineamento: il wallet, i salvataggi blueprint, i terminali portuali e i contratti condividono esattamente la stessa istanza e gli stessi titoli.
+2. **Modello Dati a Baratto Titoli (Debt & Credit Tranches)**:
+   - *Scelta*: Trattare ogni voce contabile passiva o attiva non liquida come istanza di `ShipFluxModifier`.
+   - *Motivazione*: Pienamente allineato con la visione dell'utente: non un'astratta cifra numerica, ma un portafoglio di obbligazioni, rate di noleggio e buoni commerciali emessi da corporazioni reali dell'ambientazione (*"Aegis Port Authority"*, *"Titan Mining Consortium"*, *"Ship Rent Service"*).
+3. **Flessibilità di Pagamento con Emissione Debito Condizionata dal Rating**:
+   - *Scelta*: Consentire alle navi con rating $\ge \text{C}$ di indebitarsi al momento dell'acquisto emettendo un nuovo titolo passivo se non dispongono di FLUX liquido sufficiente. Impedire l'apertura di nuovo debito per rating D ed F (richiesta liquidità integrale o vendita merci prima dell'acquisto).
+   - *Motivazione*: Crea una dinamica di gameplay satirico Freemium-punk in cui il rating creditizio influenza concretamente la libertà operativa dell'equipaggio.
+4. **Liquidazione Intelligente del Bottino e Contratti Misti**:
+   - *Scelta*: Alla vendita del carico o incasso contratti, permettere l'allocazione diretta verso il rimborso delle rate attive (riducendo il debito) o l'incasso in conio liquido.
+   - *Motivazione*: Supporta la decisione dell'utente sul pagamento discrezionale del debito di noleggio e incentiva la gestione finanziaria strategica.
 
 ### Architecture Diagram
 
 ```mermaid
 graph TD
-    Spaceship[Spaceship RigidBody3D<br/>linear_velocity] -->|v_ship| SWM[SpaceWorldManager]
-    WeaponsApp[WeaponsApp<br/>manual_aim_dir & ammo_type] -->|request_fire_weapon| SWM
-    
-    subgraph Ballistic Simulation in SWM
-        CalcInit[v_proj = v_ship + d_aim * v_muzzle]
-        SimLoop[Step position += v_proj * delta]
-        SweepCheck[Check collision radius]
-        CalcDamage[v_rel = v_proj - v_target<br/>damage = base * |v_rel| / v_muzzle]
-        
-        CalcInit --> SimLoop
-        SimLoop --> SweepCheck
-        SweepCheck --> CalcDamage
+    subgraph Core Economic State
+        Blueprint[ShipBlueprint<br/>flux: int & flux_modifiers]
+        Mods[ShipFluxModifier List<br/>-700 Rent | +200 Titoli Credito | -150 Rate]
+        Blueprint --- Mods
     end
-    
-    CalcDamage -->|take_damage| Enemy[EnemyShipAI<br/>velocity]
-    CalcDamage -->|process_hit| PlayerDmg[SystemicDamageHandler]
-    
-    SWM -->|closing_speed & ship_vel| WeaponsApp
-    WeaponsApp -->|rel_lead & kinetic_pct| HUD[WeaponsTrajectoryHUD]
+
+    subgraph FluxEconomyManager Singleton
+        FEM[FluxEconomyManager]
+        FEM -->|sync balance & modifiers| Blueprint
+        ScoreCalc[Calculate FLUX Rating & Score<br/>Liquid vs Debt Ratio + Volume]
+        ImpoundLogic[Impound Risk & Remote Feature Lockout]
+        BarterEngine[Barter Engine<br/>Liquid Flux + Debt Issuance / Credit Exchange]
+        FEM --> ScoreCalc
+        FEM --> ImpoundLogic
+        FEM --> BarterEngine
+    end
+
+    subgraph Consumers & UI
+        Hub[StationHubApp<br/>Market Trade | Yard Repairs | Debt Repay]
+        Wallet[FluxWalletApp<br/>Display Net Balance & Tranche Portfolio]
+        Missions[MissionManagerSingleton<br/>Bounties & Contracts Payout]
+        Cargo[CargoManagerSingleton<br/>Valuation in FLUX Units]
+    end
+
+    Hub -->|barter transactions| FEM
+    Wallet -->|telemetry & repay| FEM
+    Missions -->|liquid reward & debt relief| FEM
+    Cargo -->|item values in FLUX| Hub
 ```
+
+### Proposed Changes
+
+#### 1. Ristrutturazione di `Economy/flux_economy_manager.gd`
+- Rimuovere la variabile `credits: int` e il segnale `credits_changed`.
+- Aggiungere proprietà e segnali:
+  - `signal flux_balance_changed(net_flux: int, liquid_flux: int, total_debt: int)`
+  - `signal debt_tranche_added(modifier: ShipFluxModifier)`
+  - `signal debt_tranche_settled(owner: String, amount: int)`
+  - `signal barter_transaction_completed(summary: Dictionary)`
+- Implementare i metodi principali:
+  - `get_liquid_flux() -> int`: legge `blueprint.flux`.
+  - `get_total_debt() -> int`: somma i modificatori negativi in `blueprint.flux_modifiers`.
+  - `get_total_credit_titles() -> int`: somma i modificatori positivi.
+  - `get_net_flux() -> int`: calcola $\text{liquid} + \text{modificatori}$.
+  - `can_afford(cost: int, allow_debt: bool = false) -> bool`: verifica se la nave può sostenere la spesa.
+  - `spend_liquid_flux(amount: int) -> bool`: detrae FLUX liquido.
+  - `add_liquid_flux(amount: int) -> void`: incrementa FLUX liquido.
+  - `issue_debt_tranche(owner: String, reason: String, amount: int) -> ShipFluxModifier`: crea e registra una nuova rata passiva.
+  - `repay_debt(owner: String, amount: int) -> int`: rimborsa una tranche passiva usando FLUX liquido.
+  - `barter_transaction(cost: int, offered_liquid: int, transferred_titles: Array, issue_debt_if_needed: bool, creditor: String) -> Dictionary`: risolve uno scambio complesso multi-tranche.
+  - Ricalcolo dinamico di `flux_score` basato sul rapporto $\frac{\text{Liquid}}{\text{Debt} + 1}$ e sulla tempestività dei rimborsi.
+
+#### 2. Riconversione di `Applications/StationHub/station_hub_app.gd`
+- Sostituire `%CreditsLabel` con telemetria integrata FLUX: `"FLUX Netto: %d [Liq: %d | Deb: -%d]"`.
+- Rimuovere `_get_credits()`, `_spend_credits()`, `_add_credits()`, sostituendoli con chiamate dirette a `FluxEconomyManager`.
+- Aggiornare i flussi:
+  - **Cantiere Navale**: riparazione scafo (es. 250 FLUX), naniti e batterie pagabili in FLUX o con accollo rateale (`"Aegis Shipyard Repairs"`).
+  - **Cargo Market**: compravendita merci regolata in FLUX. Se il compratore non ha abbastanza conio, può ricorrere a debito commerciale autorizzato.
+  - **Liquidazione Bottino**: pulsante `"⚡ Vendi Bottino Scavenging"` accredita FLUX liquido o decurta il canone noleggio scafo con opzione di scelta.
+  - **Bacheca Contratti**: incasso delle taglie con accredito FLUX e sgravio rateale.
+
+#### 3. Riconversione di `Economy/mission_manager.gd`
+- Ridenominare le ricompense dei contratti da `reward_credits` a `reward_liquid_flux: int` e aggiungere `reward_debt_relief: int` e `creditor_relief_target: String`.
+- All'atto del claim (`claim_contract`), chiamare `FluxEconomyManager.receive_contract_reward(contract)`.
+
+#### 4. Integrazione con `Economy/cargo_manager.gd`
+- Uniformare la nomenclatura di `unit_base_value` come valore intrinseco in FLUX, eliminando ogni testo o log diegetico che faccia riferimento a "Crediti" o "CR".
+
+#### 5. Aggiornamento di `Applications/FluxWallet/flux_wallet.gd`
+- Mostrare la visualizzazione analitica delle tranche corporative possedute (con badge distintivi per debiti verso Ship Rent Service, cantieri, o titoli di credito cedibili).
 
 ### File Structure
 - **Modificati**:
-  - `Outside/space_world_manager.gd`: spawn proiettili newtoniani, aggiornamento vettoriale, calcolo danno relativo, getter velocità nave.
-  - `Applications/Weapons/weapons_app.gd`: lead indicator con velocità relativa $(\vec{v}_{target} - \vec{v}_{ship})$ e telemetria balistica.
-  - `Applications/Weapons/weapons_trajectory_hud.gd`: visualizzazione diegetica della velocità di chiusura e del fattore di impatto stimato.
-  - `Outside/Combat/combat_director.gd`: allineamento del fuoco nemico con velocità del tiratore e passaggio a `SpaceWorldManager`.
+  - `Economy/flux_economy_manager.gd`: riscrittura completa, eliminazione crediti fiat, gestione del baratto di titoli e rating.
+  - `Applications/StationHub/station_hub_app.gd`: interfaccia e transazioni interamente convertite a FLUX e baratto rate.
+  - `Economy/mission_manager.gd`: contratti e ricompense allineati al modello FLUX e sgravio debiti.
+  - `Economy/cargo_manager.gd`: quotazioni e stime stiva in unità FLUX.
+  - `Applications/FluxWallet/flux_wallet.gd`: supporto all'elenco espanso delle tranche di debito/credito corporativo.
+  - `docs/GAME_SESSION_SCENARIO_AND_ROADMAP.md`: tracciamento del nuovo pilastro economico completato.
 - **Creati**:
-  - `tests/gut/test_ballistics_newtonian.gd`: suite completa di test GUT per balistica vettoriale e danno cinetico.
+  - `tests/gut/test_flux_economy_barter_system.gd`: suite automatizzata GUT per la validazione della riscrittura economica a baratto debiti/crediti.
 
 ### Risks
-- **Rischio Tunneling su Proiettili Veloci**: A framerate bassi, un proiettile ad alta velocità potrebbe oltrepassare il bersaglio tra due frame.
-  - *Mitigazione*: Controllo della collisione tramite segment-sweep (da `prev_position` a `new_position`) calcolando la distanza minima dal segmento al centro del bersaglio rispetto al raggio di collisione.
-- **Disallineamento Segnali Rete / Solo**: La corvetta o i caccia potrebbero subire correzioni di posizione istantanee.
-  - *Mitigazione*: La cinematica è risolta a livello autoritativo sull'host/solo all'interno di `SpaceWorldManager`, con posizioni sincronizzate via telemetria standard.
+- **Rischio Regressione Test Preesistenti che invocavano `flux_mgr.credits`**: Alcuni test storici leggevano o modificavano `flux_mgr.credits`.
+  - *Mitigazione*: Implementare proprietà o setter/getter di transizione su `FluxEconomyManager` con warning diegetico, oppure aggiornare i test di test suite storiche per testare direttamente i metodi FLUX nativi.
+- **Rischio Overflow di Debito (Ciclo di Default Permanente)**: I giocatori potrebbero accumulare debiti senza poter salpare o attraccare.
+  - *Mitigazione*: I contratti del Fixer e le missioni di soccorso/scavenging rimangono sempre accessibili indipendentemente dal rating, consentendo sempre all'equipaggio abile di ripianare i debiti e risalire il rating.
 
 # Testing
 
 ### Validation Approach
-La validazione del sistema balistico newtoniano e del danno cinetico relativo viene condotta tramite suite automatizzata in Godot con il framework GUT (`tests/gut/test_ballistics_newtonian.gd`), supportata da test di integrazione visiva tra `WeaponsApp` e `WeaponsTrajectoryHUD`.
+La riscrittura della Flux Economy viene convalidata tramite una nuova suite automatizzata Godot GUT (`tests/gut/test_flux_economy_barter_system.gd`), accompagnata dall'esecuzione in headless mode di tutte le suite di regressione del progetto.
 
 ### Key Scenarios
 
-#### Scenario 1: Addizione Vettoriale di Volata (Relatività Galileiana)
-- **Setup**: Nave posizionata a $(0, 0, 0)$ con velocità lineare $\vec{v}_{ship} = (0, 0, -20)$ (moto in avanti verso $-Z$).
-- **Azione**:
-  1. Fuoco in avanti ($\hat{d}_{aim} = (0, 0, -1)$ con munizione a velocità $100\,\text{m/s}$).
-  2. Fuoco all'indietro ($\hat{d}_{aim} = (0, 0, 1)$).
-  3. Fuoco laterale verso destra ($\hat{d}_{aim} = (1, 0, 0)$).
+#### Scenario 1: Modello a Saldo Netto e Tranche di Debito
+- **Setup**: Nave con 300 FLUX liquidi e modificatore di partenza -700 FLUX per "Ship Rent Service".
 - **Esito Atteso**:
-  1. Velocità proiettile frontale $= (0, 0, -120)$ ($|\vec{v}_{proj}| = 120\,\text{m/s}$).
-  2. Velocità proiettile posteriore $= (0, 0, 80)$ ($|\vec{v}_{proj}| = 80\,\text{m/s}$).
-  3. Velocità proiettile laterale $= (100, 0, -20)$ ($|\vec{v}_{proj}| = \sqrt{100^2 + 20^2} \approx 101.98\,\text{m/s}$).
+  - `get_liquid_flux()` restituisce `300`.
+  - `get_total_debt()` restituisce `700`.
+  - `get_net_flux()` restituisce `-400`.
+  - Il rating creditizio calcola la fascia proporzionata alla solvibilità.
 
-#### Scenario 2: Danno Cinetico Relativo all'Impatto (Head-On vs Tail-Chase)
-- **Setup**: Bersaglio `EnemyShipAI` con 100 HP di scafo, munizione con danno base 50 e velocità di volata $100\,\text{m/s}$. Proiettile sparato a $100\,\text{m/s}$ verso $-Z$.
-- **Test 2A (Head-On / Frontale)**:
-  - Bersaglio vola incontro al proiettile a $\vec{v}_{target} = (0, 0, 50)$ (verso $+Z$).
-  - Velocità relativa: $\vec{v}_{rel} = (0, 0, -100) - (0, 0, 50) = (0, 0, -150) \implies |\vec{v}_{rel}| = 150\,\text{m/s}$.
-  - Moltiplicatore cinetico: $150 / 100 = 1.5$.
-  - Danno applicato $= 50 \times 1.5 = 75.0$.
-- **Test 2B (Tail-Chase / Bersaglio in fuga)**:
-  - Bersaglio fugge nella stessa direzione a $\vec{v}_{target} = (0, 0, -50)$ (verso $-Z$).
-  - Velocità relativa: $\vec{v}_{rel} = (0, 0, -100) - (0, 0, -50) = (0, 0, -50) \implies |\vec{v}_{rel}| = 50\,\text{m/s}$.
-  - Moltiplicatore cinetico: $50 / 100 = 0.5$.
-  - Danno applicato $= 50 \times 0.5 = 25.0$.
+#### Scenario 2: Transazione con Baratto ed Emissione Nuovo Debito
+- **Setup**: Corvetta con 100 FLUX liquidi e rating B che intende acquistare una fornitura dal cantiere del costo di 250 FLUX.
+- **Azione**: Invocazione di `barter_transaction` con FLUX parziale e accollo del residuo (150 FLUX) a debito verso la corporazione portuale.
+- **Esito Atteso**:
+  - Il FLUX liquido scende a 0.
+  - Viene emesso un nuovo `ShipFluxModifier` passivo di valore `-150` intestato alla stazione.
+  - `get_total_debt()` sale di 150.
+  - La transazione va a buon fine e la merce/servizio viene erogata.
 
-#### Scenario 3: Precisione del Lead Indicator Relativo
-- **Setup**: Bersaglio a 100m di distanza in moto a $(10, 0, 0)$. Nave madre che trasla lateralmente a $(10, 0, 0)$.
-- **Esito Atteso**: Poiché bersaglio e corvetta volano alla stessa velocità nella stessa direzione, il moto relativo laterale è $0$. Il Lead Indicator predittivo calcolato su $(\vec{v}_{target} - \vec{v}_{ship})$ deve coincidere con il centro del bersaglio (nessun offset laterale fasullo).
+#### Scenario 3: Rimborso Debito tramite Liquidazione Bottino
+- **Setup**: Nave con debito residuo di 700 FLUX. La stiva contiene minerali e bottino di relitto per un controvalore di 400 FLUX.
+- **Azione**: Liquidazione del bottino con destinazione rimborso debito in `StationHub`.
+- **Esito Atteso**:
+  - Il debito di noleggio scende da 700 a 300 FLUX.
+  - Il saldo netto sale di 400.
+  - Il rating FLUX riceve un bonus per puntualità e riduzione dell'indebitamento.
+
+#### Scenario 4: Riscossione Contratti Fixer e Sgravio Rateale
+- **Setup**: Contratto completato con ricompensa di 500 FLUX liquidi e 300 FLUX di sgravio debito.
+- **Azione**: Chiamata di `claim_contract`.
+- **Esito Atteso**:
+  - Il FLUX liquido aumenta di 500.
+  - Le rate di debito attive vengono ridotte di 300.
+  - Nessuna presenza di campi monetari obsoleti "CR".
 
 ### Edge Cases
-- **Velocità Bersaglio Pari o Superiore al Proiettile in Fuga**: Il clamp minimo a $0.25$ assicura che il colpo non infligga $0$ o danno negativo.
-- **Spari a Nave Ferma**: A $\vec{v}_{ship} = (0, 0, 0)$, la velocità del proiettile e il danno contro un bersaglio statico coincidono esattamente con i valori nominali ($v_{muzzle}$ e danno base).
-- **Proiettili Non Cinetici (Es. EMP / Sonde / Siluri Energetici)**: Il flag `is_kinetic: false` disattiva la moltiplicazione cinetica per preservare il comportamento standard di testate o sonde esplosive.
+- **Tentativo di Indebitamento con Rating F**: La transazione a debito deve essere respinta se la corvetta si trova in stato insolvente (`is_insolvent() == true`).
+- **Pagamento Superiore al Debito Residuo**: Se si rimborsa più del debito residuo di una tranche, l'eccedenza non va persa ma viene restituita in conio liquido.
+- **Rimozione Titoli a Saldo Zero**: I modificatori che raggiungono valore 0 vengono rimossi automaticamente dall'array per evitare frammentazione della memoria.
 
 ### Test Changes
-- **Nuovo File**: `tests/gut/test_ballistics_newtonian.gd` contenente:
-  - `test_galilean_velocity_addition()`
-  - `test_relative_kinetic_damage_head_on_vs_tail_chase()`
-  - `test_enemy_incoming_projectile_relative_damage()`
-  - `test_weapons_lead_indicator_relative_velocity()`
-  - `test_ballistic_projectile_segment_sweep_collision()`
+- **Nuovo File**: `tests/gut/test_flux_economy_barter_system.gd` contenente:
+  - `test_net_flux_and_debt_tranches_accounting()`
+  - `test_barter_purchase_with_debt_issuance()`
+  - `test_debt_relief_from_salvage_liquidation()`
+  - `test_fixer_contract_flux_and_debt_relief_payout()`
+  - `test_insolvency_blocks_new_debt_and_triggers_impound_risk()`
 
 # Delivery Steps
 
-### ✓ Step 1: Cinematica Vettoriale Galileiana e Spawn Proiettili in SpaceWorldManager
-I proiettili fisici sparati dalla nave giocatrice e dalle navi nemiche ereditano fedelmente il vettore velocità del rispettivo vettore di lancio secondo la relatività galileiana.
-- Definire in `SpaceWorldManager` i profili balistici delle munizioni (velocità di volata $v_{muzzle}$, raggio di collisione, ciclo di vita massimo) per mitragliatrice pesante, cannone e siluri.
-- Estendere `request_fire_weapon()` in `Outside/space_world_manager.gd` per estrarre la velocità lineare istantanea della corvetta (`Spaceship.linear_velocity`) e sommarla vettorialmente al vettore di volata: $\vec{v}_{proj} = \vec{v}_{ship} + (\hat{d}_{aim} \times v_{muzzle})$.
-- Implementare il buffer di simulazione dei proiettili attivi con aggiornamento della traiettoria frame per frame e rimozione temporale o fuori portata.
-- Integrare la medesima cinematica newtoniana nel generatore di proiettili nemici di `CombatDirector` e `EnemyShipAI`.
+### ✓ Step 1: Ristrutturazione FluxEconomyManager e Modello a Titoli di Debito/Credito
+Riscrivere completamente `Economy/flux_economy_manager.gd` eliminando la valuta fiat standard (`credits`), calcolando il saldo netto contabile (`Net FLUX = Liquid + Titoli`), sincronizzandosi con `ShipBlueprint` e `ShipFluxModifier`, e introducendo i metodi transazionali per il baratto (`pay_with_flux`, `transact_barter`, `issue_debt_tranche`, `repay_debt`).
 
-### ✓ Step 2: Calcolo del Danno Cinetico Relativo all'Impatto
-I danni inferti dalle collisioni balistiche scalano proporzionalmente in base alla velocità relativa reale tra il proiettile e il bersaglio al momento dell'impatto.
-- Implementare in `SpaceWorldManager` il rilevamento delle collisioni tra proiettili attivi e i bersagli ostili (`CombatDirector.active_enemies`) tramite sweep vettoriale continuo.
-- Calcolare il vettore velocità relativo d'impatto $\vec{v}_{rel} = \vec{v}_{proj} - \vec{v}_{target}$ e ricavare il moltiplicatore cinetico: $\text{mult} = \text{clampf}(|\vec{v}_{rel}| / v_{muzzle}, 0.25, 2.5)$.
-- Applicare il danno scalato a `EnemyShipAI.take_damage()` con notifica telemetrica dell'impatto e del moltiplicatore cinetico applicato.
-- Estendere la risoluzione dei colpi nemici su `SystemicDamageHandler` applicando il medesimo moltiplicatore $\vec{v}_{rel} = \vec{v}_{enemy\_proj} - \vec{v}_{player}$.
+### ✓ Step 2: Adeguamento di StationHub con Baratto Titoli e Ripianamento Rate
+Riconvertire `Applications/StationHub/station_hub_app.gd` sostituendo i riferimenti a crediti e CR con telemetria diegetica FLUX (netto, liquido, debito), e adeguando il Cantiere Navale, il Cargo Market e la liquidazione del bottino al modello a baratto titoli e FLUX.
 
-### ✓ Step 3: Lead Indicator Relativo e Telemetria Cinetica in WeaponsApp & HUD
-Il reticolo predittivo del mirino e l'HUD riflettono accuratamente la velocità di chiusura relativa della nave madre e del bersaglio con indicatori diegetici di potenza d'impatto.
-- Aggiornare in `Applications/Weapons/weapons_app.gd` l'algoritmo di calcolo del punto di anticipo (Lead Indicator) sostituendo il moto assoluto con il moto relativo: $\vec{v}_{rel\_target} = \vec{v}_{target} - \vec{v}_{ship}$.
-- Trasmettere al componente `WeaponsTrajectoryHUD` la velocità di chiusura telemetrica $\Delta v$ e il fattore di impatto stimato (es. `IMP. PWR: 135%` in avvicinamento frontale vs `65%` in fuga).
-- Visualizzare sull'HUD del mirino il marker di anticipo calibrato e il feedback visivo al momento dell'impatto critico ad alta velocità cinetica.
+### ✓ Step 3: Allineamento Contratti Fixer e Borsa Merci in Unità FLUX
+Aggiornare `Economy/mission_manager.gd` e `Economy/cargo_manager.gd` per operare interamente in unità FLUX, con contratti a ricompensa mista (FLUX liquido + sgravio rateale) e valorizzazione del carico stiva in FLUX.
 
-### ✓ Step 4: Suite di Test GUT e Validazione del Dogfight Hard Sci-Fi
-Tutti i comportamenti balistici newtoniani e di scala del danno sono verificati e protetti da regressioni tramite suite automatizzata GUT.
-- Creare la suite di test GUT `tests/gut/test_ballistics_newtonian.gd` che verifica:
-  - Addizione vettoriale $\vec{v}_{proj} = \vec{v}_{ship} + \hat{d}_{aim} \times v_{muzzle}$ sia in volo concorde sia discorde.
-  - Variazione del danno inferto a un caccia nemico che accelera frontalmente (danno maggiorato) rispetto a uno in allontanamento (danno attutito).
-  - Impatto newtoniano dei colpi nemici sulla corvetta giocatrice in funzione della manovra evasiva.
-  - Accuratezza del Lead Indicator in presenza di moto traslatorio e rollio della corvetta.
-- Verificare l'esecuzione pulita e senza errori dei test con Godot in modalità headless.
+### ✓ Step 4: Aggiornamento FluxWallet e Suite di Validazione GUT
+Aggiornare `Applications/FluxWallet/flux_wallet.gd` con la visualizzazione avanzata delle tranche di debito/credito corporativo e creare la suite di test GUT `tests/gut/test_flux_economy_barter_system.gd` per verificare la contabilità, il baratto titoli e il rating di solvibilità.

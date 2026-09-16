@@ -326,15 +326,62 @@ func _init_resource_selectors() -> void:
 		ship_blueprint_option.add_item(bp_entry.get("name", "Nave Sconosciuta"), i)
 		ship_blueprint_option.set_item_metadata(i, bp_entry.get("path", ""))
 	
+	_scan_custom_star_systems()
 	star_system_option.clear()
 	for i in range(_available_star_systems.size()):
 		var sys_entry: Dictionary = _available_star_systems[i]
 		star_system_option.add_item(sys_entry.get("name", "Sistema Sconosciuto"), i)
 		star_system_option.set_item_metadata(i, sys_entry.get("path", ""))
 
+## Scansiona le directory di esportazione per scoprire sistemi stellari generati da System Discover
+func _scan_custom_star_systems() -> void:
+	var dirs_to_scan := [
+		"user://files/Terminal Drive/Programs/SystemDiscover/",
+		"user://star_systems/"
+	]
+	var found_paths: Dictionary = {}
+	for existing in _available_star_systems:
+		found_paths[existing.get("path", "")] = true
+		
+	for dir_path in dirs_to_scan:
+		if not DirAccess.dir_exists_absolute(dir_path):
+			continue
+		var dir := DirAccess.open(dir_path)
+		if not dir:
+			continue
+		dir.list_dir_begin()
+		var file_name: String = dir.get_next()
+		while not file_name.is_empty():
+			if not dir.current_is_dir() and file_name.ends_with(".tres"):
+				var full_path: String = dir_path + file_name
+				if not found_paths.has(full_path):
+					found_paths[full_path] = true
+					var sys_clean_name: String = file_name.get_basename().replace("_", " ").capitalize()
+					_available_star_systems.append({
+						"name": "%s (Discover)" % sys_clean_name,
+						"path": full_path
+					})
+			file_name = dir.get_next()
+		dir.list_dir_end()
+
 func _refresh_resource_selection_ui() -> void:
 	if not NetworkManager or not resources_panel:
 		return
+	
+	# Aggiorna dinamicamente eventuali nuovi sistemi salvati di recente
+	var before_count := _available_star_systems.size()
+	_scan_custom_star_systems()
+	if _available_star_systems.size() != before_count and star_system_option:
+		var curr_selected_path: Variant = star_system_option.get_item_metadata(star_system_option.selected) if star_system_option.selected >= 0 else ""
+		star_system_option.clear()
+		for i in range(_available_star_systems.size()):
+			var sys_entry: Dictionary = _available_star_systems[i]
+			star_system_option.add_item(sys_entry.get("name", "Sistema Sconosciuto"), i)
+			star_system_option.set_item_metadata(i, sys_entry.get("path", ""))
+		for i in range(star_system_option.item_count):
+			if star_system_option.get_item_metadata(i) == curr_selected_path:
+				star_system_option.select(i)
+				break
 	
 	var can_edit: bool = (NetworkManager.is_host or NetworkManager.is_solo_mode)
 	

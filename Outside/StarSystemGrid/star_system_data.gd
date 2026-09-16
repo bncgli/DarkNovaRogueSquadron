@@ -351,78 +351,13 @@ func create_default_system() -> void:
 func is_empty() -> bool:
 	return celestial_bodies.is_empty()
 
-## Genera un sistema stellare casuale procedurale
-func generate_random_system(seed_str: String = "") -> void:
-	var rng := RandomNumberGenerator.new()
-	if seed_str.is_empty():
-		rng.randomize()
-	else:
-		rng.seed = hash(seed_str)
-	
-	system_id = "SYS-RAND-%d" % rng.randi_range(1000, 9999)
-	system_name = "Settore Inesplorato %s" % system_id
-	description = "Sistema stellare generato proceduralmente in uno spazio profondo."
-	
-	primary_star_name = "Stella %X" % rng.randi()
-	primary_star_coords = Vector3i.ZERO
-	primary_star_color = Color(rng.randf_range(0.7, 1.0), rng.randf_range(0.7, 1.0), rng.randf_range(0.7, 1.0), 1.0)
-	primary_star_energy = rng.randf_range(0.8, 1.8)
-	primary_star_radius_km = rng.randf_range(400000.0, 900000.0)
-	primary_star_mass_tons = rng.randf_range(1.0e27, 3.0e27)
-	
-	celestial_bodies.clear()
-	
-	# Stella Primaria
-	var star := CelestialBodyData.new()
-	star.id = "STAR_PRIME"
-	star.name = primary_star_name
-	star.type = "STAR"
-	star.coords = primary_star_coords
-	star.radius_km = primary_star_radius_km
-	star.mass_tons = primary_star_mass_tons
-	star.color = primary_star_color
-	celestial_bodies.append(star)
-	
-	# Aggiungi alcuni pianeti (3-6)
-	var planet_count := rng.randi_range(3, 6)
-	for i in range(planet_count):
-		var planet := CelestialBodyData.new()
-		planet.id = "PLANET_%d" % i
-		planet.name = "Pianeta %d" % (i + 1)
-		planet.type = "PLANET"
-		var dist := rng.randi_range(2, 20)
-		var angle := rng.randf() * TAU
-		planet.coords = Vector3i(int(cos(angle) * dist), int(sin(angle) * dist), 0)
-		planet.radius_km = rng.randf_range(2000.0, 8000.0)
-		planet.mass_tons = rng.randf_range(1.0e20, 1.0e22)
-		planet.occluding = true
-		celestial_bodies.append(planet)
-		
-		# Aggiungi una luna ogni tanto
-		if rng.randf() < 0.4:
-			var moon := CelestialBodyData.new()
-			moon.id = "MOON_%d" % i
-			moon.name = "Luna %d" % (i + 1)
-			moon.type = "MOON"
-			moon.coords = planet.coords
-			moon.radius_km = rng.randf_range(500.0, 1800.0)
-			moon.mass_tons = rng.randf_range(1.0e18, 1.0e20)
-			moon.occluding = true
-			celestial_bodies.append(moon)
-	
-	# Aggiungi una stazione di partenza obbligatoria
-	var station := CelestialBodyData.new()
-	station.id = "STATION_START"
-	station.name = "Avamposto di Frontiera"
-	station.type = "STATION"
-	var s_dist := rng.randi_range(5, 15)
-	var s_angle := rng.randf() * TAU
-	station.coords = Vector3i(int(cos(s_angle) * s_dist), int(sin(s_angle) * s_dist), 0)
-	station.radius_km = 10.0
-	station.mass_tons = 5.0e10
-	celestial_bodies.append(station)
-	
-	custom_sectors = []
+## Genera un sistema stellare casuale procedurale delegando al generatore modulare
+func generate_random_system(seed_str: String = "", archetype_idx: int = 0) -> void:
+	var arch: StarSystemGenerator.Archetype = StarSystemGenerator.Archetype.FRONTIER_EXPANSE
+	if archetype_idx >= 0 and archetype_idx < StarSystemGenerator.Archetype.size():
+		arch = archetype_idx as StarSystemGenerator.Archetype
+	var generated := StarSystemGenerator.generate_system(seed_str, arch)
+	from_dict(generated.to_dict())
 	emit_changed()
 
 static func get_default_star_system() -> StarSystemData:

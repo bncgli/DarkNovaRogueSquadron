@@ -46,6 +46,7 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/Cam/optics_tuning.dat"
 
 var cam_buttons: Dictionary = {} # cam_id (String) -> Button
 var can_control_cams: bool = true
+var is_cyber_glitch_active: bool = false
 
 # Parametri runtime ottiche ed elaborate dai file .dat protetti
 var active_config: Dictionary = {
@@ -521,6 +522,11 @@ func _on_open_all_pressed() -> void:
 	if not SpaceWorldManager or not SpaceWorldManager.is_ship_connected():
 		return
 	SpaceWorldManager.open_all_camera_windows()
+	if is_cyber_glitch_active:
+		for cid in cam_buttons:
+			var win := SpaceWorldManager.get_camera_window(cid)
+			if win and is_instance_valid(win) and win.has_method("set_cyber_glitch_active"):
+				win.set_cyber_glitch_active(true)
 	_refresh_all_buttons_state()
 
 func _on_close_all_pressed() -> void:
@@ -540,3 +546,27 @@ func _on_reset_optics_pressed() -> void:
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
 		notif.spawn_notification("Ottiche telecamere reimpostate ai valori predefiniti.")
+
+func _process(_delta: float) -> void:
+	if is_inside_tree():
+		var cd = get_tree().get_first_node_in_group("combat_directors")
+		if cd and cd.has_method("is_exploit_active"):
+			var blind_eye_active: bool = cd.is_exploit_active("BLIND_EYE")
+			if blind_eye_active != is_cyber_glitch_active:
+				set_cyber_glitch_active(blind_eye_active)
+
+func set_cyber_glitch_active(active: bool) -> void:
+	is_cyber_glitch_active = active
+	if is_inside_tree():
+		for win in get_tree().get_nodes_in_group("camera_feed_window"):
+			if is_instance_valid(win) and win.has_method("set_cyber_glitch_active"):
+				win.set_cyber_glitch_active(active)
+	_update_cams_glitch_ui()
+
+func _update_cams_glitch_ui() -> void:
+	if status_summary_label:
+		if is_cyber_glitch_active:
+			status_summary_label.text = "⚠️ ALLARME: BUS OTTICO COMPROMESSO (BLIND EYE)"
+			status_summary_label.modulate = Color(1.0, 0.25, 0.25)
+		else:
+			_update_status_summary()

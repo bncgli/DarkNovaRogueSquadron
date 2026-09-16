@@ -28,6 +28,7 @@ extends FakeWindow
 @onready var grid_toggle_btn: Button = %GridToggleBtn
 
 var is_in_hyperdrive_transition: bool = false
+var is_cyber_glitch_active: bool = false
 var _hyperdrive_progress: Dictionary = {"loaded": 1, "total": 1}
 
 const THERMAL_SHADER: Shader = preload("res://Applications/Cams/CameraFeed/Shaders/thermal.gdshader")
@@ -222,6 +223,20 @@ func set_hyperdrive_transition(active: bool, progress_dict: Dictionary = {}) -> 
 			live_badge.modulate = Color(1.0, 0.3, 0.3)
 		_update_hud_display()
 
+## Attiva o disattiva la distorsione/glitch cyber per attacco BLIND EYE
+func set_cyber_glitch_active(active: bool) -> void:
+	is_cyber_glitch_active = active
+	if filter_rect:
+		if active:
+			filter_rect.visible = true
+			filter_rect.modulate = Color(1.0, 0.15, 0.15, 0.8)
+		elif _filter_mode == 0:
+			filter_rect.visible = false
+			filter_rect.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	if crosshair_overlay:
+		crosshair_overlay.visible = not active
+	_update_hud_display()
+
 ## Aggiorna il testo dell'overlay con il numero di giocatori sincronizzati
 func update_hyperdrive_progress(loaded: int, total: int) -> void:
 	_hyperdrive_progress = {"loaded": loaded, "total": total}
@@ -263,6 +278,16 @@ func _update_telemetry(_delta: float) -> void:
 			status_info_label.text = "OFFLINE • SALTO HYPERDRIVE • %d/%d PRONTI" % [_hyperdrive_progress.get("loaded", 1), _hyperdrive_progress.get("total", 1)]
 		if live_badge:
 			live_badge.modulate.a = 0.4 + sin(_time_passed * 6.0) * 0.5
+		return
+
+	if is_cyber_glitch_active:
+		if telemetry_label:
+			telemetry_label.text = "⚠️ BUS OTTICO COMPROMESSO • BLIND EYE"
+		if status_info_label:
+			status_info_label.text = "GLITCH CRITICO • DISTURBO EW ATTIVO"
+		if live_badge:
+			live_badge.text = "● GLITCH"
+			live_badge.modulate = Color(1.0, 0.1, 0.1)
 		return
 
 	if telemetry_label:

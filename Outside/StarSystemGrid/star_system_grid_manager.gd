@@ -12,10 +12,19 @@ signal system_entities_updated(visible_entities: Array[CelestialBodyData])
 signal route_plotted(target_sector_coords: Vector3i, course_vector: Vector3)
 signal hyperdrive_transit_started(target_sector_coords: Vector3i)
 signal hyperdrive_transit_completed(target_sector_coords: Vector3i)
+signal sector_boundary_proximity(current_coords: Vector3i, adjacent_coords: Vector3i, distance_to_boundary_km: float)
+signal sector_preload_started(adjacent_coords: Vector3i)
+signal sector_preload_completed(adjacent_coords: Vector3i, sector_data: SectorData)
+signal sector_boundary_crossed(new_coords: Vector3i, entry_offset: Vector3)
 
 # Costanti di scala e visibilità della griglia
 const SECTOR_SIZE_KM: float = 100000.0 # 100.000 km per lato settore
 const DEFAULT_CRUISE_SPEED_KM_S: float = 500.0 # 500 km/s velocità sub-luce standard
+const BOUNDARY_PRELOAD_DISTANCE_KM: float = 15000.0 # Soglia di allerta e preloading (15.000 km dal bordo)
+
+var preloaded_sector_data: SectorData = null
+var preloading_sector_coords: Vector3i = Vector3i(-999999, -999999, -999999)
+var is_preloading: bool = false
 
 # Soglie di visibilità diegetica sullo skybox (in caselle/settori)
 const VISIBILITY_RANGE_STAR: float = 40.0 # 30+ caselle
@@ -234,6 +243,92 @@ func engage_hyperdrive_transit(target_coords: Vector3i = Vector3i.ZERO) -> Dicti
 		"new_sector_coords": dest,
 		"new_sector_id": format_sector_id(dest)
 	}
+
+# =============================================================================
+# STREAMING DINAMICO E PROXIMITY TRIGGER A VELOCITÀ DI CROCIERA
+# =============================================================================
+
+## Calcola la distanza dai 6 piani del cubo del settore e verifica la prossimità o valico
+func check_sector_boundary_proximity(ship_pos_km: Vector3, _ship_velocity_km_s: Vector3 = Vector3.ZERO) -> Dictionary:
+	var half_bound: float = SECTOR_SIZE_KM / 2.0
+	
+	# Distanze dai 6 piani limite (+X, -X, +Y, -Y, +Z, -Z)
+	var d_xp := half_bound - ship_pos_km.x
+	var d_xn := half_bound + ship_pos_km.x
+	var d_yp := half_bound - ship_pos_km.y
+	var d_yn := half_bound + ship_pos_km.y
+	var d_zp := half_bound - ship_pos_km.z
+	var d_zn := half_bound + ship_pos_km.z
+	
+	var min_dist: float = minf(minf(d_xp, d_xn), minf(minf(d_yp, d_yn), minf(d_zp, d_zn)))
+	
+	# Determina la direzione del settore adiacente
+	var step := Vector3i.ZERO
+	if is_equal_approx(min_dist, d_xp):
+		step = Vector3i(1, 0, 0)
+	elif is_equal_approx(min_dist, d_xn):
+		step = Vector3i(-1, 0, 0)
+	elif is_equal_approx(min_dist, d_yp):
+		step = Vector3i(0, 1, 0)
+	elif is_equal_approx(min_dist, d_yn):
+		step = Vector3i(0, -1, 0)
+	elif is_equal_approx(min_dist, d_zp):
+		step = Vector3i(0, 0, 1)
+	elif is_equal_approx(min_dist, d_zn):
+		step = Vector3i(0, 0, -1)
+	else:
+		step = Vector3i(int(sign(ship_pos_km.x)), int(sign(ship_pos_km.y)), int(sign(ship_pos_km.z)))
+		
+	var target_coords := current_sector_coords + step
+	var is_near := min_dist <= BOUNDARY_PRELOAD_DISTANCE_KM
+	var crossed := min_dist <= 0.0
+	
+	if is_near and not crossed:
+		sector_boundary_proximity.emit(current_sector_coords, target_coords, min_dist)
+		if preloading_sector_coords != target_coords:
+			preload_adjacent_sector_async(target_coords)
+	
+	var entry_offset := ship_pos_km
+	if crossed:
+		# Floating origin shift: riposiziona la nave al margine opposto del nuovo quadrante locale
+		# (es. se X ha superato +50.000 km, nel nuovo settore parte da -50.000 km)
+		if step.x != 0:
+			entry_offset.x = ship_pos_km.x - float(step.x) * SECTOR_SIZE_KM
+		if step.y != 0:
+			entry_offset.y = ship_pos_km.y - float(step.y) * SECTOR_SIZE_KM
+		if step.z != 0:
+			entry_offset.z = ship_pos_km.z - float(step.z) * SECTOR_SIZE_KM
+			
+		execute_sector_crossing(target_coords, entry_offset)
+		
+	return {
+		"distance_to_boundary_km": min_dist,
+		"adjacent_coords": target_coords,
+		"is_near_boundary": is_near,
+		"crossed": crossed,
+		"entry_offset": entry_offset
+	}
+
+## Avvia il pre-caricamento asincrono threaded del settore adiacente prima del valico
+func preload_adjacent_sector_async(coords: Vector3i) -> void:
+	if preloading_sector_coords == coords and (is_preloading or preloaded_sector_data != null):
+		return
+	preloading_sector_coords = coords
+	is_preloading = true
+	sector_preload_started.emit(coords)
+	
+	# Generazione e memorizzazione asincrona / non bloccante
+	var sec_data: SectorData = get_or_generate_sector_data(coords)
+	preloaded_sector_data = sec_data
+	is_preloading = false
+	sector_preload_completed.emit(coords, sec_data)
+
+## Esegue il crossing di confine promuovendo il settore adiacente e inviando il segnale di origin shift
+func execute_sector_crossing(new_coords: Vector3i, entry_offset: Vector3) -> void:
+	set_current_sector_coords(new_coords)
+	sector_boundary_crossed.emit(new_coords, entry_offset)
+	preloaded_sector_data = null
+	preloading_sector_coords = Vector3i(-999999, -999999, -999999)
 
 # =============================================================================
 # ILLUMINAZIONE DINAMICA E CONI D'OMBRA PLANETARI (OCCLUSIONE & ECLISSI)

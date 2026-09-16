@@ -779,6 +779,35 @@ func _apply_delete(rel_path: String, is_dir: bool) -> void:
 	_is_syncing = false
 	item_deleted.emit(rel_path)
 
+## Inietta un file malevolo (exploit/sentinella) all'interno dello Ship Drive
+func inject_intrusion_file(relative_path: String, content: String = "") -> bool:
+	relative_path = _normalize_rel_path(relative_path)
+	if not relative_path.begins_with(SHIP_DRIVE_NAME + "/") and relative_path != SHIP_DRIVE_NAME:
+		relative_path = "%s/%s" % [SHIP_DRIVE_NAME, relative_path]
+	
+	var abs_path := "user://files/%s" % relative_path
+	var base_dir := abs_path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(base_dir):
+		DirAccess.make_dir_recursive_absolute(base_dir)
+		
+	var file := FileAccess.open(abs_path, FileAccess.WRITE)
+	if not file:
+		return false
+	if content.is_empty():
+		content = "# MALICIOUS HOSTILE SENTINEL FILE\n[EXPLOIT_PAYLOAD]\ntype=MALWARE_INTRUSION\nstatus=ACTIVE\ntimestamp=%d\n" % int(Time.get_unix_time_from_system())
+	file.store_string(content)
+	file.close()
+	
+	_refresh_file_managers_for_path(base_dir)
+	file_synced.emit(relative_path)
+	
+	# Sincronizza su rete se multiplayer
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_connected_to_network") and not nm.get("is_solo_mode"):
+		sync_file(relative_path, content)
+		
+	return true
+
 # --- REFRESH UTILITIES ---
 
 func _refresh_desktop() -> void:

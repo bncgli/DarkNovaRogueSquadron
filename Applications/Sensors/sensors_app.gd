@@ -569,6 +569,19 @@ func _update_telemetry_ui() -> void:
 				var sp_lines: Array[String] = []
 				for elem in sp_comp.keys():
 					sp_lines.append("[b]%s:[/b] %.1f%%" % [elem, float(sp_comp[elem])])
+				
+				# Arricchimento dati minerari (purezza, valore, resa vitale/FLUX)
+				var flux_pot: float = float(cur_entity.get("flux_potential", 0.0))
+				var water_u: float = float(cur_entity.get("water_units", 0.0))
+				var est_cr: int = int(cur_entity.get("estimated_value_cr", 0))
+				
+				if flux_pot > 0.0:
+					sp_lines.append("[color=#d580ff]⚡ Potenziale FLUX: +%.1f[/color]" % flux_pot)
+				if water_u > 0.0:
+					sp_lines.append("[color=#5cd6ff]💧 Resa Idrica Supporto Vitale: %.1f u.[/color]" % water_u)
+				if est_cr > 0:
+					sp_lines.append("[color=#ffd24d]💰 Quotazione Stimata: %d CR[/color]" % est_cr)
+					
 				spectrometry_label.text = "\n".join(sp_lines)
 	
 	if probe_status_label:

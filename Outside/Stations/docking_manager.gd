@@ -166,6 +166,13 @@ func _complete_docking() -> void:
 		
 	var st_data := target_station.get_telemetry_data()
 	docking_completed.emit(target_station.station_id, assigned_bay_id, st_data)
+	
+	# Notifica MissionManager autonomo se disponibile
+	var mm = get_node_or_null("/root/MissionManager")
+	if mm == null and ClassDB.class_exists("MissionManagerSingleton") and MissionManagerSingleton.instance:
+		mm = MissionManagerSingleton.instance
+	if mm and mm.has_method("on_station_docked"):
+		mm.on_station_docked(target_station.station_id)
 
 ## Metodo forzato per test o docking guidato automatico
 func force_complete_docking(station: SpaceStationEntity, bay_id: int = 0) -> void:
