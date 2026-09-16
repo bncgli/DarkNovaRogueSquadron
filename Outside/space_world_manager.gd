@@ -22,6 +22,7 @@ signal sensors_scan_completed(contacts: Array)
 signal service_drone_state_changed(telemetry: Dictionary)
 signal ship_system_power_changed(category: String, is_powered: bool)
 signal projectile_spawned(projectile_data: Dictionary)
+signal projectile_impact(projectile_data: Dictionary, target_id: String, damage: float, multiplier: float)
 signal projectile_intercepted(projectile_id: String, device_id: String, sector: int)
 signal projectile_deflected(projectile_id: String, device_id: String, sector: int)
 signal projectile_destroyed(projectile_id: String)
@@ -535,6 +536,7 @@ func _physics_process(delta: float) -> void:
 	if not is_client:
 		_update_duct_drone_physics(delta)
 		_update_incoming_projectiles(delta)
+		_update_ballistic_projectiles(delta)
 		if is_host and is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 			_rpc_sync_duct_drone_state.rpc(
 				duct_drone_pos,
@@ -547,6 +549,7 @@ func _physics_process(delta: float) -> void:
 			)
 	else:
 		_update_incoming_projectiles(delta)
+		_update_ballistic_projectiles(delta)
 		if duct_drone_scan_active:
 			duct_drone_scan_radius += 180.0 * delta
 			if duct_drone_scan_radius > 160.0:
@@ -621,11 +624,29 @@ func get_ship_transform() -> Transform3D:
 	return Transform3D.IDENTITY
 
 ## Ritorna la velocità lineare reale della nave
-func get_ship_velocity() -> Vector3:
+var _spaceship_velocity_override: Vector3 = Vector3.ZERO
+var _spaceship_velocity_override_enabled: bool = false
+
+func get_spaceship_velocity() -> Vector3:
+	if _spaceship_velocity_override_enabled:
+		return _spaceship_velocity_override
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
+		if ship.is_network_client and ship.target_synced_linear_velocity != Vector3.ZERO:
+			return ship.target_synced_linear_velocity
 		return ship.linear_velocity
-	return Vector3.ZERO
+	return _spaceship_velocity_override
+
+func set_spaceship_velocity_override(vel: Vector3) -> void:
+	_spaceship_velocity_override = vel
+	_spaceship_velocity_override_enabled = true
+
+func clear_spaceship_velocity_override() -> void:
+	_spaceship_velocity_override = Vector3.ZERO
+	_spaceship_velocity_override_enabled = false
+
+func get_ship_velocity() -> Vector3:
+	return get_spaceship_velocity()
 
 func set_inertia_dampening(enabled: bool) -> void:
 	var nm := _get_net_mgr()
@@ -1948,16 +1969,98 @@ func is_armory_powered() -> bool:
 			return true # Sostituito logica obsoleta inputs_powered
 	return true
 
+# --- PROFILI BALISTICI DELLE MUNIZIONI (Fase E - Hard Sci-Fi) ---
+const BALLISTIC_PROFILES: Dictionary = {
+	"HEAVY_MG": {"muzzle_speed": 180.0, "base_damage": 12.0, "radius": 2.5, "lifetime": 3.0, "is_kinetic": true},
+	"HEAVY_CANNON": {"muzzle_speed": 120.0, "base_damage": 65.0, "radius": 3.5, "lifetime": 4.0, "is_kinetic": true},
+	"MISSILE": {"muzzle_speed": 75.0, "base_damage": 140.0, "radius": 4.0, "lifetime": 6.0, "is_kinetic": false},
+	"PROBE": {"muzzle_speed": 35.0, "base_damage": 0.0, "radius": 2.0, "lifetime": 15.0, "is_kinetic": false},
+	"TORPEDO": {"muzzle_speed": 40.0, "base_damage": 45.0, "radius": 3.5, "lifetime": 8.0, "is_kinetic": false},
+	"KINETIC": {"muzzle_speed": 40.0, "base_damage": 12.0, "radius": 2.0, "lifetime": 6.0, "is_kinetic": true},
+	"PDG_AUTO": {"muzzle_speed": 180.0, "base_damage": 12.0, "radius": 2.5, "lifetime": 3.0, "is_kinetic": true},
+	"LASER_BURST": {"muzzle_speed": 120.0, "base_damage": 12.0, "radius": 2.0, "lifetime": 4.0, "is_kinetic": true}
+}
+
+var active_ballistic_projectiles: Array[Dictionary] = []
+
+func get_active_ballistic_projectiles() -> Array[Dictionary]:
+	return active_ballistic_projectiles
+
+func clear_active_ballistic_projectiles() -> void:
+	active_ballistic_projectiles.clear()
+
+func spawn_ballistic_projectile(
+	weapon_type: String,
+	origin: Vector3,
+	velocity: Vector3,
+	muzzle_speed: float,
+	base_damage: float,
+	radius: float = 2.5,
+	lifetime: float = 4.0,
+	is_kinetic: bool = true,
+	target_id: String = "",
+	source: String = "PLAYER"
+) -> Dictionary:
+	var proj_id := "BPROJ_%d_%d" % [Time.get_ticks_msec(), active_ballistic_projectiles.size() + 1]
+	var proj_data: Dictionary = {
+		"id": proj_id,
+		"weapon_type": weapon_type,
+		"source": source,
+		"position": origin,
+		"prev_position": origin,
+		"velocity": velocity,
+		"muzzle_speed": muzzle_speed,
+		"damage": base_damage,
+		"base_damage": base_damage,
+		"radius": radius,
+		"lifetime": lifetime,
+		"spawn_time": Time.get_ticks_msec() / 1000.0,
+		"is_kinetic": is_kinetic,
+		"target_id": target_id,
+		"is_destroyed": false
+	}
+	active_ballistic_projectiles.append(proj_data)
+	projectile_spawned.emit(proj_data)
+	return proj_data
+
 ## Esegue una richiesta di fuoco per il tipo d'arma specificato
 func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim_dir: Vector3 = Vector3.ZERO) -> Dictionary:
 	var ship := get_spaceship()
 	var origin: Vector3 = ship.global_position if ship and is_instance_valid(ship) and ship.is_inside_tree() else Vector3.ZERO
-	var target_pos: Vector3 = origin + (manual_aim_dir * 100.0 if manual_aim_dir.length_squared() > 0.01 else Vector3(0, 0, -100))
+	var ship_vel: Vector3 = get_spaceship_velocity()
+	
+	var norm_type := weapon_type.to_upper()
+	var profile: Dictionary = BALLISTIC_PROFILES.get(norm_type, {
+		"muzzle_speed": 100.0,
+		"base_damage": 20.0,
+		"radius": 2.5,
+		"lifetime": 4.0,
+		"is_kinetic": true
+	})
+	var muzzle_speed: float = float(profile.get("muzzle_speed", 100.0))
+	
+	var aim_dir := Vector3(0, 0, -1)
+	if manual_aim_dir.length_squared() > 0.001:
+		aim_dir = manual_aim_dir.normalized()
+	elif not target_id.is_empty():
+		for t in get_weapon_targets():
+			if t.get("id") == target_id:
+				var t_pos: Vector3 = t.get("pos", Vector3.ZERO)
+				if (t_pos - origin).length_squared() > 0.001:
+					aim_dir = (t_pos - origin).normalized()
+				break
+	elif ship and is_instance_valid(ship) and ship.is_inside_tree():
+		aim_dir = -ship.global_transform.basis.z.normalized()
+	
+	# Relatività Galileiana: v_proj = v_ship + (aim_dir * v_muzzle)
+	var proj_vel: Vector3 = ship_vel + (aim_dir * muzzle_speed)
+	
+	var target_pos: Vector3 = origin + (aim_dir * 100.0)
 	var hit_success: bool = false
 	var probe_info: Dictionary = {}
 	
-	if weapon_type == "PROBE" or weapon_type == "TELEMETRY_PROBE":
-		probe_info = spawn_telemetry_probe(origin, manual_aim_dir)
+	if norm_type == "PROBE" or norm_type == "TELEMETRY_PROBE":
+		probe_info = spawn_telemetry_probe(origin, aim_dir)
 		target_pos = probe_info.get("pos", target_pos)
 		hit_success = true
 	elif not target_id.is_empty():
@@ -1967,6 +2070,19 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 				hit_success = true
 				break
 	
+	var proj_data := spawn_ballistic_projectile(
+		norm_type,
+		origin,
+		proj_vel,
+		muzzle_speed,
+		float(profile.get("base_damage", 20.0)),
+		float(profile.get("radius", 2.5)),
+		float(profile.get("lifetime", 4.0)),
+		bool(profile.get("is_kinetic", true)),
+		target_id,
+		"PLAYER"
+	)
+	
 	weapon_fired.emit(weapon_type, origin, target_pos, hit_success, target_id)
 	return {
 		"weapon_type": weapon_type,
@@ -1974,7 +2090,9 @@ func request_fire_weapon(weapon_type: String, target_id: String = "", manual_aim
 		"target_pos": target_pos,
 		"hit_success": hit_success,
 		"target_id": target_id,
-		"probe": probe_info
+		"probe": probe_info,
+		"projectile": proj_data,
+		"velocity": proj_vel
 	}
 
 # --- SENSORS & TACTICAL MAP METHODS ---
@@ -2970,19 +3088,27 @@ func spawn_incoming_projectile(
 	origin: Vector3,
 	p_velocity: Vector3,
 	damage: float = 25.0,
-	target_pos: Vector3 = Vector3.ZERO
+	target_pos: Vector3 = Vector3.ZERO,
+	muzzle_speed: float = -1.0,
+	is_kinetic: bool = true
 ) -> Dictionary:
 	var proj_id := "PROJ_%d_%d" % [Time.get_ticks_msec(), incoming_projectiles.size() + 1]
 	var upper_type := p_type.to_upper()
 	var is_hom := (upper_type in ["HOMING_MISSILE", "TORPEDO", "MISSILE_HOMING", "MISSILE"])
+	var effective_muzzle := muzzle_speed if muzzle_speed > 0.0 else (40.0 if not is_hom else 30.0)
 	var proj_data: Dictionary = {
 		"id": proj_id,
 		"type": upper_type,
+		"weapon_type": upper_type,
 		"position": origin,
+		"prev_position": origin,
 		"velocity": p_velocity,
 		"damage": damage,
+		"base_damage": damage,
+		"muzzle_speed": effective_muzzle,
 		"target_pos": target_pos,
 		"is_homing": is_hom,
+		"is_kinetic": is_kinetic,
 		"is_deflected": false,
 		"is_destroyed": false,
 		"spawn_time": Time.get_ticks_msec() / 1000.0,
@@ -3034,7 +3160,145 @@ func _update_incoming_projectiles(delta: float) -> void:
 		var lifetime: float = float(p.get("lifetime", 15.0))
 		if (now - spawn_t) > lifetime:
 			continue
+		p["prev_position"] = p.get("position", Vector3.ZERO)
 		var vel: Vector3 = p.get("velocity", Vector3.ZERO)
 		p["position"] = p.get("position", Vector3.ZERO) + vel * delta
 		remaining.append(p)
 	incoming_projectiles = remaining
+
+var _custom_ballistic_targets: Array[Node] = []
+
+func register_ballistic_target(target: Node) -> void:
+	if target and not _custom_ballistic_targets.has(target):
+		_custom_ballistic_targets.append(target)
+
+func unregister_ballistic_target(target: Node) -> void:
+	_custom_ballistic_targets.erase(target)
+
+func clear_custom_ballistic_targets() -> void:
+	_custom_ballistic_targets.clear()
+
+## Ritorna l'elenco dei bersagli nemici attivi per la balistica
+func get_active_enemy_targets() -> Array:
+	var foes: Array = []
+	for ct in _custom_ballistic_targets:
+		if ct and is_instance_valid(ct) and not foes.has(ct):
+			foes.append(ct)
+	var cd := get_combat_director()
+	if cd and is_instance_valid(cd):
+		for e in cd.active_enemies:
+			if e and is_instance_valid(e) and not foes.has(e):
+				foes.append(e)
+	if is_inside_tree():
+		for n in get_tree().get_nodes_in_group("enemy_ships"):
+			if n and is_instance_valid(n) and not foes.has(n):
+				foes.append(n)
+	return foes
+
+## Ritorna il raggio di collisione del bersaglio
+func get_enemy_collision_radius(enemy: Node) -> float:
+	if not enemy or not is_instance_valid(enemy):
+		return 4.0
+	if "collision_radius" in enemy:
+		return float(enemy.collision_radius)
+	for child in enemy.get_children():
+		if child is CollisionShape3D and child.shape is SphereShape3D:
+			return (child.shape as SphereShape3D).radius
+	if "ship_type" in enemy:
+		var st = enemy.get("ship_type")
+		if st == 1: # HOSTILE_DRONE
+			return 3.0
+		elif st == 2: # PATROL_CORVETTE
+			return 14.0
+		return 5.0 # PIRATE_FIGHTER / default
+	return 4.0
+
+## Calcola il moltiplicatore e il danno cinetico relativo secondo la relatività galileiana
+func calculate_relative_kinetic_damage(base_damage: float, v_rel: Vector3, muzzle_speed: float, is_kinetic: bool = true) -> Dictionary:
+	var closing_speed := v_rel.length()
+	if not is_kinetic or muzzle_speed <= 0.001:
+		return {
+			"damage": base_damage,
+			"multiplier": 1.0,
+			"closing_speed": closing_speed
+		}
+	var multiplier := clampf(closing_speed / muzzle_speed, 0.25, 2.5)
+	var final_damage := base_damage * multiplier
+	return {
+		"damage": final_damage,
+		"multiplier": multiplier,
+		"closing_speed": closing_speed
+	}
+
+## Rileva l'intersezione tra un segmento vettoriale (da p_prev a p_curr) e una sfera
+func check_segment_sphere_collision(p_prev: Vector3, p_curr: Vector3, sphere_center: Vector3, radius: float) -> Dictionary:
+	var ab := p_curr - p_prev
+	var ac := sphere_center - p_prev
+	var ab_len_sq := ab.length_squared()
+	var t: float = 0.0
+	if ab_len_sq > 0.00001:
+		t = clampf(ac.dot(ab) / ab_len_sq, 0.0, 1.0)
+	var closest_point := p_prev + ab * t
+	var dist := sphere_center.distance_to(closest_point)
+	var hit := dist <= radius
+	return {
+		"hit": hit,
+		"closest_point": closest_point,
+		"distance": dist,
+		"t": t
+	}
+
+func _update_ballistic_projectiles(delta: float) -> void:
+	if active_ballistic_projectiles.is_empty():
+		return
+	var remaining: Array[Dictionary] = []
+	var now := Time.get_ticks_msec() / 1000.0
+	var enemy_targets := get_active_enemy_targets()
+	
+	for p in active_ballistic_projectiles:
+		if p.get("is_destroyed", false):
+			continue
+		var spawn_t: float = float(p.get("spawn_time", now))
+		var lifetime: float = float(p.get("lifetime", 4.0))
+		if (now - spawn_t) > lifetime:
+			continue
+		
+		var prev_pos: Vector3 = p.get("position", Vector3.ZERO)
+		var vel: Vector3 = p.get("velocity", Vector3.ZERO)
+		var new_pos: Vector3 = prev_pos + vel * delta
+		p["prev_position"] = prev_pos
+		p["position"] = new_pos
+		
+		var proj_radius: float = float(p.get("radius", 2.5))
+		var muzzle_speed: float = float(p.get("muzzle_speed", 100.0))
+		var base_dmg: float = float(p.get("base_damage", 20.0))
+		var is_kin: bool = bool(p.get("is_kinetic", true))
+		var hit_target := false
+		
+		# Controllo collisioni verso bersagli nemici tramite sweep continuo
+		for enemy in enemy_targets:
+			if not enemy or not is_instance_valid(enemy):
+				continue
+			var e_pos: Vector3 = enemy.global_position if "global_position" in enemy else Vector3.ZERO
+			var e_radius: float = get_enemy_collision_radius(enemy)
+			var sweep_res := check_segment_sphere_collision(prev_pos, new_pos, e_pos, e_radius + proj_radius)
+			if sweep_res["hit"]:
+				var e_vel: Vector3 = enemy.velocity if "velocity" in enemy else Vector3.ZERO
+				var v_rel := vel - e_vel
+				var dmg_calc := calculate_relative_kinetic_damage(base_dmg, v_rel, muzzle_speed, is_kin)
+				var applied_dmg: float = float(dmg_calc["damage"])
+				var mult: float = float(dmg_calc["multiplier"])
+				
+				if enemy.has_method("take_damage"):
+					enemy.take_damage(applied_dmg)
+				
+				var e_id: String = enemy.ship_id if "ship_id" in enemy else (enemy.name if "name" in enemy else "")
+				p["is_destroyed"] = true
+				projectile_impact.emit(p, e_id, applied_dmg, mult)
+				hit_target = true
+				break
+		
+		if not hit_target:
+			remaining.append(p)
+	
+	active_ballistic_projectiles = remaining

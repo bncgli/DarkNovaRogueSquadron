@@ -612,7 +612,9 @@ func _refresh_targets() -> void:
 				var proj_vel := _get_active_projectile_velocity()
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
 				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
-				var lead_world_delta := t_vel * flight_time
+				var ship_vel: Vector3 = SpaceWorldManager.get_spaceship_velocity() if SpaceWorldManager else Vector3.ZERO
+				var rel_target_vel := t_vel - ship_vel
+				var lead_world_delta := rel_target_vel * flight_time
 				# Proietta in 2D sul radar
 				radar_canvas.lead_offset = Vector2(lead_world_delta.x, -lead_world_delta.z) * 1.5
 		else:
@@ -688,7 +690,9 @@ func _update_target_info() -> void:
 				var proj_vel := _get_active_projectile_velocity()
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
 				var t_vel: Vector3 = target_data.get("velocity", Vector3.ZERO)
-				var lead_world_delta := t_vel * flight_time
+				var ship_vel: Vector3 = SpaceWorldManager.get_spaceship_velocity() if SpaceWorldManager else Vector3.ZERO
+				var rel_target_vel := t_vel - ship_vel
+				var lead_world_delta := rel_target_vel * flight_time
 				radar_canvas.lead_offset = Vector2(lead_world_delta.x, -lead_world_delta.z) * 1.5
 		else:
 			radar_canvas.lead_offset = Vector2.ZERO
@@ -716,8 +720,17 @@ func _update_target_info() -> void:
 			var dist: float = float(t.get("distance", 0.0))
 			var t_hit := dist / maxf(proj_vel, 1.0)
 			var t_vel: Vector3 = t.get("velocity", Vector3.ZERO)
-			var speed_str := "%.1f m/s" % t_vel.length()
-			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_BERSAGLIO: %s | VEL_PROIETTILE: %.0f m/s" % [t_hit, speed_str, proj_vel]
+			var ship_vel: Vector3 = SpaceWorldManager.get_spaceship_velocity() if SpaceWorldManager else Vector3.ZERO
+			var rel_vel: Vector3 = t_vel - ship_vel
+			var aim_dir := Vector3(sin(deg_to_rad(manual_aim.x)), sin(deg_to_rad(manual_aim.y)), -cos(deg_to_rad(manual_aim.x))).normalized()
+			var v_proj: Vector3 = ship_vel + (aim_dir * proj_vel)
+			var v_rel: Vector3 = v_proj - t_vel
+			var is_kin := active_ammo_type in [AmmoType.HEAVY_MG, AmmoType.HEAVY_CANNON]
+			var pwr_pct := 100.0
+			if SpaceWorldManager and SpaceWorldManager.has_method("calculate_relative_kinetic_damage"):
+				var dmg_calc = SpaceWorldManager.calculate_relative_kinetic_damage(100.0, v_rel, proj_vel, is_kin)
+				pwr_pct = float(dmg_calc.get("multiplier", 1.0)) * 100.0
+			lead_calc_label.text = "ANTICIPO TIRO (LEAD): +%.2fs | VEL_REL: %.1f m/s | IMP. PWR: %.0f%%" % [t_hit, rel_vel.length(), pwr_pct]
 		else:
 			lead_calc_label.text = "ANTICIPO TIRO (LEAD): STANDBY (AGGANCIARE BERSAGLIO)"
 	
@@ -819,7 +832,24 @@ func _update_turret_camera_feed() -> void:
 				var proj_vel := _get_active_projectile_velocity()
 				var flight_time := t_dist / maxf(proj_vel, 1.0)
 				var t_vel: Vector3 = t.get("velocity", Vector3.ZERO)
-				var lead_world_delta := t_vel * flight_time
+				var ship_vel: Vector3 = SpaceWorldManager.get_spaceship_velocity() if SpaceWorldManager else Vector3.ZERO
+				var rel_target_vel: Vector3 = t_vel - ship_vel
+				var lead_world_delta := rel_target_vel * flight_time
+				
+				# Calcolo velocità di chiusura e potenza impatto cinetico stimata
+				var aim_dir := Vector3(sin(deg_to_rad(manual_aim.x)), sin(deg_to_rad(manual_aim.y)), -cos(deg_to_rad(manual_aim.x))).normalized()
+				var v_proj: Vector3 = ship_vel + (aim_dir * proj_vel)
+				var v_rel: Vector3 = v_proj - t_vel
+				var is_kin := active_ammo_type in [AmmoType.HEAVY_MG, AmmoType.HEAVY_CANNON]
+				var kinetic_mult := 1.0
+				var radial_closing: float = -rel_target_vel.z
+				
+				if SpaceWorldManager and SpaceWorldManager.has_method("calculate_relative_kinetic_damage"):
+					var dmg_calc = SpaceWorldManager.calculate_relative_kinetic_damage(100.0, v_rel, proj_vel, is_kin)
+					kinetic_mult = float(dmg_calc.get("multiplier", 1.0))
+				
+				trajectory_hud.closing_speed = radial_closing
+				trajectory_hud.expected_kinetic_pct = kinetic_mult * 100.0
 				
 				trajectory_hud.target_name = str(t.get("name", "BERSAGLIO"))
 				trajectory_hud.target_dist = t_dist
@@ -838,9 +868,13 @@ func _update_turret_camera_feed() -> void:
 			else:
 				trajectory_hud.has_lead = false
 				trajectory_hud.has_target_screen = false
+				trajectory_hud.expected_kinetic_pct = 100.0
+				trajectory_hud.closing_speed = 0.0
 		else:
 			trajectory_hud.has_lead = false
 			trajectory_hud.has_target_screen = false
+			trajectory_hud.expected_kinetic_pct = 100.0
+			trajectory_hud.closing_speed = 0.0
 
 func _get_active_projectile_velocity() -> float:
 	match active_ammo_type:

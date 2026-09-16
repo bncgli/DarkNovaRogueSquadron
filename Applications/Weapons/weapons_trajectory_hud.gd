@@ -19,6 +19,8 @@ var target_name: String = ""
 var target_dist: float = 0.0
 var aim_yaw: float = 0.0
 var aim_pitch: float = 0.0
+var closing_speed: float = 0.0
+var expected_kinetic_pct: float = 100.0
 
 func _process(_delta: float) -> void:
 	queue_redraw()
@@ -126,6 +128,12 @@ func _draw_target_box(t_pos: Vector2, t_name: String, t_dist: float) -> void:
 	# Didascalia bersaglio
 	var label := "%s (%.0fm)" % [t_name, t_dist]
 	draw_string(ThemeDB.fallback_font, rect.position + Vector2(0, -4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, col)
+	
+	# Telemetria Balistica Diegetica Hard Sci-Fi (Fase E)
+	if expected_kinetic_pct != 100.0 or absf(closing_speed) > 0.1:
+		var pwr_col := Color(0.3, 1.0, 0.5, 0.95) if expected_kinetic_pct >= 100.0 else Color(1.0, 0.6, 0.2, 0.95)
+		var k_text := "IMP. PWR: %.0f%% (Δv: %+.1f m/s)" % [expected_kinetic_pct, closing_speed]
+		draw_string(ThemeDB.fallback_font, rect.position + Vector2(0, box_sz + 12), k_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, pwr_col)
 
 func _draw_lead_indicator(reticle: Vector2, l_pos: Vector2) -> void:
 	var lead_col := Color(1.0, 0.3, 0.3, 0.95)
@@ -142,8 +150,11 @@ func _draw_lead_indicator(reticle: Vector2, l_pos: Vector2) -> void:
 	draw_line(l_pos - Vector2(5, 0), l_pos + Vector2(5, 0), lead_col, 1.0)
 	draw_line(l_pos - Vector2(0, 5), l_pos + Vector2(0, 5), lead_col, 1.0)
 	
-	# Etichetta "LEAD"
-	draw_string(ThemeDB.fallback_font, l_pos + Vector2(10, 4), "LEAD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, lead_col)
+	# Etichetta "LEAD" con % cinetica stimata se diversa da 100%
+	var lead_label := "LEAD"
+	if expected_kinetic_pct != 100.0:
+		lead_label += " (%.0f%%)" % expected_kinetic_pct
+	draw_string(ThemeDB.fallback_font, l_pos + Vector2(10, 4), lead_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, lead_col)
 
 func _draw_missile_lock_hud(reticle: Vector2, lock_pos: Vector2) -> void:
 	if is_missile_locked:

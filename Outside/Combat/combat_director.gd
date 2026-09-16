@@ -124,13 +124,29 @@ func _on_enemy_weapon_fired(weapon_type: String, origin: Vector3, target_pos: Ve
 		if player_ship_node and is_instance_valid(player_ship_node):
 			hit_dir_local = player_ship_node.global_transform.basis.inverse() * (origin - player_pos)
 
+		var player_vel: Vector3 = Vector3.ZERO
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_spaceship_velocity"):
+			player_vel = SpaceWorldManager.get_spaceship_velocity()
+		elif player_ship_node and "linear_velocity" in player_ship_node:
+			player_vel = player_ship_node.linear_velocity
+
+		var muzzle_spd: float = 40.0
+		var enemy_vel: Vector3 = enemy.velocity if enemy and is_instance_valid(enemy) else Vector3.ZERO
+		var aim_dir := (player_pos - origin).normalized() if (player_pos - origin).length_squared() > 0.001 else Vector3.FORWARD
+		var proj_vel: Vector3 = enemy_vel + (aim_dir * muzzle_spd)
+		var is_kin: bool = (weapon_type != "torpedo")
+		var v_rel: Vector3 = proj_vel - player_vel
+		var applied_damage: float = damage
+		if SpaceWorldManager and SpaceWorldManager.has_method("calculate_relative_kinetic_damage"):
+			var dmg_calc: Dictionary = SpaceWorldManager.calculate_relative_kinetic_damage(damage, v_rel, muzzle_spd, is_kin)
+			applied_damage = float(dmg_calc.get("damage", damage))
+
 		if SpaceWorldManager and SpaceWorldManager.has_method("spawn_incoming_projectile"):
 			var p_type := "TORPEDO" if weapon_type == "torpedo" else "KINETIC"
-			var proj_vel := (player_pos - origin).normalized() * 40.0
-			SpaceWorldManager.spawn_incoming_projectile(p_type, origin, proj_vel, damage, player_pos)
+			SpaceWorldManager.spawn_incoming_projectile(p_type, origin, proj_vel, applied_damage, player_pos, muzzle_spd, is_kin)
 
 		if systemic_damage_handler and is_instance_valid(systemic_damage_handler):
-			systemic_damage_handler.process_hit(hit_dir_local, damage, "plasma" if weapon_type == "torpedo" else "kinetic")
+			systemic_damage_handler.process_hit(hit_dir_local, applied_damage, "plasma" if weapon_type == "torpedo" else "kinetic")
 
 ## Verifica se un colpo in arrivo viene intercettato da dispositivi di difesa point-defense
 func evaluate_defensive_interception(hit_dir_local: Vector3, weapon_type: String, devices: Array[Dictionary]) -> Dictionary:
