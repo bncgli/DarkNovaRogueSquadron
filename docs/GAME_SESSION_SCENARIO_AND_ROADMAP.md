@@ -150,6 +150,8 @@ L'architettura di questo gameplay loop presenta un profilo di efficacia eccezion
 | **Procedural Generation** | Generatore astronomico modulare deterministico da seed `StarSystemGenerator`, applicazione diegetica `SystemDiscoverApp` con canvas orbitale e altimetrico, 4 archetipi galattici, distribuzione volumetrica 3D ($Y \neq 0$) e selezione istantanea da Lobby. | Validato con suite automatizzata GUT (`tests/gut/test_phase_b_system_discover.gd`). | **Completato** |
 | **Station Services (StationHub)** | Struttura a 5 Tab (Market, Contratti, Software, Cantiere, Taverna), coordinatore contratti autonomo `MissionManagerSingleton` con claim collettivo, archetipi economici stazione stile X4 (spread bid/ask) e dicerie della taverna con waypoint 3D volumetrici. | Validato con suite automatizzata GUT (`tests/gut/test_phase_c_station_hub_services.gd`). | **Completato** |
 | **Navigazione & Streaming Quadranti** | `StarSystemGridManager` (coordinate `Vector3i`, calcolo distanze, cache `SectorData`), `SpaceWorldManager.load_sector_zone()`, trigger di prossimità ai bordi a velocità di crociera, pre-caricamento asincrono `preload_adjacent_sector_async()`, crossing seamless con floating origin shift. | Validato con suite automatizzata GUT (`tests/gut/test_phase_d_debris_scavenging_streaming.gd`). | **Completato** |
+| **Propulsione di Crociera Avanzata** | CruiseDriveController (5 stati, warmup 4.0s a 160 MW, velocità moltiplicata 8x a 160 m/s con lock RCS, arresto forzato Proximity Drop <250m con frenata d'emergenza, picco -5.8G, surriscaldamento +60°C e scuotimento/vitals in PodInfoApp), telemetria live in FlightControlApp e bilanciamento carichi in PowerGridApp. | Validato con suite automatizzata GUT (`tests/gut/test_cruise_drive_advanced_proximity_drop.gd`: 7/7 superati). | **Completato** |
+| **Pericoli Spaziali Dinamici & Meteo** | `SpaceWeatherManager` (ciclo vitale a 4 fasi: DORMANT, WARNING, ACTIVE, DISSIPATING, tipo evento: SOLAR_CME, ION_EMP_STORM, COSMIC_RAD_BURST), calcolo geometrico a doppia scala del riparo (cono d'ombra planetario macro e cilindro 3D micro dietro asteroidi e relitti), telemetria e alert banner in `SensorsApp`, deflessione attiva orientata in `ShieldMatrixApp` e feedback sensoriali/stress nei pod. | Validato con suite automatizzata GUT (`tests/gut/test_space_weather_hazards.gd`: 6/6 superati). | **Completato** |
 | **Sensori, LIDAR & Sonde** | Raggio 1km, radar volumetrico sferico 3D con indicazione quota altimetrica relativa, ping energetico in `SensorsApp`, filtri Cams (Normal/Thermal/Lidar), spettrometria e coordinate 3D dei container cargo. | Integrazione completa dei container fluttuanti nel catalogo sensori. | **Completato** |
 | **Service Drone (Esterno)** | Scena 3D del drone, collisioni fisiche, controlli di volo e rotazione, harpoon magnetico fisico per traino container cargo (`latch_cargo`, `unlatch_cargo`), consumo energetico modulato dalla massa rimorchiata e portello cargo nave. | Validato con suite automatizzata GUT (`tests/gut/test_phase_d_debris_scavenging_streaming.gd`). | **Completato** |
 | **Balistica Newtoniana Torretta** | Profili balistici munizioni in `SpaceWorldManager`, somma vettoriale galileiana $\vec{v}_{proj} = \vec{v}_{ship} + (\hat{d}_{aim} \times v_{muzzle})$, collision sweep continuo anti-tunneling, danno cinetico scalato in base a $\vec{v}_{rel}$, Lead Indicator relativo in `WeaponsApp` e telemetria d'impatto su `WeaponsTrajectoryHUD`. | Testata e validata con suite GUT (`tests/gut/test_ballistics_newtonian.gd`). | **Completato** |
@@ -294,6 +296,82 @@ L'architettura di questo gameplay loop presenta un profilo di efficacia eccezion
   - In `StationHubApp` Tab 4 (Cantiere), gestione trasparente del debito residuo del canone noleggio scafo con pagamento discrezionale manuale a quote o estinzione completa.
   - In `ShipBlueprint`, implementato `save_blueprint_state(file_path)` con salvataggio persistente su directory utente (`user://blueprints/active_corvette_session.tres`) collegato automaticamente al termine delle transazioni di rientro o tramite pulsante dedicato.
   - Validato con suite automatizzata GUT (`tests/gut/test_phase_g_debriefing_persistence_loop.gd`).
+
+---
+
+### Fase H: Deep Core Asteroid Mining & Raffinazione Vitale [COMPLETATA]
+
+#### Task H1: Frantumazione Balistica 3D & Nodi Minerali [COMPLETATO]
+- **Obiettivo**: Permettere l'estrazione mineraria nello spazio profondo tramite distruzione selettiva di asteroidi e recupero nodi fisici 3D.
+- **Implementazione Eseguita**:
+  - In `Outside/asteroid.gd`: aggiunti integrità strutturale, danni cinetici continui da proiettili con sweep anti-tunneling, e metodo `fracture()` che genera nodi fisici `MineralDepositEntity` dotati di espulsione newtoniana casuale.
+  - In `Outside/ServiceDrone/service_drone_entity.gd` e `Outside/spaceship.gd`: aggancio magnetico dei nodi minerali con scarico automatico al docking corvetta e intake automatico al portello cargo `CargoHatchArea3D` con registrazione in `CargoManager`.
+  - In `CargoManager`: censiti i template delle risorse minerarie grezze (`durasteel_ore`, `titanium_raw`, `exocrystal_shard`, `water_ice_block`) e implementato `convert_ice_to_life_support()` per la ricarica idrica e ossigeno di bordo.
+  - Validato con suite automatizzata GUT (`tests/gut/test_deep_core_asteroid_mining.gd`: 6/6 superati).
+
+---
+
+### Fase I: Riscrittura Flux Economy & Baratto Titoli Debito [COMPLETATA]
+
+#### Task I1: Riconversione a Conio FLUX e Portafoglio Titoli Corporativi [COMPLETATO]
+- **Obiettivo**: Eliminare la valuta fiat generica (CR) a favore del modello Freemium-punk basato su FLUX liquido, baratto rateale di titoli di debito/credito corporativo e rating di solvibilità.
+- **Implementazione Eseguita**:
+  - In `Economy/flux_economy_manager.gd`: eliminata la proprietà legacy `credits`, introdotto il calcolo contabile del saldo netto ($\text{Net FLUX} = \text{Liquid} + \sum \text{Modifiers}$), sincronizzazione diretta con `ShipBlueprint.flux_modifiers` e metodi transazionali a fido (`pay_with_flux`, `transact_barter`, `issue_debt_tranche`, `repay_debt`).
+  - In `StationHubApp`: sostituita la telemetria monetaria con indicatore diegetico FLUX (Netto, Liquido e Debito); convertiti Cantiere Navale, Cargo Market e vendita rapida bottino al modello a baratto e pagamento con emissione debito condizionato dal rating.
+  - In `Economy/mission_manager.gd` e `Applications/FluxWallet/flux_wallet.gd`: riconversione compensi contratti in FLUX liquido e sgravio quote di debito pendenti, visualizzazione grafica del rating e categorizzazione visiva dei titoli.
+  - Validato con suite automatizzata GUT (`tests/gut/test_flux_economy_barter_system.gd`: 5/5 superati).
+
+---
+
+### Fase J: Corrieri Dati S-Net & Intercettazione Hacker [COMPLETATA]
+
+#### Task J1: Convogli Mercantili S-Net, Caveau Remoto DataVault & Estrazione Hard Disk [COMPLETATO]
+- **Obiettivo**: Aggiungere convogli corrieri dati intercettabili via telecomunicazioni per trafugare banche dati quantistiche, file cifrati ed exploit tramite guerra elettronica o interdizione fisica.
+- **Implementazione Eseguita**:
+  - In `Outside/Combat/enemy_ship_ai.gd` e `combat_director.gd`: introdotto l'archetipo `ShipType.DATA_COURIER` con parametri cargo corazzati, frequenza subspaziale dedicata a 1920.0 MHz, beacon radio continuo ed espulsione fisica del caveau dati (`jettison_data_vault()`).
+  - In `Applications/Comms/comms_app.gd` e `SpaceWorldManager`: tracking direzionale del radiofaro S-Net ("📡 [S-NET COURIER] Aegis Data Hauler") tramite azimut antenna e SNR ravvicinato per montare il link dati EW "Connect".
+  - In `Scenes/Autoloads/ShipDrive/remote_drive_manager.gd`: montaggio automatico della cartella blindata `Target Drive/DataVault/` protetta da password con file cifrati (`corporate_ledger.dat`, `sector_jump_charts.dat`, `exploit_payload.dat`, `Manifest_SNet.txt`) e supporto all'exploit `dump_vault`.
+  - In `Applications/HackExploits/hack_exploits_app.gd`: nuovo comando `run dump_vault <pwd> <key>` che forza l'espulsione immediata del nucleo dati quantistico nello spazio.
+  - In `Economy/cargo_manager.gd` e `Spaceship`: registrazione del template `snet_quantum_core` (categoria `DATA_CORE`, valore 1800 FLUX), abilitazione del traino magnetico con Service Drone, stivaggio al portello cargo corvetta e liquidazione al mercato nero di StationHub.
+  - Validato con suite automatizzata GUT (`tests/gut/test_snet_data_courier_hacking.gd`: 5/5 superati).
+
+---
+
+### Fase K: Cruise Drive Avanzato, Warmup Energetico & Proximity Drop con Picco G [COMPLETATA]
+
+#### Task K1: Macchina a Stati, Sincronizzazione Reattore PowerGrid & Blocco Rotta [COMPLETATO]
+- **Obiettivo**: Elevare la velocità di crociera sub-luce a procedura cooperativa hard sci-fi sincronizzata con i carichi del reattore di PowerGrid e la plancia di volo.
+- **Implementazione Eseguita**:
+  - In `Outside/ShipSystems/cruise_drive_controller.gd`: architettura a 5 stati (`IDLE`, `WARMUP`, `ENGAGED`, `COOLDOWN`, `EMERGENCY_DROP`), sequenza di warmup di 4.0s con assorbimento continuo di 160 MW dalle bobine e verifica dei 3 prerequisiti di ingaggio (quiete $|\vec{v}_{ship}| \le 5.0\,\text{m/s}$, allineamento prua/waypoint $\le 3.0^\circ$, alimentazione reattore $\ge 160\,\text{MW}$).
+  - In `Applications/PowerGrid/power_grid_app.gd`: tracciamento del carico istantaneo bobine (`cruise_coils_draw_mw`), allarme diegetico di sovraccarico reattore e aborto automatico del warmup con disingaggio immediato in caso di caduta di potenza.
+  - In `Applications/FlightControl/flight_control_app.gd`: delega completa dei controlli a `CruiseDriveController`, barra di avanzamento del warmup in tempo reale, velocità di crociera a 160 m/s (moltiplicatore 8.0x) con inibizione fisica degli attuatori RCS, visualizzazione del cooldown residuo e avvisi per vincoli non soddisfatti.
+
+#### Task K2: Proximity Drop ad Alto Impatto Cinetico, Picco Negativo -5.8G & Reazioni Pod [COMPLETATO]
+- **Obiettivo**: Implementare l'arresto forzato d'emergenza della crociera in prossimità di ostacoli con violenta frenata newtoniana, picco di decelerazione estrema e feedback sensoriali diegetici nei pod.
+- **Implementazione Eseguita**:
+  - In `Outside/ShipSystems/cruise_drive_controller.gd`: scansione radar continua di corpi celesti, asteroidi, stazioni e relitti entro 250m nel cono frontale o 125m radiale; all'attivazione di `trigger_proximity_drop()`, controspinta frenante newtoniana immediata che abbatte la velocità a $\le 20\,\text{m/s}$.
+  - In `Outside/spaceship.gd` e `Outside/space_world_manager.gd`: iniezione dell'impulso di decelerazione longitudinale a $-5.8\,\text{G}$ con smorzamento esponenziale verso $1.0\,\text{G}$, penalità termica maggiorata di $+60^\circ\text{C}$ sui propulsori e avvio del cooldown di sicurezza di 6.0s (`State.EMERGENCY_DROP`).
+  - In `Applications/PodInfo/pod_info_app.gd`: ricezione evento di Proximity Drop con screen shake ad alta intensità (22.0 per 1.2s), balzo tachicardico della frequenza cardiaca (+45 BPM fino a 135-140 BPM), allarme sonoro di deformazione strutturale e allerta Redout per l'equipaggio.
+  - Validato con suite automatizzata GUT (`tests/gut/test_cruise_drive_advanced_proximity_drop.gd`: 7/7 superati).
+
+---
+
+### Fase L: Pericoli Spaziali Dinamici & Eventi Meteo Settore [COMPLETATA]
+
+#### Task L1: Ciclo Vitale Eventi Meteo, Calcolo Esposizione & Coni d'Ombra 3D [COMPLETATO]
+- **Obiettivo**: Simulare minacce ambientali globali del settore a tempo (tempeste solari CME, impulsi ionici EMP e radiazioni cosmiche) con calcolo geometrico del riparo naturale.
+- **Implementazione Eseguita**:
+  - Creato `Outside/SpaceWeather/space_weather_manager.gd` (`SpaceWeatherManager`) con ciclo vitale deterministico a 4 fasi (`DORMANT`, `WARNING`, `ACTIVE`, `DISSIPATING`), tipologie di minaccia (`SOLAR_CME`, `ION_EMP_STORM`, `COSMIC_RAD_BURST`) e vettori solari stellari dinamici.
+  - Implementato il calcolo geometrico a doppia scala del riparo: macro-riparo da cono d'ombra planetario (`calculate_planetary_occlusion`) e micro-riparo cilindrico 3D dietro asteroidi massicci e relitti (`_calculate_micro_occlusion`).
+  - Collegato `SpaceWorldManager` per la gestione integrata, il reset al salto di settore e l'iniezione telemetrica.
+
+#### Task L2: Mitigazione con Armoniche Deflettori, Telemetria Sensors e Feedback Pod [COMPLETATO]
+- **Obiettivo**: Consentire all'equipaggio di mitigare attivamente l'impatto dei pericoli ambientali tramite deflessione energetica e visualizzare gli allarmi diegetici.
+- **Implementazione Eseguita**:
+  - In `Applications/ShieldMatrix/shield_matrix_app.gd`: implementato `mitigate_space_weather_impact` con orientamento del quadrante deflettente verso la stella primaria, abbattimento totale dei danni allo scafo con allocazione scudi $\ge 40\%$ e sincronizzazione di fase (`is_phase_synced`).
+  - In `Applications/Sensors/sensors_app.gd` e `sensors_app.tscn`: aggiunto il pannello diegetico ad alta visibilità `WeatherAlertBanner` con conto alla rovescia dell'evento, tipologia minaccia e percentuale di esposizione / riparo in tempo reale.
+  - In `Applications/PodInfo/pod_info_app.gd`: collegato l'impatto dell'onda non schermata con scuotimento visivo nei pod (screen shake 16.0), allarme sonoro d'emergenza e balzo tachicardico (+35 BPM).
+  - Validato con suite automatizzata GUT (`tests/gut/test_space_weather_hazards.gd`: 6/6 superati).
 
 ---
 

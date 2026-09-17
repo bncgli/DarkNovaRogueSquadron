@@ -203,6 +203,34 @@ func trigger_scavenger_ambush(count: int = 2) -> Array[EnemyShipAI]:
 		
 	return scavengers
 
+## Spawna un corriere dati S-Net con carico caveau e radiofaro subspaziale dedicato
+func spawn_data_courier(spawn_pos: Vector3 = Vector3.ZERO) -> EnemyShipAI:
+	var pos := spawn_pos
+	if pos == Vector3.ZERO and player_ship_node and is_instance_valid(player_ship_node):
+		pos = player_ship_node.global_position + Vector3(250.0, 50.0, -300.0)
+	elif pos == Vector3.ZERO:
+		pos = Vector3(200.0, 40.0, -250.0)
+		
+	var courier := EnemyShipAI.new()
+	courier.name = "SNet_Courier_01"
+	add_child(courier)
+	courier.setup("COURIER_SNET_01", EnemyShipAI.ShipType.DATA_COURIER, pos)
+	courier.ship_name = "S-Net Courier Aegis"
+	courier.comms_frequency = 1920.0
+	
+	courier.weapon_fired.connect(_on_enemy_weapon_fired.bind(courier))
+	courier.ship_destroyed.connect(_on_enemy_destroyed)
+	
+	active_enemies.append(courier)
+	if not is_in_combat:
+		is_in_combat = true
+		combat_engagement_started.emit()
+		
+	if SpaceWorldManager and SpaceWorldManager.has_method("_send_spawn_notification"):
+		SpaceWorldManager._send_spawn_notification("📡 Rilevato convoglio corriere dati S-Net a 1920.0 MHz!")
+		
+	return courier
+
 ## Gestisce il fuoco proveniente da un'astronave nemica
 func _on_enemy_weapon_fired(weapon_type: String, origin: Vector3, target_pos: Vector3, damage: float, enemy: EnemyShipAI) -> void:
 	# Calcola se colpisce la nave del giocatore
@@ -530,3 +558,7 @@ func is_exploit_active(exploit_type: String) -> bool:
 ## Restituisce il dizionario di tutte le intrusioni cyber attive
 func get_active_intrusions() -> Dictionary:
 	return active_intrusions
+
+## Verifica se sono presenti intrusioni cyber nemiche non neutralizzate
+func has_active_intrusion() -> bool:
+	return not active_intrusions.is_empty()

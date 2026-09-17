@@ -38,6 +38,23 @@ signal hyperdrive_transition_started(target_coords: Vector3i)
 signal hyperdrive_transition_progress(loaded_count: int, total_count: int)
 signal hyperdrive_transition_ended(target_coords: Vector3i)
 signal cargo_stowed_in_ship(item_data: Dictionary)
+signal cruise_proximity_drop_occurred(obstacle_name: String, distance: float)
+signal cruise_coils_draw_changed(draw_mw: float)
+signal weather_state_changed(state: int, hazard_type: int, time_remaining: float)
+signal weather_warning_issued(hazard_type: int, countdown: float, sun_vector: Vector3)
+signal weather_wave_impacted(hazard_type: int, effective_exposure: float)
+signal weather_cleared()
+signal ship_shelter_state_changed(is_sheltered: bool, exposure_factor: float, shelter_source: String)
+signal ship_alert_condition_changed(new_condition: int)
+
+enum ShipAlertCondition {
+	GREEN = 0,
+	YELLOW = 1,
+	RED = 2
+}
+
+var current_alert_condition: int = ShipAlertCondition.GREEN
+var _alert_eval_timer: float = 0.0
 
 # --- HYPERDRIVE TRANSITION & MULTIPLAYER CREW SYNC ---
 var is_hyperdrive_transition_active: bool = false
@@ -55,11 +72,13 @@ const CAMERA_FEED_WINDOW_SCENE := "res://Applications/Cams/CameraFeed/camera_fee
 var drone_manager := DuctDroneManager.new()
 var damage_manager := ShipDamageManager.new()
 var camera_manager := CameraFeedManager.new()
+var weather_manager := SpaceWeatherManager.new()
 
 func _ready() -> void:
 	add_child(drone_manager)
 	add_child(damage_manager)
 	add_child(camera_manager)
+	add_child(weather_manager)
 	
 	_connect_submanagers()
 	_init_space_world()
@@ -85,6 +104,15 @@ func _connect_submanagers() -> void:
 	camera_manager.window_closed.connect(func(ci): camera_window_closed.emit(ci))
 	camera_manager.status_changed.connect(func(ci, io): camera_status_changed.emit(ci, io))
 	camera_manager.headlight_toggled.connect(func(ci, en): camera_headlight_toggled.emit(ci, en))
+	
+	weather_manager.weather_state_changed.connect(func(st, ht, tr): weather_state_changed.emit(st, ht, tr))
+	weather_manager.weather_warning_issued.connect(func(ht, cd, sv): weather_warning_issued.emit(ht, cd, sv))
+	weather_manager.weather_wave_impacted.connect(func(ht, ee):
+		weather_wave_impacted.emit(ht, ee)
+		_on_weather_wave_impact(ht, ee)
+	)
+	weather_manager.weather_cleared.connect(func(): weather_cleared.emit())
+	weather_manager.ship_shelter_state_changed.connect(func(is_sh, ef, ss): ship_shelter_state_changed.emit(is_sh, ef, ss))
 
 # --- DUCT DRONE METADATA & CONSTANTS ---
 const INITIAL_DUCT_DRONE_POS := Vector2(300, 80)
@@ -173,6 +201,16 @@ func request_undock() -> void:
 	var dm := get_docking_manager()
 	if dm:
 		dm.request_undock()
+
+func request_dock_at_station(bay_id: int = 0) -> bool:
+	var dm := get_docking_manager()
+	var st := get_primary_station_entity()
+	if dm and st:
+		dm.request_docking_clearance(st)
+		dm.assigned_bay_id = bay_id
+		dm._complete_docking()
+		return true
+	return false
 
 # Settore corrente e istanza 3D relitto spaziale
 var current_sector_data: SectorData = null
@@ -290,7 +328,13 @@ func get_combat_director() -> CombatDirector:
 			combat_director = directors[0] as CombatDirector
 			_connect_combat_director()
 			return combat_director
-	return null
+	
+	var new_cd := CombatDirector.new()
+	new_cd.name = "CombatDirector"
+	add_child(new_cd)
+	combat_director = new_cd
+	_connect_combat_director()
+	return combat_director
 
 func _connect_combat_director() -> void:
 	if combat_director and is_instance_valid(combat_director):
@@ -693,6 +737,12 @@ func _physics_process(delta: float) -> void:
 			if duct_drone_scan_radius > 160.0:
 				duct_drone_scan_active = false
 				duct_drone_scan_radius = 0.0
+	
+	# Valuta periodicamente il protocollo di allerta generale nave (Condition Red / Yellow / Green)
+	_alert_eval_timer += delta
+	if _alert_eval_timer >= 0.5:
+		_alert_eval_timer = 0.0
+		evaluate_ship_alert_condition()
 
 func _init_space_world() -> void:
 	if _master_viewport != null and is_instance_valid(_master_viewport):
@@ -1236,6 +1286,7 @@ func load_sector_zone(sec_data: SectorData, force_reload: bool = false) -> void:
 		
 	# 1. Ferma i motori e azzera cinematica nave
 	stop_spaceship_engines()
+	abort_active_weather()
 	var ship := get_spaceship()
 	if ship and is_instance_valid(ship):
 		ship.global_position = Vector3.ZERO
@@ -1711,6 +1762,15 @@ func clear_ship_damages() -> void:
 	if nm and nm.get("is_connected_to_network") and nm.get("is_host"):
 		if is_inside_tree() and multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
 			_rpc_sync_ship_damages.rpc(ship_damages)
+	evaluate_ship_alert_condition()
+
+func clear_all_ship_damages() -> void:
+	clear_ship_damages()
+
+func repair_ship_damage(damage_id: String) -> void:
+	if damage_manager:
+		damage_manager.complete_repair(damage_id)
+		evaluate_ship_alert_condition()
 
 func start_duct_drone_repair(damage_id: String) -> void:
 	var nm := _get_net_mgr()
@@ -3065,6 +3125,7 @@ func get_comms_transmissions() -> Array[Dictionary]:
 					enemies.append(foe)
 		
 		var found_enemy := false
+		var found_courier := false
 		for enm in enemies:
 			if enm and is_instance_valid(enm) and enm.visible:
 				var diff := enm.global_position - ship_pos
@@ -3074,18 +3135,24 @@ func get_comms_transmissions() -> Array[Dictionary]:
 				if bearing_deg < 0.0: bearing_deg += 360.0
 				var e_id: String = enm.ship_id if "ship_id" in enm else enm.name
 				var e_name: String = enm.ship_name if "ship_name" in enm else enm.name
-				var e_freq: float = enm.comms_frequency if "comms_frequency" in enm else 2185.2
-				var strength := clampf(1.0 - (dist / 6000.0), 0.1, 0.9)
+				var is_courier: bool = "ship_type" in enm and enm.ship_type == EnemyShipAI.ShipType.DATA_COURIER
+				if is_courier: found_courier = true
+				var e_freq: float = enm.comms_frequency if "comms_frequency" in enm else (1920.0 if is_courier else 2185.2)
+				var strength := clampf(1.0 - (dist / 6000.0), 0.1, 0.95)
+				var sig_id: String = "snet_courier" if is_courier else "pirate_encrypted"
+				var sig_name: String = ("📡 [S-NET COURIER] %s" % e_name) if is_courier else ("🏴‍☠️ [BURST CRITTOGRAFATO] %s" % e_name)
+				var sig_desc: String = "Trasmissione crittografata da convoglio corriere dati S-Net. Rilevata telemetria banco dati quantistico." if is_courier else "Canale pirata tattico cifrato. Intercettazione drive e firmware."
+				var sig_type: String = "COURIER" if is_courier else "CORVETTE"
 				signals.append({
-					"id": "pirate_encrypted",
+					"id": sig_id,
 					"freq": e_freq,
 					"strength": strength,
-					"name": "🏴‍☠️ [BURST CRITTOGRAFATO] %s" % e_name,
-					"desc": "Canale pirata tattico cifrato. Intercettazione drive e firmware.",
+					"name": sig_name,
+					"desc": sig_desc,
 					"source": e_name,
 					"bearing_deg": bearing_deg,
 					"distance": dist,
-					"type": "CORVETTE",
+					"type": sig_type,
 					"target_ship_id": e_id,
 					"unlocked": true,
 					"node_ref": enm
@@ -3104,6 +3171,21 @@ func get_comms_transmissions() -> Array[Dictionary]:
 				"distance": 950.0,
 				"type": "CORVETTE",
 				"target_ship_id": "PIRATE-CORVETTE-01",
+				"unlocked": true
+			})
+		
+		if not found_courier:
+			signals.append({
+				"id": "snet_courier",
+				"freq": 1920.0,
+				"strength": 0.88,
+				"name": "📡 [S-NET COURIER] Aegis Data Hauler",
+				"desc": "Trasmissione crittografata da convoglio corriere dati S-Net. Rilevata telemetria banco dati quantistico.",
+				"source": "Aegis Information Transport",
+				"bearing_deg": 65.0,
+				"distance": 820.0,
+				"type": "COURIER",
+				"target_ship_id": "SNET-COURIER-01",
 				"unlocked": true
 			})
 
@@ -3173,6 +3255,19 @@ func get_comms_transmissions() -> Array[Dictionary]:
 				"distance": 950.0,
 				"type": "CORVETTE",
 				"target_ship_id": "PIRATE-CORVETTE-01",
+				"unlocked": true
+			},
+			{
+				"id": "snet_courier",
+				"freq": 1920.0,
+				"strength": 0.88,
+				"name": "📡 [S-NET COURIER] Aegis Data Hauler",
+				"desc": "Trasmissione crittografata da convoglio corriere dati S-Net. Rilevata telemetria banco dati quantistico.",
+				"source": "Aegis Information Transport",
+				"bearing_deg": 65.0,
+				"distance": 820.0,
+				"type": "COURIER",
+				"target_ship_id": "SNET-COURIER-01",
 				"unlocked": true
 			},
 			{
@@ -3313,6 +3408,18 @@ func is_cruise_drive_powered() -> bool:
 		return cdc.get_is_powered()
 	return false
 
+## Notifica e coordina la reazione al disingaggio d'emergenza Proximity Drop
+func notify_proximity_drop(obstacle_name: String, distance: float) -> void:
+	cruise_proximity_drop_occurred.emit(obstacle_name, distance)
+	set_ship_g_force(-5.8)
+	if is_inside_tree():
+		var pod_app = get_tree().get_first_node_in_group("pod_info_apps")
+		if pod_app and pod_app.has_method("trigger_screen_shake"):
+			pod_app.trigger_screen_shake(22.0, 1.2)
+		if pod_app and pod_app.has_method("record_biometric_stress"):
+			pod_app.record_biometric_stress(45.0)
+	report_system_alert("🚨 PROXIMITY DROP! Ostacolo %s a %.1fm - FRENATA D'EMERGENZA (-5.8G)" % [obstacle_name, distance])
+
 # --- LIFE SUPPORT & CREW VITALS INTEGRATION API ---
 var _life_support_instance: Node = null
 var _bridge_atmo_override: Dictionary = {}
@@ -3392,8 +3499,11 @@ func get_ship_g_force() -> float:
 func set_ship_g_force(g: float) -> void:
 	_current_ship_g_force = g
 	var ship := get_spaceship()
-	if ship and is_instance_valid(ship) and ship.has_method("set_current_g_force"):
-		ship.set_current_g_force(g)
+	if ship and is_instance_valid(ship):
+		if ship.has_method("set_current_g_force"):
+			ship.set_current_g_force(g)
+		else:
+			ship.current_g_force = g
 	g_force_updated.emit(g)
 
 func emit_ship_damage_taken(pos: Vector2, type: String) -> void:
@@ -3661,3 +3771,134 @@ func _update_ballistic_projectiles(delta: float) -> void:
 			remaining.append(p)
 	
 	active_ballistic_projectiles = remaining
+
+# =============================================================================
+# SPACE WEATHER & HAZARDS SUB-MANAGER INTEGRATION
+# =============================================================================
+
+func trigger_space_weather(hazard_type: int, warning_time: float = 20.0, active_time: float = 15.0) -> void:
+	if weather_manager:
+		weather_manager.trigger_weather_event(hazard_type, warning_time, active_time)
+
+func get_active_weather_info() -> Dictionary:
+	if weather_manager:
+		return weather_manager.get_active_weather_info()
+	return {"state": 0, "hazard_type": 0, "time_remaining": 0.0, "is_sheltered": false, "exposure_factor": 1.0}
+
+func get_ship_shelter_status() -> Dictionary:
+	if weather_manager:
+		return weather_manager.get_ship_shelter_status()
+	return {"is_sheltered": false, "exposure_factor": 1.0, "shelter_source": "NONE", "occlusion_factor": 0.0}
+
+func is_ship_sheltered_from_sun() -> bool:
+	if weather_manager:
+		return weather_manager.is_sheltered
+	return false
+
+func abort_active_weather() -> void:
+	if weather_manager:
+		weather_manager.abort_weather_event()
+
+func apply_solar_heat_surge(heat_amount: float) -> void:
+	if _cruise_drive_instance and is_instance_valid(_cruise_drive_instance):
+		if _cruise_drive_instance.has_method("_apply_heat_penalty"):
+			_cruise_drive_instance._apply_heat_penalty(heat_amount * 0.2)
+
+func apply_ion_emp_interference(_intensity: float) -> void:
+	pass
+
+func apply_cosmic_radiation(_dose: float) -> void:
+	pass
+
+func _on_weather_wave_impact(hazard_type: int, effective_exposure: float) -> void:
+	if effective_exposure > 0.1:
+		if hazard_type == 0: # SOLAR_CME
+			set_ship_g_force(-2.5 * effective_exposure)
+
+func get_power_overclock_tolerance() -> float:
+	var tree := get_tree()
+	if tree:
+		var pga = tree.get_first_node_in_group("power_grid_apps")
+		if pga and pga.has_method("get_overclock_tolerance"):
+			return pga.get_overclock_tolerance()
+	return 1.0
+
+func get_power_overload_threshold_pct() -> float:
+	var tree := get_tree()
+	if tree:
+		var pga = tree.get_first_node_in_group("power_grid_apps")
+		if pga and pga.has_method("get_overload_threshold_pct"):
+			return pga.get_overload_threshold_pct()
+	return 110.0
+
+# =============================================================================
+# SHIP-WIDE ALERT CONDITION PROTOCOL (GREEN / YELLOW / RED)
+# =============================================================================
+
+func get_ship_alert_condition() -> int:
+	return current_alert_condition
+
+func set_ship_alert_condition(new_cond: int) -> void:
+	if current_alert_condition != new_cond:
+		current_alert_condition = new_cond
+		ship_alert_condition_changed.emit(new_cond)
+
+func evaluate_ship_alert_condition() -> int:
+	var calculated_condition := ShipAlertCondition.GREEN
+	
+	# 1. Controlli per CONDITION RED (Priorità Massima):
+	# - Brecce non sigillate nello scafo
+	var active_breaches: int = 0
+	for d in get_active_ship_damages():
+		if d.type == DAMAGE_TYPE_BREACH:
+			active_breaches += 1
+			break
+	
+	# - Scudi totali < 20%
+	var low_shields := false
+	var tree := get_tree()
+	if tree:
+		var sma = tree.get_first_node_in_group("shield_matrix_apps")
+		if sma and sma.has_method("get_total_shield_percentage"):
+			var pct: float = sma.get_total_shield_percentage()
+			if pct < 0.20:
+				low_shields = true
+	
+	# - Onda solare o tempesta attiva non schermata
+	var active_weather_hazard := false
+	if weather_manager and weather_manager.current_state == SpaceWeatherManager.WeatherState.ACTIVE:
+		if weather_manager.current_exposure_factor > 0.25:
+			active_weather_hazard = true
+	
+	if active_breaches > 0 or low_shields or active_weather_hazard:
+		calculated_condition = ShipAlertCondition.RED
+	else:
+		# 2. Controlli per CONDITION YELLOW:
+		# - Intrusioni cyber / sentinelle hacker attive
+		var active_cyber_threat := false
+		var cd := get_combat_director()
+		if cd and cd.has_method("has_active_intrusion") and cd.has_active_intrusion():
+			active_cyber_threat = true
+		
+		# - Allerta meteo WARNING
+		var weather_warning := false
+		if weather_manager and weather_manager.current_state == SpaceWeatherManager.WeatherState.WARNING:
+			weather_warning = true
+		
+		# - Surriscaldamento propulsori Cruise Drive > 80%
+		var high_heat := false
+		if _cruise_drive_instance and is_instance_valid(_cruise_drive_instance):
+			if _cruise_drive_instance.has_method("get_current_heat") and _cruise_drive_instance.get_current_heat() > 80.0:
+				high_heat = true
+		
+		var has_minor_damage: bool = not get_active_ship_damages().is_empty()
+		
+		if active_cyber_threat or weather_warning or high_heat or has_minor_damage:
+			calculated_condition = ShipAlertCondition.YELLOW
+		else:
+			calculated_condition = ShipAlertCondition.GREEN
+	
+	if calculated_condition != current_alert_condition:
+		set_ship_alert_condition(calculated_condition)
+	
+	return current_alert_condition

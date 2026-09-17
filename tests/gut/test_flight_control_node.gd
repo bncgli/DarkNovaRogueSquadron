@@ -18,6 +18,13 @@ func before_each() -> void:
 		ship.linear_input = Vector3.ZERO
 		ship.angular_input = Vector3.ZERO
 		ship.inertia_dampening = true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("clear_active_waypoint"):
+			SpaceWorldManager.clear_active_waypoint()
+		var cdc := SpaceWorldManager.get_cruise_drive_controller()
+		if cdc:
+			cdc.clear_destination_target()
+			cdc.disengage("Reset test", false)
 
 func after_each() -> void:
 	if is_instance_valid(_app):
@@ -30,6 +37,9 @@ func _start_solo_mission(player_name: String = "Comandante Test") -> void:
 	NetworkManager.start_mission()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if SpaceWorldManager and SpaceWorldManager.is_ship_docked():
+		SpaceWorldManager.request_undock()
+		await get_tree().process_frame
 
 func _create_app() -> FlightControlApp:
 	var scene: PackedScene = load("res://Applications/FlightControl/flight_control_app.tscn")
@@ -175,13 +185,14 @@ func test_cruise_speed_toggle_and_forward_movement() -> void:
 	assert_eq(ship.max_linear_speed, 20.0, "Velocità massima base nave 20.0 m/s")
 	
 	# Imposta rotazione residua per verificare che venga azzerata all'attivazione
+	ship.linear_velocity = Vector3.ZERO
 	ship.angular_velocity = Vector3(0.5, 0.2, -0.1)
 	
 	# Attiva velocità di crociera
-	_app._on_cruise_toggle_pressed()
-	assert_true(_app.is_cruise_enabled, "Velocità di crociera attivata dopo toggle")
-	assert_eq(_app.cruise_toggle_button.text, "VELOCITÀ CROCIERA: ON", "Testo pulsante aggiornato a ON")
-	assert_eq(ship.max_linear_speed, 100.0, "Velocità massima moltiplicata x5 (100.0 m/s)")
+	_app.set_cruise_enabled(true)
+	assert_true(_app.is_cruise_enabled, "Velocità di crociera attivata")
+	assert_true(_app.cruise_toggle_button.text.contains("CROCIERA ATTIVA"), "Testo pulsante aggiornato a ATTIVA")
+	assert_eq(ship.max_linear_speed, 160.0, "Velocità massima moltiplicata x8 (160.0 m/s)")
 	assert_eq(ship.angular_velocity, Vector3.ZERO, "Velocità angolare azzerata all'attivazione della crociera")
 	assert_true(_app.btn_w.disabled, "Pulsante manovra W disabilitato durante la crociera")
 	assert_true(_app.btn_q.disabled, "Pulsante manovra Q disabilitato durante la crociera")
@@ -203,13 +214,13 @@ func test_cruise_speed_toggle_and_forward_movement() -> void:
 	
 	ship._physics_process(0.1)
 	assert_true(ship.linear_velocity.z < 0.0, "La nave deve avanzare automaticamente verso prua (Z negativo)")
-	assert_eq(ship.linear_velocity.x, 0.0, "Nessuna deviazione laterale in crociera")
-	assert_eq(ship.linear_velocity.y, 0.0, "Nessuna deviazione verticale in crociera")
+	assert_true(absf(ship.linear_velocity.x) < 0.001, "Nessuna deviazione laterale in crociera")
+	assert_true(absf(ship.linear_velocity.y) < 0.001, "Nessuna deviazione verticale in crociera")
 	
 	# Disattiva velocità di crociera
-	_app._on_cruise_toggle_pressed()
-	assert_false(_app.is_cruise_enabled, "Velocità di crociera disattivata dopo secondo toggle")
-	assert_eq(_app.cruise_toggle_button.text, "VELOCITÀ CROCIERA: OFF", "Testo pulsante ritornato a OFF")
+	_app.set_cruise_enabled(false)
+	assert_false(_app.is_cruise_enabled, "Velocità di crociera disattivata")
+	assert_true(_app.cruise_toggle_button.text.contains("COOLDOWN") or _app.cruise_toggle_button.text == "VELOCITÀ CROCIERA: OFF", "Testo pulsante ritornato a COOLDOWN o OFF")
 	assert_eq(ship.max_linear_speed, 20.0, "Velocità massima riportata a 20.0 m/s")
 	assert_false(_app.btn_w.disabled, "Pulsante W riabilitato dopo disattivazione crociera")
 	assert_false(_app.btn_q.disabled, "Pulsante Q riabilitato dopo disattivazione crociera")

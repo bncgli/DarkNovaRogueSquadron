@@ -51,6 +51,18 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_weather_banner"]
+bg_color = Color(0.12, 0.05, 0.02, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.45, 0.1, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="SensorsApp" type="Control" unique_id=957899815]
 custom_minimum_size = Vector2(750, 550)
 layout_mode = 3
@@ -133,6 +145,27 @@ custom_minimum_size = Vector2(110, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "🔄 Ricarica .DAT"
+
+[node name="WeatherAlertBanner" type="PanelContainer" parent="ScrollContainer/Margin/VBox" unique_id=987123456]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_weather_banner")
+
+[node name="Margin" type="MarginContainer" parent="ScrollContainer/Margin/VBox/WeatherAlertBanner" unique_id=987123457]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 4
+
+[node name="WeatherAlertLabel" type="RichTextLabel" parent="ScrollContainer/Margin/VBox/WeatherAlertBanner/Margin" unique_id=987123458]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "[color=#ffaa00]⚠️ ALLERTA METEO SPAZIALE: SOLAR CME TRA 00:22 | STATO: 100% ESPOSTO[/color]"
 
 [node name="ContentHBox" type="HBoxContainer" parent="ScrollContainer/Margin/VBox" unique_id=845279317]
 layout_mode = 2

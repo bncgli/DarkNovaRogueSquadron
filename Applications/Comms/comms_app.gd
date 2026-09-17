@@ -145,6 +145,19 @@ var available_signals: Array[Dictionary] = [
 		"unlocked": true
 	},
 	{
+		"id": "snet_courier",
+		"freq": 1920.0,
+		"strength": 0.88,
+		"name": "📡 [S-NET COURIER] Aegis Data Hauler",
+		"desc": "Trasmissione crittografata da convoglio corriere dati S-Net. Rilevata telemetria banco dati quantistico.",
+		"source": "Aegis Information Transport",
+		"bearing_deg": 65.0,
+		"distance": 820.0,
+		"type": "COURIER",
+		"target_ship_id": "SNET-COURIER-01",
+		"unlocked": true
+	},
+	{
 		"id": "deep_space_beacon",
 		"freq": 2750.0,
 		"strength": 0.6,
@@ -278,7 +291,9 @@ func _process(delta: float) -> void:
 		var target_bearing := _get_signal_bearing_by_id(locked_signal_id)
 		if target_bearing >= 0.0:
 			var diff := fposmod(target_bearing - antenna_azimuth_deg + 180.0, 360.0) - 180.0
-			var step := signf(diff) * minf(absf(diff), auto_rotate_speed * 2.0 * delta)
+			var bw: float = float(active_config.get("bandwidth_hz", 1420.0))
+			var track_speed: float = auto_rotate_speed * 2.0 * maxf(0.2, bw / 1420.0)
+			var step := signf(diff) * minf(absf(diff), track_speed * delta)
 			antenna_azimuth_deg = fposmod(antenna_azimuth_deg + step, 360.0)
 			if antenna_heading_slider:
 				antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
@@ -397,7 +412,22 @@ func load_dat_configuration() -> void:
 	_apply_configuration()
 
 func _apply_configuration() -> void:
-	auto_rotate_speed = float(active_config.get("auto_rotate_speed", 45.0))
+	var base_rotate_speed := float(active_config.get("auto_rotate_speed", 45.0))
+	var bw := float(active_config.get("bandwidth_hz", 1420.0))
+	if bw > 0.0:
+		auto_rotate_speed = base_rotate_speed * maxf(0.2, bw / 1420.0)
+	else:
+		auto_rotate_speed = base_rotate_speed
+	
+	if bool(active_config.get("auto_tune_sos", false)) and not is_frequency_locked:
+		for sig in available_signals:
+			if sig.get("type") == "DERELICT" or "SOS" in str(sig.get("name", "")):
+				current_frequency = float(sig.get("freq", 850.5))
+				if freq_slider:
+					freq_slider.set_value_no_signal(current_frequency)
+				_refresh_tuner_state()
+				break
+	
 	_refresh_ui_display()
 	_update_action_log("Configurazione .DAT ricaricata con successo.")
 
@@ -521,23 +551,35 @@ func get_effective_signal_strength(sig: Dictionary) -> float:
 	var target_bearing: float = _get_signal_bearing(sig)
 	var delta_theta: float = get_angular_difference(antenna_azimuth_deg, target_bearing)
 	var cone_deg: float = float(active_config.get("reception_cone_deg", 25.0))
+	var amp: float = float(active_config.get("signal_amplification", 1.2))
+	var snr: float = float(active_config.get("signal_noise_ratio", 0.85))
 	
 	if is_auto_rotating and not is_frequency_locked:
-		# In auto-rotazione: raggio ridotto del 70% (max 800m) e rapporto SNR degradato con rumore
-		if dist > 800.0:
+		# In auto-rotazione: raggio ridotto del 70% (max 800m * amp) e rapporto SNR degradato con rumore
+		var max_sweep_dist: float = 800.0 * amp
+		if dist > max_sweep_dist:
 			return 0.0
-		var dist_factor: float = clampf(1.0 - (dist / 800.0) * 0.5, 0.3, 0.8)
-		return clampf(base_strength * 0.35 * dist_factor, 0.0, 1.0)
+		var dist_factor: float = clampf(1.0 - (dist / max_sweep_dist) * 0.5, 0.3, 0.8)
+		return clampf(base_strength * 0.35 * dist_factor * amp * snr, 0.0, 1.0)
 	
 	# Modalità manuale o frequency locked (focalizzata)
 	if delta_theta <= cone_deg:
 		var angle_factor: float = cos(deg_to_rad(delta_theta))
-		var dist_factor: float = clampf(1800.0 / maxf(dist, 400.0), 0.5, 1.2)
-		return clampf(base_strength * angle_factor * (dist_factor * 0.5 + 0.5), 0.0, 1.0)
+		var dist_factor: float = clampf((1800.0 * amp) / maxf(dist, 400.0), 0.5, 1.2)
+		return clampf(base_strength * angle_factor * (dist_factor * 0.5 + 0.5) * amp, 0.0, 1.0)
 	else:
 		# Fuori dal cono di ±25° il segnale cala drasticamente fino a zero/rumore
 		var falloff: float = maxf(0.0, cos(deg_to_rad(delta_theta))) * 0.05
-		return clampf(base_strength * falloff, 0.0, 1.0)
+		return clampf(base_strength * falloff * amp * (1.0 - snr), 0.0, 1.0)
+
+func get_signal_amplification() -> float:
+	return float(active_config.get("signal_amplification", 1.2))
+
+func get_bandwidth_hz() -> float:
+	return float(active_config.get("bandwidth_hz", 1420.0))
+
+func is_auto_tune_sos_enabled() -> bool:
+	return bool(active_config.get("auto_tune_sos", false))
 
 # --- CONTROLLI SETTORE SINISTRO: ANTENNA DIREZIONALE ---
 func _on_antenna_heading_changed(new_val: float) -> void:
@@ -646,7 +688,7 @@ func _on_connect_drive_pressed() -> void:
 	# Monta il Drive remoto bersaglio su GodotOS filesystem
 	var rdm := get_node_or_null("/root/RemoteDriveManager")
 	if rdm and rdm.has_method("mount_target_drive"):
-		rdm.mount_target_drive(target_ship_id)
+		rdm.mount_target_drive(target_ship_id, target_name)
 	else:
 		var target_drive_path := "user://files/Target Drive"
 		if not DirAccess.dir_exists_absolute(target_drive_path):

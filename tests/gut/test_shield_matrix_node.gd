@@ -21,6 +21,8 @@ func after_each() -> void:
 		SpaceWorldManager.clear_incoming_projectiles()
 
 func _start_solo_mission(player_name: String = "Comandante Test") -> void:
+	if SpaceWorldManager:
+		SpaceWorldManager.set_initial_spawn_docked(false)
 	NetworkManager.start_solo_game(player_name)
 	NetworkManager.start_mission()
 	await get_tree().process_frame

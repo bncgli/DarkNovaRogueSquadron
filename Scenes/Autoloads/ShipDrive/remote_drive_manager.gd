@@ -20,6 +20,7 @@ const BLIND_EYE_SENTINEL := "Cams/blind_eye.pid"
 const EIGHT_LOOPS_SENTINEL := "FlightControl/8loops.sys"
 const GOUT_SENTINEL := "FlightControl/gout.pid"
 const GOUT_FALLBACK_SENTINEL := "System/gout.pid"
+const DUMP_VAULT_SENTINEL := "DataVault/dump_vault.pid"
 
 var is_target_drive_mounted: bool = false
 var current_target_ship_id: String = ""
@@ -29,7 +30,8 @@ var active_exploits: Dictionary = {
 	"spammer": false,
 	"blind_eye": false,
 	"8loops": false,
-	"gout": false
+	"gout": false,
+	"dump_vault": false
 }
 
 var _poll_timer: float = 0.0
@@ -113,6 +115,10 @@ func mount_target_drive(target_ship_id: String, target_name: String = "Nave Bers
 		"Weapons"
 	]
 	
+	var is_courier := target_ship_id.containsn("COURIER") or target_ship_id.containsn("SNET") or target_name.containsn("Courier") or target_name.containsn("Hauler") or target_name.containsn("S-Net")
+	if is_courier:
+		subfolders.append("DataVault")
+	
 	for subf in subfolders:
 		var full_sub_path := "%s/%s" % [TARGET_DRIVE_ROOT_DIR, subf]
 		if not DirAccess.dir_exists_absolute(full_sub_path):
@@ -131,6 +137,8 @@ func mount_target_drive(target_ship_id: String, target_name: String = "Nave Bers
 			"Target Drive/LifeSupport": "LIFE-HOSTILE-55",
 			"Target Drive/Weapons": "WEAP-HOSTILE-77"
 		}
+		if is_courier:
+			default_pw["Target Drive/DataVault"] = "VAULT-SEC-88"
 		
 		# Applica custom_passwords se presenti
 		for k in custom_passwords:
@@ -280,6 +288,45 @@ torpedoes_loaded=8
 pdg_auto_intercept=true
 """)
 
+	var is_courier := ship_id.containsn("COURIER") or ship_id.containsn("SNET") or ship_name.containsn("Courier") or ship_name.containsn("Hauler") or ship_name.containsn("S-Net")
+	if is_courier:
+		_write_target_file("DataVault/corporate_ledger.dat", """# S-NET ENCRYPTED FINANCIAL LEDGER
+[LEDGER]
+corporation=Aegis Orbital Freight
+vault_id=VAULT-9912-QUANTUM
+decryption_key=AEGIS-LEDGER-771
+total_unsettled_flux=450000
+black_budget_accounts=3
+destination_station=Aegis Central Station
+authorization_hash=99fa8bc3e1
+""")
+
+		_write_target_file("DataVault/sector_jump_charts.dat", """# CLASSIFIED JUMP CORRIDOR COORDINATES
+[NAV_CHARTS]
+chart_id=CHART-DEEP-VOID
+decryption_key=VOID-CHART-409
+primary_coordinates=Vector3(12500.0, 450.0, -9800.0)
+derelict_graveyard_sector=Sector_Delta_9
+anomaly_spectral_type=EXOCRYSTAL_CORE
+""")
+
+		_write_target_file("DataVault/exploit_payload.dat", """# S-NET EXPERIMENTAL CYBER WARFARE PAYLOAD
+[EXPLOIT_PAYLOAD]
+payload_name=DumpVault
+target_architecture=QuantumCourier_v4
+decryption_key=VAULT-PURGE-884
+execution_sentinel=DataVault/dump_vault.pid
+effect=EMERGENCY_DATA_CORE_EJECTION
+""")
+
+		_write_target_file("DataVault/Manifest_SNet.txt", """=== S-NET SECURE TRANSPORT MANIFEST ===
+CONVOGLIO: Aegis Data Hauler
+MITTENTE: Aegis Information Directorate
+DESTINATARIO: Archivi Centrali Corporativi
+CARICO: 1x Banca Dati Quantistica Sigillata (Alta Sicurezza)
+AVVISO: In caso di intrusione EW o avaria critica, il sistema attiva il protocollo di espulsione di sicurezza del nucleo dati.
+""")
+
 ## Esegue l'attivazione di uno dei 4 exploit depositando il file sentinella
 func execute_exploit(exploit_type: String) -> bool:
 	if not is_target_drive_mounted:
@@ -311,6 +358,11 @@ func execute_exploit(exploit_type: String) -> bool:
 			var content := "# GOUT ANGULAR VELOCITY OVERRIDE PID FILE\nPID=%d\nEXPLOIT=GOUT\nSTATUS=ACTIVE\nTARGET=%s\nSTARTED_AT=%s\nANGULAR_LIMITERS=DISABLED\nG_FORCE_UNCLAMPED=TRUE\n" % [pid_id, current_target_ship_id, timestamp]
 			_write_target_file(GOUT_SENTINEL, content)
 			_apply_gout_effect_to_target(true)
+		
+		"dump_vault":
+			var content := "# DUMP_VAULT DATA PURGE PID FILE\nPID=%d\nEXPLOIT=DUMP_VAULT\nSTATUS=ACTIVE\nTARGET=%s\nSTARTED_AT=%s\nCARGO_DISGORGE=FORCED\n" % [pid_id, current_target_ship_id, timestamp]
+			_write_target_file(DUMP_VAULT_SENTINEL, content)
+			_apply_dump_vault_effect_to_target()
 		
 		_:
 			return false
@@ -362,6 +414,7 @@ func get_sentinel_path(exploit_type: String) -> String:
 		"blind_eye": return BLIND_EYE_SENTINEL
 		"8loops": return EIGHT_LOOPS_SENTINEL
 		"gout": return GOUT_SENTINEL
+		"dump_vault": return DUMP_VAULT_SENTINEL
 		_: return ""
 
 func is_sentinel_file_present(exploit_type: String) -> bool:
@@ -460,6 +513,11 @@ func _apply_gout_effect_to_target(active: bool) -> void:
 	var cruise := get_node_or_null("/root/CruiseDriveController")
 	if cruise and cruise.has_method("apply_gout_exploit"):
 		cruise.apply_gout_exploit(active)
+
+func _apply_dump_vault_effect_to_target() -> void:
+	var enemy := _find_target_enemy()
+	if enemy and enemy.has_method("apply_dump_vault_exploit"):
+		enemy.apply_dump_vault_exploit()
 
 func _find_target_enemy() -> EnemyShipAI:
 	if current_target_ship_id.is_empty():

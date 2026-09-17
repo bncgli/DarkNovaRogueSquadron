@@ -81,6 +81,12 @@ func _ready() -> void:
 
 	if SpaceWorldManager and SpaceWorldManager.has_method("is_hyperdrive_transit_active") and SpaceWorldManager.is_hyperdrive_transit_active():
 		set_hyperdrive_transition(true, SpaceWorldManager.get_hyperdrive_loading_progress())
+	
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_signal("ship_alert_condition_changed") and not SpaceWorldManager.ship_alert_condition_changed.is_connected(_on_ship_alert_condition_changed):
+			SpaceWorldManager.ship_alert_condition_changed.connect(_on_ship_alert_condition_changed)
+		if SpaceWorldManager.has_method("get_ship_alert_condition"):
+			_on_ship_alert_condition_changed(SpaceWorldManager.get_ship_alert_condition())
 
 ## Chiude la finestra del feed telecamera
 func close_window() -> void:
@@ -94,7 +100,22 @@ func _exit_tree() -> void:
 	_lidar_closest_distance = -1.0
 	if SpaceWorldManager and SpaceWorldManager.camera_headlight_toggled.is_connected(_on_global_headlight_changed):
 		SpaceWorldManager.camera_headlight_toggled.disconnect(_on_global_headlight_changed)
+	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_alert_condition_changed") and SpaceWorldManager.ship_alert_condition_changed.is_connected(_on_ship_alert_condition_changed):
+		SpaceWorldManager.ship_alert_condition_changed.disconnect(_on_ship_alert_condition_changed)
 	super._exit_tree()
+
+func _on_ship_alert_condition_changed(cond: int) -> void:
+	if status_info_label:
+		match cond:
+			2: # RED
+				status_info_label.text = "⚠️ ALLARME: CONDITION RED (PERICOLO CRITICO)"
+				status_info_label.modulate = Color(1.0, 0.25, 0.25)
+			1: # YELLOW
+				status_info_label.text = "⚠️ ALLARME: CONDITION YELLOW (ATTENZIONE)"
+				status_info_label.modulate = Color(1.0, 0.8, 0.2)
+			_:
+				status_info_label.text = "FEED TELECAMERA ATTIVO"
+				status_info_label.modulate = Color(0.3, 0.9, 0.5)
 
 ## Applica i parametri runtime caricati dal file .dat (APP_ARCHITECTURE_STANDARD.md)
 func apply_optics_config(config: Dictionary) -> void:

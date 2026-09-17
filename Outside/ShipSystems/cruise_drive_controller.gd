@@ -20,6 +20,8 @@ signal cruise_engaged()
 signal cruise_disengaged(reason: String)
 signal proximity_drop_triggered(obstacle_name: String, distance: float)
 signal power_state_changed(is_powered: bool, current_power: float, required_power: float)
+signal power_demand_updated(demand_mw: float)
+signal cruise_coils_draw_updated(draw_mw: float)
 signal alignment_updated(angle_deg: float, is_aligned: bool)
 signal rest_state_updated(current_speed: float, is_at_rest: bool)
 signal heat_penalty_applied(heat_amount: float, total_heat: float)
@@ -30,7 +32,7 @@ signal cruise_thrust_applied(forward_velocity: Vector3)
 @export var cruise_multiplier: float = 8.0
 @export var warmup_time_sec: float = 4.0
 @export var proximity_drop_distance: float = 250.0
-@export var heat_penalty: float = 45.0
+@export var heat_penalty: float = 60.0
 @export var required_power_mw: float = 160.0
 @export var max_rest_speed: float = 5.0
 @export var max_alignment_deg: float = 3.0
@@ -249,7 +251,11 @@ func update_power_from_blueprint() -> void:
 	var active_prop_rooms: int = 0
 	
 	for room in bp.rooms:
-		var is_on: bool = bool(room.get("is_on") if room is Dictionary else room.is_on)
+		var is_on: bool = true
+		if room is Dictionary:
+			is_on = bool(room.get("is_on", true))
+		elif "is_on" in room:
+			is_on = bool(room.get("is_on"))
 		var cat: String = str(room.get("category") if room is Dictionary else room.category).to_lower()
 		var r_id: String = str(room.get("id") if room is Dictionary else room.id).to_lower()
 		var r_name: String = str(room.get("name") if room is Dictionary else room.name).to_lower()
@@ -335,11 +341,12 @@ func abort_warmup(reason: String = "Warmup interrotto") -> void:
 		warmup_timer = 0.0
 		_change_state(State.IDLE)
 		cruise_disengaged.emit(reason)
+		if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
+			SpaceWorldManager.report_system_alert("WARMUP CROCIERA ABORTITO: " + reason)
 
 func engage_cruise() -> void:
 	var ship := get_spaceship()
-	var align_check := check_vector_alignment()
-	cruise_forward_direction = align_check["target_direction"] if has_target_destination else get_ship_forward_vector()
+	cruise_forward_direction = get_ship_forward_vector()
 	
 	_change_state(State.ENGAGED)
 	is_rcs_locked = true
@@ -347,7 +354,7 @@ func engage_cruise() -> void:
 	if ship and is_instance_valid(ship):
 		var base_speed: float = ship.max_linear_speed
 		target_cruise_speed = base_speed * cruise_multiplier
-		# Applica spinta iniziale di crociera sub-FTL
+		# Applica spinta iniziale di crociera sub-FTL lungo l'asse longitudinale
 		var fwd_dir := cruise_forward_direction.normalized()
 		ship.linear_velocity = fwd_dir * target_cruise_speed
 		ship.set_flight_inputs(Vector3(0, 0, -1.0), Vector3.ZERO)
@@ -366,9 +373,17 @@ func disengage(reason: String = "Disattivazione manuale", is_emergency: bool = f
 		cooldown_timer = emergency_cooldown_duration
 		_apply_heat_penalty(heat_penalty)
 		if ship and is_instance_valid(ship):
-			# Drop immediato a velocità ordinaria
-			ship.linear_velocity = ship.linear_velocity.limit_length(ship.max_linear_speed)
+			# Drop immediato a velocità sub-luce ordinaria (<= 20 m/s)
+			var cur_spd := ship.linear_velocity.length()
+			var target_spd: float = minf(cur_spd, 10.0 if cur_spd > 20.0 else ship.max_linear_speed)
+			if ship.linear_velocity.length_squared() > 0.001:
+				ship.linear_velocity = ship.linear_velocity.normalized() * target_spd
+			else:
+				ship.linear_velocity = Vector3.ZERO
 			ship.set_flight_inputs(Vector3.ZERO, Vector3.ZERO)
+			ship.current_g_force = -5.8
+		if SpaceWorldManager and SpaceWorldManager.has_method("set_ship_g_force"):
+			SpaceWorldManager.set_ship_g_force(-5.8)
 	else:
 		_change_state(State.COOLDOWN)
 		cooldown_timer = cooldown_duration
@@ -379,18 +394,38 @@ func disengage(reason: String = "Disattivazione manuale", is_emergency: bool = f
 	cruise_disengaged.emit(reason)
 
 func _apply_heat_penalty(amount: float) -> void:
-	current_heat += amount
-	heat_penalty_applied.emit(amount, current_heat)
+	var tol: float = 1.0
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_power_overclock_tolerance"):
+		tol = SpaceWorldManager.get_power_overclock_tolerance()
+	var effective_amount: float = amount / maxf(0.5, tol)
+	current_heat += effective_amount
+	heat_penalty_applied.emit(effective_amount, current_heat)
 	
 	# Notifica danno / calore nel sistema se possibile
 	if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
-		SpaceWorldManager.report_system_alert("SURRISCALDAMENTO PROPULSORI (+%.0f°C) PER PROXIMITY DROP!" % amount)
+		SpaceWorldManager.report_system_alert("SURRISCALDAMENTO PROPULSORI (+%.0f°C) PER PROXIMITY DROP!" % effective_amount)
 
 func _change_state(new_state: State) -> void:
 	if current_state != new_state:
 		var old := current_state
 		current_state = new_state
 		state_changed.emit(new_state, old)
+		var coils_draw: float = required_power_mw if (new_state == State.WARMUP or new_state == State.ENGAGED) else 0.0
+		cruise_coils_draw_updated.emit(coils_draw)
+		power_demand_updated.emit(coils_draw)
+		if SpaceWorldManager and SpaceWorldManager.has_signal("cruise_coils_draw_changed"):
+			SpaceWorldManager.cruise_coils_draw_changed.emit(coils_draw)
+
+func get_current_power_draw_mw() -> float:
+	if current_state == State.WARMUP or current_state == State.ENGAGED:
+		return required_power_mw
+	return 0.0
+
+func get_current_heat() -> float:
+	return current_heat
+
+func get_cooldown_remaining() -> float:
+	return cooldown_timer
 
 func _physics_process(delta: float) -> void:
 	# Raffreddamento termico graduale
@@ -490,6 +525,8 @@ func _check_proximity_hazards() -> void:
 
 func trigger_proximity_drop(obstacle_name: String, distance: float) -> void:
 	proximity_drop_triggered.emit(obstacle_name, distance)
+	if SpaceWorldManager and SpaceWorldManager.has_method("notify_proximity_drop"):
+		SpaceWorldManager.notify_proximity_drop(obstacle_name, distance)
 	disengage("PROXIMITY DROP: Rilevato %s a %.1fm" % [obstacle_name, distance], true)
 
 func _process_cooldown(delta: float) -> void:

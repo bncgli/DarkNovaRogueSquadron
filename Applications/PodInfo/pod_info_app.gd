@@ -72,8 +72,14 @@ var _cached_audio_streams: Dictionary = {}
 var overlay_layer: CanvasLayer = null
 var blackout_overlay: ColorRect = null
 var redout_overlay: ColorRect = null
+var alert_overlay: ColorRect = null
 var game_over_panel: Control = null
 var game_over_label: Label = null
+
+# --- ALLERTA GENERALE NAVE ---
+var alert_condition: int = 0
+var alert_audio: AudioStreamPlayer = null
+var _alert_pulse_timer: float = 0.0
 
 func _ready() -> void:
 	_init_procedural_audio()
@@ -84,6 +90,19 @@ func _ready() -> void:
 	_update_ui()
 
 func _exit_tree() -> void:
+	if SpaceWorldManager:
+		if SpaceWorldManager.ship_damage_taken.is_connected(_on_ship_damage_taken):
+			SpaceWorldManager.ship_damage_taken.disconnect(_on_ship_damage_taken)
+		if SpaceWorldManager.electrical_short_sparked.is_connected(_on_electrical_short_sparked):
+			SpaceWorldManager.electrical_short_sparked.disconnect(_on_electrical_short_sparked)
+		if SpaceWorldManager.duct_drone_position_updated.is_connected(_on_duct_drone_position_updated):
+			SpaceWorldManager.duct_drone_position_updated.disconnect(_on_duct_drone_position_updated)
+		if SpaceWorldManager.has_signal("cruise_proximity_drop_occurred") and SpaceWorldManager.cruise_proximity_drop_occurred.is_connected(_on_cruise_proximity_drop):
+			SpaceWorldManager.cruise_proximity_drop_occurred.disconnect(_on_cruise_proximity_drop)
+		if SpaceWorldManager.has_signal("weather_wave_impacted") and SpaceWorldManager.weather_wave_impacted.is_connected(_on_weather_wave_impacted):
+			SpaceWorldManager.weather_wave_impacted.disconnect(_on_weather_wave_impacted)
+		if SpaceWorldManager.has_signal("ship_alert_condition_changed") and SpaceWorldManager.ship_alert_condition_changed.is_connected(_on_ship_alert_condition_changed):
+			SpaceWorldManager.ship_alert_condition_changed.disconnect(_on_ship_alert_condition_changed)
 	if overlay_layer and is_instance_valid(overlay_layer):
 		overlay_layer.queue_free()
 		overlay_layer = null
@@ -106,6 +125,52 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.electrical_short_sparked.connect(_on_electrical_short_sparked)
 		if not SpaceWorldManager.duct_drone_position_updated.is_connected(_on_duct_drone_position_updated):
 			SpaceWorldManager.duct_drone_position_updated.connect(_on_duct_drone_position_updated)
+		if SpaceWorldManager.has_signal("cruise_proximity_drop_occurred") and not SpaceWorldManager.cruise_proximity_drop_occurred.is_connected(_on_cruise_proximity_drop):
+			SpaceWorldManager.cruise_proximity_drop_occurred.connect(_on_cruise_proximity_drop)
+		if SpaceWorldManager.has_signal("weather_wave_impacted") and not SpaceWorldManager.weather_wave_impacted.is_connected(_on_weather_wave_impacted):
+			SpaceWorldManager.weather_wave_impacted.connect(_on_weather_wave_impacted)
+		if SpaceWorldManager.has_signal("ship_alert_condition_changed") and not SpaceWorldManager.ship_alert_condition_changed.is_connected(_on_ship_alert_condition_changed):
+			SpaceWorldManager.ship_alert_condition_changed.connect(_on_ship_alert_condition_changed)
+		if SpaceWorldManager.has_method("get_ship_alert_condition"):
+			alert_condition = SpaceWorldManager.get_ship_alert_condition()
+			if alert_condition != 0 and alert_audio and not alert_audio.playing:
+				alert_audio.play()
+
+func _on_cruise_proximity_drop(_obstacle_name: String, _distance: float) -> void:
+	trigger_screen_shake(22.0, 1.2)
+	record_biometric_stress(45.0)
+	_play_spatial_ship_sound(bridge_pos, null, 6.0, "impact")
+
+func _on_weather_wave_impacted(_hazard_type: int, effective_exposure: float) -> void:
+	if effective_exposure > 0.15:
+		var intensity := 16.0 * effective_exposure
+		trigger_screen_shake(intensity, 1.0)
+		record_biometric_stress(35.0 * effective_exposure)
+		stress_level = clampf(stress_level + 0.4 * effective_exposure, 0.0, 1.0)
+		_play_spatial_ship_sound(bridge_pos, null, 5.0, "breach")
+
+func _on_ship_alert_condition_changed(cond: int) -> void:
+	var prev := alert_condition
+	alert_condition = cond
+	if cond == 2: # RED
+		if prev != 2:
+			record_biometric_stress(30.0)
+			trigger_screen_shake(8.0, 0.6)
+		if alert_audio and not alert_audio.playing:
+			alert_audio.play()
+	elif cond == 1: # YELLOW
+		if prev == 0:
+			record_biometric_stress(10.0)
+		if alert_audio and not alert_audio.playing:
+			alert_audio.play()
+	else:
+		if alert_audio and alert_audio.playing:
+			alert_audio.stop()
+		if alert_overlay:
+			alert_overlay.color.a = 0.0
+
+func get_alert_condition() -> int:
+	return alert_condition
 
 func _update_bridge_position() -> void:
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_bridge_position"):
@@ -281,11 +346,11 @@ func _on_ship_damage_taken(pos: Vector2, type: String) -> void:
 	match type:
 		"short_circuit", "spark":
 			s_name = "spark"
-		"breach", "decompression":
+		"decompression":
 			s_name = "decompression"
 		"fire", "fire_hiss":
 			s_name = "fire_hiss"
-		"impact", "ballistic", _:
+		"breach", "impact", "ballistic", _:
 			s_name = "impact"
 	
 	_play_spatial_ship_sound(pos, null, 0.0, s_name)
@@ -352,6 +417,13 @@ func _setup_overlay() -> void:
 	redout_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay_layer.add_child(redout_overlay)
 	
+	alert_overlay = ColorRect.new()
+	alert_overlay.name = "AlertOverlay"
+	alert_overlay.color = Color(1.0, 0.05, 0.05, 0)
+	alert_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	alert_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay_layer.add_child(alert_overlay)
+	
 	game_over_panel = _create_game_over_panel()
 	game_over_panel.visible = false
 	overlay_layer.add_child(game_over_panel)
@@ -405,6 +477,17 @@ func _update_overlay_visuals() -> void:
 	if redout_overlay:
 		var red_alpha := clampf(redout_intensity * 0.85 + (stress_level * 0.25), 0.0, 0.95)
 		redout_overlay.color.a = red_alpha
+	if alert_overlay:
+		if alert_condition == 2: # RED
+			_alert_pulse_timer += get_process_delta_time()
+			var pulse := (sin(_alert_pulse_timer * 4.0) * 0.5 + 0.5)
+			alert_overlay.color = Color(0.95, 0.05, 0.05, 0.06 + pulse * 0.16)
+		elif alert_condition == 1: # YELLOW
+			_alert_pulse_timer += get_process_delta_time()
+			var pulse := (sin(_alert_pulse_timer * 2.0) * 0.5 + 0.5)
+			alert_overlay.color = Color(0.95, 0.75, 0.1, 0.03 + pulse * 0.06)
+		else:
+			alert_overlay.color.a = 0.0
 
 func _trigger_game_over(reason: String) -> void:
 	if is_game_over:
@@ -449,6 +532,14 @@ func _init_procedural_audio() -> void:
 	_cached_audio_streams["drone_hum"] = _create_drone_hum_stream()
 	_cached_audio_streams["decompression"] = _create_decompression_stream()
 	_cached_audio_streams["fire_hiss"] = _create_fire_hiss_stream()
+	_cached_audio_streams["siren"] = _create_siren_stream()
+	
+	alert_audio = AudioStreamPlayer.new()
+	alert_audio.name = "AlertSirenAudio"
+	alert_audio.bus = &"DiegeticMuffled" if AudioServer.get_bus_index("DiegeticMuffled") != -1 else &"Master"
+	alert_audio.stream = _cached_audio_streams["siren"]
+	alert_audio.volume_db = -10.0
+	add_child(alert_audio)
 
 static func _create_pcm_wav(duration: float, generator_fn: Callable, mix_rate: int = 22050) -> AudioStreamWAV:
 	var wav := AudioStreamWAV.new()
@@ -529,6 +620,15 @@ static func _create_fire_hiss_stream() -> AudioStreamWAV:
 		return (noise * 0.5 + crackle * 0.5) * sin(PI * t / dur)
 	)
 
+static func _create_siren_stream() -> AudioStreamWAV:
+	var wav := _create_pcm_wav(1.0, func(t: float, dur: float) -> float:
+		var freq := 500.0 + sin(2.0 * PI * 1.5 * t) * 150.0
+		var tone := sin(2.0 * PI * freq * t)
+		return tone * 0.4 * sin(PI * t / dur)
+	)
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	return wav
+
 # --- SCREEN SHAKE & BIOMETRIC ACTIONS ---
 
 ## Attiva lo scuotimento dello schermo (Screen Shake diegetico) con decadimento smorzato
@@ -575,6 +675,9 @@ func _apply_shake_offset(offset: Vector2) -> void:
 ## Restituisce l'offset istantaneo dello shake
 func get_screen_shake_offset() -> Vector2:
 	return _shake_offset
+
+func get_shake_intensity() -> float:
+	return _shake_intensity
 
 ## Incrementa i parametri di stress e battito cardiaco all'impatto o guasto
 func record_biometric_stress(added_stress: float = 25.0) -> void:

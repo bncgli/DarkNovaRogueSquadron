@@ -65,13 +65,17 @@ const DEVICE_CATEGORIES: Array[String] = ["command", "propulsion", "life_support
 ## - 300 FLUX liquidi disponibili
 ## - Modificatore passivo vincolato di -700 FLUX ("Ship Rent Service") per canone noleggio scafo
 func setup_default_freemium_debt() -> void:
-	if flux == 100:
+	if flux == 100 or flux == 0:
 		flux = 300
+	var found := false
 	for mod in flux_modifiers:
 		if mod is ShipFluxModifier and mod.owner == "Ship Rent Service":
-			return
-	var rent_mod := ShipFluxModifier.new(-700, "Ship Rent Service", "Canone noleggio scafo")
-	flux_modifiers.append(rent_mod)
+			mod.value = -700
+			found = true
+			break
+	if not found:
+		var rent_mod := ShipFluxModifier.new(-700, "Ship Rent Service", "Canone noleggio scafo")
+		flux_modifiers.append(rent_mod)
 	emit_changed()
 
 ## Ritorna il debito residuo del canone noleggio scafo
@@ -81,6 +85,14 @@ func get_rent_debt() -> int:
 		if mod is ShipFluxModifier and mod.owner == "Ship Rent Service":
 			total_rent += absi(mod.value)
 	return total_rent
+
+## Ritorna il saldo netto contabile (FLUX liquidi + somma algebrica dei modificatori)
+func get_net_flux() -> int:
+	var net: int = flux
+	for mod in flux_modifiers:
+		if mod is ShipFluxModifier:
+			net += mod.value
+	return net
 
 ## Ripiana una quota del debito di noleggio scalando dal saldo liquido disponibile
 func repay_rent_debt(amount: int) -> int:

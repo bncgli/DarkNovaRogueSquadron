@@ -84,6 +84,24 @@ var item_templates: Dictionary = {
 			"market_intel": "Domanda record per leghe durasteel nel settore Aegis."
 		}
 	},
+	"snet_quantum_core": {
+		"id": "snet_quantum_core",
+		"name": "Banca Dati S-Net Crittografata",
+		"category": "DATA_CORE",
+		"unit_mass_kg": 35.0,
+		"unit_volume_m3": 0.8,
+		"unit_base_value": 1800.0,
+		"is_contraband": false,
+		"is_snet_disk": true,
+		"is_scavenged": true,
+		"description": "Banca dati quantistica asportata da un corriere dati S-Net. Contiene archivi corporativi di inestimabile valore FLUX.",
+		"metadata": {
+			"ice_strength": 4,
+			"ice_broken": false,
+			"encrypted_files": ["corporate_ledger.dat", "sector_jump_charts.dat", "exploit_payload.dat"],
+			"corporation": "Aegis Orbital Freight"
+		}
+	},
 	"contraband_synth_narcotics": {
 		"id": "contraband_synth_narcotics",
 		"name": "Narcotici Sintetici Sigillati",
@@ -362,7 +380,7 @@ func clear_cargo() -> void:
 func get_scavenged_items() -> Array[CargoItemData]:
 	var scavenged: Array[CargoItemData] = []
 	for item in cargo_items:
-		if bool(item.is_scavenged) or item.category in ["SCAVENGED", "WRECK_COMPONENT", "SALVAGE"]:
+		if bool(item.is_scavenged) or item.category in ["SCAVENGED", "WRECK_COMPONENT", "SALVAGE", "DATA_CORE"]:
 			scavenged.append(item)
 	return scavenged
 
@@ -382,8 +400,8 @@ func calculate_scavenged_value(multiplier: float = 1.0) -> Dictionary:
 		total_vol += item.get_total_volume()
 		if item.metadata.has("flux_potential"):
 			total_flux += float(item.metadata["flux_potential"]) * float(item.quantity)
-		elif item.category in ["WRECK_COMPONENT", "SALVAGE"]:
-			total_flux += float(item.quantity) * 5.0
+		elif item.category in ["WRECK_COMPONENT", "SALVAGE", "DATA_CORE"]:
+			total_flux += float(item.quantity) * (50.0 if item.category == "DATA_CORE" else 5.0)
 			
 	return {
 		"credits": total_credits,

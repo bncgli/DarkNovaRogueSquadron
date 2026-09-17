@@ -382,7 +382,10 @@ func test_camera_shader_multi_window_independence() -> void:
 	assert_false(rear_win.filter_rect.visible, "Rear FilterColorRect deve essere nascosto in modalita' Lidar")
 	assert_true(front_win.lidar_overlay.visible, "Front LidarOverlay deve essere visibile")
 	assert_true(rear_win.lidar_overlay.visible, "Rear LidarOverlay deve essere visibile")
+	
+	front_win._lidar_points.append({"pos": Vector2(10, 10), "dist": 25.0, "color": Color.RED})
 	assert_ne(front_win._lidar_points, rear_win._lidar_points, "I punti Lidar delle due finestre devono essere memorizzati in array distinti")
+	front_win._lidar_points.clear()
 
 func test_lidar_depth_color_gradient() -> void:
 	await _start_solo_mission()
@@ -405,6 +408,13 @@ func test_lidar_depth_color_gradient() -> void:
 
 func test_lidar_obstacle_detection_and_ship_exclusion() -> void:
 	await _start_solo_mission()
+	var ship := SpaceWorldManager.get_spaceship()
+	if ship:
+		ship.global_position = Vector3(0, 0, 1500)
+		ship.linear_velocity = Vector3.ZERO
+		ship.rotation = Vector3.ZERO
+	await get_tree().physics_frame
+	
 	var feed_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
 	assert_not_null(feed_win, "La finestra front deve essere aperta")
 	
@@ -419,7 +429,8 @@ func test_lidar_obstacle_detection_and_ship_exclusion() -> void:
 	box.size = Vector3(10, 10, 2)
 	col_shape.shape = box
 	obstacle.add_child(col_shape)
-	obstacle.position = Vector3(0, 0.25, -15.0)
+	var front_cam_trans: Transform3D = SpaceWorldManager.get_camera_transform("front")
+	obstacle.position = front_cam_trans.origin + front_cam_trans.basis * Vector3(0, 0, -15.0)
 	
 	var world_3d := SpaceWorldManager.get_world_3d()
 	assert_not_null(world_3d, "Il World3D condiviso deve esistere")
@@ -434,7 +445,6 @@ func test_lidar_obstacle_detection_and_ship_exclusion() -> void:
 	assert_between(feed_win._lidar_closest_distance, 10.0, 16.0, "La distanza minima rilevata deve corrispondere alla posizione dell'ostacolo")
 	
 	# Verifica che lo scafo della Spaceship non generi collisioni fantasma
-	var ship := SpaceWorldManager.get_spaceship()
 	assert_not_null(ship, "La nave del giocatore deve esistere")
 	var ship_rid := ship.get_rid()
 	for pt in feed_win._lidar_points:
@@ -444,6 +454,13 @@ func test_lidar_obstacle_detection_and_ship_exclusion() -> void:
 
 func test_lidar_multi_window_direction_independence() -> void:
 	await _start_solo_mission()
+	var ship := SpaceWorldManager.get_spaceship()
+	if ship:
+		ship.global_position = Vector3(0, 0, 1500)
+		ship.linear_velocity = Vector3.ZERO
+		ship.rotation = Vector3.ZERO
+	await get_tree().physics_frame
+	
 	var front_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("front") as CameraFeedWindow
 	var rear_win: CameraFeedWindow = SpaceWorldManager.open_camera_window("rear") as CameraFeedWindow
 	assert_not_null(front_win, "La finestra front deve aprirsi")
@@ -462,7 +479,8 @@ func test_lidar_multi_window_direction_independence() -> void:
 	box.size = Vector3(15, 15, 2)
 	col_shape.shape = box
 	front_obstacle.add_child(col_shape)
-	front_obstacle.position = Vector3(0, 0.25, -18.0)
+	var front_cam_trans: Transform3D = SpaceWorldManager.get_camera_transform("front")
+	front_obstacle.position = front_cam_trans.origin + front_cam_trans.basis * Vector3(0, 0, -18.0)
 	SpaceWorldManager._space_scene_instance.add_child(front_obstacle)
 	
 	await get_tree().physics_frame
@@ -476,7 +494,7 @@ func test_lidar_multi_window_direction_independence() -> void:
 	assert_lt(front_win._lidar_closest_distance, 20.0, "La telecamera Frontale deve agganciare l'ostacolo anteriore a distanza ravvicinata")
 	
 	# La telecamera Posteriore punta all'indietro (+Z) e non deve vedere l'ostacolo anteriore (< 30m)
-	assert_gt(rear_win._lidar_closest_distance, 40.0, "La telecamera Posteriore non deve rilevare l'ostacolo anteriore ravvicinato")
+	assert_true(rear_win._lidar_closest_distance == -1.0 or rear_win._lidar_closest_distance > 40.0, "La telecamera Posteriore non deve rilevare l'ostacolo anteriore ravvicinato")
 	
 	front_obstacle.queue_free()
 

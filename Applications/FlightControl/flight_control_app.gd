@@ -76,9 +76,15 @@ var _speed_multiplier: float = 1.0
 # Smorzamento inerziale attivo di default
 var is_inertia_enabled: bool = true
 
-# Velocità di crociera attiva (aumenta velocità massima a x5 e si muove avanti nella direzione corrente)
+# Velocità di crociera attiva (aumenta velocità massima a x8 e si muove avanti nella direzione corrente)
 var is_cruise_enabled: bool = false
-const CRUISE_SPEED_MULTIPLIER: float = 5.0
+const CRUISE_SPEED_MULTIPLIER: float = 8.0
+
+var cruise_drive_state: int = 0
+var cruise_warmup_ratio: float = 0.0
+var cruise_warmup_current_time: float = 0.0
+var cruise_warmup_total_time: float = 4.0
+var cruise_last_error_reason: String = ""
 
 # Configurazione attiva di volo estratta dai file .dat o da valori di calibrazione di fabbrica
 var active_config: Dictionary = {
@@ -131,6 +137,19 @@ func _connect_system_signals() -> void:
 		SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 		if SpaceWorldManager.has_signal("ship_system_power_changed"):
 			SpaceWorldManager.ship_system_power_changed.connect(_on_system_power_changed)
+		if SpaceWorldManager.has_method("get_cruise_drive_controller"):
+			var cdc := SpaceWorldManager.get_cruise_drive_controller()
+			if cdc:
+				if cdc.has_signal("warmup_progress_updated") and not cdc.warmup_progress_updated.is_connected(_on_cruise_warmup_progress):
+					cdc.warmup_progress_updated.connect(_on_cruise_warmup_progress)
+				if cdc.has_signal("cruise_engaged") and not cdc.cruise_engaged.is_connected(_on_cruise_engaged):
+					cdc.cruise_engaged.connect(_on_cruise_engaged)
+				if cdc.has_signal("cruise_disengaged") and not cdc.cruise_disengaged.is_connected(_on_cruise_disengaged):
+					cdc.cruise_disengaged.connect(_on_cruise_disengaged)
+				if cdc.has_signal("proximity_drop_triggered") and not cdc.proximity_drop_triggered.is_connected(_on_cruise_proximity_drop):
+					cdc.proximity_drop_triggered.connect(_on_cruise_proximity_drop)
+				if cdc.has_signal("state_changed") and not cdc.state_changed.is_connected(_on_cruise_state_changed):
+					cdc.state_changed.connect(_on_cruise_state_changed)
 	if NetworkManager:
 		NetworkManager.player_role_changed.connect(_on_player_role_changed)
 	if StarSystemGridManager:
@@ -154,6 +173,19 @@ func _exit_tree() -> void:
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 		if SpaceWorldManager.has_signal("ship_system_power_changed") and SpaceWorldManager.ship_system_power_changed.is_connected(_on_system_power_changed):
 			SpaceWorldManager.ship_system_power_changed.disconnect(_on_system_power_changed)
+		if SpaceWorldManager.has_method("get_cruise_drive_controller"):
+			var cdc := SpaceWorldManager.get_cruise_drive_controller()
+			if cdc:
+				if cdc.has_signal("warmup_progress_updated") and cdc.warmup_progress_updated.is_connected(_on_cruise_warmup_progress):
+					cdc.warmup_progress_updated.disconnect(_on_cruise_warmup_progress)
+				if cdc.has_signal("cruise_engaged") and cdc.cruise_engaged.is_connected(_on_cruise_engaged):
+					cdc.cruise_engaged.disconnect(_on_cruise_engaged)
+				if cdc.has_signal("cruise_disengaged") and cdc.cruise_disengaged.is_connected(_on_cruise_disengaged):
+					cdc.cruise_disengaged.disconnect(_on_cruise_disengaged)
+				if cdc.has_signal("proximity_drop_triggered") and cdc.proximity_drop_triggered.is_connected(_on_cruise_proximity_drop):
+					cdc.proximity_drop_triggered.disconnect(_on_cruise_proximity_drop)
+				if cdc.has_signal("state_changed") and cdc.state_changed.is_connected(_on_cruise_state_changed):
+					cdc.state_changed.disconnect(_on_cruise_state_changed)
 		SpaceWorldManager.stop_spaceship_engines()
 	if NetworkManager:
 		if NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
@@ -168,6 +200,47 @@ func _exit_tree() -> void:
 			sdm.file_synced.disconnect(_on_file_synced)
 		if sdm.has_signal("ship_drive_mounted") and sdm.ship_drive_mounted.is_connected(_on_ship_drive_mounted):
 			sdm.ship_drive_mounted.disconnect(_on_ship_drive_mounted)
+
+func _get_cruise_controller() -> CruiseDriveController:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_cruise_drive_controller"):
+		return SpaceWorldManager.get_cruise_drive_controller()
+	return null
+
+func _on_cruise_warmup_progress(current_time: float, total_time: float, ratio: float) -> void:
+	cruise_warmup_current_time = current_time
+	cruise_warmup_total_time = total_time
+	cruise_warmup_ratio = ratio
+	cruise_drive_state = 1
+	_update_cruise_button()
+	_update_permissions()
+
+func _on_cruise_engaged() -> void:
+	is_cruise_enabled = true
+	cruise_drive_state = 2
+	cruise_warmup_ratio = 1.0
+	_update_cruise_button()
+	_update_permissions()
+
+func _on_cruise_disengaged(reason: String) -> void:
+	is_cruise_enabled = false
+	cruise_warmup_ratio = 0.0
+	cruise_last_error_reason = reason
+	_update_cruise_button()
+	_update_permissions()
+
+func _on_cruise_proximity_drop(obstacle_name: String, distance: float) -> void:
+	is_cruise_enabled = false
+	cruise_last_error_reason = "PROXIMITY DROP: %s a %.1fm" % [obstacle_name, distance]
+	_update_cruise_button()
+	_update_permissions()
+
+func _on_cruise_state_changed(new_state: int, _old_state: int) -> void:
+	cruise_drive_state = new_state
+	is_cruise_enabled = (new_state == 2)
+	if new_state != 1:
+		cruise_warmup_ratio = 0.0
+	_update_cruise_button()
+	_update_permissions()
 
 func _get_ship_drive_manager() -> Node:
 	return get_node_or_null("/root/ShipDriveManager")
@@ -266,17 +339,42 @@ func _update_permissions() -> void:
 			if is_aligning_hyperdrive:
 				thrusters_badge.text = "ALLINEAMENTO ROTTA"
 				thrusters_badge.modulate = Color(1.0, 0.8, 0.2)
-			elif is_cruise_enabled:
-				thrusters_badge.text = "CROCIERA ATTIVA"
+			elif is_cruise_enabled or cruise_drive_state == 2:
+				thrusters_badge.text = "CROCIERA ATTIVA (160 m/s)"
 				thrusters_badge.modulate = Color(0.2, 1.0, 0.5)
+			elif cruise_drive_state == 1:
+				thrusters_badge.text = "WARMUP CROCIERA (%.0f%%)" % (cruise_warmup_ratio * 100.0)
+				thrusters_badge.modulate = Color(0.2, 0.85, 1.0)
+			elif cruise_drive_state == 3:
+				var cdc := _get_cruise_controller()
+				var cd_t: float = cdc.get_cooldown_remaining() if cdc else 0.0
+				thrusters_badge.text = "COOLDOWN CROCIERA (%.1fs)" % cd_t
+				thrusters_badge.modulate = Color(1.0, 0.6, 0.2)
+			elif cruise_drive_state == 4:
+				var cdc := _get_cruise_controller()
+				var cd_t: float = cdc.get_cooldown_remaining() if cdc else 0.0
+				thrusters_badge.text = "🚨 PROXIMITY DROP (%.1fs)" % cd_t
+				thrusters_badge.modulate = Color(1.0, 0.25, 0.25)
 			else:
 				thrusters_badge.text = "PROPULSORI PRONTI"
 				thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
 		if status_summary_label:
 			if is_aligning_hyperdrive:
 				status_summary_label.text = "ALLINEAMENTO HYPERDRIVE AUTOMATICO (Controlli manuali temporaneamente bloccati)"
-			elif is_cruise_enabled:
-				status_summary_label.text = "VELOCITÀ DI CROCIERA ATTIVA (Rotta rettilinea bloccata - controlli manuali esclusi)"
+			elif is_cruise_enabled or cruise_drive_state == 2:
+				status_summary_label.text = "VELOCITÀ DI CROCIERA ATTIVA (160 m/s - 8.0x, Rotta bloccata - attuatori RCS esclusi)"
+			elif cruise_drive_state == 1:
+				status_summary_label.text = "WARMUP CROCIERA IN CORSO (160 MW) - Mantenere quiete (<5 m/s) e allineamento (<=3°)"
+			elif cruise_drive_state == 3:
+				var cdc := _get_cruise_controller()
+				var cd_t: float = cdc.get_cooldown_remaining() if cdc else 0.0
+				status_summary_label.text = "Cooldown termico propulsori in corso (%.1fs rimanenti)" % cd_t
+			elif cruise_drive_state == 4:
+				var cdc := _get_cruise_controller()
+				var cd_t: float = cdc.get_cooldown_remaining() if cdc else 0.0
+				status_summary_label.text = "🚨 ARRESTO D'EMERGENZA: Proximity Drop (Frenata -5.8G) - Riavvio bloccato per %.1fs" % cd_t
+			elif not cruise_last_error_reason.is_empty():
+				status_summary_label.text = "Ingaggio rifiutato: %s | WASD: Volo ordinario" % cruise_last_error_reason
 			else:
 				status_summary_label.text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
 
@@ -512,8 +610,10 @@ func _physics_process(_delta: float) -> void:
 
 func _update_telemetry_display(speed: float, pos: Vector3, rot: Vector3) -> void:
 	if speed_value_label:
-		if is_cruise_enabled:
-			speed_value_label.text = "%.1f m/s (5.0x CROCIERA)" % [speed]
+		if is_cruise_enabled or cruise_drive_state == 2:
+			speed_value_label.text = "%.1f m/s (8.0x CROCIERA)" % [speed]
+		elif cruise_drive_state == 1:
+			speed_value_label.text = "%.1f m/s (WARMUP %.0f%%)" % [speed, cruise_warmup_ratio * 100.0]
 		else:
 			speed_value_label.text = "%.1f m/s (%.1fx)" % [speed, _speed_multiplier]
 	if speed_progress_bar:
@@ -554,12 +654,41 @@ func _update_inertia_button() -> void:
 func _on_cruise_toggle_pressed() -> void:
 	if not can_control_flight or is_aligning_hyperdrive:
 		return
-	set_cruise_enabled(not is_cruise_enabled)
+	var cdc := _get_cruise_controller()
+	if cdc:
+		if cdc.current_state == CruiseDriveController.State.IDLE:
+			var res := cdc.request_engage()
+			if not res.get("success", false):
+				var reason: String = str(res.get("reason", "Condizioni di ingaggio non soddisfatte"))
+				cruise_last_error_reason = reason
+				if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
+					SpaceWorldManager.report_system_alert("INGAGGIO CROCIERA NEGATO: " + reason)
+				_update_cruise_button()
+				_update_permissions()
+		elif cdc.current_state == CruiseDriveController.State.WARMUP:
+			cdc.abort_warmup("Annullato dal pilota")
+		elif cdc.current_state == CruiseDriveController.State.ENGAGED:
+			cdc.disengage("Disattivazione manuale pilota", false)
+	else:
+		set_cruise_enabled(not is_cruise_enabled)
 
 func set_cruise_enabled(enabled: bool) -> void:
 	if (not can_control_flight or is_aligning_hyperdrive) and enabled:
 		return
-	is_cruise_enabled = enabled
+	var cdc := _get_cruise_controller()
+	if cdc:
+		if enabled:
+			if cdc.current_state != CruiseDriveController.State.ENGAGED:
+				if not cdc.get_is_powered():
+					cdc.set_cruise_coils_power(cdc.required_power_mw)
+				cdc.engage_cruise()
+			is_cruise_enabled = true
+		else:
+			if cdc.current_state in [CruiseDriveController.State.WARMUP, CruiseDriveController.State.ENGAGED]:
+				cdc.disengage("Disattivazione manuale", false)
+			is_cruise_enabled = false
+	else:
+		is_cruise_enabled = enabled
 	_ui_linear_input = Vector3.ZERO
 	_ui_angular_input = Vector3.ZERO
 	_update_cruise_button()
@@ -571,11 +700,26 @@ func set_cruise_enabled(enabled: bool) -> void:
 			ship.angular_velocity = Vector3.ZERO
 
 func _update_cruise_button() -> void:
-	if cruise_toggle_button:
-		if is_cruise_enabled:
-			cruise_toggle_button.text = "VELOCITÀ CROCIERA: ON"
+	if not cruise_toggle_button:
+		return
+	var cdc := _get_cruise_controller()
+	var st: int = cdc.current_state if cdc else (2 if is_cruise_enabled else 0)
+	match st:
+		1: # WARMUP
+			cruise_toggle_button.text = "WARMUP CROCIERA: %.1f/%.1fs (%.0f%%)" % [cruise_warmup_current_time, cruise_warmup_total_time, cruise_warmup_ratio * 100.0]
+			cruise_toggle_button.modulate = Color(0.2, 0.85, 1.0)
+		2: # ENGAGED
+			cruise_toggle_button.text = "CROCIERA ATTIVA (160 m/s - 8.0x) [STOP]"
 			cruise_toggle_button.modulate = Color(0.2, 1.0, 0.5)
-		else:
+		3: # COOLDOWN
+			var cd_rem: float = cdc.get_cooldown_remaining() if cdc else 0.0
+			cruise_toggle_button.text = "COOLDOWN CROCIERA (%.1fs)" % cd_rem
+			cruise_toggle_button.modulate = Color(1.0, 0.6, 0.2)
+		4: # EMERGENCY_DROP
+			var cd_rem: float = cdc.get_cooldown_remaining() if cdc else 0.0
+			cruise_toggle_button.text = "EMERGENCY DROP (%.1fs)" % cd_rem
+			cruise_toggle_button.modulate = Color(1.0, 0.25, 0.25)
+		_: # IDLE
 			cruise_toggle_button.text = "VELOCITÀ CROCIERA: OFF"
 			cruise_toggle_button.modulate = Color(1.0, 0.4, 0.2)
 

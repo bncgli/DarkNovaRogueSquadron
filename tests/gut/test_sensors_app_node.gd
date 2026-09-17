@@ -8,6 +8,15 @@ var _app: SensorsApp = null
 
 func before_each() -> void:
 	NetworkManager.disconnect_game()
+	if SpaceWorldManager:
+		SpaceWorldManager.clear_active_probes()
+		SpaceWorldManager.clear_active_waypoint()
+		SpaceWorldManager.abort_active_weather()
+		var ship := SpaceWorldManager.get_spaceship()
+		if ship and is_instance_valid(ship):
+			ship.global_position = Vector3.ZERO
+			ship.linear_velocity = Vector3.ZERO
+			ship.rotation = Vector3.ZERO
 
 func after_each() -> void:
 	if is_instance_valid(_app):
@@ -427,6 +436,14 @@ func test_radar_3d_zoom_range_control() -> void:
 func test_nearby_obstacles_within_500m_visibility_and_shadow_zones() -> void:
 	_app = await _create_app()
 	await _start_solo_mission()
+	
+	if SpaceWorldManager:
+		SpaceWorldManager.register_discovered_poi({
+			"id": "TEST_NEAR_ASTEROID",
+			"pos": Vector3(0, 0, -250),
+			"type": "ASTEROID",
+			"name": "Asteroide Test"
+		})
 	
 	_app._refresh_entities()
 	await get_tree().process_frame

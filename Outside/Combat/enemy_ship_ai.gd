@@ -11,6 +11,7 @@ signal weapon_fired(weapon_type: String, origin: Vector3, target_pos: Vector3, d
 signal health_changed(current_health: float, max_health: float, current_shield: float)
 signal ship_destroyed(ship_id: String, ship_type: String, position: Vector3)
 signal ew_effect_applied(effect_type: String, duration: float)
+signal data_vault_jettisoned(ship_id: String, container_pos: Vector3)
 
 enum AIState {
 	PATROL,
@@ -24,7 +25,8 @@ enum AIState {
 enum ShipType {
 	PIRATE_FIGHTER,
 	HOSTILE_DRONE,
-	PATROL_CORVETTE
+	PATROL_CORVETTE,
+	DATA_COURIER
 }
 
 # --- CONFIGURAZIONE NAVE ---
@@ -89,6 +91,10 @@ var gout_spin_speed: float = 0.0
 var g_force_accumulated: float = 1.0
 var is_crew_blackout: bool = false
 
+# Caveau Dati S-Net
+var has_data_vault: bool = false
+var is_vault_jettisoned: bool = false
+
 func _ready() -> void:
 	add_to_group("enemy_ships")
 	add_to_group("scannable_entities")
@@ -127,6 +133,26 @@ func _setup_ship_parameters() -> void:
 			torpedo_damage = 60.0
 			torpedo_cooldown = 4.5
 			retreat_health_threshold = 15.0
+		ShipType.DATA_COURIER:
+			ship_name = "S-Net Data Courier " + ship_id
+			max_health = 180.0
+			max_shield = 120.0
+			max_speed = 32.0
+			acceleration = 14.0
+			turn_speed = 1.6
+			comms_frequency = 1920.0
+			signal_signature = 0.95
+			iff_tag = "COURIER"
+			composition = {
+				"Blindatura Cifrata": 50.0,
+				"Banca Dati Quantistica": 30.0,
+				"Motori Sub-Luce": 20.0
+			}
+			primary_damage = 8.0
+			primary_cooldown = 2.0
+			torpedo_cooldown = 0.0
+			retreat_health_threshold = 40.0
+			has_data_vault = true
 		ShipType.PIRATE_FIGHTER, _:
 			ship_name = "Pirate Fighter " + ship_id
 			max_health = 90.0
@@ -445,6 +471,10 @@ func take_damage(amount: float, is_emp: bool = false) -> Dictionary:
 
 	health_changed.emit(current_health, max_health, current_shield)
 
+	# Se il corriere dati subisce danni critici allo scafo, espelle il caveau dati
+	if ship_type == ShipType.DATA_COURIER and current_health <= 60.0 and has_data_vault and not is_vault_jettisoned:
+		jettison_data_vault()
+
 	if current_health <= 0.0:
 		ship_destroyed.emit(ship_id, ShipType.keys()[ship_type], global_position)
 		if get_parent():
@@ -503,6 +533,49 @@ func apply_gout_exploit(active: bool) -> void:
 		if not is_jammed and not is_blind_eye_active:
 			accuracy_penalty = 0.0
 	ew_effect_applied.emit("GOUT", 999.0 if active else 0.0)
+
+## Esegue l'exploit hacker 'dump_vault' forzando l'espulsione immediata del caveau dati S-Net
+func apply_dump_vault_exploit() -> CargoContainerEntity:
+	ew_effect_applied.emit("DUMP_VAULT", 999.0)
+	return jettison_data_vault()
+
+## Espelle fisicamente il caveau dati S-Net come CargoContainerEntity nello spazio
+func jettison_data_vault() -> CargoContainerEntity:
+	if is_vault_jettisoned:
+		return null
+	is_vault_jettisoned = true
+	var container := CargoContainerEntity.new()
+	container.name = "SNet_DataVault_" + ship_id
+	container.container_id = "DATA_CORE_" + ship_id
+	container.container_name = "Banca Dati S-Net Crittografata"
+	container.mass_kg = 35.0
+	container.volume_m3 = 0.8
+	container.item_data = {
+		"id": "snet_quantum_core",
+		"name": "Banca Dati S-Net Crittografata",
+		"category": "DATA_CORE",
+		"unit_mass_kg": 35.0,
+		"unit_volume_m3": 0.8,
+		"unit_base_value": 1800.0,
+		"quantity": 1,
+		"is_contraband": false,
+		"is_scavenged": true
+	}
+	var fwd := -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var spawn_pos: Vector3 = (global_position if is_inside_tree() else Vector3.ZERO) + (fwd * 4.0)
+	
+	if get_parent():
+		get_parent().add_child(container)
+	elif is_inside_tree() and get_tree().current_scene:
+		get_tree().current_scene.add_child(container)
+	
+	if container.is_inside_tree():
+		container.global_position = spawn_pos
+	else:
+		container.position = spawn_pos
+	
+	data_vault_jettisoned.emit(ship_id, spawn_pos)
+	return container
 
 func get_tactical_status() -> Dictionary:
 	return {

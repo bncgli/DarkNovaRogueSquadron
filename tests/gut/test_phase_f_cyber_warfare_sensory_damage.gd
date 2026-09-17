@@ -11,6 +11,11 @@ var systemic_damage: SystemicDamageHandler = null
 var pod_info: PodInfoApp = null
 
 func before_each() -> void:
+	if SpaceWorldManager:
+		SpaceWorldManager.set_ship_alert_condition(SpaceWorldManager.ShipAlertCondition.GREEN)
+		SpaceWorldManager.clear_all_ship_damages()
+		SpaceWorldManager.abort_active_weather()
+	
 	systemic_damage = SystemicDamageHandler.new()
 	systemic_damage.name = "SystemicDamageHandler"
 	add_child(systemic_damage)
@@ -24,6 +29,8 @@ func before_each() -> void:
 	add_child(combat_dir)
 	combat_dir.setup(ship, systemic_damage)
 	combat_dir.auto_manage_encounters = false
+	if SpaceWorldManager:
+		SpaceWorldManager.combat_director = combat_dir
 	
 	var pod_scene := load("res://Applications/PodInfo/pod_info_app.tscn") as PackedScene
 	pod_info = pod_scene.instantiate() as PodInfoApp
@@ -32,6 +39,12 @@ func before_each() -> void:
 	await get_tree().process_frame
 
 func after_each() -> void:
+	if SpaceWorldManager:
+		SpaceWorldManager.combat_director = null
+		SpaceWorldManager.set_ship_alert_condition(SpaceWorldManager.ShipAlertCondition.GREEN)
+		SpaceWorldManager.clear_all_ship_damages()
+		SpaceWorldManager.abort_active_weather()
+	
 	for node in [pod_info, combat_dir, ship, systemic_damage]:
 		if is_instance_valid(node):
 			node.free()

@@ -95,3 +95,30 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 ### TASK-021: Aggiornamento Documentazione Post-Refactoring Resource
 - **Stato**: Completato.
 - **Dettagli**: Aggiornamento massivo della documentazione tecnica e dei file di contesto Junie per riflettere il passaggio dai dizionari alle classi Resource tipizzate per ShipBlueprint, StarSystem, Cargo e metadati globali.
+
+## 2026-09-17
+
+### TASK-041: Intercettazione Corrieri Dati S-Net & Caveau DataVault
+- **Descrizione**: Meccaniche dei corrieri dati S-Net con intercettazione via frequenza 1920 MHz su CommsApp, antenna direzionale, cartella blindata remota `DataVault/` protetta da password, nuovo exploit `dump_vault` per forzare l'espulsione del container e recupero del nucleo dati quantistico `snet_quantum_core` (1800 FLUX).
+- **Stato**: Completato.
+- **Dettagli**: Estesi `EnemyShipAI` con archetipo `DATA_COURIER`, `RemoteDriveManager` con montaggio condizionale cartella protetta, `HackExploitsApp` con sottoprogramma `dump_vault` e `CargoManager` con template dati e vendita rapida. Validato con `tests/gut/test_snet_data_courier_hacking.gd` (5/5 passati).
+
+### TASK-042: Deep Core Asteroid Mining & Raffinazione Vitale
+- **Descrizione**: Frantumazione fisica 3D di asteroidi tramite impatto balistico con sweep anti-tunneling, generazione nodi minerali `MineralDepositEntity` espulsi nello spazio, aggancio e traino magnetico tramite Service Drone e conversione blocchi di ghiaccio in riserve idriche/ossigeno per Life Support.
+- **Stato**: Completato.
+- **Dettagli**: Implementato modello di frattura e integrità in `asteroid.gd`, intake diretto nel portello cargo `CargoHatchArea3D` della corvetta, catalogazione risorse grezze in `CargoManager` e metodo `convert_ice_to_life_support()`. Validato con `tests/gut/test_deep_core_asteroid_mining.gd` (6/6 passati).
+
+### TASK-043: Riscrittura Flux Economy & Baratto Titoli Debito
+- **Descrizione**: Riscrittura integrale del motore economico a conio FLUX con eliminazione definitiva della valuta fiat convenzionale a favore del baratto di quote debito/credito corporativo (`ShipFluxModifier`), rating di credito dinamico della nave e blocco per insolvenza.
+- **Stato**: Completato.
+- **Dettagli**: Sostituito il sistema crediti in `FluxEconomyManager`, sincronizzazione diretta con `ShipBlueprint`, emissione debito commerciale e rimborso rateale in `StationHubApp`, conversione ricompense missioni in `MissionManager` e gestione fido in `FluxWallet`. Validato con `tests/gut/test_flux_economy_barter_system.gd` (5/5 passati).
+
+### TASK-044: Cruise Drive Avanzato, Warmup Energetico & Proximity Drop con Picco G
+- **Descrizione**: Evoluzione del Cruise Drive con sequenza deterministica a 5 stati coordinata con il reattore di `PowerGridApp` (160 MW di warmup per 4.0s), velocità a 160 m/s (8.0x) con lock attuatori RCS, e arresto forzato d'emergenza Proximity Drop (< 250m) con frenata violenta a <= 20 m/s, picco di decelerazione estrema a -5.8G, surriscaldamento propulsori di +60°C, screen shake 22.0 e reazioni tachicardiche nei pod.
+- **Stato**: Completato.
+- **Dettagli**: Sviluppata logica di allineamento e blocco rotta in `CruiseDriveController`, tracciamento assorbimento bobine `cruise_coils_draw_mw` in `PowerGridApp`, delega completa e barra warmup in `FlightControlApp`, dissipazione decadimento G su `Spaceship` e feedback sensoriali diegetici in `PodInfoApp`. Validato con `tests/gut/test_cruise_drive_advanced_proximity_drop.gd` (7/7 passati).
+
+### TASK-045: Pericoli Spaziali Dinamici & Eventi Meteo Settore
+- **Descrizione**: Simulazione di eventi meteorologici spaziali estremi (tempeste solari CME, impulsi ionici EMP e tempeste di radiazioni cosmiche) con ciclo vitale a 4 stati (DORMANT, WARNING, ACTIVE, DISSIPATING), calcolo geometrico del riparo su doppia scala (cono d'ombra planetario macro e cilindro 3D micro dietro asteroidi e relitti), mitigazione attiva con deflettori orientati in `ShieldMatrixApp`, telemetria con alert banner in `SensorsApp` e reazioni sensoriali nei pod.
+- **Stato**: Completato.
+- **Dettagli**: Creato sub-manager `SpaceWeatherManager`, implementato calcolo dell'esposizione e dell'ombra da coordinate stellari, integrato banner d'allerta `WeatherAlertBanner` in `SensorsApp`, estesa `ShieldMatrixApp` con mitigazione deflettente orientata alla stella (`mitigate_space_weather_impact`) e collegati feedback audio/shake nei pod. Validato con `tests/gut/test_space_weather_hazards.gd` (6/6 passati).

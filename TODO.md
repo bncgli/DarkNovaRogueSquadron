@@ -224,3 +224,28 @@
   - **Criteri di accettazione**: Notifiche multiple separate e ordinate in stack verticale con transizioni fluide, rilevamento automatico connessione joystick/gamepad con nome periferica.
   - **File Task**: `task_queue/028_godotos_notification_stacking_peripheral_detect.md`
   - **Stato**: Completato (2026-09-04).
+
+- [x] **TASK-041**: Intercettazione Corrieri Dati S-Net & Caveau DataVault
+  - **Descrizione**: Meccaniche dei corrieri dati S-Net con intercettazione via frequenza 1920 MHz su CommsApp, antenna direzionale, cartella blindata remota `DataVault/` protetta da password, nuovo exploit `dump_vault` per forzare l'espulsione del container e recupero del nucleo dati quantistico `snet_quantum_core` (1800 FLUX).
+  - **Criteri di accettazione**: Corrieri dati con beacon subspaziale, montaggio DataVault protetto, exploit dump_vault e recupero fisico con Service Drone.
+  - **Stato**: Completato (2026-09-17).
+
+- [x] **TASK-042**: Deep Core Asteroid Mining & Raffinazione Vitale
+  - **Descrizione**: Frantumazione fisica 3D di asteroidi tramite impatto balistico con sweep anti-tunneling, generazione nodi minerali `MineralDepositEntity` espulsi nello spazio, aggancio e traino magnetico tramite Service Drone e conversione blocchi di ghiaccio in riserve idriche/ossigeno per Life Support.
+  - **Criteri di accettazione**: Frantumazione selettiva asteroidi, entità nodi 3D fisici, traino Service Drone e scarico portello cargo corvetta, conversione ghiaccio per supporto vitale.
+  - **Stato**: Completato (2026-09-17).
+
+- [x] **TASK-043**: Riscrittura Flux Economy & Baratto Titoli Debito
+  - **Descrizione**: Riscrittura integrale del motore economico a conio FLUX con eliminazione definitiva della valuta fiat convenzionale a favore del baratto di quote debito/credito corporativo (`ShipFluxModifier`), rating di credito dinamico della nave e blocco per insolvenza.
+  - **Criteri di accettazione**: Saldo netto contabile da blueprint, transazioni a baratto titoli in StationHub, compensi missioni in conio/sgravio debito e rating di solvibilità.
+  - **Stato**: Completato (2026-09-17).
+
+- [x] **TASK-044**: Cruise Drive Avanzato, Warmup Energetico & Proximity Drop con Picco G
+  - **Descrizione**: Evoluzione del Cruise Drive con sequenza deterministica a 5 stati coordinata con il reattore di `PowerGridApp` (160 MW di warmup per 4.0s), velocità a 160 m/s (8.0x) con lock attuatori RCS, e arresto forzato d'emergenza Proximity Drop (< 250m) con frenata violenta a <= 20 m/s, picco di decelerazione estrema a -5.8G, surriscaldamento propulsori di +60°C, screen shake 22.0 e reazioni tachicardiche nei pod.
+  - **Criteri di accettazione**: 3 vincoli di warmup (quiete, rotta, 160 MW) con aborto su calo potenza, crociera a 160 m/s con lock RCS, frenata d'emergenza a -5.8G con scuotimento e picco cardio nei pod.
+  - **Stato**: Completato (2026-09-17).
+
+- [x] **TASK-045**: Pericoli Spaziali Dinamici & Eventi Meteo Settore
+  - **Descrizione**: Simulazione di eventi meteorologici spaziali estremi (tempeste solari CME, impulsi ionici EMP e tempeste di radiazioni cosmiche) con ciclo vitale a 4 stati (DORMANT, WARNING, ACTIVE, DISSIPATING), calcolo geometrico del riparo su doppia scala (cono d'ombra planetario macro e cilindro 3D micro dietro asteroidi e relitti), mitigazione attiva con deflettori orientati in `ShieldMatrixApp`, telemetria con alert banner in `SensorsApp` e reazioni sensoriali nei pod.
+  - **Criteri di accettazione**: Manager autonomo `SpaceWeatherManager`, valutazione continua del cono d'ombra solare, banner d'allerta countdown in SensorsApp, deflessione energetica $\ge 40\%$ orientata verso la stella, reazioni biometriche nei pod e test GUT validati (6/6).
+  - **Stato**: Completato (2026-09-17).

@@ -1,7 +1,7 @@
 extends GutTest
 
 func test_all_registered_apps_have_fitting_min_window_size():
-	var all_apps: Array[AppResource] = SoftwareManager.get_all_installed_apps()
+	var all_apps: Array[AppResource] = ShipSoftwareManager.get_all_registered_apps()
 	assert_gt(all_apps.size(), 0, "Dovrebbero esserci applicazioni installate/registrate.")
 	
 	for app in all_apps:

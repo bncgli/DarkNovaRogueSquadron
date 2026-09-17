@@ -215,6 +215,9 @@ func test_cargo_bay_app_ui_and_app_resource_integrity() -> void:
 	var cargo_app: CargoBayApp = app_scene_res.instantiate() as CargoBayApp
 	assert_not_null(cargo_app, "CargoBayApp deve essere istanziabile")
 	add_child_autofree(cargo_app)
+	if cargo_app.cargo_mgr:
+		cargo_app.cargo_mgr.add_item_by_id("energy_cell", 5)
+		cargo_app._refresh_all_views()
 	await get_tree().process_frame
 
 	assert_not_null(cargo_app.mass_progress_bar, "mass_progress_bar presente")

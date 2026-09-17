@@ -150,6 +150,7 @@ var active_config: Dictionary = {
 }
 
 func _ready() -> void:
+	add_to_group("shield_matrix_apps")
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_connect_system_signals()
 	_setup_ui_signals()
@@ -158,6 +159,10 @@ func _ready() -> void:
 	load_dat_configuration()
 	_update_permissions()
 	_refresh_ui_display()
+
+func get_total_shield_percentage() -> float:
+	var total := shield_fore + shield_aft + shield_port + shield_starboard
+	return clampf(total / 1000.0, 0.0, 1.0)
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -843,3 +848,76 @@ func _update_permissions() -> void:
 	for dev_id in _device_cards:
 		if is_instance_valid(_device_cards[dev_id]):
 			_device_cards[dev_id].set_permissions(can_control_shields)
+
+# --- MITIGAZIONE EVENTI METEO SPAZIALI E DEFLETTORI ARMONICI ---
+
+## Mitiga l'impatto di un evento meteo spaziale sfruttando i deflettori di quadrante e la sincronizzazione di fase
+func mitigate_space_weather_impact(hazard_type: int, sun_dir_local: Vector3, raw_damage: float) -> float:
+	# Determina il quadrante orientato verso il vettore solare locale
+	var dot_fore := sun_dir_local.dot(Vector3(0, 0, -1))
+	var dot_aft := sun_dir_local.dot(Vector3(0, 0, 1))
+	var dot_port := sun_dir_local.dot(Vector3(-1, 0, 0))
+	var dot_starboard := sun_dir_local.dot(Vector3(1, 0, 0))
+	
+	var best_dot := dot_fore
+	var target_sector := DefenseSector.FORE
+	var target_ratio := ratio_fore
+	var quad_name := "FORE"
+	
+	if dot_aft > best_dot:
+		best_dot = dot_aft
+		target_sector = DefenseSector.AFT
+		target_ratio = ratio_aft
+		quad_name = "AFT"
+	if dot_port > best_dot:
+		best_dot = dot_port
+		target_sector = DefenseSector.PORT
+		target_ratio = ratio_port
+		quad_name = "PORT"
+	if dot_starboard > best_dot:
+		best_dot = dot_starboard
+		target_sector = DefenseSector.STARBOARD
+		target_ratio = ratio_starboard
+		quad_name = "STARBOARD"
+	
+	var is_effective_mitigation := (target_ratio >= 0.35) and is_phase_synced
+	var residual_hull_damage := 0.0
+	
+	if is_effective_mitigation:
+		# Se il quadrante ha energia elevata (>= 40%) e fasi sincronizzate, assorbe interamente l'impatto (0 danno allo scafo)
+		if target_ratio >= 0.40:
+			residual_hull_damage = 0.0
+		else:
+			residual_hull_damage = raw_damage * 0.15 # assorbe l'85%
+		
+		# I deflettori assorbono l'energia senza collassare
+		var shield_absorption := raw_damage * 0.4
+		match target_sector:
+			DefenseSector.FORE:
+				shield_fore = maxf(10.0, shield_fore - shield_absorption)
+			DefenseSector.AFT:
+				shield_aft = maxf(10.0, shield_aft - shield_absorption)
+			DefenseSector.PORT:
+				shield_port = maxf(10.0, shield_port - shield_absorption)
+			DefenseSector.STARBOARD:
+				shield_starboard = maxf(10.0, shield_starboard - shield_absorption)
+		
+		_log_action("🛡️ Flusso meteo (%s) mitigato da Deflettori %s (Ratio: %.0f%%, Fasi Sinc: %s). Danno residuo scafo: %.1f" % [str(hazard_type), quad_name, target_ratio * 100.0, str(is_phase_synced), residual_hull_damage])
+	else:
+		# Schermatura insufficiente o asincrona: assorbimento ridotto (30%), danno residuo allo scafo
+		residual_hull_damage = raw_damage * 0.70
+		var shield_absorption := raw_damage * 0.3
+		match target_sector:
+			DefenseSector.FORE:
+				shield_fore = maxf(0.0, shield_fore - shield_absorption)
+			DefenseSector.AFT:
+				shield_aft = maxf(0.0, shield_aft - shield_absorption)
+			DefenseSector.PORT:
+				shield_port = maxf(0.0, shield_port - shield_absorption)
+			DefenseSector.STARBOARD:
+				shield_starboard = maxf(0.0, shield_starboard - shield_absorption)
+		
+		_log_action("⚠️ Breccia parziale flusso meteo: Quadrante %s insufficiente (Ratio: %.0f%%, Sinc: %s). Danno scafo: %.1f" % [quad_name, target_ratio * 100.0, str(is_phase_synced), residual_hull_damage])
+	
+	_refresh_ui_display()
+	return residual_hull_damage

@@ -324,8 +324,9 @@ func _update_g_force(delta: float) -> void:
 			current_g_force = 6.2
 			return
 		elif ctrl_state == 4: # EMERGENCY_DROP
-			current_g_force = -2.5
-			return
+			if current_g_force < 1.0:
+				current_g_force = move_toward(current_g_force, 1.0, delta * 4.8)
+				return
 
 	var target_g := 1.0
 	if linear_input.length_squared() > 0.001:

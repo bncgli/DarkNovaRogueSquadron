@@ -46,6 +46,8 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Sensors/radar_tuni
 @onready var sweep_label: Label = get_node_or_null("%SweepLabel")
 @onready var ping_label: Label = get_node_or_null("%PingLabel")
 @onready var radar_damage_badge: Label = get_node_or_null("%RadarDamageBadge")
+@onready var weather_alert_banner: PanelContainer = get_node_or_null("%WeatherAlertBanner")
+@onready var weather_alert_label: RichTextLabel = get_node_or_null("%WeatherAlertLabel")
 
 # Nodi opzionali per retrocompatibilità
 @onready var target_option: OptionButton = get_node_or_null("%TargetOption")
@@ -83,6 +85,15 @@ var current_power_mw: float = 40.0 # 40 MW base sweep, 120 MW ping attivo
 var is_radar_powered: bool = true
 var has_radar_damage: bool = false
 
+# --- TELEMETRIA METEOROLOGIA SPAZIALE & RIPARO ---
+var active_weather_state: int = 0 # 0=DORMANT, 1=WARNING, 2=ACTIVE, 3=DISSIPATING
+var active_weather_hazard: int = 0 # 0=SOLAR_CME, 1=ION_EMP_STORM, 2=COSMIC_RAD_BURST
+var active_weather_time: float = 0.0
+var is_ship_weather_sheltered: bool = false
+var weather_exposure_factor: float = 1.0
+var weather_shelter_source: String = "NONE"
+var weather_sun_vector: Vector3 = Vector3(0, 0, -1)
+
 func _ready() -> void:
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_init_ui_elements()
@@ -92,6 +103,8 @@ func _ready() -> void:
 	_update_connection_state()
 	_update_permissions()
 	_refresh_entities()
+	_sync_initial_weather_state()
+	_update_weather_banner()
 
 func _process(delta: float) -> void:
 	if not _is_ship_operational():
@@ -101,6 +114,7 @@ func _process(delta: float) -> void:
 	_update_power_and_damage_state(delta)
 	_refresh_entities()
 	_update_telemetry_ui()
+	_update_weather_lifecycle_timers(delta)
 
 func _init_ui_elements() -> void:
 	if option_display_mode:
@@ -143,6 +157,14 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.ship_damages_updated.connect(_on_ship_damages_updated)
 		if SpaceWorldManager.has_signal("waypoint_updated") and not SpaceWorldManager.waypoint_updated.is_connected(_on_waypoint_updated):
 			SpaceWorldManager.waypoint_updated.connect(_on_waypoint_updated)
+		if SpaceWorldManager.has_signal("weather_state_changed") and not SpaceWorldManager.weather_state_changed.is_connected(_on_weather_state_changed):
+			SpaceWorldManager.weather_state_changed.connect(_on_weather_state_changed)
+		if SpaceWorldManager.has_signal("weather_warning_issued") and not SpaceWorldManager.weather_warning_issued.is_connected(_on_weather_warning_issued):
+			SpaceWorldManager.weather_warning_issued.connect(_on_weather_warning_issued)
+		if SpaceWorldManager.has_signal("ship_shelter_state_changed") and not SpaceWorldManager.ship_shelter_state_changed.is_connected(_on_ship_shelter_state_changed):
+			SpaceWorldManager.ship_shelter_state_changed.connect(_on_ship_shelter_state_changed)
+		if SpaceWorldManager.has_signal("weather_cleared") and not SpaceWorldManager.weather_cleared.is_connected(_on_weather_cleared):
+			SpaceWorldManager.weather_cleared.connect(_on_weather_cleared)
 	
 	var nm := _get_net_mgr()
 	if nm:
@@ -203,6 +225,14 @@ func _exit_tree() -> void:
 			SpaceWorldManager.ship_damages_updated.disconnect(_on_ship_damages_updated)
 		if SpaceWorldManager.has_signal("waypoint_updated") and SpaceWorldManager.waypoint_updated.is_connected(_on_waypoint_updated):
 			SpaceWorldManager.waypoint_updated.disconnect(_on_waypoint_updated)
+		if SpaceWorldManager.has_signal("weather_state_changed") and SpaceWorldManager.weather_state_changed.is_connected(_on_weather_state_changed):
+			SpaceWorldManager.weather_state_changed.disconnect(_on_weather_state_changed)
+		if SpaceWorldManager.has_signal("weather_warning_issued") and SpaceWorldManager.weather_warning_issued.is_connected(_on_weather_warning_issued):
+			SpaceWorldManager.weather_warning_issued.disconnect(_on_weather_warning_issued)
+		if SpaceWorldManager.has_signal("ship_shelter_state_changed") and SpaceWorldManager.ship_shelter_state_changed.is_connected(_on_ship_shelter_state_changed):
+			SpaceWorldManager.ship_shelter_state_changed.disconnect(_on_ship_shelter_state_changed)
+		if SpaceWorldManager.has_signal("weather_cleared") and SpaceWorldManager.weather_cleared.is_connected(_on_weather_cleared):
+			SpaceWorldManager.weather_cleared.disconnect(_on_weather_cleared)
 	
 	var nm := _get_net_mgr()
 	if nm:
@@ -787,3 +817,94 @@ func _on_ship_damages_updated(_damages: Array) -> void:
 
 func _on_waypoint_updated(_wp_data: Dictionary) -> void:
 	_refresh_entities()
+
+# --- TELEMETRIA METEOROLOGIA SPAZIALE & ALLERTE DIEGETICHE ---
+
+func _sync_initial_weather_state() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_active_weather_info"):
+		var info: Dictionary = SpaceWorldManager.get_active_weather_info()
+		active_weather_state = int(info.get("state", 0))
+		active_weather_hazard = int(info.get("hazard_type", 0))
+		active_weather_time = float(info.get("time_remaining", 0.0))
+		is_ship_weather_sheltered = bool(info.get("is_sheltered", false))
+		weather_exposure_factor = float(info.get("exposure_factor", 1.0))
+		weather_shelter_source = str(info.get("shelter_source", "NONE"))
+		weather_sun_vector = info.get("sun_vector", Vector3(0, 0, -1))
+
+func _update_weather_lifecycle_timers(delta: float) -> void:
+	if active_weather_state != 0 and active_weather_time > 0.0:
+		active_weather_time = maxf(0.0, active_weather_time - delta)
+	_update_weather_banner()
+
+func update_weather_telemetry(state: int, hazard: int, time_left: float, sheltered: bool, exposure: float, source: String = "NONE") -> void:
+	active_weather_state = state
+	active_weather_hazard = hazard
+	active_weather_time = time_left
+	is_ship_weather_sheltered = sheltered
+	weather_exposure_factor = exposure
+	weather_shelter_source = source
+	_update_weather_banner()
+
+func _on_weather_state_changed(state: int, hazard_type: int, time_remaining: float) -> void:
+	active_weather_state = state
+	active_weather_hazard = hazard_type
+	active_weather_time = time_remaining
+	_update_weather_banner()
+
+func _on_weather_warning_issued(hazard_type: int, countdown: float, sun_vec: Vector3) -> void:
+	active_weather_state = 1 # WARNING
+	active_weather_hazard = hazard_type
+	active_weather_time = countdown
+	weather_sun_vector = sun_vec
+	_update_weather_banner()
+
+func _on_ship_shelter_state_changed(is_sheltered: bool, exposure_factor: float, shelter_source: String) -> void:
+	is_ship_weather_sheltered = is_sheltered
+	weather_exposure_factor = exposure_factor
+	weather_shelter_source = shelter_source
+	_update_weather_banner()
+
+func _on_weather_cleared() -> void:
+	active_weather_state = 0 # DORMANT
+	active_weather_time = 0.0
+	_update_weather_banner()
+
+func _update_weather_banner() -> void:
+	if weather_alert_banner == null or weather_alert_label == null:
+		return
+	
+	match active_weather_state:
+		0: # DORMANT
+			weather_alert_banner.visible = false
+		1: # WARNING
+			weather_alert_banner.visible = true
+			var mins := int(active_weather_time) / 60
+			var secs := int(active_weather_time) % 60
+			var hazard_name := _get_weather_hazard_name(active_weather_hazard)
+			var shelter_txt := ""
+			if is_ship_weather_sheltered:
+				var shelter_pct := int((1.0 - weather_exposure_factor) * 100.0)
+				shelter_txt = "STATO: %d%% RIPARATO (%s)" % [shelter_pct, weather_shelter_source]
+			else:
+				shelter_txt = "STATO: 100% ESPOSTO"
+			weather_alert_label.text = "[b][color=#ffaa00]⚠️ ALLERTA METEO SPAZIALE: %s TRA %02d:%02d | %s[/color][/b]" % [hazard_name, mins, secs, shelter_txt]
+		2: # ACTIVE
+			weather_alert_banner.visible = true
+			var hazard_name := _get_weather_hazard_name(active_weather_hazard)
+			var shelter_txt := ""
+			if is_ship_weather_sheltered:
+				var shelter_pct := int((1.0 - weather_exposure_factor) * 100.0)
+				shelter_txt = "RIPARO: %d%% (%s)" % [shelter_pct, weather_shelter_source]
+			else:
+				shelter_txt = "100% ESPOSTO AL FRONTE D'ONDA"
+			weather_alert_label.text = "[b][color=#ff3333]🚨 IMPATTO METEO IN CORSO | %s ATTIVO | %s[/color][/b]" % [hazard_name, shelter_txt]
+		3: # DISSIPATING
+			weather_alert_banner.visible = true
+			weather_alert_label.text = "[b][color=#66bbff]ℹ️ FRONTE METEO IN DISSIPAZIONE (%.0fs) | RIENTRO A CONDIZIONI NOMINALI[/color][/b]" % active_weather_time
+
+func _get_weather_hazard_name(hazard_type: int) -> String:
+	match hazard_type:
+		0: return "SOLAR CME"
+		1: return "ION/EMP STORM"
+		2: return "COSMIC RAD BURST"
+		_: return "UNKNOWN HAZARD"

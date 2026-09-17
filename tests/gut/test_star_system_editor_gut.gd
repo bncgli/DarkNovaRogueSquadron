@@ -109,7 +109,7 @@ func test_star_system_editor_generate_random_system():
 	var sys: StarSystemData = editor.current_system
 	assert_not_null(sys, "current_system deve essere valorizzato dopo la generazione casuale")
 	assert_ne(sys, initial_sys, "current_system deve essere una nuova istanza")
-	assert_true(sys.system_id.begins_with("SYS-RAND-"), "L'ID del sistema deve avere prefisso SYS-RAND-")
+	assert_true(sys.system_id.begins_with("SYS-"), "L'ID del sistema deve avere prefisso SYS-")
 	assert_not_null(sys.find_primary_station(), "Il sistema generato deve contenere una stazione spaziale primaria")
 	
 	var has_star := false

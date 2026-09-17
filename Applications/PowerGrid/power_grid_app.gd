@@ -70,12 +70,14 @@ var terminal_history_index: int = 0
 var total_gen_mw: float = 0.0
 var total_cons_mw: float = 0.0
 var net_power_mw: float = 0.0
+var cruise_coils_draw_mw: float = 0.0
 
 @onready var room_list_container: VBoxContainer = %RoomListContainer
 
 signal system_power_changed(category: String, is_powered: bool)
 
 func _ready() -> void:
+	add_to_group("power_grid_apps")
 	_configure_window(APP_TITLE, DEFAULT_WINDOW_SIZE, MIN_WINDOW_SIZE)
 	_setup_ui_events()
 	load_dat_configuration()
@@ -161,12 +163,26 @@ func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 		room["is_on"] = is_on
 		var st_col := "#33ff66" if is_on else "#ff4040"
 		_print_terminal("[color=#ffffaa]Stanza %s: [color=%s]%s[/color][/color]" % [str(room.get("name", "Ignota")), st_col, "ACCESA" if is_on else "SPENTA"])
-		_refresh_power_logic()
 		
 		# Sync with blueprint if possible
 		var bp := _get_blueprint()
 		if bp:
+			for r in bp.rooms:
+				var rid: String = str(r.get("id") if r is Dictionary else r.id)
+				if rid == room_id:
+					if r is Dictionary:
+						r["is_on"] = is_on
+					elif "is_on" in r:
+						r.is_on = is_on
 			bp.emit_changed()
+		
+		_refresh_power_logic()
+		
+		# Sincronizza CruiseDriveController se attivo
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_cruise_drive_controller"):
+			var cdc := SpaceWorldManager.get_cruise_drive_controller()
+			if cdc:
+				cdc.update_power_from_blueprint()
 
 func _get_room_by_id(room_id: String) -> Dictionary:
 	for r in rooms_data:
@@ -200,19 +216,84 @@ func _refresh_power_logic() -> void:
 	
 	# Penalità anomalia cyber se REACTOR_OVERLOAD è attivo
 	if is_inside_tree():
-		var cd = get_tree().get_first_node_in_group("combat_directors")
-		if cd and cd.has_method("is_exploit_active") and cd.is_exploit_active("REACTOR_OVERLOAD"):
-			total_gen_mw *= 0.75
-			total_cons_mw += 200.0
-			net_power_mw = total_gen_mw - total_cons_mw
+		var tree := get_tree()
+		if tree:
+			var cds := tree.get_nodes_in_group("combat_directors")
+			for candidate in cds:
+				if candidate and candidate.has_method("is_exploit_active") and candidate.is_exploit_active("REACTOR_OVERLOAD"):
+					total_gen_mw *= 0.75
+					total_cons_mw += 200.0
+					net_power_mw = total_gen_mw - total_cons_mw
+					break
+	
+	# Carico bobine di crociera (Cruise Drive warmup / cruise flight)
+	if cruise_coils_draw_mw > 0.0:
+		total_cons_mw += cruise_coils_draw_mw
+		net_power_mw = total_gen_mw - total_cons_mw
+		if total_gen_mw < cruise_coils_draw_mw or total_gen_mw < 160.0:
+			_print_terminal("[color=#ff4040]⚠️ ALLARME SOVRACCARICO: Reattore insufficiente (< 160 MW) per bobine crociera![/color]")
+			if SpaceWorldManager and SpaceWorldManager.has_method("get_cruise_drive_controller"):
+				var cdc := SpaceWorldManager.get_cruise_drive_controller()
+				if cdc:
+					cdc.set_cruise_coils_power(0.0)
+	
+	# Verifica soglia di sovraccarico e scatto relè / breaker di sicurezza
+	var overload_pct: float = float(active_config.get("overload_threshold_pct", 110.0))
+	var max_allowed_cons: float = total_gen_mw * (overload_pct / 100.0)
+	if total_gen_mw > 0.0 and total_cons_mw > max_allowed_cons:
+		_check_and_trip_breakers(max_allowed_cons)
 	
 	_update_ui_telemetry()
 	_update_system_effects(categories_present)
 	_update_inspector()
 
+func _check_and_trip_breakers(_max_allowed: float) -> void:
+	# Priorità di disconnessione breaker: disconnette il maggior consumatore non vitale
+	var candidate_rid: String = ""
+	var candidate_draw: float = 0.0
+	var candidate_name: String = ""
+	
+	for room in rooms_data:
+		if not bool(room.get("is_on", false)):
+			continue
+		var r_cat: String = str(room.get("category", "")).to_lower()
+		if r_cat in ["command", "life_support"]:
+			continue
+		
+		var room_p: float = 0.0
+		for dev in room.get("devices", []):
+			room_p += float(dev.get("power_mw", 0.0))
+		if room_p == 0.0 and room.has("power_mw"):
+			room_p = float(room.get("power_mw", 0.0))
+		
+		if room_p < 0.0 and absf(room_p) > candidate_draw:
+			candidate_draw = absf(room_p)
+			candidate_rid = str(room.get("id", ""))
+			candidate_name = str(room.get("name", candidate_rid))
+	
+	if not candidate_rid.is_empty():
+		for room in rooms_data:
+			if str(room.get("id", "")) == candidate_rid:
+				room["is_on"] = false
+				break
+		if room_widgets.has(candidate_rid):
+			var widget = room_widgets[candidate_rid]
+			if "power_switch" in widget and widget.power_switch:
+				widget.power_switch.button_pressed = false
+		_print_terminal("[color=#ff4040]⚡ INTERRUTTORE DI PROTEZIONE SCATTATO: Stanza '%s' disconnessa per sovraccarico (> %.0f%%)![/color]" % [candidate_name, float(active_config.get("overload_threshold_pct", 110.0))])
+		if SpaceWorldManager and SpaceWorldManager.has_method("report_system_alert"):
+			SpaceWorldManager.report_system_alert("BREAKER TRIPPED: %s disconnesso per sovraccarico!" % candidate_name)
+
+func get_overload_threshold_pct() -> float:
+	return float(active_config.get("overload_threshold_pct", 110.0))
+
+func get_overclock_tolerance() -> float:
+	return float(active_config.get("overclock_tolerance", 1.2))
+
 func _update_ui_telemetry() -> void:
 	if total_power_label:
-		total_power_label.text = "GEN: %.0f / CONS: %.0f MW" % [total_gen_mw, total_cons_mw]
+		var cruise_txt := " [⚡CROCIERA: %.0f MW]" % cruise_coils_draw_mw if cruise_coils_draw_mw > 0.0 else ""
+		total_power_label.text = "GEN: %.0f / CONS: %.0f MW%s" % [total_gen_mw, total_cons_mw, cruise_txt]
 	
 	if efficiency_label:
 		var net_text := "BILANCIO: %.0f MW" % net_power_mw
@@ -380,21 +461,31 @@ func _connect_system_signals() -> void:
 			SpaceWorldManager.ship_connection_changed.connect(_on_ship_connection_changed)
 		if SpaceWorldManager.has_signal("ship_damages_updated") and not SpaceWorldManager.ship_damages_updated.is_connected(_on_ship_damages_updated):
 			SpaceWorldManager.ship_damages_updated.connect(_on_ship_damages_updated)
+		if SpaceWorldManager.has_signal("cruise_coils_draw_changed") and not SpaceWorldManager.cruise_coils_draw_changed.is_connected(_on_cruise_coils_draw_changed):
+			SpaceWorldManager.cruise_coils_draw_changed.connect(_on_cruise_coils_draw_changed)
+		if SpaceWorldManager.has_method("get_cruise_drive_controller"):
+			var cdc := SpaceWorldManager.get_cruise_drive_controller()
+			if cdc:
+				if cdc.has_signal("state_changed") and not cdc.state_changed.is_connected(_on_cdc_state_changed):
+					cdc.state_changed.connect(_on_cdc_state_changed)
+				if cdc.has_signal("cruise_coils_draw_updated") and not cdc.cruise_coils_draw_updated.is_connected(_on_cruise_coils_draw_changed):
+					cdc.cruise_coils_draw_updated.connect(_on_cruise_coils_draw_changed)
 	
-	if NetworkManager:
-		if NetworkManager.has_signal("player_role_changed") and not NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
-			NetworkManager.player_role_changed.connect(_on_player_role_changed)
-		if NetworkManager.has_signal("mission_started") and not NetworkManager.mission_started.is_connected(_on_mission_started):
-			NetworkManager.mission_started.connect(_on_mission_started)
-		if NetworkManager.has_signal("mission_ended") and not NetworkManager.mission_ended.is_connected(_on_mission_ended):
-			NetworkManager.mission_ended.connect(_on_mission_ended)
+	var nm := _get_net_mgr()
+	if nm:
+		if nm.has_signal("player_role_changed") and not nm.player_role_changed.is_connected(_on_player_role_changed):
+			nm.player_role_changed.connect(_on_player_role_changed)
+		if nm.has_signal("mission_started") and not nm.mission_started.is_connected(_on_mission_started):
+			nm.mission_started.connect(_on_mission_started)
+		if nm.has_signal("mission_ended") and not nm.mission_ended.is_connected(_on_mission_ended):
+			nm.mission_ended.connect(_on_mission_ended)
 	
 	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
-		if sdm.has_signal("file_synced") and not sdm.file_synced.is_connected(_on_drive_file_modified):
-			sdm.file_synced.connect(_on_drive_file_modified)
-		if sdm.has_signal("file_modified") and not sdm.file_modified.is_connected(_on_drive_file_modified):
-			sdm.file_modified.connect(_on_drive_file_modified)
+		if sdm.has_signal("file_synced") and not sdm.file_synced.is_connected(_on_drive_file_event):
+			sdm.file_synced.connect(_on_drive_file_event)
+		if sdm.has_signal("file_modified") and not sdm.file_modified.is_connected(_on_drive_file_event):
+			sdm.file_modified.connect(_on_drive_file_event)
 
 func _exit_tree() -> void:
 	if SpaceWorldManager:
@@ -402,21 +493,52 @@ func _exit_tree() -> void:
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 		if SpaceWorldManager.has_signal("ship_damages_updated") and SpaceWorldManager.ship_damages_updated.is_connected(_on_ship_damages_updated):
 			SpaceWorldManager.ship_damages_updated.disconnect(_on_ship_damages_updated)
+		if SpaceWorldManager.has_signal("cruise_coils_draw_changed") and SpaceWorldManager.cruise_coils_draw_changed.is_connected(_on_cruise_coils_draw_changed):
+			SpaceWorldManager.cruise_coils_draw_changed.disconnect(_on_cruise_coils_draw_changed)
+		if SpaceWorldManager.has_method("get_cruise_drive_controller"):
+			var cdc := SpaceWorldManager.get_cruise_drive_controller()
+			if cdc:
+				if cdc.has_signal("state_changed") and cdc.state_changed.is_connected(_on_cdc_state_changed):
+					cdc.state_changed.disconnect(_on_cdc_state_changed)
+				if cdc.has_signal("cruise_coils_draw_updated") and cdc.cruise_coils_draw_updated.is_connected(_on_cruise_coils_draw_changed):
+					cdc.cruise_coils_draw_updated.disconnect(_on_cruise_coils_draw_changed)
 	
-	if NetworkManager:
-		if NetworkManager.has_signal("player_role_changed") and NetworkManager.player_role_changed.is_connected(_on_player_role_changed):
-			NetworkManager.player_role_changed.disconnect(_on_player_role_changed)
-		if NetworkManager.has_signal("mission_started") and NetworkManager.mission_started.is_connected(_on_mission_started):
-			NetworkManager.mission_started.disconnect(_on_mission_started)
-		if NetworkManager.has_signal("mission_ended") and NetworkManager.mission_ended.is_connected(_on_mission_ended):
-			NetworkManager.mission_ended.disconnect(_on_mission_ended)
+	var nm := _get_net_mgr()
+	if nm:
+		if nm.has_signal("player_role_changed") and nm.player_role_changed.is_connected(_on_player_role_changed):
+			nm.player_role_changed.disconnect(_on_player_role_changed)
+		if nm.has_signal("mission_started") and nm.mission_started.is_connected(_on_mission_started):
+			nm.mission_started.disconnect(_on_mission_started)
+		if nm.has_signal("mission_ended") and nm.mission_ended.is_connected(_on_mission_ended):
+			nm.mission_ended.disconnect(_on_mission_ended)
 	
 	var sdm := get_node_or_null("/root/ShipDriveManager")
 	if sdm:
-		if sdm.has_signal("file_synced") and sdm.file_synced.is_connected(_on_drive_file_modified):
-			sdm.file_synced.disconnect(_on_drive_file_modified)
-		if sdm.has_signal("file_modified") and sdm.file_modified.is_connected(_on_drive_file_modified):
-			sdm.file_modified.disconnect(_on_drive_file_modified)
+		if sdm.has_signal("file_synced") and sdm.file_synced.is_connected(_on_drive_file_event):
+			sdm.file_synced.disconnect(_on_drive_file_event)
+		if sdm.has_signal("file_modified") and sdm.file_modified.is_connected(_on_drive_file_event):
+			sdm.file_modified.disconnect(_on_drive_file_event)
+
+func _on_drive_file_event(path: String, _content: String = "") -> void:
+	if "Programs/PowerGrid" in path and path.ends_with(".dat"):
+		load_dat_configuration()
+
+func _on_cruise_coils_draw_changed(draw_mw: float) -> void:
+	var prev_draw := cruise_coils_draw_mw
+	cruise_coils_draw_mw = draw_mw
+	if draw_mw > 0.0 and prev_draw == 0.0:
+		_print_terminal("[color=#39ff14]⚡ BOBINE CROCIERA IN CARICA: %.0f MW[/color]" % draw_mw)
+	_refresh_power_logic()
+
+func _on_cdc_state_changed(new_state: int, _old_state: int) -> void:
+	if new_state == 1: # WARMUP
+		cruise_coils_draw_mw = 160.0
+		_print_terminal("[color=#39ff14]⚡ BOBINE CROCIERA IN CARICA: 160 MW[/color]")
+	elif new_state == 2: # ENGAGED
+		cruise_coils_draw_mw = 160.0
+	else:
+		cruise_coils_draw_mw = 0.0
+	_refresh_power_logic()
 
 # --- GESTIONE MINI-TERMINALE ---
 func _print_terminal_welcome() -> void:
