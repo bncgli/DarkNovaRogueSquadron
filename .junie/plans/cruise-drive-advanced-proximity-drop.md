@@ -5,163 +5,164 @@ sessionId: session-260915-141146-3p3m
 # Requirements
 
 ### Overview & Goals
-Con il completamento di tutte le Fasi operative della roadmap di sessione (Fasi A-G) e delle successive macro-estensioni sistemiche (Deep Core Mining, Flux Economy a baratto titoli, Corrieri S-Net con DataVault, Cruise Drive avanzato a 160 MW e Pericoli Spaziali Dinamici), *Dark Nova: Rogue Squadron* ha raggiunto la sua piena fisionomia di simulatore cooperativo spaziale asimmetrico.
+Con il completamento architetturale e funzionale di tutti i sistemi di simulazione, fisici ed economici di *Dark Nova: Rogue Squadron* (Fasi A-L), il progetto dispone di 22 applicazioni operative su desktop GodotOS e di oltre 400 test automatizzati GUT convalidati al 100% in modalità headless.
 
-Questo piano definisce e organizza in modo deterministico gli **ultimi step per finire il gioco**, trasformando l'insieme dei moduli esistenti in un prodotto finale rifinito, documentato al 100%, coperto da collaudo end-to-end continuativo e pronto per il rilascio:
-1. **Consolidamento Documentale (Fase L - Pericoli Spaziali)**: registrazione formale in `GAME_SESSION_SCENARIO_AND_ROADMAP.md`, `TODO.md` (`TASK-045`), `docs/task_log.md` e `CHANGELOG.md`.
-2. **Chiusura Debiti di Design (.DAT Dormienti)**: collegamento funzionale diegetico dei parametri finora inattivi dei file `.dat` in `CommsApp` (amplificazione antenna, filtri rumore) e `PowerGridApp` (soglie di overload, tolleranza overclocking).
-3. **Protocollo Allerta Generale Nave (Condition Red / Yellow)**: allarme coordinato per l'intera corvetta (sirene diegetiche soffuse, illuminazione d'emergenza rossa nei pod e allarmi ottici) durante brecce scafo, scudi critici o radiazioni letali.
-4. **Traguardo "100% Full Green" GUT**: correzione dei test legacy e dei warning di parsing preesistenti, portando tutti i ~400 test del repository a passare all'unisono in modalità headless senza errori.
-5. **Suite di Collaudo Integrato End-to-End (E2E)**: creazione di una simulazione automatica headless dell'intero ciclo cooperativo dalla partenza con debito fino al rientro e alla liquidazione economica.
-6. **Configurazione Export & Packaging Release Candidate**: verifica dei preset di export per Linux e Windows x86_64 con build autonoma e smoke test.
+L'obiettivo di questo piano è definire la creazione di un **Test Plan Manuale Strutturato e Questionario di Collaudo** (`docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md`). Tale documento fungerà da guida operativa passo-passo che l'utente potrà seguire direttamente durante le sessioni di gioco manuali per verificare ogni singola applicazione, registrare l'esito di ciascuna verifica tramite checklist (`[ ] PASS / [ ] FAIL / [ ] BLOCKED`) e annotare osservazioni, bug o attriti di usabilità/game design. Al termine del collaudo, il questionario compilato verrà riletto insieme per pianificare ed eseguire gli interventi mirati di correzione e rifinitura.
 
 ### Scope
 - **In Scope**:
-  - Aggiornamento sincronizzato di tutti i documenti di tracciamento e rilascio per la Fase L.
-  - Attivazione dei parametri `.dat` di Comms e PowerGrid secondo le specifiche del punto 4 di `DESIGN_DECISIONS_PENDING.md`.
-  - Macchina a stati di allerta generale nave (`ConditionState.GREEN`, `YELLOW`, `RED`) in `SpaceWorldManager` con propagazione a `PodInfoApp`, `CameraFeedWindow` e `SensorsApp`.
-  - Risoluzione dei disallineamenti legacy in `test_applications_min_size.gd` e `life_support_app.tscn`.
-  - Suite automatizzata `tests/gut/test_full_gameplay_session_e2e.gd` che verifica sequenzialmente tutte le tappe del loop cooperativo.
-  - Verifica della configurazione di export e build eseguibile.
+  - Creazione del documento esaustivo `docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md`.
+  - Copertura modulare indipendente di tutte le **22 applicazioni** e finestre del sistema:
+    1. *Lobby & Selezione Sistema/Nave* (`Applications/Lobby/`)
+    2. *Impostazioni & Controlli/Periferiche* (`Scenes/Window/Settings Window/`)
+    3. *Flight Control & Cruise Drive* (`Applications/FlightControl/`)
+    4. *Weapons & HUD Traiettoria Balistica* (`Applications/Weapons/`)
+    5. *Shield Matrix & Deflettori* (`Applications/ShieldMatrix/`)
+    6. *Sensors 3D & Meteo Alert* (`Applications/Sensors/`)
+    7. *Cams & Feed Ottici Esterni* (`Applications/Cams/`)
+    8. *Power Grid & Reattore* (`Applications/PowerGrid/`)
+    9. *Life Support & Sopravvivenza* (`Applications/LifeSupport/`)
+    10. *Comms & Telecomunicazioni* (`Applications/Comms/`)
+    11. *Diagnostics & Log Danni/Cyber* (`Applications/Diagnostics/`)
+    12. *Duct Drone & Riparazioni Interne* (`Applications/DuctDrone/`)
+    13. *Service Drone & Recupero Cargo/Minerali* (`Applications/ServiceDrone/`)
+    14. *Cargo Bay & Stiva Merci* (`Applications/CargoBay/`)
+    15. *Flux Wallet & Rating Creditizio* (`Applications/FluxWallet/`)
+    16. *Station Hub & Servizi Portuali X4* (`Applications/StationHub/`)
+    17. *Hack Exploits & EW Remota* (`Applications/HackExploits/`)
+    18. *Terminal CLI & Scripting .DAT* (`Applications/Terminal/`)
+    19. *Logbook & Registro Missioni* (`Applications/Logbook/`)
+    20. *System Map & Visuale Orbitale* (`Applications/SystemMap/`)
+    21. *System Discover & Generazione Procedurale* (`Applications/SystemDiscover/`)
+    22. *Ship Builder & Progettazione Scafo* (`Applications/ShipBuilder/`)
+    23. *Pod Info, Allarme Condition Red & Feedback Sensoriali* (`Applications/PodInfo/`)
+  - Istruzioni di riproduzione chiare, sequenziali e univoche per ciascuna funzionalità.
+  - Criteri di accettazione espliciti (comportamento visivo, acustico o telemetrico atteso).
+  - Formato compilativo a checklist con campi note e motivazioni di blocco.
+  - Cruscotto riassuntivo iniziale e linee guida per la revisione congiunta post-collaudo.
 - **Out of Scope**:
-  - Aggiunta di ulteriori macro-feature non concordate (il perimetro funzionale è sigillato).
-  - Riscrittura grafica o sostituzione degli asset UI esistenti.
+  - Modifica del codice sorgente di gioco durante la fase di redazione del questionario (le modifiche e correzioni avverranno nello sprint successivo sulla base del questionario compilato dall'utente).
+  - Rimpiazzo delle suite di test automatici GUT esistenti (il testplan manuale è complementare e focalizzato su feeling di gioco, UX, rendering e interazione umana).
 
 ### User Stories
-- **Come Equipaggio in Plancia**, voglio che la nave reagisca come un unico organismo vivente durante le emergenze critiche (Condition Red con illuminazione d'emergenza e allarme sonoro), facendomi percepire il pericolo anche quando lavoro su un'app secondaria.
-- **Come Hacker o Ingegnere**, voglio che la modifica manuale dei file `.dat` tramite terminale o text editor influenzi realmente i parametri fisici della radio Comms o la tolleranza ai sovraccarichi della PowerGrid.
-- **Come Sviluppatore / Tester CI**, voglio poter eseguire l'intera cartella dei test GUT (`-gdir=res://tests/gut`) e ottenere un risultato 100% verde (Full Green) senza eccezioni o script rotti.
-- **Come Giocatore**, voglio poter avviare il binario standalone del gioco senza dipendere dall'editor di Godot e vivere una partita completa e fluida dalla partenza al debriefing.
+- **Come Tester / Giocatore**, voglio avere una guida passo-passo che mi indichi esattamente cosa cliccare, quale tasto premere o quale comando digitare per testare ogni singola app del gioco, senza dover indovinare le condizioni di riproduzione.
+- **Come Tester**, voglio poter segnare con un semplice clic o spunta l'esito di ogni test (`PASS`, `FAIL`, `BLOCKED`) e descrivere anomalie riscontrate nel campo note sottostante.
+- **Come Team di Sviluppo**, vogliamo un documento standardizzato e univoco per raccogliere il feedback del collaudo manuale, identificare bug prioritari e procedere a correzioni rapide ed efficaci.
 
 ### Functional Requirements
-- **FR-FIN1 (Documentazione Fase L)**: `GAME_SESSION_SCENARIO_AND_ROADMAP.md` deve includere la Sezione Fase L con i dettagli di `SpaceWeatherManager`, `TODO.md` deve contenere `TASK-045` completato e `CHANGELOG.md` deve riportare le nuove aggiunte sotto `[Unreleased]`.
-- **FR-FIN2 (Attivazione Parametri DAT Comms)**: `CommsApp` legge da `active_config` i campi `signal_amplification` (moltiplicatore SNR su stazioni/corrieri), `bandwidth_hz` (velocità di aggancio radio) e `auto_tune_sos` (sintonizzazione automatica su radiofari di soccorso).
-- **FR-FIN3 (Attivazione Parametri DAT PowerGrid)**: `PowerGridApp` legge da `active_config` i campi `overload_threshold_pct` (soglia percentuale prima dello scatto dei breaker di stanza) e `overclock_tolerance` (resistenza ai sovraccarichi del Cruise Drive o tempeste solari).
-- **FR-FIN4 (Protocollo Allarme Generale Nave)**:
-  - `SpaceWorldManager` calcola lo stato:
-    - `RED`: breccia non sigillata nello scafo, scudi totali $< 20\%$, o onda di tempesta solare attiva non schermata.
-    - `YELLOW`: intrusioni hacker attive con sentinelle `.dat`, allerta meteo `WARNING`, o temperatura propulsori $> 80\%$.
-    - `GREEN`: condizioni nominali.
-  - Emissione del segnale `ship_alert_condition_changed(condition: int)` con reazione visivo-acustica in `PodInfoApp` e cornici di pericolo nei monitor Cams.
-- **FR-FIN5 (Risoluzione Test Legacy Full Green)**:
-  - Correggere `test_applications_min_size.gd` aggiornando l'identificatore alla classe Autoload corretta.
-  - Risolvere il parse error della scena `life_support_app.tscn`.
-  - Garantire l'uscita con codice 0 su `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/gut`.
-- **FR-FIN6 (Suite E2E Session Loop)**: Creare `tests/gut/test_full_gameplay_session_e2e.gd` a copertura sequenziale dell'intera partita.
+- **FR-TP1 (Completezza del Perimetro)**: Il documento deve coprire al 100% tutte le 22 applicazioni di bordo e le componenti di sistema diegetiche (inclusi i recenti meccanismi di conio/debito FLUX, balistica newtoniana, corrieri dati S-Net, proximity drop a -5.8G, coni d'ombra per tempeste solari e protocollo Condition Red).
+- **FR-TP2 (Istruzioni di Riproduzione Riproducibili)**: Ogni test case deve specificare:
+  - *Prerequisito / Contesto di avvio* (es. nave attraccata, spazio aperto, nave danneggiata).
+  - *Passaggi operativi esatti* (es. aprire finestra, trascinare slider a 1920.0 MHz, orientare antenna a 180°, premere Engage).
+  - *Risultato atteso verificabile* (es. SNR sale a 95%, icona lucchetto si chiude, feed telecamera mostra distorsione statica).
+- **FR-TP3 (Formato Questionario Compilabile)**: Ogni punto di verifica deve includere il blocco:
+  ```markdown
+  - [ ] PASS  - [ ] FAIL  - [ ] BLOCKED
+  **Note / Anomalie Riscontrate**: 
+  ```
+- **FR-TP4 (Organizzazione Modulare per Cluster)**: Le applicazioni devono essere raggruppate in cluster logici per facilitare sessioni di test tematiche:
+  - Cluster 1: Avvio, Lobby, Impostazioni e Volo
+  - Cluster 2: Tattica, Balistica, Scudi e Monitoraggio Spaziale
+  - Cluster 3: Ingegneria, Supporto Vitale e Droni di Manutenzione/Estrazione
+  - Cluster 4: Telecomunicazioni, Guerra Elettronica, Terminale e Log
+  - Cluster 5: Economia a Baratto, Servizi Portuali e Strumenti Creativi
+- **FR-TP5 (Protocollo di Rilettura e Correzione)**: Definire nel documento la procedura di triage: classificazione anomalie (Critico/Bloccante, Funzionale, Minore/UX) e assegnazione ai successivi task di correzione.
+
+### Non-Functional Requirements
+- **Semplicità e Chiarezza Diegetica**: Linguaggio operativo accessibile, comprensibile senza dover consultare il codice sorgente GDScript.
+- **Autonomia Esecutiva**: Il test plan deve poter essere eseguito da chiunque avviando il gioco da Godot o da build standalone.
 
 # Technical Design
 
 ### Current Implementation
-- Tutti i sottosistemi di gioco sono funzionanti ma operano prevalentemente tramite contratti diretti tra coppie di manager.
-- `SpaceWorldManager` orchestra i moduli di volo, combattimento, meteorologia e droni, ma manca di una variabile di allerta nave unificata (`ship_alert_condition`).
-- I file `.dat` di Comms e PowerGrid includono chiavi avanzate che vengono caricate in memoria ma parzialmente ignorate dalla simulazione.
-- La cartella `tests/gut/` contiene oltre 50 suite di test specializzate, di cui una piccola frazione legacy fallisce l'esecuzione batch globale.
+- Il progetto dispone di un'architettura modulare basata su `GodotOS` (`Scenes/Window/`), dove ogni app estende `BaseApp` o implementa una finestra nativa con contratti disaccoppiati verso manager singleton (`SpaceWorldManager`, `ShipDriveManager`, `CargoManager`, `MissionManager`, `FluxEconomyManager`, ecc.).
+- La roadmap operativa in `docs/GAME_SESSION_SCENARIO_AND_ROADMAP.md` descrive il gameplay loop generale, ma non fornisce una guida di test granulare applicazione per applicazione con campi compilativi.
 
 ### Key Decisions
-1. **Centralizzazione dell'Allarme Nave in `SpaceWorldManager`**:
-   - *Scelta*: Valutare lo stato di allerta nave (`ConditionState`) periodicamente (1 Hz) in `SpaceWorldManager` ed emettere un segnale globale che viene intercettato dalle finestre dell'OS.
-   - *Motivazione*: Evita accoppiamenti rigidi e consente a qualsiasi componente (audio pod, shader telecamere, allarmi diagnostici) di reagire istantaneamente.
-2. **Integrazione Trasparente dei Campi `.dat` con Valori di Fallback**:
-   - *Scelta*: Se i campi `.dat` opzionali non sono presenti nel file caricato, utilizzare i valori di default già calibrati nel codice.
-   - *Motivazione*: Massima retrocompatibilità con i blueprint e i file salvati esistenti senza rischiare crash da chiavi mancanti.
-3. **Collaudo E2E Basato su Transizioni Reali di Stato**:
-   - *Scelta*: Il test E2E instanzia `SpaceWorldManagerSingleton` e pilota la nave attraverso i vari stati senza ricorrere a mock fittizi per i sistemi core.
-   - *Motivazione*: Dimostra l'assenza di regressioni e memory leak nella simulazione integrata reale.
+1. **Organizzazione Modulare per Applicazione**:
+   - *Scelta*: Ciascuna delle 22 applicazioni possiede una propria scheda autonoma con ID progressivo univoco (`TC-APP-XX-01`, ecc.).
+   - *Motivazione*: Permette al tester di collaudare le app in ordine libero o in blocchi dedicati (es. oggi solo Comms e HackExploits, domani solo FlightControl e Weapons) senza dover necessariamente rigiocare l'intera sessione sequenziale.
+2. **Formato Checklist con Campi Note Dedicati**:
+   - *Scelta*: Utilizzo di caselle Markdown con triplo stato (`PASS`, `FAIL`, `BLOCKED`) e casella testuale aperta per registrare comportamenti inattesi o dettagli del framerate/UI.
+   - *Motivazione*: Rispetta esattamente la preferenza espressa dall'utente, garantendo velocità di compilazione e facile comparazione in fase di diff/rilettura.
+3. **Inclusione dei Casi Limite e delle Meccaniche Hard Sci-Fi Avanzate**:
+   - *Scelta*: Includere verifiche esplicite sui comportamenti di punta (es. aborto warmup Cruise per calo reattore, disinfezione file `.dat` prima dell'esplosione, mitigazione deflettori contro tempesta solare, conversione blocchi di ghiaccio in ossigeno).
+   - *Motivazione*: Assicura che le peculiarità hardcore del gioco vengano effettivamente collaudate a mano e non solo verificate dai test headless GUT.
 
 ### Proposed Changes
-
-#### 1. Consolidamento Documentale
-- `docs/GAME_SESSION_SCENARIO_AND_ROADMAP.md`: aggiunta Fase L (Pericoli Spaziali Dinamici & Eventi Meteo Settore) nella matrice di allineamento e nel piano dettagliato.
-- `TODO.md`: inserimento e spunta di `TASK-045`.
-- `docs/task_log.md` e `CHANGELOG.md`: aggiornamento voci di rilascio.
-
-#### 2. Parametri DAT in `Applications/Comms/comms_app.gd` & `Applications/PowerGrid/power_grid_app.gd`
-- In `comms_app.gd`:
-  - `signal_amplification` scala la ricezione e la velocità di sweep dell'antenna.
-  - `bandwidth_hz` riduce il tempo necessario per sincronizzare i segnali di docking e telecomunicazione.
-- In `power_grid_app.gd`:
-  - `overload_threshold_pct` modula la sensibilità con cui i carichi eccessivi provocano lo scatto dei relè di protezione.
-  - `overclock_tolerance` riduce la penalità termica applicata durante il warmup del Cruise Drive.
-
-#### 3. Protocollo di Allerta Generale in `Outside/space_world_manager.gd`
-- Aggiunta enum `ShipAlertCondition { GREEN = 0, YELLOW = 1, RED = 2 }`.
-- Segnale `ship_alert_condition_changed(new_condition: int)`.
-- Valutazione automatica dello stato basata su integrità scafo, scudi, brecce, sentinelle hacker e tempeste solari.
-- Integrazione in `PodInfoApp` con luci d'emergenza rosse e sirena interna.
-
-#### 4. Manutenzione Test Legacy in `tests/gut/`
-- Correzione di `tests/gut/test_applications_min_size.gd`.
-- Fix della proprietà non valida in `Applications/LifeSupport/life_support_app.tscn`.
-- Verifica dell'esecuzione completa di `-gdir=res://tests/gut`.
-
-#### 5. Nuova Suite E2E `tests/gut/test_full_gameplay_session_e2e.gd`
-- Verifica dell'intera sequenza di sessione: Spawn -> Undock -> Cruise -> Mining/Scavenging -> Hack & Dogfight -> Weather -> Return & Debriefing.
+Creazione del documento programmatico:
+- `docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md`:
+  - Sezione 1: **Istruzioni Operative & Cruscotto Riepilogativo** (matrice di avanzamento delle 22 app).
+  - Sezione 2: **Cluster 1 — Boot, Impostazioni & Navigazione** (Lobby, Settings, FlightControl, SystemMap, PodInfo & Alert Condition).
+  - Sezione 3: **Cluster 2 — Sistemi Tattici, Armeria & Difesa** (Weapons & HUD, ShieldMatrix, Sensors 3D, Cams).
+  - Sezione 4: **Cluster 3 — Ingegneria, Risorse & Droni** (PowerGrid, LifeSupport, Diagnostics, DuctDrone, ServiceDrone).
+  - Sezione 5: **Cluster 4 — Telecomunicazioni, Cyber-Guerra & Console** (Comms, HackExploits, Terminal, Logbook).
+  - Sezione 6: **Cluster 5 — Economia, Commercio & Generatori** (FluxWallet, CargoBay, StationHub, SystemDiscover, ShipBuilder).
+  - Sezione 7: **Guida al Triage e Protocollo di Correzione Congiunta**.
 
 ### Architecture Diagram
 
 ```mermaid
 graph TD
-    subgraph Final Integration & Polish
-        Doc[Documentation & Task Log<br/>Phase L Sync]
-        DAT[Active DAT Configuration<br/>Comms & PowerGrid Tuning]
-        Alert[Ship-Wide Condition Alert<br/>Green / Yellow / Red]
-        Fix[Legacy Tests Cleanup<br/>100% Full Green GUT]
-        E2E[End-to-End Test Suite<br/>Full Session Loop]
-        Pkg[Export & Standalone Build<br/>Release Candidate]
+    subgraph Manual Testing Workflow
+        Plan[docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md] --> Run[Avvio Gioco GodotOS / Standalone]
+        
+        Run --> C1[Cluster 1: Boot & Volo]
+        Run --> C2[Cluster 2: Tattica & Difesa]
+        Run --> C3[Cluster 3: Ingegneria & Droni]
+        Run --> C4[Cluster 4: Comms & Cyber]
+        Run --> C5[Cluster 5: Economia & Hub]
+        
+        C1 --> Check[Spunta Checklist: PASS / FAIL / BLOCKED]
+        C2 --> Check
+        C3 --> Check
+        C4 --> Check
+        C5 --> Check
+        
+        Check --> Notes[Compilazione Note e Comportamenti Anomali]
+        Notes --> Review[Sessione Congiunta di Rilettura]
+        Review --> Fixes[Sviluppo Correzioni Mirate]
     end
-    
-    Doc --> DAT
-    DAT --> Alert
-    Alert --> Fix
-    Fix --> E2E
-    E2E --> Pkg
 ```
 
 ### File Structure
-- **Nuovi File**:
-  - `tests/gut/test_full_gameplay_session_e2e.gd`: suite completa end-to-end della sessione di gioco.
-  - `tests/gut/test_ship_alert_condition_system.gd`: test per il protocollo Condition Green/Yellow/Red.
-- **File Modificati**:
+- **Nuovo File Documentale**:
+  - `docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md`: documento completo con questionario interattivo Markdown.
+- **File di Riferimento Consultati**:
   - `docs/GAME_SESSION_SCENARIO_AND_ROADMAP.md`
-  - `TODO.md`
-  - `docs/task_log.md`
-  - `CHANGELOG.md`
-  - `Outside/space_world_manager.gd`
-  - `Applications/Comms/comms_app.gd`
-  - `Applications/PowerGrid/power_grid_app.gd`
-  - `Applications/PodInfo/pod_info_app.gd`
-  - `Applications/LifeSupport/life_support_app.tscn`
-  - `tests/gut/test_applications_min_size.gd`
+  - `docs/APP_ARCHITECTURE_STANDARD.md`
+  - Tutti i descrittori delle 22 applicazioni in `Applications/` e `Scenes/Window/`.
 
 # Testing
 
 ### Validation Approach
-La chiusura definitiva del progetto viene convalidata tramite:
-1. Suite unitaria mirata per il protocollo Condition Red (`test_ship_alert_condition_system.gd`).
-2. Suite E2E continuativa (`test_full_gameplay_session_e2e.gd`).
-3. Esecuzione globale della suite GUT senza errori (`godot --headless ... -gdir=res://tests/gut`).
+La validazione di questo step consiste nel verificare che il documento generato:
+1. Copra integralmente tutte le 22 applicazioni presenti nel progetto senza lacune.
+2. Fornisca passaggi riproducibili e coerenti con la reale configurazione dei nodi e dei comandi di input del gioco.
+3. Abbia una formattazione Markdown pulita, priva di errori di rendering e pronta per essere modificata direttamente dall'utente durante il collaudo.
 
-### Key Scenarios
-- **Scenario E2E Completo**: Verifica che una nave attraccata possa disattraccare, compiere un tragitto di crociera a 160 m/s, raccogliere risorse con il drone, distruggere un caccia ostile ereditando il vettore di volata balistico, difendersi da un'infezione cyber, ripararsi da un flare solare dietro un asteroide e attraccare con successo per liquidare il bottino e abbattere il debito di noleggio.
-- **Scenario Condition Red**: Verifica che lo scendere degli scudi sotto il 20% inneschi istantaneamente la Condition Red con notifica diegetica e reazione nei pod.
-- **Scenario DAT Tuning**: Modificare via script i parametri `.dat` di Comms e PowerGrid e confermare l'immediata variazione dell'efficienza dei sistemi collegati.
+### Verification Checklist
+- Verifica che per ogni applicazione siano presenti almeno 2-4 casi di prova specifici.
+- Verifica che i recenti task avanzati (Fasi A-L) siano coperti da passaggi dedicati.
+- Verifica che la struttura del questionario consenta una facile rilettura e individuazione dei fallimenti.
 
-# Execution Steps
+# Delivery Steps
 
-### ✓ Step 1: Consolidamento Documentale della Fase L (Meteo Spaziale)
-Allineare formalmente `GAME_SESSION_SCENARIO_AND_ROADMAP.md`, registrare `TASK-045` in `TODO.md` e aggiornare `docs/task_log.md` e `CHANGELOG.md`.
+### ✓ Step 1: Struttura del documento, cruscotto di avanzamento e redazione Cluster 1 (Boot & Navigazione) e Cluster 2 (Tattica & Difesa)
+- Creare `docs/MANUAL_TESTPLAN_QUESTIONNAIRE.md`.
+- Inserire l'introduzione, le istruzioni operative e la matrice/cruscotto riassuntivo delle 22 applicazioni con contatore progressivo.
+- Redigere le schede di collaudo con istruzioni step-by-step e checklist con note per:
+  - Cluster 1: Lobby (`Applications/Lobby/`), Impostazioni (`Scenes/Window/Settings Window/`), Flight Control (`Applications/FlightControl/`), System Map (`Applications/SystemMap/`), Pod Info & Allarme Condition Red (`Applications/PodInfo/`).
+  - Cluster 2: Weapons & HUD Traiettoria Balistica (`Applications/Weapons/`), Shield Matrix & Deflettori (`Applications/ShieldMatrix/`), Sensors 3D & Meteo Alert (`Applications/Sensors/`), Cams & Feed Ottici (`Applications/Cams/`).
 
-### ✓ Step 2: Attivazione e Collegamento Campi .DAT Sospesi in Comms e PowerGrid
-Connettere i parametri dormienti censiti nel punto 4 di `DESIGN_DECISIONS_PENDING.md` alla logica di amplificazione antenna di `CommsApp` e di tolleranza termica/overload di `PowerGridApp`.
+### ✓ Step 2: Redazione Cluster 3 (Ingegneria & Droni), Cluster 4 (Comms & Cyber) e Cluster 5 (Economia & Hub) con Protocollo di Triage
+- Redigere le schede di collaudo con istruzioni step-by-step e checklist con note per:
+  - Cluster 3: Power Grid & Reattore (`Applications/PowerGrid/`), Life Support & Sopravvivenza (`Applications/LifeSupport/`), Diagnostics & Log Danni (`Applications/Diagnostics/`), Duct Drone & Riparazioni Interne (`Applications/DuctDrone/`), Service Drone & Recupero Cargo/Minerali (`Applications/ServiceDrone/`).
+  - Cluster 4: Comms & Telecomunicazioni (`Applications/Comms/`), Hack Exploits & EW Remota (`Applications/HackExploits/`), Terminal CLI & Scripting (`Applications/Terminal/`), Logbook & Missioni (`Applications/Logbook/`).
+  - Cluster 5: Flux Wallet & Debito (`Applications/FluxWallet/`), Cargo Bay & Stiva (`Applications/CargoBay/`), Station Hub & Servizi Portuali X4 (`Applications/StationHub/`), System Discover & Generazione Procedurale (`Applications/SystemDiscover/`), Ship Builder & Progettazione Scafo (`Applications/ShipBuilder/`).
+- Inserire la sezione finale con il Protocollo di Triage, classificazione anomalie (Bloccante, Funzionale, Minore/UX) e guida per la revisione congiunta post-collaudo.
 
-### ✓ Step 3: Implementazione Protocollo Nave Condition Red / Yellow e Feedback Visivo-Acustici
-Introdurre in `SpaceWorldManager` la gestione unificata dello stato di allarme nave (`GREEN`, `YELLOW`, `RED`) con propagazione a `PodInfoApp` (illuminazione d'emergenza e sirena) e alle console di plancia.
-
-### ✓ Step 4: Risoluzione Test Legacy e Conseguimento del 100% Full Green GUT
-Risolvere i due errori preesistenti in `test_applications_min_size.gd` e `life_support_app.tscn`, assicurando che l'esecuzione completa di `tests/gut/` ritorni codice 0 con tutti i test verdi.
-
-### ✓ Step 5: Sviluppo Suite di Test d'Integrazione End-to-End della Sessione Cooperativa
-Creare `tests/gut/test_full_gameplay_session_e2e.gd` che simula sequenzialmente l'intera partita cooperativa dal debito iniziale al rientro persistente.
-
-### ✓ Step 6: Configurazione Export Presets e Packaging Release Candidate
-Verificare e aggiornare `export_presets.cfg` per Linux e Windows, compilare l'eseguibile di release ed effettuare la verifica di avvio standalone.
+### ✓ Step 3: Revisione incrociata e validazione della completezza di tutte le 22 applicazioni
+- Verificare che tutte le 22 applicazioni siano integralmente coperte con checklist `- [ ] PASS - [ ] FAIL - [ ] BLOCKED` e campi note.
+- Verificare che le meccaniche hard sci-fi avanzate introdotte (conio/debito FLUX, balistica galileiana, Proximity Drop a -5.8G, tempeste solari con coni d'ombra, corrieri S-Net e Condition Red) siano puntualmente testabili con parametri esatti.
+- Validare la formattazione Markdown del documento.
