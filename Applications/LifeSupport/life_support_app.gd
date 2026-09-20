@@ -71,6 +71,7 @@ var room_card_widgets: Dictionary = {}
 var selected_room_id: String = ""
 var global_scrubber_setting: float = 1.0
 var _room_anomalies: Dictionary = {}
+var target_cabin_temp: float = 21.5
 
 var rooms: Array = [
 	{"id": "bridge", "name": "Ponte di Comando", "category": "Command", "rect": Rect2(260, 40, 80, 50), "color": Color(0.15, 0.35, 0.55, 0.65), "border_color": Color(0.3, 0.7, 1.0, 0.9)},
@@ -174,7 +175,20 @@ func _connect_system_signals() -> void:
 		if sdm.has_signal("file_synced") and not sdm.file_synced.is_connected(_on_drive_file_synced):
 			sdm.file_synced.connect(_on_drive_file_synced)
 
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if not hal.life_support_updated.is_connected(_on_hal_life_support_updated):
+				hal.life_support_updated.connect(_on_hal_life_support_updated)
+			var m := hal.get_life_support_metrics()
+			target_cabin_temp = float(m.get("target_temp", 21.5))
+
 func _disconnect_system_signals() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.life_support_updated.is_connected(_on_hal_life_support_updated):
+			hal.life_support_updated.disconnect(_on_hal_life_support_updated)
+
 	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_connection_changed"):
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
@@ -233,6 +247,12 @@ func is_power_supplied_to_room(room_id: String) -> bool:
 		return false
 	if not is_life_support_powered:
 		return false
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if not hal.is_device_powered("heater"):
+				return false
+			return hal.is_device_powered(room_id)
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_blueprint"):
 		var bp := SpaceWorldManager.get_ship_blueprint()
 		if bp:
@@ -246,6 +266,13 @@ func _on_ship_connection_changed(is_connected: bool) -> void:
 	if is_connected:
 		load_dat_configuration()
 		_refresh_all_ui()
+
+func _on_hal_life_support_updated(_o2: float, _co2: float, temp: float) -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			var m := hal.get_life_support_metrics()
+			target_cabin_temp = float(m.get("target_temp", temp))
 
 func _update_connection_state() -> void:
 	var connected := _is_ship_operational()
@@ -557,14 +584,26 @@ func _simulate_atmosphere_step(delta: float) -> void:
 			# Pressurizzazione e rigenerazione normale
 			if not state["is_suppression_active"]:
 				state["pressure_kpa"] = move_toward(state["pressure_kpa"], 101.3, delta * 4.0)
-				if not state["is_fire_active"]:
-					state["o2_pct"] = move_toward(state["o2_pct"], 21.0, delta * o2_gen_rate * 0.5)
 				
-				# Scrubber CO2
-				var scrub_rate := delta * 0.08 * scrubber_eff * global_scrubber_setting
-				state["co2_pct"] = move_toward(state["co2_pct"], 0.04, scrub_rate)
-				if state["co2_pct"] <= 0.1 and not state["is_fire_active"]:
-					state["is_smoke_active"] = false
+				var scrubber_powered := true
+				if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+					var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+					if hal:
+						scrubber_powered = hal.is_device_powered("scrubber")
+				
+				if scrubber_powered:
+					if not state["is_fire_active"]:
+						state["o2_pct"] = move_toward(state["o2_pct"], 21.0, delta * o2_gen_rate * 0.5)
+					
+					# Scrubber CO2
+					var scrub_rate := delta * 0.08 * scrubber_eff * global_scrubber_setting
+					state["co2_pct"] = move_toward(state["co2_pct"], 0.04, scrub_rate)
+					if state["co2_pct"] <= 0.1 and not state["is_fire_active"]:
+						state["is_smoke_active"] = false
+				else:
+					# Scrubber offline / non alimentato: accumulo CO2 e calo O2 da respirazione equipaggio
+					state["co2_pct"] = move_toward(state["co2_pct"], 3.5, delta * 0.05)
+					state["o2_pct"] = move_toward(state["o2_pct"], 12.0, delta * 0.04)
 		
 		# Se c'è incendio e c'è ancora pressione/combustibile
 		if state["is_fire_active"]:
@@ -581,9 +620,9 @@ func _simulate_atmosphere_step(delta: float) -> void:
 		# 3. Soppressione gas inerte raffredda a 18.0 °C
 		elif state["is_suppression_active"]:
 			state["temperature_c"] = move_toward(state["temperature_c"], 18.0, delta * 15.0)
-		# 4. Riscaldamento normale con caldaia online verso 21.5 °C
+		# 4. Riscaldamento normale con caldaia online verso target_cabin_temp
 		elif state["heater_online"]:
-			state["temperature_c"] = move_toward(state["temperature_c"], 21.5, delta * 1.5)
+			state["temperature_c"] = move_toward(state["temperature_c"], target_cabin_temp, delta * 1.5)
 		# 5. Caldaia spenta / corto circuito -> raffreddamento progressivo verso 0.0 °C
 		else:
 			state["temperature_c"] = move_toward(state["temperature_c"], 0.0, delta * 0.8)

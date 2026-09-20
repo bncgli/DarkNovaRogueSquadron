@@ -25,6 +25,12 @@ const TUNING_PATH_FALLBACK: String = "Ship Drive/Programs/PowerGrid/tuning.dat"
 @onready var total_power_label: Label = get_node_or_null("%TotalPowerLabel")
 @onready var efficiency_label: Label = get_node_or_null("%EfficiencyLabel")
 @onready var damage_count_label: Label = get_node_or_null("%DamageCountLabel")
+@onready var battery_charge_label: Label = get_node_or_null("%BatteryChargeLabel")
+@onready var reactor_target_label: Label = get_node_or_null("%ReactorTargetLabel")
+@onready var reactor_target_slider: HSlider = get_node_or_null("%ReactorTargetSlider")
+@onready var reactor_warning_label: Label = get_node_or_null("%ReactorWarningLabel")
+
+var _battery_warning_emitted: bool = false
 
 # Inspector UI
 @onready var inspector_title_label: Label = get_node_or_null("%InspectorTitleLabel")
@@ -109,6 +115,28 @@ func _setup_ui_events() -> void:
 		btn_diagnostics.pressed.connect(_run_diagnostics)
 	if reload_config_button:
 		reload_config_button.pressed.connect(_on_reload_config_pressed)
+	if reactor_target_slider:
+		reactor_target_slider.value_changed.connect(_on_reactor_slider_changed)
+
+func _on_reactor_slider_changed(val: float) -> void:
+	if not can_control:
+		return
+	var target := clampf(val, 0.0, 2.0)
+	if reactor_target_label:
+		reactor_target_label.text = "%.0f%%" % (target * 100.0)
+	if reactor_warning_label:
+		reactor_warning_label.visible = target > 1.0
+	
+	if target > 1.0:
+		_print_terminal("[color=#ffaa00]⚠️ ATTENZIONE: Sovraccarico reattore impostato (>100%): %.0f%%[/color]" % (target * 100.0))
+		var notif := get_node_or_null("/root/NotificationManager")
+		if notif and notif.has_method("spawn_notification"):
+			notif.spawn_notification("ATTENZIONE: Sovraccarico reattore impostato (>100%)")
+			
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			hal.set_reactor_power_target(target)
 
 func _init_room_list() -> void:
 	for child in room_list_container.get_children():
@@ -164,7 +192,12 @@ func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 		var st_col := "#33ff66" if is_on else "#ff4040"
 		_print_terminal("[color=#ffffaa]Stanza %s: [color=%s]%s[/color][/color]" % [str(room.get("name", "Ignota")), st_col, "ACCESA" if is_on else "SPENTA"])
 		
-		# Sync with blueprint if possible
+		# Sync with HAL & Blueprint
+		if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				hal.toggle_room_power(room_id, is_on)
+				
 		var bp := _get_blueprint()
 		if bp:
 			for r in bp.rooms:
@@ -272,10 +305,7 @@ func _check_and_trip_breakers(_max_allowed: float) -> void:
 			candidate_name = str(room.get("name", candidate_rid))
 	
 	if not candidate_rid.is_empty():
-		for room in rooms_data:
-			if str(room.get("id", "")) == candidate_rid:
-				room["is_on"] = false
-				break
+		_on_room_power_toggled(candidate_rid, false)
 		if room_widgets.has(candidate_rid):
 			var widget = room_widgets[candidate_rid]
 			if "power_switch" in widget and widget.power_switch:
@@ -419,6 +449,11 @@ func autobalance_grid() -> void:
 	if not can_control: return
 	_print_terminal("[color=#ffaa00]Bilanciamento automatico: spegnimento stanze non essenziali...[/color]")
 	
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			hal.autobalance_grid()
+	
 	# Simple heuristic: shut down until net_power >= 0
 	var priority_order := ["cargo", "service", "mainframe", "engineering", "comms", "sensors", "tactical", "defense", "propulsion", "command", "life_support"]
 	
@@ -438,11 +473,10 @@ func autobalance_grid() -> void:
 					break
 			
 			if only_low_priority and not devices.is_empty():
-				room["is_on"] = false
 				var rid: String = str(room.get("id", ""))
+				_on_room_power_toggled(rid, false)
 				if room_widgets.has(rid):
 					room_widgets[rid].power_switch.button_pressed = false
-				_refresh_power_logic()
 				if net_power_mw >= 0: break
 
 func _get_blueprint() -> ShipBlueprint:
@@ -487,7 +521,17 @@ func _connect_system_signals() -> void:
 		if sdm.has_signal("file_modified") and not sdm.file_modified.is_connected(_on_drive_file_event):
 			sdm.file_modified.connect(_on_drive_file_event)
 
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if not hal.power_telemetry_updated.is_connected(_on_hal_power_telemetry):
+				hal.power_telemetry_updated.connect(_on_hal_power_telemetry)
+
 func _exit_tree() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.power_telemetry_updated.is_connected(_on_hal_power_telemetry):
+			hal.power_telemetry_updated.disconnect(_on_hal_power_telemetry)
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 			SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
@@ -540,6 +584,38 @@ func _on_cdc_state_changed(new_state: int, _old_state: int) -> void:
 		cruise_coils_draw_mw = 0.0
 	_refresh_power_logic()
 
+func _on_hal_power_telemetry(gen: float, dem: float, _ratio: float, blackout: bool) -> void:
+	total_gen_mw = gen
+	total_cons_mw = dem
+	net_power_mw = gen - dem
+	if blackout:
+		_print_terminal("[color=#ff4040]⚡ ALLARME BLACKOUT FISICO: Riserve energetiche esaurite![/color]")
+		
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			var telem := hal.get_power_telemetry()
+			var b_charge: float = telem.get("battery_charge_mj", 0.0)
+			var b_max: float = telem.get("battery_capacity_mj", 0.0)
+			if b_max > 0.0:
+				var b_pct: float = (b_charge / b_max) * 100.0
+				if battery_charge_label:
+					battery_charge_label.text = "%.0f%% (%.0f MJ)" % [b_pct, b_charge]
+					if b_pct < 20.0 and b_pct > 0.0:
+						battery_charge_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2))
+					elif b_pct <= 0.0:
+						battery_charge_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))
+					else:
+						battery_charge_label.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0))
+				if b_pct < 20.0 and b_pct > 0.0 and not _battery_warning_emitted:
+					_battery_warning_emitted = true
+					_print_terminal("[color=#ff9900]⚠️ ATTENZIONE: Riserva batterie in esaurimento (<20%)![/color]")
+				elif b_pct >= 20.0:
+					_battery_warning_emitted = false
+
+	_update_ui_telemetry()
+	_update_inspector()
+
 # --- GESTIONE MINI-TERMINALE ---
 func _print_terminal_welcome() -> void:
 	_print_terminal("[color=#00e5ff]=== DARK NOVA POWER GRID OS v2.0.0 ===[/color]")
@@ -576,6 +652,7 @@ func execute_terminal_command(raw_cmd: String) -> void:
 			_print_terminal("[color=#00e5ff]status / stat[/color]        : Report bilancio energetico")
 			_print_terminal("[color=#00e5ff]rooms / list[/color]        : Stato delle stanze e dispositivi")
 			_print_terminal("[color=#00e5ff]set <room> <on|off>[/color] : Accendi o spegni una stanza")
+			_print_terminal("[color=#00e5ff]reactor <val>[/color]       : Imposta potenza reattore (es. 1.0, 150%)")
 			_print_terminal("[color=#00e5ff]autobalance[/color]          : Bilanciamento automatico del carico")
 			_print_terminal("[color=#00e5ff]clear / cls[/color]          : Pulisce il terminale")
 		
@@ -599,10 +676,36 @@ func execute_terminal_command(raw_cmd: String) -> void:
 					p_mw = float(r.get("power_mw", 0.0))
 				var p_col := "#33ff66" if p_mw > 0.0 else ("#ff4040" if p_mw < 0.0 else "#a6a6a6")
 				_print_terminal(" • %s: [color=%s]%s[/color] ([color=%s]%.0f MW[/color])" % [str(r.get("name", "Ignota")), st_col, st, p_col, p_mw])
+
+		"reactor":
+			if parts.size() > 1:
+				var val := parts[1].trim_suffix("%").to_float()
+				if val > 2.0:
+					val = val / 100.0
+				val = clampf(val, 0.0, 2.0)
+				if reactor_target_slider:
+					reactor_target_slider.value = val
+				else:
+					_on_reactor_slider_changed(val)
+				_print_terminal("[color=#ffffaa]Target reattore impostato a %.0f%%[/color]" % (val * 100.0))
+			else:
+				var cur_target: String = reactor_target_label.text if reactor_target_label else "100%"
+				_print_terminal("[color=#ffffaa]Target reattore attuale: %s[/color]" % cur_target)
 		
 		"set":
 			if parts.size() < 3:
-				_print_terminal("[color=#ff5555]Uso: set <room_id> <on|off>[/color]")
+				_print_terminal("[color=#ff5555]Uso: set <room_id> <on|off> oppure set reactor <val>[/color]")
+				return
+			if parts[1].to_lower() == "reactor":
+				var val := parts[2].trim_suffix("%").to_float()
+				if val > 2.0:
+					val = val / 100.0
+				val = clampf(val, 0.0, 2.0)
+				if reactor_target_slider:
+					reactor_target_slider.value = val
+				else:
+					_on_reactor_slider_changed(val)
+				_print_terminal("[color=#ffffaa]Target reattore impostato a %.0f%%[/color]" % (val * 100.0))
 				return
 			var rid: String = parts[1]
 			var val: Variant = parts[2].to_lower() == "on"

@@ -122,3 +122,32 @@ Registro delle attività e dei task completati nel progetto DarkNovaRogueSquadro
 - **Descrizione**: Simulazione di eventi meteorologici spaziali estremi (tempeste solari CME, impulsi ionici EMP e tempeste di radiazioni cosmiche) con ciclo vitale a 4 stati (DORMANT, WARNING, ACTIVE, DISSIPATING), calcolo geometrico del riparo su doppia scala (cono d'ombra planetario macro e cilindro 3D micro dietro asteroidi e relitti), mitigazione attiva con deflettori orientati in `ShieldMatrixApp`, telemetria con alert banner in `SensorsApp` e reazioni sensoriali nei pod.
 - **Stato**: Completato.
 - **Dettagli**: Creato sub-manager `SpaceWeatherManager`, implementato calcolo dell'esposizione e dell'ombra da coordinate stellari, integrato banner d'allerta `WeatherAlertBanner` in `SensorsApp`, estesa `ShieldMatrixApp` con mitigazione deflettente orientata alla stella (`mitigate_space_weather_impact`) e collegati feedback audio/shake nei pod. Validato con `tests/gut/test_space_weather_hazards.gd` (6/6 passati).
+
+## 2026-09-20
+
+### TASK-046: Manual Test Plan per Hardware Abstraction Layer (HAL)
+- **Descrizione**: Stesura e formalizzazione del documento di collaudo manuale step-by-step per l'Hardware Abstraction Layer (`ShipHAL`), includendo matrici di avanzamento, 20 test case dettagliati su 6 domini hardware, integrazione CLI/Sysfs e protocollo di triage.
+- **Stato**: Completato.
+- **Dettagli**: Creato `docs/MANUAL_TESTPLAN_HAL.md` conforme agli standard di progetto e allineato con `ShipHAL`, `ShipHardwareBus` e le applicazioni GodotOS. Validati tutti i 20 test case dei 6 domini operativi (Lifecycle, Propulsione, Energia, Termica, Diagnostica, Supporto Vitale, CLI Sysfs e Resilienza) con esito 100% PASS.
+
+### TASK-047: Ship Blueprint Funzionante per Collaudo HAL
+- **Descrizione**: Creazione di uno ShipBlueprint funzionante e configurato ad-hoc (`res://Outside/ShipSublayer/hal_test_ship_blueprint.tres`) per l'esecuzione di tutti i test case descritti in `docs/MANUAL_TESTPLAN_HAL.md`.
+- **Stato**: Completato.
+- **Dettagli**:
+  - Esteso `ShipDeviceData` con `custom_properties` per consentire l'override granulare dei parametri fisici dei componenti (spinta max, raffreddamento, capacità batterie, ecc.) e relativa serializzazione.
+  - Generato il blueprint `Corvette HAL Testbed` (`corvette_hal_testbed`) completo di:
+    - `engine_room`: `reactor_01` (1000 MW), `thruster_01` (50 kN, -50 MW), `thruster_02` (30 kN, -30 MW), `cooling_01` (60 kW capacity), `battery_01` (500 MWh capacity).
+    - `bridge`: `life_support_01` (O2/CO2/Temp), luci e comandi.
+    - `cargo`: baia droni e stazioni ricarica.
+    - `sensors`: scanner e telemetria spaziale.
+    - Condotti (`ShipDuctData`), applicazioni GodotOS e file/password di sistema clonati per piena operatività diegetica.
+  - Registrato `Corvette HAL Testbed` nei preset selezionabili dell'app `Lobby` (`lobby_app.gd`).
+  - Validati tutti i test del documento di collaudo HAL tramite script di test headless (`tests/test_hal_blueprint_verification.gd`) con esito 100% PASS.
+
+### TASK-048: Revisione Manual Test Plan HAL per Esecuzione Operativa In-Game
+- **Descrizione**: Ristrutturazione di `docs/MANUAL_TESTPLAN_HAL.md` in un vero questionario di collaudo manuale eseguibile interamente a mano dall'utente all'interno del gioco, eliminando qualsiasi istruzione su chiamate API GDScript esterne o esiti precompilati.
+- **Stato**: Completato.
+- **Dettagli**:
+  - Riscritto `docs/MANUAL_TESTPLAN_HAL.md` secondo il formato standard del questionario di collaudo (`MANUAL_TESTPLAN_QUESTIONNAIRE.md`), con caselle di spunta intatte `[ ] PASS / [ ] FAIL / [ ] BLOCKED` e campi note pronti per la compilazione manuale da parte del tester.
+  - Riformulati tutti i 20 test case come azioni concrete in-game: interazione con le finestre GUI GodotOS (`FlightControl`, `PowerGrid`, `Diagnostics`, `LifeSupport`), comandi da console Terminale (`dev set`, `dev get`, `dev list`, `dev reboot`, `dev online`, `cat`, `echo` su `/sys`) e controlli di volo.
+  - Esteso il comando CLI `dev` in `Applications/Terminal/commands/dev_command.gd` con i comandi `dev bus` e `dev status` (senza argomenti) per mostrare a video nel Terminale lo stato di connessione HAL, la spinta disponibile, il bilancio energetico MW, la temperatura media e i parametri vitali di bordo.

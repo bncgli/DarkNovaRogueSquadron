@@ -53,7 +53,8 @@ const MIN_WINDOW_SIZE: Vector2 = Vector2(700, 530)
 var role_buttons: Dictionary = {}
 var _active_file_picker_target: String = "" # "ship" o "system"
 var _available_ship_blueprints: Array[Dictionary] = [
-	{ "name": "Dark Nova Corvette (Default)", "path": "res://Outside/ShipSublayer/default_ship_blueprint.tres" }
+	{ "name": "Dark Nova Corvette (Default)", "path": "res://Outside/ShipSublayer/default_ship_blueprint.tres" },
+	{ "name": "Corvette HAL Testbed (Manual Test Plan)", "path": "res://Outside/ShipSublayer/hal_test_ship_blueprint.tres" }
 ]
 var _available_star_systems: Array[Dictionary] = [
 	{ "name": "Helios Nova System (Default)", "path": "res://Outside/StarSystemGrid/default_star_system.tres" }

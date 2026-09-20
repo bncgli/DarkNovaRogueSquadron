@@ -26,6 +26,8 @@ const TUNING_PATH_FALLBACK: String = "Terminal Drive/Programs/Diagnostics/securi
 @onready var depth_option: OptionButton = get_node_or_null("%DepthOption")
 @onready var btn_start_scan: Button = get_node_or_null("%BtnStartScan")
 @onready var btn_purge_threats: Button = get_node_or_null("%BtnPurgeThreats")
+@onready var btn_reboot_hardware: Button = get_node_or_null("%BtnRebootHardware")
+@onready var btn_repair_hardware: Button = get_node_or_null("%BtnRepairHardware")
 @onready var scan_progress_bar: ProgressBar = get_node_or_null("%ScanProgressBar")
 @onready var scan_status_label: Label = get_node_or_null("%ScanStatusLabel")
 @onready var threats_list: ItemList = get_node_or_null("%ThreatsList")
@@ -74,6 +76,7 @@ var reset_timer_target: float = 3.0
 
 var detected_threats: Array[Dictionary] = []
 var quarantined_threats: Array[Dictionary] = []
+var damaged_hardware: Array[Dictionary] = []
 var active_cyber_intrusions: Dictionary = {}
 var _combat_director: CombatDirector = null
 
@@ -254,7 +257,21 @@ func _connect_system_signals() -> void:
 		if sdm.has_signal("ship_drive_unmounted") and not sdm.ship_drive_unmounted.is_connected(_on_drive_unmounted):
 			sdm.ship_drive_unmounted.connect(_on_drive_unmounted)
 	
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if not hal.hardware_integrity_changed.is_connected(_on_hal_hardware_integrity_changed):
+				hal.hardware_integrity_changed.connect(_on_hal_hardware_integrity_changed)
+			system_integrity_score = hal.get_overall_system_integrity()
+	
 	call_deferred("_connect_combat_director")
+
+func _on_hal_hardware_integrity_changed(_dev_id: String, _health: float, _status: String) -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			system_integrity_score = hal.get_overall_system_integrity()
+			_refresh_all_ui()
 
 func _connect_combat_director() -> void:
 	if not is_inside_tree():
@@ -274,6 +291,10 @@ func _connect_ui_signals() -> void:
 		btn_start_scan.pressed.connect(_on_start_scan_pressed)
 	if btn_purge_threats and not btn_purge_threats.pressed.is_connected(_on_purge_threats_pressed):
 		btn_purge_threats.pressed.connect(_on_purge_threats_pressed)
+	if btn_reboot_hardware and not btn_reboot_hardware.pressed.is_connected(_on_reboot_hardware_pressed):
+		btn_reboot_hardware.pressed.connect(_on_reboot_hardware_pressed)
+	if btn_repair_hardware and not btn_repair_hardware.pressed.is_connected(_on_repair_hardware_pressed):
+		btn_repair_hardware.pressed.connect(_on_repair_hardware_pressed)
 	if btn_reinforce_ice and not btn_reinforce_ice.pressed.is_connected(_on_reinforce_ice_pressed):
 		btn_reinforce_ice.pressed.connect(_on_reinforce_ice_pressed)
 	if btn_flush_firewall and not btn_flush_firewall.pressed.is_connected(_on_flush_firewall_pressed):
@@ -290,6 +311,11 @@ func _connect_ui_signals() -> void:
 		depth_option.item_selected.connect(_on_depth_selected)
 
 func _exit_tree() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.hardware_integrity_changed.is_connected(_on_hal_hardware_integrity_changed):
+			hal.hardware_integrity_changed.disconnect(_on_hal_hardware_integrity_changed)
+	
 	if SpaceWorldManager and SpaceWorldManager.has_signal("ship_connection_changed") and SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
 		SpaceWorldManager.ship_connection_changed.disconnect(_on_ship_connection_changed)
 	
@@ -424,7 +450,11 @@ func _update_permissions() -> void:
 	if btn_start_scan:
 		btn_start_scan.disabled = not can_control_diagnostics
 	if btn_purge_threats:
-		btn_purge_threats.disabled = not can_control_diagnostics or detected_threats.is_empty()
+		btn_purge_threats.disabled = not can_control_diagnostics or (detected_threats.is_empty() and damaged_hardware.is_empty())
+	if btn_reboot_hardware:
+		btn_reboot_hardware.disabled = not can_control_diagnostics or (damaged_hardware.is_empty() and detected_threats.is_empty())
+	if btn_repair_hardware:
+		btn_repair_hardware.disabled = not can_control_diagnostics or (damaged_hardware.is_empty() and detected_threats.is_empty())
 	if btn_reinforce_ice:
 		btn_reinforce_ice.disabled = not can_control_diagnostics
 	if btn_flush_firewall:
@@ -691,9 +721,6 @@ func _on_purge_threats_pressed() -> void:
 
 func purge_threats() -> void:
 	var count := detected_threats.size()
-	if count == 0:
-		return
-	
 	for threat in detected_threats:
 		var p: String = threat.get("path")
 		var abs_p := "user://files/%s" % p
@@ -706,31 +733,109 @@ func purge_threats() -> void:
 		if cd and cd.has_method("_on_ship_drive_item_deleted"):
 			cd._on_ship_drive_item_deleted(p)
 		quarantined_threats.append(threat)
-	
 	detected_threats.clear()
+
+	# Bonifica e ripristina anche componenti hardware degradati
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			for d in damaged_hardware:
+				var did: String = d.get("device_id", "")
+				if not did.is_empty():
+					hal.repair_device(did, 100.0)
+					count += 1
+	
 	system_integrity_score = 100.0
 	
-	_log_audit("Bonifica completata: %d minacce rimosse e messe in quarantena." % count)
-	_update_scan_ui()
-	_update_permissions()
-	
-	if status_badge:
-		status_badge.text = "● INTEGRITÀ 100% (SECURE)"
-		status_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+	_log_audit("Bonifica completata: %d minacce e anomalie ripristinate." % count)
+	_refresh_all_ui()
 	
 	var notif := get_node_or_null("/root/NotificationManager")
 	if notif and notif.has_method("spawn_notification"):
-		notif.spawn_notification("Bonifica completata: %d minacce neutralizzate." % count)
+		notif.spawn_notification("Bonifica completata: %d elementi neutralizzati." % count)
+
+func _on_reboot_hardware_pressed() -> void:
+	if not can_control_diagnostics:
+		return
+	reboot_hardware()
+
+func reboot_hardware(target_dev_id: String = "") -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if target_dev_id.is_empty():
+				var sel: PackedInt32Array = threats_list.get_selected_items() if threats_list else PackedInt32Array()
+				if sel.size() > 0:
+					var meta = threats_list.get_item_metadata(sel[0])
+					if meta is Dictionary and meta.get("type") == "hardware":
+						target_dev_id = meta.get("device_id", "")
+			
+			if not target_dev_id.is_empty():
+				var success := hal.reboot_device(target_dev_id)
+				if success:
+					_log_audit("🔄 Riavvio dispositivo hardware eseguito: %s" % target_dev_id)
+					var notif := get_node_or_null("/root/NotificationManager")
+					if notif and notif.has_method("spawn_notification"):
+						notif.spawn_notification("Dispositivo %s riavviato." % target_dev_id)
+				else:
+					_log_audit("❌ Riavvio fallito per dispositivo: %s" % target_dev_id)
+			else:
+				for d in damaged_hardware:
+					var did: String = d.get("device_id", "")
+					if not did.is_empty():
+						hal.reboot_device(did)
+				_log_audit("🔄 Riavvio globale dispositivi hardware degradati completato.")
+			_refresh_all_ui()
+
+func _on_repair_hardware_pressed() -> void:
+	if not can_control_diagnostics:
+		return
+	repair_hardware()
+
+func repair_hardware(target_dev_id: String = "") -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if target_dev_id.is_empty():
+				var sel: PackedInt32Array = threats_list.get_selected_items() if threats_list else PackedInt32Array()
+				if sel.size() > 0:
+					var meta = threats_list.get_item_metadata(sel[0])
+					if meta is Dictionary and meta.get("type") == "hardware":
+						target_dev_id = meta.get("device_id", "")
+			
+			if not target_dev_id.is_empty():
+				var success := hal.repair_device(target_dev_id, 100.0)
+				if success:
+					_log_audit("🔧 Riparazione hardware eseguita: %s ripristinato al 100%%" % target_dev_id)
+					var notif := get_node_or_null("/root/NotificationManager")
+					if notif and notif.has_method("spawn_notification"):
+						notif.spawn_notification("Dispositivo %s riparato al 100%%." % target_dev_id)
+				else:
+					_log_audit("❌ Riparazione fallita per dispositivo: %s" % target_dev_id)
+			else:
+				for d in damaged_hardware:
+					var did: String = d.get("device_id", "")
+					if not did.is_empty():
+						hal.repair_device(did, 100.0)
+				_log_audit("🔧 Riparazione globale dispositivi hardware completata al 100%.")
+			_refresh_all_ui()
 
 func _update_scan_ui() -> void:
 	if scan_progress_bar:
 		scan_progress_bar.value = scan_progress
 	
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			system_integrity_score = hal.get_overall_system_integrity()
+			damaged_hardware = hal.get_damaged_components(95.0)
+	
 	if scan_status_label:
 		if is_scanning:
 			scan_status_label.text = "Scansione in corso... %.1f%%" % scan_progress
 		else:
-			scan_status_label.text = "Scansione terminata. Rilevate %d minacce." % detected_threats.size()
+			var total_anomalies := detected_threats.size() + damaged_hardware.size()
+			scan_status_label.text = "Scansione terminata. Rilevate %d anomalie." % total_anomalies
 	
 	if integrity_score_label:
 		integrity_score_label.text = "Integrità Sistema: %.0f%%" % system_integrity_score
@@ -743,12 +848,25 @@ func _update_scan_ui() -> void:
 	
 	if threats_list:
 		threats_list.clear()
-		if detected_threats.is_empty():
-			threats_list.add_item("✔ Nessuna minaccia rilevata nel file system. Firma logica integra.")
-		else:
-			for t in detected_threats:
-				var prefix := "🔴 [CRITICA]" if t.get("severity") == "CRITICAL" else "🟡 [AVVISO]"
-				threats_list.add_item("%s %s (%s) - %s" % [prefix, t.get("name"), t.get("path"), t.get("desc")])
+		var has_items := false
+		for comp in damaged_hardware:
+			has_items = true
+			var dev_id: String = str(comp.get("device_id", "sconosciuto"))
+			var h: float = float(comp.get("health", 100.0))
+			var st: String = str(comp.get("status", "ONLINE"))
+			var room: String = str(comp.get("room_id", "nave"))
+			var prefix := "🔴 [GUASTO]" if st == "FAULT" or h < 25.0 else "🟡 [DEGRADATO]"
+			var idx := threats_list.add_item("%s HW: %s (%s) - Integrità: %.0f%% [%s]" % [prefix, dev_id, room, h, st])
+			threats_list.set_item_metadata(idx, {"type": "hardware", "device_id": dev_id})
+
+		for t in detected_threats:
+			has_items = true
+			var prefix := "🔴 [CRITICA]" if t.get("severity") == "CRITICAL" else "🟡 [AVVISO]"
+			var idx := threats_list.add_item("%s %s (%s) - %s" % [prefix, t.get("name"), t.get("path"), t.get("desc")])
+			threats_list.set_item_metadata(idx, {"type": "file", "path": t.get("path")})
+
+		if not has_items:
+			threats_list.add_item("✔ Nessuna minaccia o anomalia hardware rilevata. Firma logica integra.")
 
 # --- MODULO 2: PANNELLO ICE & DIFESA FIREWALL ---
 
@@ -977,8 +1095,20 @@ func _log_audit(msg: String) -> void:
 		action_log_label.text = "Stato: %s" % msg
 
 func _refresh_all_ui() -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			system_integrity_score = hal.get_overall_system_integrity()
+			damaged_hardware = hal.get_damaged_components(95.0)
 	_update_scan_ui()
 	_update_ice_ui()
 	_update_reset_ui()
 	_update_firmware_ui()
 	_update_permissions()
+	if status_badge and not is_scanning and active_cyber_intrusions.is_empty():
+		if system_integrity_score >= 95.0 and detected_threats.is_empty() and damaged_hardware.is_empty():
+			status_badge.text = "● INTEGRITÀ 100% (SECURE)"
+			status_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+		else:
+			status_badge.text = "⚠️ INTEGRITÀ %.0f%% (HARDWARE DEGRADATO)" % system_integrity_score
+			status_badge.add_theme_color_override("font_color", Color(0.95, 0.75, 0.2, 1.0) if system_integrity_score >= 60.0 else Color(0.95, 0.25, 0.25, 1.0))

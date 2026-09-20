@@ -86,6 +86,10 @@ var cruise_warmup_current_time: float = 0.0
 var cruise_warmup_total_time: float = 4.0
 var cruise_last_error_reason: String = ""
 
+# Hardware Abstraction Layer (HAL) State
+var hal_efficiency: float = 1.0
+var hal_available_thrust: float = 35.0
+
 # Configurazione attiva di volo estratta dai file .dat o da valori di calibrazione di fabbrica
 var active_config: Dictionary = {
 	"max_linear_speed": 20.0,
@@ -163,10 +167,22 @@ func _connect_system_signals() -> void:
 		if sdm.has_signal("ship_drive_mounted"):
 			sdm.ship_drive_mounted.connect(_on_ship_drive_mounted)
 
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal:
+			if not hal.propulsion_profile_changed.is_connected(_on_hal_propulsion_changed):
+				hal.propulsion_profile_changed.connect(_on_hal_propulsion_changed)
+			hal_efficiency = hal.get_propulsion_efficiency()
+			hal_available_thrust = hal.get_total_available_thrust()
+
 func _exit_tree() -> void:
 	cancel_hyperdrive_alignment()
 	if is_cruise_enabled:
 		set_cruise_enabled(false)
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.propulsion_profile_changed.is_connected(_on_hal_propulsion_changed):
+			hal.propulsion_profile_changed.disconnect(_on_hal_propulsion_changed)
 	# Disconnessione segnali e pulizia risorse
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
@@ -313,29 +329,69 @@ func _update_permissions() -> void:
 	# Controllo abilitato per Pilota, Capitano, Solo Mode o se nessun ruolo bloccante
 	can_control_flight = (my_role == NetworkManager.ROLE_PILOT or my_role == NetworkManager.ROLE_CAPTAIN or my_role == "" or my_role == NetworkManager.ROLE_UNASSIGNED or is_solo)
 	
+	# Verifica alimentazione hardware diegetica tramite ShipHAL
+	var hal: ShipHAL = null
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		hal = SpaceWorldManager.get_ship_hal()
+		
+	var helm_powered: bool = true
+	var engine_powered: bool = true
+	var rcs_l_powered: bool = true
+	var rcs_r_powered: bool = true
+	
+	if hal:
+		helm_powered = hal.is_device_powered("helm_control")
+		engine_powered = hal.is_device_powered("engine_main")
+		rcs_l_powered = hal.is_device_powered("rcs_pitch_l")
+		rcs_r_powered = hal.is_device_powered("rcs_pitch_r")
+	
+	var rcs_any_powered: bool = rcs_l_powered or rcs_r_powered
+	
+	if not helm_powered:
+		can_control_flight = false
+		if is_cruise_enabled:
+			set_cruise_enabled(false)
+		if is_aligning_hyperdrive:
+			cancel_hyperdrive_alignment()
+	
 	# Aggiorna stato pulsanti di manovra
 	if not can_control_flight and is_cruise_enabled:
 		set_cruise_enabled(false)
 	if not can_control_flight and is_aligning_hyperdrive:
 		cancel_hyperdrive_alignment()
+	if not engine_powered and is_cruise_enabled:
+		set_cruise_enabled(false)
+		cruise_last_error_reason = "CRUISE DISENGAGED: PROPULSION POWER LOSS"
 	
 	if cruise_toggle_button:
-		cruise_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive
+		cruise_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive or not engine_powered
 	if inertia_toggle_button:
-		inertia_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive
+		inertia_toggle_button.disabled = not can_control_flight or is_aligning_hyperdrive or not rcs_any_powered
 	if btn_w:
-		btn_w.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive
+		btn_w.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive or not engine_powered
 	if btn_q:
-		btn_q.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive
+		btn_q.disabled = not can_control_flight or is_cruise_enabled or is_aligning_hyperdrive or not rcs_any_powered
 	
-	if not can_control_flight and is_operational():
+	if not helm_powered:
+		if thrusters_badge:
+			thrusters_badge.text = "COMMAND CONSOLE UNPOWERED"
+			thrusters_badge.modulate = Color(1.0, 0.25, 0.25)
+		if status_summary_label:
+			status_summary_label.text = "Consolle di comando non alimentata (helm_control offline). Comandi pilota disconnessi."
+	elif not can_control_flight and is_operational():
 		if thrusters_badge:
 			thrusters_badge.text = "SOLO TELEMETRIA"
 			thrusters_badge.modulate = Color(0.7, 0.7, 1.0)
 		if status_summary_label:
 			status_summary_label.text = "Postazione in modalità osservatore (Ruolo: %s). Comandi di volo riservati al Pilota." % my_role
 	elif is_operational():
-		if thrusters_badge:
+		if not engine_powered:
+			if thrusters_badge:
+				thrusters_badge.text = "OFFLINE - NO POWER"
+				thrusters_badge.modulate = Color(1.0, 0.3, 0.2)
+			if status_summary_label:
+				status_summary_label.text = "Propulsore principale non alimentato (engine_main offline). Spinta longitudinale nulla."
+		elif thrusters_badge:
 			if is_aligning_hyperdrive:
 				thrusters_badge.text = "ALLINEAMENTO ROTTA"
 				thrusters_badge.modulate = Color(1.0, 0.8, 0.2)
@@ -356,8 +412,15 @@ func _update_permissions() -> void:
 				thrusters_badge.text = "🚨 PROXIMITY DROP (%.1fs)" % cd_t
 				thrusters_badge.modulate = Color(1.0, 0.25, 0.25)
 			else:
-				thrusters_badge.text = "PROPULSORI PRONTI"
-				thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
+				if hal_efficiency < 0.2:
+					thrusters_badge.text = "OFFLINE - NO POWER"
+					thrusters_badge.modulate = Color(1.0, 0.3, 0.2)
+				elif hal_efficiency < 0.8:
+					thrusters_badge.text = "PROPULSORI DEGRADATI (%.0f%% - %.0f kN)" % [(hal_efficiency * 100.0), hal_available_thrust]
+					thrusters_badge.modulate = Color(1.0, 0.8, 0.2)
+				else:
+					thrusters_badge.text = "PROPULSORI PRONTI (%.0f kN)" % hal_available_thrust
+					thrusters_badge.modulate = Color(0.4, 1.0, 0.6)
 		if status_summary_label:
 			if is_aligning_hyperdrive:
 				status_summary_label.text = "ALLINEAMENTO HYPERDRIVE AUTOMATICO (Controlli manuali temporaneamente bloccati)"
@@ -377,6 +440,11 @@ func _update_permissions() -> void:
 				status_summary_label.text = "Ingaggio rifiutato: %s | WASD: Volo ordinario" % cruise_last_error_reason
 			else:
 				status_summary_label.text = "WASD: Traslazione | Q/E: Rollio | Spazio/Ctrl: Quota | Frecce: Orientamento | R/F: Velocità"
+
+func _on_hal_propulsion_changed(eff: float, _max_th: float, avail_th: float) -> void:
+	hal_efficiency = eff
+	hal_available_thrust = avail_th
+	_update_permissions()
 
 func _setup_ui_events() -> void:
 	btn_w = Button.new()
@@ -531,10 +599,15 @@ func is_control_active() -> bool:
 			return false
 	return true
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if not is_control_active():
 		return
 	if is_cruise_enabled or is_aligning_hyperdrive:
+		return
+	if parent_window and not parent_window.is_selected:
+		return
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner is LineEdit or focus_owner is TextEdit:
 		return
 	
 	if event is InputEventKey and event.pressed and not event.is_echo():
@@ -549,11 +622,29 @@ func _process(_delta: float) -> void:
 	var move_vec := Vector3.ZERO
 	var rot_vec := Vector3.ZERO
 	
+	# Verifica alimentazione hardware diegetica tramite ShipHAL
+	var hal: ShipHAL = null
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		hal = SpaceWorldManager.get_ship_hal()
+		
+	var engine_powered: bool = true
+	var rcs_l_powered: bool = true
+	var rcs_r_powered: bool = true
+	
+	if hal:
+		engine_powered = hal.is_device_powered("engine_main")
+		rcs_l_powered = hal.is_device_powered("rcs_pitch_l")
+		rcs_r_powered = hal.is_device_powered("rcs_pitch_r")
+	
 	if is_cruise_enabled:
-		# In velocità di crociera i controlli di volo manuali sono esclusi:
-		# la nave ignora gli input di manovra e prosegue unicamente dritta lungo l'asse di prua (-Z)
-		move_vec = Vector3(0.0, 0.0, -1.0)
-		rot_vec = Vector3.ZERO
+		if not engine_powered:
+			set_cruise_enabled(false)
+			move_vec = Vector3.ZERO
+		else:
+			# In velocità di crociera i controlli di volo manuali sono esclusi:
+			# la nave ignora gli input di manovra e prosegue unicamente dritta lungo l'asse di prua (-Z)
+			move_vec = Vector3(0.0, 0.0, -1.0)
+			rot_vec = Vector3.ZERO
 	elif is_aligning_hyperdrive:
 		# Durante l'allineamento automatico i comandi utente sono esclusi
 		move_vec = Vector3.ZERO
@@ -580,6 +671,21 @@ func _process(_delta: float) -> void:
 		move_vec += _ui_linear_input
 		rot_vec += _ui_angular_input
 	
+		# Applicazione vincoli energetici hardware su spinta e manovra
+		if not engine_powered:
+			move_vec.z = 0.0
+		
+		if not rcs_l_powered and not rcs_r_powered:
+			rot_vec = Vector3.ZERO
+			move_vec.x = 0.0
+			move_vec.y = 0.0
+		elif not rcs_l_powered:
+			if move_vec.x < 0.0: move_vec.x = 0.0
+			if rot_vec.y > 0.0: rot_vec.y = 0.0
+		elif not rcs_r_powered:
+			if move_vec.x > 0.0: move_vec.x = 0.0
+			if rot_vec.y < 0.0: rot_vec.y = 0.0
+		
 		# Normalizzazione e applicazione moltiplicatore velocità
 		if move_vec.length_squared() > 1.0:
 			move_vec = move_vec.normalized()

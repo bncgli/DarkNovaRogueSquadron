@@ -272,6 +272,34 @@ func _process(delta: float) -> void:
 	if not _is_ship_operational():
 		return
 	
+	# Verifica alimentazione hardware diegetica antenna_array
+	is_comms_powered = true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				is_comms_powered = hal.is_device_powered("antenna_array")
+		elif SpaceWorldManager.has_method("is_ship_system_powered"):
+			is_comms_powered = SpaceWorldManager.is_ship_system_powered("comms")
+	
+	if waterfall_canvas:
+		waterfall_canvas.set_operational(is_comms_powered)
+	
+	if not is_comms_powered:
+		is_auto_rotating = false
+		is_frequency_locked = false
+		if power_badge:
+			power_badge.text = "⚠️ PWR: 0 MW (ANTENNA OFFLINE)"
+			power_badge.modulate = Color(1.0, 0.25, 0.25)
+		if status_badge:
+			status_badge.text = "STATO: SEGNALE PERSO (RETE)"
+			status_badge.modulate = Color(1.0, 0.35, 0.25)
+		# Se l'antenna perde alimentazione, smonta immediatamente il Target Drive EW
+		var rdm := get_node_or_null("/root/RemoteDriveManager")
+		if rdm and rdm.has_method("unmount_target_drive") and bool(rdm.get("is_target_drive_mounted")):
+			rdm.unmount_target_drive()
+		return
+	
 	_refresh_signals()
 	
 	# 1. Auto-rotazione continua antenna a 360°
@@ -352,6 +380,9 @@ func _update_permissions() -> void:
 		can_control_comms = role_lower in ["hacker", "capitano", "captain", "stagista", "admin", "host"]
 	else:
 		can_control_comms = is_solo
+	
+	if not is_comms_powered:
+		can_control_comms = false
 	
 	# Sintonizzatore
 	if freq_slider:
@@ -636,7 +667,8 @@ func _on_btn_freq_lock_toggled(toggled_on: bool) -> void:
 
 # --- CONTROLLI SETTORE DESTRO: INTERAZIONI, STAZIONE & EW CONNECT ---
 func _on_btn_request_docking_pressed() -> void:
-	if not can_control_comms:
+	if not can_control_comms or not is_comms_powered:
+		_log_comms_message("[color=#ff5555][ERRORE HARDWARE][/color] Impossibile trasmettere richiesta attracco: antenna subspaziale non alimentata.")
 		return
 	var cur_sig: Variant = _get_locked_signal()
 	var station_id := ""
@@ -649,7 +681,7 @@ func _on_btn_request_docking_pressed() -> void:
 	request_station_docking(target_st)
 
 func _on_btn_station_emergency_pressed() -> void:
-	if not can_control_comms:
+	if not can_control_comms or not is_comms_powered:
 		return
 	var cur_sig: Variant = _get_locked_signal()
 	var s_name := str(cur_sig.get("name", "Stazione")) if cur_sig != null else "Stazione"
@@ -657,7 +689,7 @@ func _on_btn_station_emergency_pressed() -> void:
 	_update_action_log("Canale emergenza stazione aperto.")
 
 func _on_btn_station_trade_pressed() -> void:
-	if not can_control_comms:
+	if not can_control_comms or not is_comms_powered:
 		return
 	var cur_sig: Variant = _get_locked_signal()
 	var s_name := str(cur_sig.get("name", "Stazione")) if cur_sig != null else "Stazione"
@@ -665,7 +697,8 @@ func _on_btn_station_trade_pressed() -> void:
 	_update_action_log("Dati commerciali stazione ricevuti.")
 
 func _on_connect_drive_pressed() -> void:
-	if not can_control_comms:
+	if not can_control_comms or not is_comms_powered:
+		_log_comms_message("[color=#ff5555][ERRORE HARDWARE][/color] Link EW impossibile: antenna_array non alimentata.")
 		return
 	
 	var cur_sig: Variant = _get_locked_signal()

@@ -16,7 +16,17 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 	if current_path != "" and current_path[-1] != '/':
 		current_path += '/'
 	
-	var file_path: String = current_path + args[0]
+	var file_path: String = args[0] if args[0].begins_with("/") else (current_path + args[0])
+	
+	if VirtualSysfsDriver.is_sysfs_path(file_path):
+		var sysfs := terminal.virtual_path_manager._get_sysfs()
+		if sysfs.is_valid_file(file_path):
+			var content := sysfs.read_file(file_path)
+			terminal.push_line_to_output(content)
+		else:
+			terminal.push_line_to_output(file_path + " does not exist or is a folder.")
+		return
+
 	if file_path.ends_with(".dat"):
 		terminal.push_line_to_output("Errore: I file .dat sono file di configurazione binari/protetti e non sono leggibili dal visualizzatore di testo standard.")
 		return

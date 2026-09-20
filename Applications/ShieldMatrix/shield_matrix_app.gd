@@ -234,15 +234,26 @@ func _process(delta: float) -> void:
 	if not _is_ship_operational():
 		return
 	
+	is_is_shield_powered = true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				is_is_shield_powered = hal.is_device_powered("arm_sx_balancer") or hal.is_device_powered("arm_dx_balancer")
+		elif SpaceWorldManager.has_method("is_ship_system_powered"):
+			is_is_shield_powered = SpaceWorldManager.is_ship_system_powered("defense")
+	
 	if boost_cooldown_timer > 0.0:
 		boost_cooldown_timer = maxf(0.0, boost_cooldown_timer - delta)
 		if emergency_boost_button and can_control_shields:
-			if boost_cooldown_timer > 0.0:
+			if boost_cooldown_timer > 0.0 or not is_is_shield_powered:
 				emergency_boost_button.disabled = true
-				emergency_boost_button.text = "⏳ BOOST (%.1fs)" % boost_cooldown_timer
+				emergency_boost_button.text = "⏳ BOOST (%.1fs)" % boost_cooldown_timer if boost_cooldown_timer > 0.0 else "⚡ BOOST DISABILITATO"
 			else:
 				emergency_boost_button.disabled = false
 				emergency_boost_button.text = "⚡ RICARICA RAPIDA"
+	elif emergency_boost_button and can_control_shields:
+		emergency_boost_button.disabled = not is_is_shield_powered
 	
 	_process_active_defenses(delta)
 	_simulate_shield_recharge(delta)
@@ -565,10 +576,15 @@ func _refresh_ui_display() -> void:
 	
 	# Power badge
 	if power_badge:
-		var p_mw: float = active_config.get("base_power_draw_mw", 90.0)
-		if boost_cooldown_timer > 0.0:
-			p_mw += active_config.get("emergency_boost_power_mw", 120.0)
-		power_badge.text = "POTENZA: %.0f MW" % p_mw
+		if is_is_shield_powered:
+			var p_mw: float = active_config.get("base_power_draw_mw", 90.0)
+			if boost_cooldown_timer > 0.0:
+				p_mw += active_config.get("emergency_boost_power_mw", 120.0)
+			power_badge.text = "POTENZA: %.0f MW" % p_mw
+			power_badge.modulate = Color(0.3, 0.9, 0.5)
+		else:
+			power_badge.text = "⚠️ PWR: 0 MW (SOTTOALIMENTATO)"
+			power_badge.modulate = Color(1.0, 0.25, 0.25)
 
 # --- GESTIONE VECTOR PAD & SLIDER RATIO ---
 

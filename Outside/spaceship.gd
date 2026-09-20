@@ -63,8 +63,32 @@ signal cargo_stowed_in_ship(item_data: Dictionary)
 
 var cargo_hatch_area: Area3D = null
 var cargo_manager: Node = null
+var hardware_bus: ShipHardwareBus = null
 const CARGO_HATCH_OFFSET_LOCAL: Vector3 = Vector3(0.0, -1.8, 3.2)
 const CARGO_HATCH_RADIUS: float = 8.0
+
+func get_hardware_bus() -> ShipHardwareBus:
+	if hardware_bus and is_instance_valid(hardware_bus):
+		return hardware_bus
+	if is_inside_tree():
+		var swm = get_node_or_null("/root/SpaceWorldManager")
+		if swm and swm.has_method("get_hardware_bus"):
+			hardware_bus = swm.get_hardware_bus()
+			return hardware_bus
+	return null
+
+func get_ship_hal() -> ShipHAL:
+	if is_inside_tree():
+		var swm = get_node_or_null("/root/SpaceWorldManager")
+		if swm and swm.has_method("get_ship_hal"):
+			return swm.get_ship_hal()
+	var bus := get_hardware_bus()
+	if bus:
+		return ShipHAL.new(bus)
+	return null
+
+func set_hardware_bus(bus: ShipHardwareBus) -> void:
+	hardware_bus = bus
 
 func _ready() -> void:
 	add_to_group("spaceship")
@@ -425,33 +449,47 @@ func _apply_flight_physics(delta: float) -> void:
 	
 	var cur_basis := global_transform.basis if is_inside_tree() else transform.basis
 	
+	# Modulazione spinta e manovrabilità tramite Hardware Bus se disponibile
+	var eff := 1.0
+	var bus := get_hardware_bus()
+	if bus and is_instance_valid(bus):
+		eff = bus.get_propulsion_efficiency()
+		var hal := get_ship_hal()
+		if hal and is_instance_valid(hal):
+			hal.apply_thrust_input(absf(linear_input.z))
+		else:
+			var thrusters := bus.get_components_by_category("propulsion")
+			for t in thrusters:
+				if t is ThrusterComponent:
+					t.set_throttle(absf(linear_input.z))
+	
 	# Calcola velocità target locale
 	var target_local_vel := Vector3.ZERO
-	target_local_vel.x = linear_input.x * max_linear_speed
-	target_local_vel.y = linear_input.y * max_linear_speed
-	target_local_vel.z = linear_input.z * max_linear_speed
+	target_local_vel.x = linear_input.x * max_linear_speed * eff
+	target_local_vel.y = linear_input.y * max_linear_speed * eff
+	target_local_vel.z = linear_input.z * max_linear_speed * eff
 	
 	# Converti nel frame di riferimento globale usando la basis della nave
 	var target_global_vel := cur_basis * target_local_vel
 	
 	if linear_input.length_squared() > 0.001:
-		linear_velocity = linear_velocity.move_toward(target_global_vel, linear_acceleration * delta)
+		linear_velocity = linear_velocity.move_toward(target_global_vel, linear_acceleration * eff * delta)
 	elif inertia_dampening:
 		linear_velocity = linear_velocity.move_toward(Vector3.ZERO, linear_deceleration * delta)
 	
 	# Rotazioni angolari
 	var target_local_ang := Vector3.ZERO
 	# Pitch (Up/Down) attorno all'asse X locale
-	target_local_ang.x = angular_input.x * max_angular_speed
+	target_local_ang.x = angular_input.x * max_angular_speed * eff
 	# Yaw (Left/Right) attorno all'asse Y locale
-	target_local_ang.y = angular_input.y * max_angular_speed
+	target_local_ang.y = angular_input.y * max_angular_speed * eff
 	# Roll attorno all'asse Z locale
-	target_local_ang.z = angular_input.z * max_angular_speed
+	target_local_ang.z = angular_input.z * max_angular_speed * eff
 	
 	var target_global_ang := cur_basis * target_local_ang
 	
 	if angular_input.length_squared() > 0.001:
-		angular_velocity = angular_velocity.move_toward(target_global_ang, angular_acceleration * delta)
+		angular_velocity = angular_velocity.move_toward(target_global_ang, angular_acceleration * eff * delta)
 	else:
 		angular_velocity = angular_velocity.move_toward(Vector3.ZERO, angular_deceleration * delta)
 
@@ -509,6 +547,9 @@ func stop_engines() -> void:
 	angular_input = Vector3.ZERO
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
+	var hal := get_ship_hal()
+	if hal and is_instance_valid(hal):
+		hal.apply_thrust_input(0.0)
 
 func reset_to_origin() -> void:
 	stop_engines()

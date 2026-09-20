@@ -1,0 +1,1097 @@
+[gd_resource type="Resource" script_class="ShipBlueprint" format=3 uid="uid://crc7c5e38nfh6"]
+
+[ext_resource type="Script" uid="uid://syyl8iobwguy" path="res://Outside/ShipSublayer/ShipDriveFile.gd" id="1_ovaa7"]
+[ext_resource type="Script" uid="uid://dqvdvs2fhqsep" path="res://Outside/ShipSublayer/ShipDuctData.gd" id="2_mj6ij"]
+[ext_resource type="Script" uid="uid://dydvrwi8fq2be" path="res://Outside/ShipSublayer/ShipAppMetadata.gd" id="3_g1fx3"]
+[ext_resource type="Script" uid="uid://ctqtsswyqa20u" path="res://Outside/ShipSublayer/ShipDeviceData.gd" id="4_jpah4"]
+[ext_resource type="Script" uid="uid://od5pvbqowjk" path="res://Outside/ShipSublayer/ShipRoomData.gd" id="5_lwibt"]
+[ext_resource type="Script" uid="uid://fb3y4b4gyx8x" path="res://Outside/ShipSublayer/ship_blueprint.gd" id="6_h7y36"]
+
+[sub_resource type="Resource" id="Resource_2o3qs"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Weapons/weapons_config.dat"
+content = "# DARK NOVA TACTICAL WEAPONS RUNTIME CONFIGURATION
+# WARNING: TACTICAL WEAPONS & DEFENSE SYSTEMS FIRMWARE
+[SYSTEM]
+app_name=Weapons
+version=1.0.4
+status=OPERATIONAL
+weapons_subsystem=ACTIVE
+decryption_key=WEAP-CFG-7815
+
+[WEAPONS]
+max_range=4500.0
+fire_rate=1.8
+cooling_rate=0.75
+auto_pdg_enabled=true
+laser_power_draw=250.0
+torpedo_max_ammo=12
+pdg_ammo_max=500
+pdg_fire_rate=8.0
+emergency_vent_cooldown=10.0
+"
+is_protected = true
+desc = "Parametri operativi armi pesanti, torrette laser e cadenza PDG."
+
+[sub_resource type="Resource" id="Resource_0retm"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Weapons/ammo_tuning.dat"
+content = "# WEAPONS BALLISTICS & TARGETING CALIBRATION MATRIX
+[BALLISTICS]
+decryption_key=AMMO-TUN-7815
+torpedo_velocity=85.0
+auto_lead_tracking=true
+overclock_damage_mult=1.0
+heat_multiplier=1.0
+pdg_range=1200.0
+laser_beam_intensity=1.0
+"
+is_protected = true
+desc = "Balistica siluri, tracking anticipo di tiro e guadagno danno."
+
+[sub_resource type="Resource" id="Resource_5gyaf"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/StationHub/station_hub_config.dat"
+content = "[SYSTEM]
+app_name=StationHubApp
+version=1.0.0
+status=OPERATIONAL
+
+[SERVICES]
+auto_handshake=true
+default_credits=5000
+allow_firmware_trade=true
+logbook_sync=true
+"
+is_protected = true
+desc = "Configurazione docking suite, crediti e autorizzazioni servizi portuali."
+
+[sub_resource type="Resource" id="Resource_6qj18"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/ServiceDrone/service_drone_config.dat"
+content = "[SYSTEM]
+app_name=ServiceDroneApp
+version=1.0.0
+status=OPERATIONAL
+
+[FLIGHT]
+max_thrust=35.0
+battery_capacity_sec=240.0
+tether_range=1500.0
+auto_dock_speed=12.0
+"
+is_protected = true
+desc = "Configurazione dinamica di spinta, batteria, raggio tether e auto-docking."
+
+[sub_resource type="Resource" id="Resource_2vxcw"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/ServiceDrone/manipulator_tuning.dat"
+content = "[TOOLS]
+repair_rate=15.0
+cutting_laser_power=25.0
+cargo_capacity_kg=500.0
+magnet_range=18.0
+"
+is_protected = true
+desc = "Calibrazione braccio manipolatore, tasso saldatura, laser e raggio magnete."
+
+[sub_resource type="Resource" id="Resource_pv8qg"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Sensors/sensors_config.dat"
+content = "# DARK NOVA SENSORS ARRAY & TACTICAL MAP CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - RUNTIME RADAR FIRMWARE
+[SYSTEM]
+app_name=SensorsApp
+version=1.0.0
+status=OPERATIONAL
+decryption_key=SENS-CFG-7815
+
+[SWEEP]
+sweep_frequency_hz=12.0
+active_ping_radius=2000.0
+noise_filter=0.92
+"
+is_protected = true
+desc = "Configurazione frequenza sweep, raggio ping attivo e filtri rumore sensori."
+
+[sub_resource type="Resource" id="Resource_bkl24"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Sensors/radar_tuning.dat"
+content = "# RADAR TUNING & SPECTROMETRY CALIBRATION MATRIX
+[TUNING]
+decryption_key=RADR-TUN-7815
+spectrum_sensitivity=1.0
+iff_auto_tag=true
+stealth_detection_threshold=0.35
+"
+is_protected = true
+desc = "Sensibilità spettrometrica, marcatura automatica IFF e soglia stealth."
+
+[sub_resource type="Resource" id="Resource_i82pr"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/CargoBay/cargo_bay_config.dat"
+content = "[SYSTEM]
+app_name=CargoBayApp
+version=1.0.0
+status=OPERATIONAL
+
+[LIMITS]
+max_mass_kg=2000.0
+max_volume_m3=100.0
+
+[ECONOMY]
+default_flux_score=720.0
+impound_warning_sec=120.0
+"
+is_protected = true
+desc = "Configurazione stiva cargo, capacità volumetrica/massa e rating creditizio FLUX."
+
+[sub_resource type="Resource" id="Resource_3i4yk"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Comms/comms_config.dat"
+content = "# DARK NOVA COMMUNICATIONS & EW RUNTIME CONFIGURATION
+# WARNING: SUBSPACE TRANSCEIVER & HACKWARFARE PROTOCOLS
+[SYSTEM]
+app_name=Comms
+version=1.0.4
+status=OPERATIONAL
+subspace_relay_active=true
+decryption_key=COMM-CFG-7815
+
+[FREQUENCY]
+default_freq_mhz=1420.0
+bandwidth_hz=1420.0
+signal_amplification=1.2
+signal_noise_ratio=0.85
+auto_tune_sos=true
+
+[ELECTRONIC_WARFARE]
+jamming_power_mw=120.0
+jamming_radius=15000.0
+spoofing_signature=CORVETTE_CIVILIAN
+overclock_ew_boost=1.0
+"
+is_protected = true
+desc = "Configurazione ricetrasmettitore subspaziale e moduli di disturbo EW."
+
+[sub_resource type="Resource" id="Resource_mbylt"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/Comms/crypto_tuning.dat"
+content = "# CRYPTO ANALYSIS & DECRYPTION CALIBRATION MATRIX
+[CRYPTO]
+decryption_key=CRYP-TUN-7815
+decryption_speed_multiplier=1.0
+crypto_crack_speed=1.0
+matrix_layers=3
+auto_archive_decrypted=true
+"
+is_protected = true
+desc = "Parametri decodifica cifrari e velocità crittanalisi."
+
+[sub_resource type="Resource" id="Resource_gvkt0"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/DuctDrone/duct_drone_config.dat"
+content = "# DARK NOVA DUCT DRONE RUNTIME CONFIGURATION
+# WARNING: SYSTEM CONFIGURATION FILE - MAINTENANCE & REPAIR ROBOT
+[SYSTEM]
+app_name=DuctDrone
+version=1.0.4
+status=OPERATIONAL
+maintenance_subsystem=ACTIVE
+decryption_key=DUCT-CFG-7815
+
+[DRONE_DYNAMICS]
+linear_speed=175.0
+linear_acceleration=650.0
+linear_deceleration=750.0
+rotate_speed=3.0
+
+[BATTERY_MANAGEMENT]
+battery_max=100.0
+battery_drain_move=0.35
+battery_drain_lights=0.75
+battery_drain_radar=3.5
+battery_drain_repair=6.0
+
+[MAINTENANCE]
+radar_scan_radius_max=160.0
+repair_range=42.0
+repair_speed_multiplier=1.0
+"
+is_protected = true
+desc = "Configurazione dinamica e gestione energetica del drone di manutenzione."
+
+[sub_resource type="Resource" id="Resource_tx7is"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/DuctDrone/drone_tuning.dat"
+content = "# DUCT DRONE CALIBRATION & EFFICIENCY MATRIX
+[TUNING]
+decryption_key=DRONE-TUN-7815
+turbo_multiplier=2.0
+precision_multiplier=0.5
+repair_efficiency=1.0
+radar_intensity=1.0
+overclock_speed_gain=1.0
+"
+is_protected = true
+desc = "Coefficienti di efficienza riparazione e radar del drone."
+
+[sub_resource type="Resource" id="Resource_2wg3o"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/FluxWallet/wallet_config.dat"
+content = "# DARK NOVA FLUX WALLET CONFIGURATION
+[SYSTEM]
+app_name=FluxWallet
+version=1.0.0
+status=OPERATIONAL
+
+[DISPLAY]
+show_modifiers=true
+refresh_rate=1.0
+"
+is_protected = true
+desc = "Configurazione visualizzazione portafoglio Flux."
+
+[sub_resource type="Resource" id="Resource_5uroj"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/ShieldMatrix/shields_config.dat"
+content = "# DARK NOVA SHIELD MATRIX RUNTIME CONFIGURATION
+# WARNING: SHIELD DEFLECTOR AND HULL PROTECTION MATRIX
+[SYSTEM]
+app_name=ShieldMatrix
+version=1.0.4
+status=OPERATIONAL
+shield_subsystem=ACTIVE
+decryption_key=SHLD-CFG-7815
+
+[SHIELD_SETTINGS]
+max_capacity_per_quadrant=250.0
+recharge_rate_per_sec=15.0
+overload_limit=1.3
+base_power_draw_mw=90.0
+emergency_boost_power_mw=120.0
+emergency_boost_amount=75.0
+emergency_boost_cooldown=8.0
+decay_rate_unpowered=25.0
+"
+is_protected = true
+desc = "Capacità per quadrante, rigenerazione e assorbimento energetico matrice scudi."
+
+[sub_resource type="Resource" id="Resource_0ttoj"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/ShieldMatrix/deflector_tuning.dat"
+content = "# DEFLECTOR HARMONICS & FIELD TUNING MATRIX
+[HARMONICS]
+decryption_key=DEFL-TUN-7815
+harmonic_frequency=440.0
+emergency_boost_multiplier=2.5
+overclock_absorption=1.0
+phase_sync_stability=0.98
+dispersion_damping=0.88
+"
+is_protected = true
+desc = "Frequenza armonica deflettori e moltiplicatori boost scudi."
+
+[sub_resource type="Resource" id="Resource_bp_dat"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/systems/ship_blueprint.dat"
+content = "# DARK NOVA SHIP BLUEPRINT & HULL SPECIFICATIONS
+# WARNING: SHIP MAINFRAME BLUEPRINT MATRIX - LOW-LEVEL FIRMWARE
+[BLUEPRINT_METADATA]
+decryption_key=BLUP-SYS-7815
+ship_id=dark_nova_corvette
+ship_name=Dark Nova Corvette
+ship_class=Corvetta d'Assalto & Ricognizione Leggera
+bounds_x=60.0
+bounds_y=30.0
+bounds_width=480.0
+bounds_height=420.0
+drone_spawn_x=300.0
+drone_spawn_y=80.0
+drone_spawn_heading=-1.5707963
+
+[BLUEPRINT_SUBLAYERS]
+rooms_count=10
+ducts_count=14
+damages_count=8
+drive_files_count=23
+installed_apps_count=9
+"
+is_protected = true
+desc = "Specifiche mainframe e metadata della blueprint di bordo."
+
+[sub_resource type="Resource" id="Resource_hull_dat"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/systems/hull_specs.dat"
+content = "# SHIP HULL SECTORS & SUBLAYER TOPOLOGY MATRIX
+[HULL_SECTORS]
+decryption_key=HULL-SYS-7815
+sector_bridge=Ponte di Comando
+sector_crew=Alloggi Equipaggio
+sector_drone_bay=Baia di Lancio Droni
+sector_tech_corridor=Corridoio Tecnico Principale
+sector_cargo=Baia di Carico Principale
+sector_reactor=Sala Reattore Principale
+sector_engines=Sala Motori & Propulsione
+sector_armory=Sala Armeria & Scudi
+
+[POWER_GRID_SPECS]
+reactor_output_mw=1200.0
+aux_generator_mw=450.0
+total_devices=11
+grid_balancing=AUTOMATIC
+
+[DAMAGE_TOLERANCE]
+critical_integrity_threshold=25.0
+max_structural_integrity=100.0
+total_damage_sectors=8
+"
+is_protected = true
+desc = "Topologia scafo, settori strutturali e tolleranze danni nave."
+
+[sub_resource type="Resource" id="Resource_vganl"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/HackExploits/hack_exploits_config.dat"
+content = "# HACK EXPLOITS SUITE RUNTIME CONFIGURATION
+# WARNING: CLASSIFIED ELECTRONIC WARFARE FIRMWARE
+[SYSTEM]
+app_name=HackExploits
+version=1.0.0
+status=OPERATIONAL
+decryption_key=HACK-CFG-7815
+
+[EXPLOITS]
+spammer_enabled=true
+blind_eye_enabled=true
+eight_loops_enabled=true
+gout_enabled=true
+sentinel_poll_rate=0.25
+"
+is_protected = true
+desc = "Configurazione della suite di exploit offensivi e parametri sentinella."
+
+[sub_resource type="Resource" id="Resource_gtdma"]
+script = ExtResource("1_ovaa7")
+path = "Ship Drive/Programs/HackExploits/exploit_payloads.dat"
+content = "# EXPLOIT PAYLOAD CALIBRATION & INTRUSION MATRIX
+[PAYLOADS]
+decryption_key=EXPLOIT-PAYLOAD-7815
+spammer_frequency_sec=2.5
+blind_eye_timeout_sec=1.0
+eight_loops_g_mult=8.0
+gout_angular_mult=6.0
+"
+is_protected = true
+desc = "Parametri di calibrazione payload, rateo spammer e moltiplicatori G."
+
+[sub_resource type="Resource" id="Resource_duct_1"]
+script = ExtResource("2_mj6ij")
+id = "duct_1"
+name = "Condotto Dorsale Alpha"
+from = Vector2(300, 115)
+to = Vector2(300, 135)
+width = 16.0
+
+[sub_resource type="Resource" id="Resource_duct_2"]
+script = ExtResource("2_mj6ij")
+id = "duct_2"
+name = "Condotto Reattore-Armeria"
+from = Vector2(300, 195)
+to = Vector2(300, 215)
+width = 16.0
+
+[sub_resource type="Resource" id="Resource_duct_3"]
+script = ExtResource("2_mj6ij")
+id = "duct_3"
+name = "Condotto Termico Motori"
+from = Vector2(300, 295)
+to = Vector2(300, 315)
+width = 18.0
+
+[sub_resource type="Resource" id="Resource_duct_4"]
+script = ExtResource("2_mj6ij")
+id = "duct_4"
+name = "Condotto Dati Sensori"
+from = Vector2(230, 80)
+to = Vector2(160, 80)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_5"]
+script = ExtResource("2_mj6ij")
+id = "duct_5"
+name = "Condotto Avionica"
+from = Vector2(160, 80)
+to = Vector2(160, 115)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_6"]
+script = ExtResource("2_mj6ij")
+id = "duct_6"
+name = "Condotto Linea Comms"
+from = Vector2(370, 80)
+to = Vector2(440, 80)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_7"]
+script = ExtResource("2_mj6ij")
+id = "duct_7"
+name = "Condotto EW Comms"
+from = Vector2(440, 80)
+to = Vector2(440, 115)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_8"]
+script = ExtResource("2_mj6ij")
+id = "duct_8"
+name = "Condotto Filtrazione SX"
+from = Vector2(160, 180)
+to = Vector2(160, 200)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_9"]
+script = ExtResource("2_mj6ij")
+id = "duct_9"
+name = "Condotto Linea Merci DX"
+from = Vector2(440, 180)
+to = Vector2(440, 200)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_10"]
+script = ExtResource("2_mj6ij")
+id = "duct_10"
+name = "Bypass Refrigerante SX"
+from = Vector2(220, 240)
+to = Vector2(235, 240)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_11"]
+script = ExtResource("2_mj6ij")
+id = "duct_11"
+name = "Bypass Refrigerante DX"
+from = Vector2(365, 240)
+to = Vector2(380, 240)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_12"]
+script = ExtResource("2_mj6ij")
+id = "duct_12"
+name = "Condotto RCS Sinistro"
+from = Vector2(100, 250)
+to = Vector2(80, 250)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_13"]
+script = ExtResource("2_mj6ij")
+id = "duct_13"
+name = "Condotto RCS Destro"
+from = Vector2(500, 250)
+to = Vector2(520, 250)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_14"]
+script = ExtResource("2_mj6ij")
+id = "duct_14"
+name = "Condotto Manutenzione SX"
+from = Vector2(160, 275)
+to = Vector2(160, 350)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_15"]
+script = ExtResource("2_mj6ij")
+id = "duct_15"
+name = "Accesso Motori SX"
+from = Vector2(160, 350)
+to = Vector2(185, 350)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_16"]
+script = ExtResource("2_mj6ij")
+id = "duct_16"
+name = "Condotto Manutenzione DX"
+from = Vector2(440, 275)
+to = Vector2(440, 350)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_duct_17"]
+script = ExtResource("2_mj6ij")
+id = "duct_17"
+name = "Accesso Motori DX"
+from = Vector2(440, 350)
+to = Vector2(415, 350)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_hcilf"]
+script = ExtResource("2_mj6ij")
+id = "duct_18"
+name = "Condotto 18"
+from = Vector2(120, 270)
+to = Vector2(120, 320)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_12irv"]
+script = ExtResource("2_mj6ij")
+id = "duct_19"
+name = "Condotto 19"
+from = Vector2(160, 80)
+to = Vector2(90, 80)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_r8ubu"]
+script = ExtResource("2_mj6ij")
+id = "duct_20"
+name = "Condotto 20"
+from = Vector2(440, 80)
+to = Vector2(520, 80)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_gm38s"]
+script = ExtResource("2_mj6ij")
+id = "duct_21"
+name = "Condotto 21"
+from = Vector2(480, 280)
+to = Vector2(480, 310)
+width = 14.0
+
+[sub_resource type="Resource" id="Resource_app_flight"]
+script = ExtResource("3_g1fx3")
+id = "flight_control"
+title = "Flight Control"
+category = "Sistemi Nave"
+scene_path = "res://Applications/FlightControl/flight_control_app.tscn"
+roles = Array[String](["Capitano", "Pilota", "Stagista"])
+
+[sub_resource type="Resource" id="Resource_app_power"]
+script = ExtResource("3_g1fx3")
+id = "power_grid"
+title = "Power Grid"
+category = "Sistemi Nave"
+scene_path = "res://Applications/PowerGrid/power_grid_app.tscn"
+roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
+
+[sub_resource type="Resource" id="Resource_app_cams"]
+script = ExtResource("3_g1fx3")
+id = "cams"
+title = "Cams"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Cams/cams_app.tscn"
+roles = Array[String](["Capitano", "Pilota", "Tattico / Armi", "Sensori / Radar", "Soldato", "Stagista"])
+
+[sub_resource type="Resource" id="Resource_app_life"]
+script = ExtResource("3_g1fx3")
+id = "life_support"
+title = "Supporto Vitale & Atmosfera"
+category = "Sistemi Nave"
+scene_path = "res://Applications/LifeSupport/life_support_app.tscn"
+roles = Array[String](["Engineer", "Captain", "Stagista", "Ingegnere", "Capitano"])
+
+[sub_resource type="Resource" id="Resource_app_diag"]
+script = ExtResource("3_g1fx3")
+id = "diagnostics"
+title = "System Diagnostics"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Diagnostics/diagnostics_app.tscn"
+roles = Array[String](["Capitano", "Hacker", "Ingegnere", "Stagista", "Captain", "Engineer"])
+
+[sub_resource type="Resource" id="Resource_app_map"]
+script = ExtResource("3_g1fx3")
+id = "system_map"
+title = "System Map & Hyperdrive"
+category = "Navigazione"
+scene_path = "res://Applications/SystemMap/system_map_app.tscn"
+roles = Array[String](["Pilota", "Capitano", "Hacker", "Tattico", "Pilot", "Captain", "Hacker", "Stagista"])
+
+[sub_resource type="Resource" id="Resource_app_log"]
+script = ExtResource("3_g1fx3")
+id = "logbook"
+title = "Registro di Bordo & Obiettivi"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Logbook/logbook_app.tscn"
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Soldato", "Hacker", "Stagista", "Captain", "Pilot", "Engineer", "Soldier"])
+
+[sub_resource type="Resource" id="Resource_4iptn"]
+script = ExtResource("3_g1fx3")
+id = "weapons"
+title = "Tactical Weapons"
+description = "Sistemi d'arma, torrette laser binate, lanciasiluri e PDG"
+developer = "CyberDyne Orbital"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Weapons/weapons_app.tscn"
+icon_color = Color(0.95, 0.25, 0.25, 1)
+roles = Array[String](["Capitano", "Soldato", "Tattico / Armi", "Stagista"])
+drive_folder = "Programs/Weapons"
+
+[sub_resource type="Resource" id="Resource_bgbc1"]
+script = ExtResource("3_g1fx3")
+id = "station_hub"
+title = "Hub Servizi Portuali"
+description = "Interfaccia diegetica servizi di stazione: Cantiere, Mercato Firmware, Bacheca Contratti e Taverna."
+developer = "Pulse Networks"
+category = "Sistemi Nave"
+scene_path = "res://Applications/StationHub/station_hub_app.tscn"
+icon_color = Color(0.2, 0.8, 0.7, 1)
+roles = Array[String](["Captain", "Engineer", "Hacker", "Pilot", "Stagista", "Capitano", "Ingegnere", "Pilota"])
+drive_folder = "Programs/StationHub"
+
+[sub_resource type="Resource" id="Resource_dhb3i"]
+script = ExtResource("3_g1fx3")
+id = "service_drone"
+title = "Drone di Servizio EVA"
+description = "Controllo drone extra-veicolare per riparazioni esterne, salvataggio e taglio laser"
+developer = "Aether Dynamics"
+category = "Sistemi Nave"
+scene_path = "res://Applications/ServiceDrone/service_drone_app.tscn"
+icon_color = Color(0.9, 0.5, 0.2, 1)
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista", "Captain", "Engineer"])
+drive_folder = "Programs/ServiceDrone"
+
+[sub_resource type="Resource" id="Resource_d1s52"]
+script = ExtResource("3_g1fx3")
+id = "sensors"
+title = "Array Sensori & Mappa Tattica"
+description = "Mappa telemetrica spaziale a lungo raggio e spettrometria"
+developer = "AstroForge"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Sensors/sensors_app.tscn"
+icon_color = Color(0.2, 0.8, 0.4, 1)
+roles = Array[String](["Capitano", "Soldato", "Tattico", "Sensori / Radar", "Hacker", "Stagista", "Soldier", "Captain"])
+drive_folder = "Programs/Sensors"
+
+[sub_resource type="Resource" id="Resource_ac58n"]
+script = ExtResource("3_g1fx3")
+id = "cargo_bay"
+title = "Stiva Cargo & FLUX"
+description = "Gestione inventario stiva, logistica trasferimenti merci, rating economico FLUX e violazione array S-Net."
+developer = "NovaTech Systems"
+category = "Sistemi Nave"
+scene_path = "res://Applications/CargoBay/cargo_bay_app.tscn"
+icon_color = Color(0.95, 0.65, 0.15, 1)
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
+drive_folder = "Programs/CargoBay"
+
+[sub_resource type="Resource" id="Resource_y7fwl"]
+script = ExtResource("3_g1fx3")
+id = "comms"
+title = "Comms & Electronic War"
+description = "Comunicazioni subspaziali, guerra elettronica EW e decodifica cifrari"
+developer = "Pulse Networks"
+category = "Sistemi Nave"
+scene_path = "res://Applications/Comms/comms_app.tscn"
+icon_color = Color(0.4, 0.8, 1, 1)
+roles = Array[String](["Capitano", "Hacker", "Stagista", "Captain"])
+drive_folder = "Programs/Comms"
+
+[sub_resource type="Resource" id="Resource_ccqtn"]
+script = ExtResource("3_g1fx3")
+id = "duct_drone"
+title = "Duct Drone"
+description = "Robottino manutenzione e schema condotti 2D"
+developer = "Aether Dynamics"
+category = "Sistemi Nave"
+scene_path = "res://Applications/DuctDrone/duct_drone_app.tscn"
+icon_color = Color(1, 0.85, 0.2, 1)
+roles = Array[String](["Capitano", "Ingegnere", "Hacker", "Stagista"])
+drive_folder = "Programs/DuctDrone"
+
+[sub_resource type="Resource" id="Resource_vajca"]
+script = ExtResource("3_g1fx3")
+id = "flux_wallet"
+title = "Flux Wallet"
+description = "Visualizzazione stato economico della nave e storico modificatori FLUX."
+developer = "VoidCore Solutions"
+category = "Sistemi Nave"
+scene_path = "res://Applications/FluxWallet/flux_wallet.tscn"
+icon_color = Color(0.95, 0.65, 0.15, 1)
+roles = Array[String](["Capitano", "Pilota", "Ingegnere", "Hacker", "Stagista", "Captain", "Pilot", "Engineer"])
+drive_folder = "Programs/FluxWallet"
+
+[sub_resource type="Resource" id="Resource_kqfrg"]
+script = ExtResource("3_g1fx3")
+id = "shield_matrix"
+title = "Shield Matrix"
+description = "Matrice deflettori a 4 quadranti e scudi energetici"
+developer = "CyberDyne Orbital"
+category = "Sistemi Nave"
+scene_path = "res://Applications/ShieldMatrix/shield_matrix_app.tscn"
+icon_color = Color(0.2, 0.6, 1, 1)
+roles = Array[String](["Capitano", "Ingegnere", "Stagista"])
+drive_folder = "Programs/ShieldMatrix"
+
+[sub_resource type="Resource" id="Resource_rpa3i"]
+script = ExtResource("3_g1fx3")
+id = "hack_exploits"
+title = "Hack Exploits Suite"
+description = "Suite offensiva di sottoprogrammi di violazione informatica e guerra elettronica."
+developer = "Dark Nova Cyber Division"
+category = "Sistemi Nave"
+menu_path = "Sistemi Nave"
+scene_path = "res://Applications/HackExploits/hack_exploits_app.tscn"
+icon_color = Color(1, 0, 0.35, 1)
+roles = Array[String](["Hacker", "Capitano", "Captain", "Stagista"])
+drive_folder = "Programs/HackExploits"
+
+[sub_resource type="Resource" id="Resource_pghxd"]
+script = ExtResource("4_jpah4")
+id = "life_support_01"
+name = "Unità Supporto Vitale Cabina"
+pos = Vector2(260, 65)
+power_mw = -30.0
+category = "life_support"
+sector = "Supporto vitale minimale"
+desc = "Unità combinata generatore O2, scrubber CO2 e termoregolatore cabina."
+component_class = "LifeSupportComponent"
+custom_properties = {
+"cabin_temp": 21.0,
+"co2_level": 0.0,
+"oxygen_level": 100.0,
+"target_temp": 21.0
+}
+
+[sub_resource type="Resource" id="Resource_dev_lights_main"]
+script = ExtResource("4_jpah4")
+id = "lights_main"
+name = "Illuminazione Interna"
+power_mw = -5.0
+sector = "Nucleo Reattore & Fusione"
+
+[sub_resource type="Resource" id="Resource_uyi6u"]
+script = ExtResource("4_jpah4")
+id = "pods"
+name = "Pod Equipaggio"
+pos = Vector2(300, 80)
+power_mw = -10.0
+category = "command"
+sector = "Ponte di Comando"
+
+[sub_resource type="Resource" id="Resource_bn0hl"]
+script = ExtResource("5_lwibt")
+id = "bridge"
+name = "Ponte di Comando"
+rect = Rect2(230, 45, 140, 70)
+color = Color(0.12, 0.28, 0.45, 0.55)
+border_color = Color(0.35, 0.75, 1, 0.8)
+devices = [SubResource("Resource_pghxd"), SubResource("Resource_dev_lights_main"), SubResource("Resource_uyi6u")]
+power_mw = -45.0
+
+[sub_resource type="Resource" id="Resource_fyawf"]
+script = ExtResource("4_jpah4")
+id = "sensor_array"
+name = "Array Sensori"
+power_mw = -20.0
+category = "sensors"
+sector = "Sensori & Avionica"
+
+[sub_resource type="Resource" id="Resource_nhflg"]
+script = ExtResource("5_lwibt")
+id = "sensors"
+name = "Sensori & Avionica"
+rect = Rect2(110, 115, 110, 65)
+color = Color(0.12, 0.35, 0.3, 0.5)
+border_color = Color(0.2, 0.85, 0.65, 0.8)
+devices = [SubResource("Resource_fyawf")]
+power_mw = -20.0
+
+[sub_resource type="Resource" id="Resource_u617c"]
+script = ExtResource("4_jpah4")
+id = "comms_relay"
+name = "Relè Comunicazioni"
+power_mw = -10.0
+category = "comms"
+sector = "Comunicazioni & EW"
+
+[sub_resource type="Resource" id="Resource_ftid0"]
+script = ExtResource("5_lwibt")
+id = "comms"
+name = "Comunicazioni & EW"
+rect = Rect2(390, 115, 100, 65)
+color = Color(0.12, 0.35, 0.3, 0.5)
+border_color = Color(0.2, 0.85, 0.65, 0.8)
+devices = [SubResource("Resource_u617c")]
+power_mw = -10.0
+
+[sub_resource type="Resource" id="Resource_sn6i7"]
+script = ExtResource("4_jpah4")
+id = "weapon_array"
+name = "Weapon Array"
+power_mw = -40.0
+category = "tactical"
+sector = "Armeria & Sicurezza"
+
+[sub_resource type="Resource" id="Resource_ppq10"]
+script = ExtResource("5_lwibt")
+id = "armory"
+name = "Armeria & Sicurezza"
+rect = Rect2(245, 135, 110, 60)
+color = Color(0.35, 0.15, 0.2, 0.5)
+border_color = Color(0.9, 0.35, 0.4, 0.8)
+devices = [SubResource("Resource_sn6i7")]
+power_mw = -40.0
+
+[sub_resource type="Resource" id="Resource_3m01d"]
+script = ExtResource("4_jpah4")
+id = "mainserver"
+name = "Server Principale"
+pos = Vector2(160, 237.5)
+power_mw = -10.0
+category = "mainframe"
+sector = "MainFrame"
+
+[sub_resource type="Resource" id="Resource_yb5yo"]
+script = ExtResource("5_lwibt")
+id = "mainframe"
+name = "MainFrame"
+rect = Rect2(100, 200, 120, 75)
+color = Color(0.22, 0.22, 0.35, 0.5)
+border_color = Color(0.55, 0.55, 0.85, 0.8)
+devices = [SubResource("Resource_3m01d")]
+power_mw = -10.0
+
+[sub_resource type="Resource" id="Resource_fwghb"]
+script = ExtResource("4_jpah4")
+id = "drone_dock"
+name = "Dock Ricarica Drone"
+power_mw = -5.0
+sector = "Baia di Carico Principale"
+
+[sub_resource type="Resource" id="Resource_vey2d"]
+script = ExtResource("5_lwibt")
+id = "cargo"
+name = "Baia di Carico Principale"
+rect = Rect2(380, 200, 120, 75)
+color = Color(0.35, 0.28, 0.12, 0.5)
+border_color = Color(0.95, 0.75, 0.25, 0.8)
+devices = [SubResource("Resource_fwghb")]
+power_mw = -5.0
+
+[sub_resource type="Resource" id="Resource_1sr6t"]
+script = ExtResource("5_lwibt")
+id = "reactor"
+name = "Nucleo Reattore & Fusione"
+rect = Rect2(235, 215, 130, 80)
+color = Color(0.35, 0.12, 0.35, 0.55)
+border_color = Color(0.95, 0.35, 0.95, 0.9)
+
+[sub_resource type="Resource" id="Resource_vv1pg"]
+script = ExtResource("4_jpah4")
+id = "reactor_01"
+name = "Reattore Tokamak Primario"
+pos = Vector2(250, 340)
+power_mw = 1000.0
+category = "engineering"
+sector = "Nucleo Reattore & Fusione"
+desc = "Reattore a fusione primario tokamak con potenza nominale di 1000 MW."
+component_class = "ReactorComponent"
+custom_properties = {
+"heat_max": 250.0,
+"power_output_nominal": 1000.0,
+"power_target": 1.0
+}
+
+[sub_resource type="Resource" id="Resource_wbq8y"]
+script = ExtResource("4_jpah4")
+id = "thruster_01"
+name = "Propulsore Principale SX"
+pos = Vector2(205, 360)
+power_mw = -50.0
+category = "propulsion"
+sector = "Sala Macchine & Propulsione"
+desc = "Propulsore ionico vettoriale di babordo da 50 kN."
+component_class = "ThrusterComponent"
+custom_properties = {
+"max_thrust": 50.0,
+"thruster_type": "main"
+}
+
+[sub_resource type="Resource" id="Resource_wsvgc"]
+script = ExtResource("4_jpah4")
+id = "thruster_02"
+name = "Propulsore Principale DX"
+pos = Vector2(375, 360)
+power_mw = -30.0
+category = "propulsion"
+sector = "Sala Macchine & Propulsione"
+desc = "Propulsore ionico vettoriale di tribordo da 30 kN."
+component_class = "ThrusterComponent"
+custom_properties = {
+"max_thrust": 30.0,
+"thruster_type": "main"
+}
+
+[sub_resource type="Resource" id="Resource_eupt0"]
+script = ExtResource("4_jpah4")
+id = "cooling_01"
+name = "Radiatore Criogenico"
+pos = Vector2(300, 325)
+power_mw = -20.0
+category = "engineering"
+sector = "Sala Macchine & Propulsione"
+desc = "Scambiatore e radiatore termico criogenico ad alta efficienza."
+component_class = "CoolingComponent"
+custom_properties = {
+"coolant_level": 100.0,
+"cooling_capacity": 60.0
+}
+
+[sub_resource type="Resource" id="Resource_tjq6u"]
+script = ExtResource("4_jpah4")
+id = "battery_01"
+name = "Banco Batterie Emergenza"
+pos = Vector2(320, 325)
+category = "engineering"
+sector = "Nucleo Reattore & Fusione"
+desc = "Batterie al grafene ad alta densità per stabilizzazione e riserva di emergenza."
+component_class = "BatteryComponent"
+custom_properties = {
+"capacity_max": 500.0,
+"charge_current": 500.0
+}
+
+[sub_resource type="Resource" id="Resource_g0muk"]
+script = ExtResource("5_lwibt")
+id = "engine_room"
+name = "Sala Macchine & Propulsione"
+rect = Rect2(185, 315, 230, 85)
+color = Color(0.4, 0.2, 0.1, 0.55)
+border_color = Color(1, 0.5, 0.2, 0.85)
+devices = [SubResource("Resource_vv1pg"), SubResource("Resource_wbq8y"), SubResource("Resource_wsvgc"), SubResource("Resource_eupt0"), SubResource("Resource_tjq6u")]
+power_mw = 900.0
+
+[sub_resource type="Resource" id="Resource_kykt7"]
+script = ExtResource("5_lwibt")
+id = "rcs_left"
+name = "Pod RCS Sinistro"
+rect = Rect2(30, 230, 50, 60)
+color = Color(0.18, 0.25, 0.32, 0.5)
+border_color = Color(0.4, 0.65, 0.85, 0.7)
+
+[sub_resource type="Resource" id="Resource_5aif8"]
+script = ExtResource("5_lwibt")
+id = "rcs_right"
+name = "Pod RCS Destro"
+rect = Rect2(520, 230, 50, 60)
+color = Color(0.18, 0.25, 0.32, 0.5)
+border_color = Color(0.4, 0.65, 0.85, 0.7)
+
+[sub_resource type="Resource" id="Resource_s6w4n"]
+script = ExtResource("4_jpah4")
+id = "co2_extr"
+name = "Estrattore CO2"
+pos = Vector2(140, 540)
+power_mw = -10.0
+category = "life_support"
+sector = "Supporto vitale minimale"
+desc = "Estrae l'ossigeno dall'anidride carbonica"
+
+[sub_resource type="Resource" id="Resource_ctfga"]
+script = ExtResource("4_jpah4")
+id = "heater"
+name = "Caldaia"
+pos = Vector2(140, 540)
+power_mw = -10.0
+category = "life_support"
+sector = "Supporto vitale minimale"
+desc = "Mantiene la nave ad una temperatura costante"
+
+[sub_resource type="Resource" id="Resource_7p534"]
+script = ExtResource("5_lwibt")
+id = "room_11"
+name = "Supporto vitale minimale"
+rect = Rect2(80, 310, 60, 60)
+color = Color(0.2, 0.6, 0.2, 0.5)
+border_color = Color(0.4, 0.7, 0.9, 0.8)
+devices = [SubResource("Resource_s6w4n"), SubResource("Resource_ctfga")]
+default_devices = Array[String](["purificatore", "caldaia"])
+power_mw = -20.0
+
+[sub_resource type="Resource" id="Resource_6k4ol"]
+script = ExtResource("4_jpah4")
+id = "dronestation"
+name = "Stazione Drone Esterno"
+pos = Vector2(490, 340)
+power_mw = -10.0
+category = "service"
+sector = "Pod drone di servizio"
+desc = "Stazione Mantenimento drone"
+
+[sub_resource type="Resource" id="Resource_lvswq"]
+script = ExtResource("5_lwibt")
+id = "room_13"
+name = "Pod drone di servizio"
+rect = Rect2(460, 310, 60, 60)
+color = Color(0.3, 0.3, 0.6, 0.5)
+border_color = Color(0.4, 0.7, 0.9, 0.8)
+devices = [SubResource("Resource_6k4ol")]
+default_devices = Array[String](["baia_ricarica_drone"])
+power_mw = -10.0
+
+[sub_resource type="Resource" id="Resource_a2fat"]
+script = ExtResource("4_jpah4")
+id = "arm_sx_balancer"
+name = "Orchestratore Servo motori"
+pos = Vector2(70, 120)
+power_mw = -10.0
+category = "defense"
+sector = "Armatura adattiva SX"
+
+[sub_resource type="Resource" id="Resource_22s2y"]
+script = ExtResource("5_lwibt")
+id = "room_14"
+name = "Armatura adattiva SX"
+rect = Rect2(50, 50, 40, 140)
+color = Color(0.4, 0.4, 0.4, 0.5)
+border_color = Color(0.4, 0.7, 0.9, 0.8)
+devices = [SubResource("Resource_a2fat")]
+default_devices = Array[String](["sistema_difesa"])
+power_mw = -10.0
+
+[sub_resource type="Resource" id="Resource_8i3df"]
+script = ExtResource("4_jpah4")
+id = "arm_dx_balancer"
+name = "Orchestratore Servo Motori"
+pos = Vector2(540, 120)
+power_mw = -10.0
+category = "defense"
+sector = "Armatura adattiva DX"
+
+[sub_resource type="Resource" id="Resource_5ho8u"]
+script = ExtResource("5_lwibt")
+id = "room_15"
+name = "Armatura adattiva DX"
+rect = Rect2(520, 50, 40, 140)
+color = Color(0.4, 0.4, 0.4, 0.5)
+border_color = Color(0.4, 0.7, 0.9, 0.8)
+devices = [SubResource("Resource_8i3df")]
+default_devices = Array[String](["sistema_difesa"])
+power_mw = -10.0
+
+[resource]
+script = ExtResource("6_h7y36")
+ship_id = "corvette_hal_testbed"
+ship_name = "Corvette HAL Testbed"
+ship_bounds = Rect2(21, 11, 560, 420)
+drone_spawn_pos = Vector2(400, 260)
+drone_spawn_heading = -1.5708
+recharge_room_id = "cargo"
+rooms = [SubResource("Resource_bn0hl"), SubResource("Resource_nhflg"), SubResource("Resource_ftid0"), SubResource("Resource_ppq10"), SubResource("Resource_yb5yo"), SubResource("Resource_vey2d"), SubResource("Resource_1sr6t"), SubResource("Resource_g0muk"), SubResource("Resource_kykt7"), SubResource("Resource_5aif8"), SubResource("Resource_7p534"), SubResource("Resource_lvswq"), SubResource("Resource_22s2y"), SubResource("Resource_5ho8u")]
+ducts = [SubResource("Resource_duct_1"), SubResource("Resource_duct_2"), SubResource("Resource_duct_3"), SubResource("Resource_duct_4"), SubResource("Resource_duct_5"), SubResource("Resource_duct_6"), SubResource("Resource_duct_7"), SubResource("Resource_duct_8"), SubResource("Resource_duct_9"), SubResource("Resource_duct_10"), SubResource("Resource_duct_11"), SubResource("Resource_duct_12"), SubResource("Resource_duct_13"), SubResource("Resource_duct_14"), SubResource("Resource_duct_15"), SubResource("Resource_duct_16"), SubResource("Resource_duct_17"), SubResource("Resource_hcilf"), SubResource("Resource_12irv"), SubResource("Resource_r8ubu"), SubResource("Resource_gm38s")]
+drive_files = [SubResource("Resource_2o3qs"), SubResource("Resource_0retm"), SubResource("Resource_5gyaf"), SubResource("Resource_6qj18"), SubResource("Resource_2vxcw"), SubResource("Resource_pv8qg"), SubResource("Resource_bkl24"), SubResource("Resource_i82pr"), SubResource("Resource_3i4yk"), SubResource("Resource_mbylt"), SubResource("Resource_gvkt0"), SubResource("Resource_tx7is"), SubResource("Resource_2wg3o"), SubResource("Resource_5uroj"), SubResource("Resource_0ttoj"), SubResource("Resource_bp_dat"), SubResource("Resource_hull_dat"), SubResource("Resource_vganl"), SubResource("Resource_gtdma")]
+drive_passwords = {
+"Ship Drive/Programs/Cams": "CAMS-7815",
+"Ship Drive/Programs/CargoBay": "CARG-7815",
+"Ship Drive/Programs/Comms": "COMM-7815",
+"Ship Drive/Programs/Diagnostics": "DIAG-7815",
+"Ship Drive/Programs/DuctDrone": "DRONE-7815",
+"Ship Drive/Programs/FlightControls": "FLIGHT-7815",
+"Ship Drive/Programs/FluxWallet": "FLUX-7815",
+"Ship Drive/Programs/HackExploits": "HACK-7815",
+"Ship Drive/Programs/LifeSupport": "LIFE-7815",
+"Ship Drive/Programs/Logbook": "LOGB-7815",
+"Ship Drive/Programs/PowerGrid": "GRID-7815",
+"Ship Drive/Programs/Sensors": "SENS-7815",
+"Ship Drive/Programs/ServiceDrone": "SERV-7815",
+"Ship Drive/Programs/ShieldMatrix": "SHLD-7815",
+"Ship Drive/Programs/StationHub": "STTN-7815",
+"Ship Drive/Programs/SystemMap": "MAPS-7815",
+"Ship Drive/Programs/Weapons": "WEAP-7815",
+"Ship Drive/systems": "ROOT-7815"
+}
+installed_apps = [SubResource("Resource_app_flight"), SubResource("Resource_app_power"), SubResource("Resource_app_cams"), SubResource("Resource_app_life"), SubResource("Resource_app_diag"), SubResource("Resource_app_map"), SubResource("Resource_app_log"), SubResource("Resource_4iptn"), SubResource("Resource_bgbc1"), SubResource("Resource_dhb3i"), SubResource("Resource_d1s52"), SubResource("Resource_ac58n"), SubResource("Resource_y7fwl"), SubResource("Resource_ccqtn"), SubResource("Resource_vajca"), SubResource("Resource_kqfrg"), SubResource("Resource_rpa3i")]

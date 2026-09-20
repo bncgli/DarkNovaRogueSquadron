@@ -174,3 +174,19 @@ func get_setting(key: String, default_val: String = "") -> String:
 			return parts[1].strip_edges()
 	file.close()
 	return default_val
+
+var sysfs_driver: VirtualSysfsDriver = VirtualSysfsDriver.new()
+
+func get_sysfs_driver() -> VirtualSysfsDriver:
+	if sysfs_driver == null:
+		sysfs_driver = VirtualSysfsDriver.new()
+	return sysfs_driver
+
+func is_sysfs_path(path: String) -> bool:
+	return VirtualSysfsDriver.is_sysfs_path(path)
+
+func read_sysfs_file(path: String) -> String:
+	return get_sysfs_driver().read_file(path)
+
+func write_sysfs_file(path: String, content: String) -> Dictionary:
+	return get_sysfs_driver().write_file(path, content)

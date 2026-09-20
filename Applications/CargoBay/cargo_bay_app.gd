@@ -223,6 +223,21 @@ func _on_cargo_item_selected(index: int) -> void:
 func _on_jettison_pressed() -> void:
 	if not cargo_mgr or selected_cargo_idx < 0:
 		return
+	
+	var cargo_powered := true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				cargo_powered = hal.is_device_powered("cargo_handling")
+		elif SpaceWorldManager.has_method("is_ship_system_powered"):
+			cargo_powered = SpaceWorldManager.is_ship_system_powered("cargo")
+	
+	if not cargo_powered:
+		if status_sub_label:
+			status_sub_label.text = "⚠️ PORTELLONI BLOCCATI: Manipolatore cargo (cargo_handling) non alimentato!"
+		return
+	
 	var items := cargo_mgr.get_cargo_list()
 	if selected_cargo_idx < items.size():
 		var item_id := items[selected_cargo_idx].id if items[selected_cargo_idx] else ""

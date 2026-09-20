@@ -311,13 +311,23 @@ func _input(event: InputEvent) -> void:
 	
 	if is_mouse_captured and event is InputEventMouseMotion:
 		if can_control_weapons:
-			manual_aim.x = clampf(manual_aim.x - event.relative.x * mouse_sensitivity, -60.0, 60.0)
-			manual_aim.y = clampf(manual_aim.y - event.relative.y * mouse_sensitivity, -35.0, 45.0)
-			if aim_yaw_slider:
-				aim_yaw_slider.set_value_no_signal(manual_aim.x)
-			if aim_pitch_slider:
-				aim_pitch_slider.set_value_no_signal(manual_aim.y)
-			_update_turret_camera_feed()
+			var armory_powered := true
+			if SpaceWorldManager:
+				if SpaceWorldManager.has_method("get_ship_hal"):
+					var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+					if hal:
+						armory_powered = hal.is_device_powered("armory_defense")
+				elif SpaceWorldManager.has_method("is_armory_powered"):
+					armory_powered = SpaceWorldManager.is_armory_powered()
+			
+			if armory_powered:
+				manual_aim.x = clampf(manual_aim.x - event.relative.x * mouse_sensitivity, -60.0, 60.0)
+				manual_aim.y = clampf(manual_aim.y - event.relative.y * mouse_sensitivity, -35.0, 45.0)
+				if aim_yaw_slider:
+					aim_yaw_slider.set_value_no_signal(manual_aim.x)
+				if aim_pitch_slider:
+					aim_pitch_slider.set_value_no_signal(manual_aim.y)
+				_update_turret_camera_feed()
 	
 	if is_mouse_captured and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -503,8 +513,13 @@ func _update_timers(delta: float) -> void:
 
 func _update_cooling_and_power(delta: float) -> void:
 	var armory_powered := true
-	if SpaceWorldManager and SpaceWorldManager.has_method("is_armory_powered"):
-		armory_powered = SpaceWorldManager.is_armory_powered()
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				armory_powered = hal.is_device_powered("armory_defense")
+		elif SpaceWorldManager.has_method("is_armory_powered"):
+			armory_powered = SpaceWorldManager.is_armory_powered()
 	
 	if power_badge:
 		if armory_powered:
@@ -536,6 +551,17 @@ func _update_cooling_and_power(delta: float) -> void:
 
 func _process_auto_pdg(delta: float) -> void:
 	if not auto_pdg_enabled or is_overheated:
+		return
+	
+	var armory_powered := true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				armory_powered = hal.is_device_powered("armory_defense")
+		elif SpaceWorldManager.has_method("is_armory_powered"):
+			armory_powered = SpaceWorldManager.is_armory_powered()
+	if not armory_powered:
 		return
 	
 	pdg_auto_timer += delta
@@ -938,6 +964,18 @@ func _update_weapon_group_buttons() -> void:
 
 func _on_fire_button_pressed() -> void:
 	if not _is_ship_operational() or not can_control_weapons:
+		return
+	
+	var armory_powered := true
+	if SpaceWorldManager:
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				armory_powered = hal.is_device_powered("armory_defense")
+		elif SpaceWorldManager.has_method("is_armory_powered"):
+			armory_powered = SpaceWorldManager.is_armory_powered()
+	if not armory_powered:
+		_log_action("⚠️ FUOCO BLOCCATO: ARMERIA E TORRETTA NON ALIMENTATE (armory_defense offline)")
 		return
 	
 	if is_overheated:

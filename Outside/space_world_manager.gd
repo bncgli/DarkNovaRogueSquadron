@@ -85,7 +85,6 @@ func _ready() -> void:
 	duct_drone_pos = get_drone_spawn_pos()
 	duct_drone_heading = get_drone_spawn_heading()
 	duct_drone_lights = false
-	generate_initial_ship_damages()
 	call_deferred("_connect_network_signals")
 	call_deferred("_connect_grid_manager")
 
@@ -1101,6 +1100,29 @@ func get_sealed_rooms() -> Array:
 				})
 	return result
 
+var active_hardware_bus: ShipHardwareBus = null
+var active_ship_hal: ShipHAL = null
+
+## Ritorna l'istanza attiva del bus hardware della nave
+func get_hardware_bus() -> ShipHardwareBus:
+	if active_hardware_bus == null or not is_instance_valid(active_hardware_bus):
+		active_hardware_bus = ShipHardwareBus.new()
+		active_hardware_bus.name = "ShipHardwareBus"
+		active_hardware_bus.active_simulation = true
+		add_child(active_hardware_bus)
+		var bp := get_ship_blueprint()
+		if bp:
+			active_hardware_bus.load_from_blueprint(bp)
+	return active_hardware_bus
+
+## Ritorna l'istanza attiva dell'HAL (Hardware Abstraction Layer)
+func get_ship_hal() -> ShipHAL:
+	if active_ship_hal == null or not is_instance_valid(active_ship_hal):
+		active_ship_hal = ShipHAL.new(get_hardware_bus())
+		active_ship_hal.name = "ShipHAL"
+		add_child(active_ship_hal)
+	return active_ship_hal
+
 ## Ritorna l'istanza attiva della ShipBlueprint
 func get_ship_blueprint() -> ShipBlueprint:
 	if active_ship_blueprint == null:
@@ -1110,6 +1132,10 @@ func get_ship_blueprint() -> ShipBlueprint:
 ## Imposta l'istanza attiva della ShipBlueprint
 func set_ship_blueprint(bp: ShipBlueprint) -> void:
 	active_ship_blueprint = bp
+	if active_hardware_bus and is_instance_valid(active_hardware_bus):
+		active_hardware_bus.load_from_blueprint(bp)
+	if active_ship_hal and is_instance_valid(active_ship_hal):
+		active_ship_hal.set_hardware_bus(active_hardware_bus)
 
 ## Ritorna l'istanza attiva del StarSystemData
 func get_star_system_data() -> StarSystemData:
@@ -3459,11 +3485,21 @@ func get_bridge_atmo_state() -> Dictionary:
 					return all_st[r_id]
 			if not all_st.is_empty():
 				return all_st.values()[0]
+	var def_temp := 21.5
+	var def_o2 := 21.0
+	var def_co2 := 0.04
+	if has_method("get_ship_hal"):
+		var hal := get_ship_hal()
+		if hal:
+			var ls_metrics := hal.get_life_support_metrics()
+			def_temp = float(ls_metrics.get("temp", def_temp))
+			def_o2 = float(ls_metrics.get("o2", 100.0)) * 0.21
+			def_co2 = float(ls_metrics.get("co2", 0.0))
 	return {
-		"o2_pct": 21.0,
-		"co2_pct": 0.04,
+		"o2_pct": def_o2,
+		"co2_pct": def_co2,
 		"pressure_kpa": 101.3,
-		"temperature_c": 21.5,
+		"temperature_c": def_temp,
 		"heater_online": true,
 		"has_breach": false,
 		"has_short_circuit": false,

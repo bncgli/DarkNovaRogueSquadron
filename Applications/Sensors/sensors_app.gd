@@ -308,10 +308,16 @@ func _update_permissions() -> void:
 	else:
 		can_control_sensors = is_solo
 	
+	if not is_radar_powered:
+		can_control_sensors = false
+	
 	if role_badge:
 		var display_role := my_role if not my_role.is_empty() else ("SOLO MODE" if is_solo else "SPETTATORE")
 		role_badge.text = "RUOLO: %s" % display_role
-		if can_control_sensors:
+		if not is_radar_powered:
+			role_badge.text += " (MATRICE SENSORE SPENTA)"
+			role_badge.modulate = Color(1.0, 0.35, 0.25)
+		elif can_control_sensors:
 			role_badge.modulate = Color(0.3, 0.9, 0.6)
 		else:
 			role_badge.text += " (SOLA LETTURA)"
@@ -321,11 +327,11 @@ func _update_permissions() -> void:
 	if btn_sweep_toggle:
 		btn_sweep_toggle.disabled = not can_control_sensors
 	if btn_active_ping:
-		btn_active_ping.disabled = not can_control_sensors or ping_cooldown > 0.0
+		btn_active_ping.disabled = not can_control_sensors or ping_cooldown > 0.0 or not is_radar_powered
 	if btn_lock_target:
-		btn_lock_target.disabled = not can_control_sensors or selected_entity_id.is_empty()
+		btn_lock_target.disabled = not can_control_sensors or selected_entity_id.is_empty() or not is_radar_powered
 	if btn_transmit_waypoint:
-		btn_transmit_waypoint.disabled = not can_control_sensors or selected_entity_id.is_empty()
+		btn_transmit_waypoint.disabled = not can_control_sensors or selected_entity_id.is_empty() or not is_radar_powered
 	if btn_clear_waypoint:
 		btn_clear_waypoint.disabled = not can_control_sensors
 
@@ -414,7 +420,11 @@ func _update_power_and_damage_state(_delta: float) -> void:
 	has_radar_damage = false
 	
 	if SpaceWorldManager:
-		if SpaceWorldManager.has_method("is_sensors_powered"):
+		if SpaceWorldManager.has_method("get_ship_hal"):
+			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+			if hal:
+				is_radar_powered = hal.is_device_powered("sensors_matrix")
+		elif SpaceWorldManager.has_method("is_sensors_powered"):
 			is_radar_powered = SpaceWorldManager.is_sensors_powered()
 		if SpaceWorldManager.has_method("has_radar_damage"):
 			has_radar_damage = SpaceWorldManager.has_radar_damage()
@@ -453,6 +463,17 @@ func _update_power_and_damage_state(_delta: float) -> void:
 # --- LINE OF SIGHT (LoS) & PROBE INTEGRATION ---
 
 func _refresh_entities() -> void:
+	if not is_radar_powered:
+		detected_entities.clear()
+		if radar_display:
+			radar_display.clear_contacts()
+			radar_display.is_powered = false
+		if target_details_label:
+			target_details_label.text = "[color=#888888]Radar disattivato: nessun contatto tracciato.[/color]"
+		if probe_status_label:
+			probe_status_label.text = "[color=#888888]Feed sonda: OFFLINE[/color]"
+		return
+	
 	var raw_entities: Array[Dictionary] = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_sensor_entities"):
 		raw_entities = SpaceWorldManager.get_sensor_entities()

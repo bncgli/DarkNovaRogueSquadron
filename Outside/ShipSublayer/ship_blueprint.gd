@@ -244,7 +244,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 	var bounds: Rect2 = get_ship_bounds()
 	var margin := grid_size * 2
 	
-	var room_templates := RoomDatabase.get_room_ids()
+	var room_templates := RoomDatabaseSingleton.get_room_ids()
 	if room_templates.is_empty():
 		return
 
@@ -264,7 +264,7 @@ func generate_random_layout(grid_size: float = 20.0) -> void:
 		else:
 			template_id = room_templates[rng.randi() % room_templates.size()]
 			
-		var template_data := RoomDatabase.get_room_data(template_id)
+		var template_data := RoomDatabaseSingleton.get_room_data(template_id)
 		
 		var min_size: Vector2 = template_data.min_size
 		var w:float = ceil(min_size.x / grid_size) * grid_size
@@ -364,6 +364,23 @@ func get_device_by_id(dev_id: String) -> ShipDeviceData:
 			if dev.id == dev_id:
 				return dev
 	return null
+
+## Istanziamento nodi fisici per tutte le stanze e dispositivi del blueprint
+func instantiate_physical_components() -> Array[ShipPhysicalComponent]:
+	var result: Array[ShipPhysicalComponent] = []
+	for r in rooms:
+		var room_id_str: String = r.id if "id" in r else ""
+		if "devices" in r and r.devices is Array:
+			for dev in r.devices:
+				if dev is ShipDeviceData:
+					var comp: ShipPhysicalComponent = dev.create_physical_component(room_id_str)
+					result.append(comp)
+				elif dev is Dictionary:
+					var dev_obj := ShipDeviceData.new()
+					dev_obj.from_dict(dev)
+					var comp: ShipPhysicalComponent = dev_obj.create_physical_component(room_id_str)
+					result.append(comp)
+	return result
 
 func get_damage_by_id(dmg_id: String) -> ShipDamageData:
 	for d in damages:

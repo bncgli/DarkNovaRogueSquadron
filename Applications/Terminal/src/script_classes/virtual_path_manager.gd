@@ -68,8 +68,26 @@ func get_current_folder() -> String:
 	return _virtual_path.simplify_path().get_file()
 
 
+var _sysfs_driver: VirtualSysfsDriver = null
+
+func _get_sysfs() -> VirtualSysfsDriver:
+	if _sysfs_driver == null:
+		if Engine.get_main_loop() is SceneTree:
+			var t: SceneTree = Engine.get_main_loop() as SceneTree
+			if t and t.root and t.root.has_node("TerminalDriveManager"):
+				var tdm = t.root.get_node_or_null("TerminalDriveManager")
+				if tdm and tdm.has_method("get_sysfs_driver"):
+					_sysfs_driver = tdm.get_sysfs_driver()
+		if _sysfs_driver == null:
+			_sysfs_driver = VirtualSysfsDriver.new()
+	return _sysfs_driver
+
 ## Checks if given [param virtual_path] do not go outside [code]"user://files"[/code].
 func is_legal_path(virt_path: String = "=") -> bool:
+	var path_to_test := _virtual_path if virt_path == '=' else virt_path
+	if VirtualSysfsDriver.is_sysfs_path(path_to_test):
+		return _get_sysfs().get_bus() != null
+		
 	var real_path: String = _ROOT_PATH
 	
 	if virt_path == '=':
@@ -87,6 +105,8 @@ func is_legal_path(virt_path: String = "=") -> bool:
 
 ## Returns true if a file exists in [member _ROOT_PATH] + [member _virtual_path].
 func path_is_valid_file(virt_path: String) -> bool:
+	if VirtualSysfsDriver.is_sysfs_path(virt_path):
+		return _get_sysfs().is_valid_file(virt_path)
 	if not is_legal_path(virt_path):
 		return false
 	
@@ -95,6 +115,8 @@ func path_is_valid_file(virt_path: String) -> bool:
 
 ## Returns true if a folder exists in [member _ROOT_PATH] + [member _virtual_path].
 func path_is_valid_folder(virt_path: String) -> bool:
+	if VirtualSysfsDriver.is_sysfs_path(virt_path):
+		return _get_sysfs().is_valid_folder(virt_path)
 	if not is_legal_path(virt_path):
 		return false
 	
@@ -116,6 +138,9 @@ func open_file(virt_path: String, flags: FileAccess.ModeFlags) -> FileAccess:
 ## NOTE: This function don't check and will crash if the file do not exist,
 ## for this use [method path_is_valid_file].
 func list_files(virt_path: String = "") -> PackedStringArray:
+	var target := _virtual_path if virt_path == "" else virt_path
+	if VirtualSysfsDriver.is_sysfs_path(target):
+		return _get_sysfs().list_files(target)
 	if virt_path == "":
 		return DirAccess.open(_get_real_path(_virtual_path)).get_files()
 	
@@ -128,11 +153,21 @@ func list_files(virt_path: String = "") -> PackedStringArray:
 ## NOTE: This function don't check and will crash if the folder do not exist,
 ## for this use [method path_is_valid_folder].
 func list_directories(virt_path: String = ".") -> PackedStringArray:
+	var target := _virtual_path if virt_path == "." else virt_path
+	if VirtualSysfsDriver.is_sysfs_path(target):
+		return _get_sysfs().list_directories(target)
+		
+	var dirs: PackedStringArray
 	if virt_path == '.':
-		return DirAccess.open(_get_real_path(_virtual_path)).get_directories()
-	
-	_assert_folder(virt_path)
-	return DirAccess.open(_get_real_path(virt_path)).get_directories()
+		dirs = DirAccess.open(_get_real_path(_virtual_path)).get_directories()
+	else:
+		_assert_folder(virt_path)
+		dirs = DirAccess.open(_get_real_path(virt_path)).get_directories()
+		
+	if (target == "" or target == ".") and not dirs.has("sys"):
+		if _get_sysfs().get_bus() != null:
+			dirs.append("sys")
+	return dirs
 
 
 func _assert_file(path: String) -> void:
