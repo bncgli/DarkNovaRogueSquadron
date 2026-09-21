@@ -279,8 +279,6 @@ func _process(delta: float) -> void:
 			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
 			if hal:
 				is_comms_powered = hal.is_device_powered("antenna_array")
-		elif SpaceWorldManager.has_method("is_ship_system_powered"):
-			is_comms_powered = SpaceWorldManager.is_ship_system_powered("comms")
 	
 	if waterfall_canvas:
 		waterfall_canvas.set_operational(is_comms_powered)

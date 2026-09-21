@@ -35,8 +35,8 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 			terminal.push_line_to_output("Sottocomando 'nav %s' non riconosciuto. Digita 'nav help' per la guida." % subcmd)
 
 func _execute_position(terminal: Terminal) -> void:
-	var ssm = terminal.get_node_or_null("/root/StarSystemGridManager")
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	var ssm = terminal.get_node_or_null("/root/StarSystemGridManager") if terminal.is_inside_tree() else null
+	var swm = terminal.get_node_or_null("/root/SpaceWorldManager") if terminal.is_inside_tree() else null
 	var ship = swm.get_spaceship() if swm and swm.has_method("get_spaceship") else null
 	
 	var sec_id := "SEC-00-00"
@@ -59,6 +59,10 @@ func _execute_position(terminal: Terminal) -> void:
 	terminal.push_line_to_output("==================================================")
 
 func _execute_calculate(terminal: Terminal, tx: int, ty: int, tz: int) -> void:
+	var hal: ShipHAL = _get_hal(terminal)
+	if hal and hal.navigation:
+		hal.navigation.calculate_route(Vector2(tx, ty))
+	
 	var ssm = terminal.get_node_or_null("/root/StarSystemGridManager")
 	if ssm == null:
 		terminal.push_line_to_output("[color=#ffaa00][NAV][/color] StarSystemGridManager non disponibile per il calcolo.")
@@ -80,7 +84,15 @@ func _execute_calculate(terminal: Terminal, tx: int, ty: int, tz: int) -> void:
 	terminal.push_line_to_output("==================================================")
 
 func _get_hal(terminal: Terminal) -> ShipHAL:
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	if terminal and "ship_hal" in terminal and terminal.ship_hal != null:
+		return terminal.ship_hal
+	var swm = null
+	if terminal and terminal.is_inside_tree():
+		swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	elif Engine.get_main_loop() is SceneTree:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			swm = tree.root.get_node_or_null("SpaceWorldManager")
 	if swm and swm.has_method("get_ship_hal"):
 		return swm.get_ship_hal()
 	return null

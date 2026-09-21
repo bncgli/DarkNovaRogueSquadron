@@ -230,8 +230,6 @@ func _on_jettison_pressed() -> void:
 			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
 			if hal:
 				cargo_powered = hal.is_device_powered("cargo_handling")
-		elif SpaceWorldManager.has_method("is_ship_system_powered"):
-			cargo_powered = SpaceWorldManager.is_ship_system_powered("cargo")
 	
 	if not cargo_powered:
 		if status_sub_label:

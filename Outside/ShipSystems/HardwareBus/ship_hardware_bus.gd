@@ -196,14 +196,14 @@ func dispatch_command(device_id: String, command: String, args: Array = []) -> D
 
 ## Ciclo di simulazione e bilanciamento carichi su Power Grid e Thermal Grid
 func step(delta: float) -> void:
-	# 1. Esecuzione tick autonomo per ogni componente
+	# 1. Bilanciamento Power Grid (calcola generazione e distribuisce potenza)
+	_balance_power_grid(delta)
+	
+	# 2. Esecuzione tick autonomo per ogni componente con la potenza fornita
 	for comp: ShipPhysicalComponent in _components.values():
 		if is_instance_valid(comp):
 			comp.step(delta)
 			
-	# 2. Bilanciamento Power Grid
-	_balance_power_grid(delta)
-	
 	# 3. Bilanciamento Thermal Grid
 	_balance_thermal_grid(delta)
 
@@ -218,12 +218,14 @@ func _balance_power_grid(delta: float) -> void:
 			continue
 			
 		if comp is ReactorComponent:
-			total_generated += comp.power_output_current
+			if comp.is_online and comp.status_string != "SCRAM" and comp.status_string != "DEPLETED":
+				total_generated += comp.power_output_current
 		elif comp is BatteryComponent:
 			batteries.append(comp)
 		else:
-			if comp.is_online and comp.power_draw_current > 0.0:
-				total_demanded += comp.power_draw_current
+			var demand: float = comp.power_draw_current if comp.power_draw_current > 0.0 else comp.power_draw_nominal
+			if comp.is_online and demand > 0.0:
+				total_demanded += demand
 				consumers.append(comp)
 			else:
 				comp.power_supplied = 0.0
@@ -235,7 +237,9 @@ func _balance_power_grid(delta: float) -> void:
 	if net_balance_mw >= 0.0:
 		# Sovrappiù o pareggio: tutti i consumatori ricevono 100%
 		for c in consumers:
-			c.power_supplied = c.power_draw_current
+			var dem: float = c.power_draw_current if c.power_draw_current > 0.0 else c.power_draw_nominal
+			c.power_supplied = dem
+			c.power_ratio = 1.0
 			
 		# Carica batterie con l'eccesso
 		var surplus := net_balance_mw

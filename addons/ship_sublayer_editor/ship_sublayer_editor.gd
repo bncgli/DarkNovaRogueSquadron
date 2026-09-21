@@ -1221,21 +1221,25 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 			
 			var room_devs := room.devices
 			for i in range(room_devs.size()):
-				var dev: Dictionary = room_devs[i]
+				var dev_item: Variant = room_devs[i]
+				var d_id: String = dev_item.id if dev_item is ShipDeviceData else str(dev_item.get("id", ""))
+				var d_name: String = dev_item.name if dev_item is ShipDeviceData else str(dev_item.get("name", "Dispositivo"))
+				var d_power: float = float(dev_item.power_mw) if dev_item is ShipDeviceData else float(dev_item.get("power_mw", 0.0))
+				
 				var d_h := HBoxContainer.new()
 				var d_lbl := Label.new()
-				d_lbl.text = "- %s (%.0f MW)" % [dev.name, dev.power_mw]
+				d_lbl.text = "- %s (%.0f MW)" % [d_name, d_power]
 				d_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				d_lbl.add_theme_font_size_override("font_size", 10)
 				d_h.add_child(d_lbl)
 				
 				var d_edit := Button.new()
 				d_edit.text = "📝"
-				d_edit.pressed.connect(func():
+				d_edit.pressed.connect((func(id_to_edit, obj_to_edit):
 					canvas.selected_type = "device"
-					canvas.selected_id = dev.id
-					_populate_property_editor("device", canvas.selected_id, dev)
-				)
+					canvas.selected_id = id_to_edit
+					_populate_property_editor("device", id_to_edit, obj_to_edit)
+				).bind(d_id, dev_item))
 				d_h.add_child(d_edit)
 				
 				var d_del := Button.new()
@@ -1243,38 +1247,74 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 				d_del.pressed.connect((func(idx):
 					save_undo_state("Rimuovi Dispositivo")
 					room_devs.remove_at(idx)
+					current_blueprint.recalculate_all_powers()
 					current_blueprint.emit_changed()
 					_populate_property_editor("room", elem_id, elem_data)
+					_refresh_outliner()
+					_update_stats_label()
+					if canvas:
+						canvas.queue_redraw()
 				).bind(i))
 				d_h.add_child(d_del)
 				prop_editor_vbox.add_child(d_h)
 				
+			var add_dev_box := VBoxContainer.new()
+			var add_dev_lbl := Label.new()
+			add_dev_lbl.text = "Aggiungi Dispositivo Canonico:"
+			add_dev_lbl.add_theme_font_size_override("font_size", 11)
+			add_dev_box.add_child(add_dev_lbl)
+			
+			var add_dev_h := HBoxContainer.new()
+			var opt_canon := OptionButton.new()
+			opt_canon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			
+			var canon_keys := ShipDeviceData.CANONICAL_DEVICES.keys()
+			for k in canon_keys:
+				var c_def: Dictionary = ShipDeviceData.CANONICAL_DEVICES[k]
+				var p_mw: float = float(c_def.get("power_mw", 0.0))
+				var p_badge := "[+%d MW]" % int(p_mw) if p_mw > 0 else ("[%d MW]" % int(p_mw) if p_mw < 0 else "[0 MW]")
+				var label := "%s %s (%s)" % [p_badge, c_def.get("name", k), k]
+				opt_canon.add_item(label)
+			if opt_canon.item_count > 0:
+				opt_canon.select(0)
+			
+			add_dev_h.add_child(opt_canon)
+			
 			var btn_add_d := Button.new()
-			btn_add_d.text = "+ Aggiungi Dispositivo"
+			btn_add_d.text = "+ Aggiungi"
 			btn_add_d.pressed.connect(func():
+				var sel_idx := opt_canon.selected
+				if sel_idx < 0 or sel_idx >= canon_keys.size():
+					return
+				var selected_key: String = canon_keys[sel_idx]
 				save_undo_state("Aggiungi Dispositivo")
-				var new_dev_id := "dev_%d_%d" % [Time.get_ticks_msec(), room_devs.size()]
-				var new_dev := ShipDeviceData.new(
-					new_dev_id,
-					"Nuovo Dispositivo",
+				
+				var unique_id := current_blueprint.get_unique_device_id(selected_key)
+				var room_name: String = room.name if not room.name.is_empty() else room.id
+				var new_dev := ShipDeviceData.create_canonical_device(
+					selected_key,
+					unique_id,
+					room_name,
 					room.rect.get_center()
 				)
-				new_dev.category = "utility"
-				new_dev.power_mw = -10.0
-				new_dev.sector = room.name
 				room_devs.append(new_dev)
+				current_blueprint.recalculate_all_powers()
+				current_blueprint.emit_changed()
 				
 				# Seleziona automaticamente il nuovo dispositivo e passa al suo inspector
 				if canvas:
 					canvas.selected_type = "device"
-					canvas.selected_id = new_dev_id
+					canvas.selected_id = unique_id
 					canvas.queue_redraw()
 				
-				current_blueprint.emit_changed()
-				_populate_property_editor("device", new_dev_id, new_dev)
+				_populate_property_editor("device", unique_id, new_dev)
 				_refresh_outliner()
+				_update_stats_label()
+				_set_status_msg("Aggiunto dispositivo canonico: %s" % new_dev.name)
 			)
-			prop_editor_vbox.add_child(btn_add_d)
+			add_dev_h.add_child(btn_add_d)
+			add_dev_box.add_child(add_dev_h)
+			prop_editor_vbox.add_child(add_dev_box)
 
 		"duct":
 			var duct := current_blueprint.get_duct_by_id(elem_id)
@@ -1325,24 +1365,41 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 				dev.id = v
 				canvas.selected_id = v
 				current_blueprint.emit_changed()
+				_refresh_outliner()
 			)
 			_add_string_field("Nome:", dev.name, func(v):
 				save_undo_state("Modifica Nome Dispositivo")
 				dev.name = v
 				current_blueprint.emit_changed()
+				_refresh_outliner()
+				if canvas:
+					canvas.queue_redraw()
 			)
 			
 			prop_editor_vbox.add_child(HSeparator.new())
 			
+			_add_option_field("Classe Componente:", dev.get_or_detect_component_class(), ShipDeviceData.COMPONENT_CLASSES, func(v):
+				save_undo_state("Modifica Classe Componente Dispositivo")
+				dev.component_class = v
+				current_blueprint.emit_changed()
+			)
 			_add_option_field("Categoria:", dev.category, ShipBlueprint.DEVICE_CATEGORIES, func(v):
 				save_undo_state("Modifica Categoria Dispositivo")
 				dev.category = v
 				current_blueprint.emit_changed()
 			)
-			_add_sector_selector_field("Settore:", dev.sector, func(v):
-				save_undo_state("Modifica Settore Dispositivo")
-				dev.sector = v
-				current_blueprint.emit_changed()
+			
+			var current_room := current_blueprint.find_room_by_device_id(dev.id)
+			var current_room_id := current_room.id if current_room else ""
+			_add_room_selector_field("Stanza:", current_room_id, func(target_room_id: String):
+				save_undo_state("Sposta Dispositivo Stanza")
+				if current_blueprint.move_device_to_room(dev.id, target_room_id):
+					_refresh_outliner()
+					_update_stats_label()
+					if canvas:
+						canvas.queue_redraw()
+					_populate_property_editor("device", dev.id, dev)
+					_set_status_msg("Dispositivo '%s' spostato nella stanza '%s'" % [dev.name, target_room_id])
 			)
 			
 			prop_editor_vbox.add_child(HSeparator.new())
@@ -1351,7 +1408,11 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 				save_undo_state("Modifica Potenza Dispositivo")
 				dev.power_mw = v
 				current_blueprint.recalculate_all_powers()
-				canvas.queue_redraw()
+				current_blueprint.emit_changed()
+				_update_stats_label()
+				_refresh_outliner()
+				if canvas:
+					canvas.queue_redraw()
 			)
 			
 			prop_editor_vbox.add_child(HSeparator.new())
@@ -1572,6 +1633,38 @@ func _add_option_field(lbl: String, current_val: String, options: Array, callbac
 	opt.select(sel_idx)
 	opt.item_selected.connect(func(idx: int):
 		callback.call(options[idx])
+	)
+	h.add_child(l)
+	h.add_child(opt)
+	prop_editor_vbox.add_child(h)
+
+func _add_room_selector_field(lbl: String, current_room_id: String, callback: Callable) -> void:
+	var h := HBoxContainer.new()
+	var l := Label.new()
+	l.text = lbl
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var opt := OptionButton.new()
+	opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	var room_ids: Array[String] = []
+	var sel_idx := -1
+	if current_blueprint:
+		for i in range(current_blueprint.rooms.size()):
+			var r = current_blueprint.rooms[i]
+			var r_id: String = str(r.id)
+			var r_name: String = str(r.name) if not str(r.name).is_empty() else r_id
+			room_ids.append(r_id)
+			opt.add_item("[%s] %s" % [r_id, r_name])
+			if r_id == current_room_id:
+				sel_idx = i
+	if sel_idx >= 0:
+		opt.select(sel_idx)
+	
+	opt.item_selected.connect(func(idx: int):
+		if idx >= 0 and idx < room_ids.size():
+			var chosen_id := room_ids[idx]
+			if chosen_id != current_room_id:
+				callback.call(chosen_id)
 	)
 	h.add_child(l)
 	h.add_child(opt)
@@ -1952,9 +2045,10 @@ func _refresh_outliner() -> void:
 		item.set_metadata(0, {"type": "duct", "id": d.id})
 
 	# Gruppo 3: Rete Elettrica
-	var all_devices: Array[ShipDeviceData] = []
+	var all_devices: Array = []
 	for r in current_blueprint.rooms:
-		all_devices.append_array(r.devices)
+		if "devices" in r and r.devices is Array:
+			all_devices.append_array(r.devices)
 		
 	var cat_power := outliner_tree.create_item(root)
 	cat_power.set_text(0, "⚡ Rete Elettrica (%d Dispositivi)" % all_devices.size())
@@ -1962,9 +2056,13 @@ func _refresh_outliner() -> void:
 	# Sottogruppo Dispositivi
 	for dev in all_devices:
 		var item := outliner_tree.create_item(cat_power)
-		var gen_tag := " [GEN %d MW]" % int(dev.power_mw) if dev.is_generator else ""
-		item.set_text(0, "⚡ [%s] %s%s" % [dev.id, dev.name, gen_tag])
-		item.set_metadata(0, {"type": "device", "id": dev.id})
+		var d_id: String = dev.id if dev is ShipDeviceData else str(dev.get("id", ""))
+		var d_name: String = dev.name if dev is ShipDeviceData else str(dev.get("name", ""))
+		var is_gen: bool = dev.is_generator if dev is ShipDeviceData else (float(dev.get("power_mw", 0.0)) > 0.0)
+		var p_mw: float = dev.power_mw if dev is ShipDeviceData else float(dev.get("power_mw", 0.0))
+		var gen_tag := " [GEN %d MW]" % int(p_mw) if is_gen else ""
+		item.set_text(0, "⚡ [%s] %s%s" % [d_id, d_name, gen_tag])
+		item.set_metadata(0, {"type": "device", "id": d_id})
 
 	# Gruppo 4: Zone di Danno
 	var cat_damages := outliner_tree.create_item(root)

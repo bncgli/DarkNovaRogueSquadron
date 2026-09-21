@@ -59,6 +59,9 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 
 func _execute_rotate(terminal: Terminal, deg: float) -> void:
 	var norm_deg := fposmod(deg, 360.0)
+	var hal: ShipHAL = _get_hal(terminal)
+	if hal and hal.comms:
+		hal.comms.rotate_antenna(norm_deg)
 	var comms_app = _get_comms_app(terminal)
 	if comms_app:
 		comms_app.antenna_azimuth_deg = norm_deg
@@ -69,6 +72,9 @@ func _execute_rotate(terminal: Terminal, deg: float) -> void:
 	terminal.push_line_to_output("[color=#00ffff][COMMS][/color] Orientamento azimuth antenna impostato a: [b]%03d°[/b]" % int(norm_deg))
 
 func _execute_scan(terminal: Terminal, active: bool) -> void:
+	var hal: ShipHAL = _get_hal(terminal)
+	if hal and hal.comms:
+		hal.comms.toggle_scan(active)
 	var comms_app = _get_comms_app(terminal)
 	if comms_app:
 		comms_app.is_auto_rotating = active
@@ -78,10 +84,19 @@ func _execute_scan(terminal: Terminal, active: bool) -> void:
 
 func _execute_get_frequency(terminal: Terminal) -> void:
 	var comms_app = _get_comms_app(terminal)
-	var freq: float = comms_app.current_frequency if comms_app else 1420.0
+	var hal: ShipHAL = _get_hal(terminal)
+	var freq: float = 1420.0
+	if comms_app:
+		freq = comms_app.current_frequency
+	elif hal and hal.comms:
+		freq = float(hal.comms.get_status().get("locked_freq", 1420.0))
+		if freq == 0.0: freq = 1420.0
 	terminal.push_line_to_output("[color=#00ffff][COMMS][/color] Frequenza sintonizzata attuale: [b]%.1f MHz[/b]" % freq)
 
 func _execute_lock_frequency(terminal: Terminal, freq: float) -> void:
+	var hal: ShipHAL = _get_hal(terminal)
+	if hal and hal.comms:
+		hal.comms.lock_frequency(freq)
 	var comms_app = _get_comms_app(terminal)
 	if comms_app:
 		comms_app.current_frequency = freq
@@ -123,14 +138,22 @@ func handle_interactive_input(terminal: Terminal, input: String) -> void:
 	terminal.push_line_to_output(_sample_packets[_packet_index])
 	terminal.push_line_to_output("[color=#888888](Premi 'q' per uscire dalla modalità ascolto radio)[/color]")
 
-func _get_comms_app(terminal: Terminal) -> CommsApp:
-	var sw_mgr = terminal.get_node_or_null("/root/ShipSoftwareManager")
+func _get_comms_app(terminal: Terminal) -> Node:
+	var sw_mgr = terminal.get_node_or_null("/root/ShipSoftwareManager") if terminal.is_inside_tree() else null
 	if sw_mgr and sw_mgr.has_method("get_running_app"):
-		return sw_mgr.get_running_app("comms") as CommsApp
+		return sw_mgr.get_running_app("comms")
 	return null
 
 func _get_hal(terminal: Terminal) -> ShipHAL:
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	if terminal and "ship_hal" in terminal and terminal.ship_hal != null:
+		return terminal.ship_hal
+	var swm = null
+	if terminal and terminal.is_inside_tree():
+		swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	elif Engine.get_main_loop() is SceneTree:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			swm = tree.root.get_node_or_null("SpaceWorldManager")
 	if swm and swm.has_method("get_ship_hal"):
 		return swm.get_ship_hal()
 	return null

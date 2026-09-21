@@ -240,8 +240,6 @@ func _process(delta: float) -> void:
 			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
 			if hal:
 				is_is_shield_powered = hal.is_device_powered("arm_sx_balancer") or hal.is_device_powered("arm_dx_balancer")
-		elif SpaceWorldManager.has_method("is_ship_system_powered"):
-			is_is_shield_powered = SpaceWorldManager.is_ship_system_powered("defense")
 	
 	if boost_cooldown_timer > 0.0:
 		boost_cooldown_timer = maxf(0.0, boost_cooldown_timer - delta)

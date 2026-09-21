@@ -172,6 +172,8 @@ func _connect_system_signals() -> void:
 		if hal:
 			if not hal.propulsion_profile_changed.is_connected(_on_hal_propulsion_changed):
 				hal.propulsion_profile_changed.connect(_on_hal_propulsion_changed)
+			if not hal.flight_controls_state_changed.is_connected(_on_hal_controls_changed):
+				hal.flight_controls_state_changed.connect(_on_hal_controls_changed)
 			hal_efficiency = hal.get_propulsion_efficiency()
 			hal_available_thrust = hal.get_total_available_thrust()
 
@@ -181,8 +183,11 @@ func _exit_tree() -> void:
 		set_cruise_enabled(false)
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
 		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
-		if hal and hal.propulsion_profile_changed.is_connected(_on_hal_propulsion_changed):
-			hal.propulsion_profile_changed.disconnect(_on_hal_propulsion_changed)
+		if hal:
+			if hal.propulsion_profile_changed.is_connected(_on_hal_propulsion_changed):
+				hal.propulsion_profile_changed.disconnect(_on_hal_propulsion_changed)
+			if hal.flight_controls_state_changed.is_connected(_on_hal_controls_changed):
+				hal.flight_controls_state_changed.disconnect(_on_hal_controls_changed)
 	# Disconnessione segnali e pulizia risorse
 	if SpaceWorldManager:
 		if SpaceWorldManager.ship_connection_changed.is_connected(_on_ship_connection_changed):
@@ -444,6 +449,9 @@ func _update_permissions() -> void:
 func _on_hal_propulsion_changed(eff: float, _max_th: float, avail_th: float) -> void:
 	hal_efficiency = eff
 	hal_available_thrust = avail_th
+	_update_permissions()
+
+func _on_hal_controls_changed(_can_ctrl: bool) -> void:
 	_update_permissions()
 
 func _setup_ui_events() -> void:

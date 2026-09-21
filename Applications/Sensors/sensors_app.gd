@@ -424,8 +424,6 @@ func _update_power_and_damage_state(_delta: float) -> void:
 			var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
 			if hal:
 				is_radar_powered = hal.is_device_powered("sensors_matrix")
-		elif SpaceWorldManager.has_method("is_sensors_powered"):
-			is_radar_powered = SpaceWorldManager.is_sensors_powered()
 		if SpaceWorldManager.has_method("has_radar_damage"):
 			has_radar_damage = SpaceWorldManager.has_radar_damage()
 	

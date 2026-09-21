@@ -382,6 +382,12 @@ func _on_button_toggled(toggled_on: bool, cam_id: String) -> void:
 			cam_buttons[cam_id].set_pressed_no_signal(false)
 		return
 	
+	var hal = SpaceWorldManager.get_ship_hal() if SpaceWorldManager.has_method("get_ship_hal") else null
+	if hal and not hal.is_device_powered("cam_array"):
+		if cam_buttons.has(cam_id) and cam_buttons[cam_id]:
+			cam_buttons[cam_id].set_pressed_no_signal(false)
+		return
+	
 	var is_open: bool = SpaceWorldManager.is_camera_window_open(cam_id)
 	
 	if toggled_on and not is_open:
@@ -478,6 +484,23 @@ func _update_status_summary() -> void:
 		for cam_id in cam_buttons:
 			if SpaceWorldManager.is_camera_window_open(cam_id):
 				active_count += 1
+	
+	var hal = SpaceWorldManager.get_ship_hal() if (SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal")) else null
+	var cams_powered: bool = hal.is_device_powered("cam_array") if hal else true
+	
+	if not cams_powered and connected and not in_hyperdrive:
+		if active_count_badge:
+			active_count_badge.text = "NO POWER"
+			active_count_badge.modulate = Color(1.0, 0.25, 0.25)
+		if status_summary_label:
+			status_summary_label.text = "⚠️ TELECAMERE OFFLINE: Dispositivo 'cam_array' non alimentato. Feed video disconnessi."
+			status_summary_label.modulate = Color(1.0, 0.3, 0.3)
+		for b in cam_buttons.values():
+			if b: b.disabled = true
+		return
+	elif can_control_cams:
+		for b in cam_buttons.values():
+			if b: b.disabled = false
 	
 	if in_hyperdrive:
 		var prog: Dictionary = SpaceWorldManager.get_hyperdrive_loading_progress() if SpaceWorldManager else {"loaded": 1, "total": 1}

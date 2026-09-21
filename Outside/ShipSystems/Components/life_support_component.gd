@@ -5,6 +5,7 @@ extends ShipPhysicalComponent
 ## Gestisce generazione ossigeno (O2), depurazione anidride carbonica (CO2),
 ## filtrazione atmosferica e regolazione termica della cabina.
 
+@export var subsystem_type: String = "general" # "general", "scrubber", "heater", "serra"
 @export var oxygen_level: float = 100.0 # percentuale 0..100%
 @export var co2_level: float = 0.0 # percentuale 0..100%
 @export var target_temp: float = 21.0 # gradi Celsius
@@ -14,14 +15,27 @@ extends ShipPhysicalComponent
 func _init(p_device_id: String = "", p_room_id: String = "", p_category: String = "life_support") -> void:
 	super._init(p_device_id, p_room_id, p_category)
 	power_draw_nominal = 15.0
+	var lower_id := p_device_id.to_lower()
+	if lower_id.contains("scrubber") or lower_id.contains("co2") or lower_id.contains("purificatore"):
+		subsystem_type = "scrubber"
+		power_draw_nominal = 10.0
+	elif lower_id.contains("heater") or lower_id.contains("caldaia"):
+		subsystem_type = "heater"
+		power_draw_nominal = 10.0
+	elif lower_id.contains("serra") or lower_id.contains("idroponica"):
+		subsystem_type = "serra"
+		power_draw_nominal = 15.0
 
 func initialize_registers() -> void:
 	super.initialize_registers()
+	registers["subsystem_type"] = subsystem_type
 	registers["o2_level"] = oxygen_level
 	registers["co2_level"] = co2_level
 	registers["cabin_temp"] = cabin_temp
 	registers["target_temp"] = target_temp
 	registers["filter_integrity"] = filter_integrity
+	if not readonly_registers.has("subsystem_type"):
+		readonly_registers.append("subsystem_type")
 	if not readonly_registers.has("o2_level"):
 		readonly_registers.append("o2_level")
 	if not readonly_registers.has("co2_level"):

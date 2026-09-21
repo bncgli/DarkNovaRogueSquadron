@@ -34,11 +34,12 @@ func _ready() -> void:
 
 	# Set initial virtual_path
 	# Check for focused folder icon first
-	if ContextMenu.target is FakeFolder:
-		virtual_path_manager.set_path(ContextMenu.target.folder_path)
+	var ctx = get_node_or_null("/root/ContextMenu")
+	if ctx and ctx.target is FakeFolder:
+		virtual_path_manager.set_path(ctx.target.folder_path)
 	# Check for a focused folder window to be the starting path
-	elif ContextMenu.target is FileManagerWindow:
-		var path: String = ContextMenu.target.file_path
+	elif ctx and ctx.target is FileManagerWindow:
+		var path: String = ctx.target.file_path
 
 		if virtual_path_manager.path_is_valid_folder(path):
 			virtual_path_manager.set_path(path)

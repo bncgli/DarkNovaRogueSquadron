@@ -153,7 +153,8 @@ func step(delta: float) -> void:
 	if not is_online:
 		power_draw_current = 0.0
 		heat_current = move_toward(heat_current, ambient_temp, passive_cooling_rate * delta * 2.0)
-		status_string = "OFFLINE"
+		if status_string != "SCRAM" and status_string != "DEPLETED" and status_string != "FAULT":
+			status_string = "OFFLINE"
 		_sync_base_registers()
 		telemetry_updated.emit(device_id, get_telemetry())
 		return
@@ -202,7 +203,10 @@ func set_online(online: bool) -> void:
 	if is_online == online:
 		return
 	is_online = online
-	status_string = "ONLINE" if is_online else "OFFLINE"
+	if is_online:
+		status_string = "ONLINE"
+	elif status_string != "SCRAM" and status_string != "DEPLETED" and status_string != "FAULT":
+		status_string = "OFFLINE"
 	registers["is_online"] = is_online
 	registers["status"] = status_string
 	if not is_online:

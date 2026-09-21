@@ -76,8 +76,8 @@ Tutti i punti proposti nel piano sono stati implementati:
 4.  **Dati**: Implementate risorse tipizzate (`ShipRoomData`, `ShipDuctData`, `CelestialBodyData`) per blueprint e sistemi stellari.
 5.  **Addon**: `ShipSublayerEditor` migrato verso una struttura basata su scene `.tscn`.
 6.  **Pulizia**: Organizzati script in `tools/` e test obsoleti in `tests/obsolete/`.
+7.  **ShipHAL OS & Componenti Fisici Autonomi**: Tutti i 19 dispositivi canonici di `docs/POWER_GRID_DEVICES.md` sono stati trasformati in classi fisiche simulate dedicate derivate da `ShipPhysicalComponent`. `ShipHAL` è stato ristrutturato come Kernel OS con 10 sottosistemi tipizzati (`power`, `propulsion`, `navigation`, `sensors`, `comms`, `defense`, `life_support`, `cargo`, `cyber`, `optics`), eliminando metodi legacy sparsi e mediando tutte le chiamate applicative e CLI.
 
 ## Prossimi Passi Consigliati
 1. Continuare la migrazione della UI per `star_system_editor` verso scene.
-2. Implementare test automatizzati per i nuovi manager utilizzando GUT.
-3. Espandere la validazione delle risorse tipizzate.
+2. Espandere ulteriormente la suite di test automatizzati per scenari limite multi-sottosistema.

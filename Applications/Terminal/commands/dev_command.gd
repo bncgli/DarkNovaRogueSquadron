@@ -201,20 +201,34 @@ func _execute_online(terminal: Terminal, bus: ShipHardwareBus, device_id: String
 		terminal.push_line_to_output("Errore modifica stato %s: %s" % [device_id, res.get("error", "Fallito")])
 
 func _get_bus(terminal: Terminal) -> ShipHardwareBus:
-	var tdm := terminal.get_node_or_null("/root/TerminalDriveManager")
+	if terminal and "ship_bus" in terminal and terminal.ship_bus != null:
+		return terminal.ship_bus
+	if terminal and "ship_hal" in terminal and terminal.ship_hal != null:
+		return terminal.ship_hal.get_hardware_bus()
+
+	var tdm = null
+	var swm = null
+	if terminal and terminal.is_inside_tree():
+		tdm = terminal.get_node_or_null("/root/TerminalDriveManager")
+		swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	elif Engine.get_main_loop() is SceneTree:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			tdm = tree.root.get_node_or_null("TerminalDriveManager")
+			swm = tree.root.get_node_or_null("SpaceWorldManager")
+
 	if tdm and tdm.has_method("get_sysfs_driver"):
-		var drv: VirtualSysfsDriver = tdm.get_sysfs_driver()
-		if drv and drv.custom_bus != null:
+		var drv = tdm.get_sysfs_driver()
+		if drv and "custom_bus" in drv and drv.custom_bus != null:
 			return drv.custom_bus
 
-	var swm := terminal.get_node_or_null("/root/SpaceWorldManager")
 	if swm and swm.has_method("is_ship_connected") and not swm.is_ship_connected():
 		return null
 
 	if tdm and tdm.has_method("get_sysfs_driver"):
-		var drv: VirtualSysfsDriver = tdm.get_sysfs_driver()
-		if drv:
-			var b := drv.get_bus()
+		var drv = tdm.get_sysfs_driver()
+		if drv and drv.has_method("get_bus"):
+			var b = drv.get_bus()
 			if b:
 				return b
 				

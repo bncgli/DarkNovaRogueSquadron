@@ -13,27 +13,27 @@
 
 ## 1. Matrice Rapida Dispositivi & Sintesi Impatto Energetico
 
-| ID Dispositivo | Nome rappresentativo        | Stanza / Settore | Categoria | Potenza Nominale | Applicazioni Dirette | Effetto Critico se OFF |
-|---|-----------------------------|---|---|---|---|---|
-| `core_reactor` | Reattore a fusione          | `reattore_fusione` / `reactor` | `reactor` | **+500 / +1000 MW** | PowerGrid, Terminal, Tutte | Blackout generale nave se batterie assenti/esaurite; blocco Cruise e Hyperdrive |
-| `engine_main` / `thruster_01..02` | Propulsore a Scarica Ionica | `sala_motori` / `engine` | `propulsion` | **-50..-80 MW** | FlightControl, ShipHAL | Perdita spinta longitudinale (W/S/R/F); disingaggio immediato Cruise Drive; blocco Hyperdrive |
-| `rcs_pitch_l` / `rcs_pitch_r` | Attuatori RCS Babordo / Tribordo | `rcs_left`, `rcs_right` | `propulsion` | **-15 MW cad.** | FlightControl, ShipHAL | Perdita rotazione (Pitch/Yaw/Roll) e traslazione laterale/verticale; deriva angolare permanente |
-| `helm_control` | Consolle Pilotaggio e Plancia | `ponte_comando` / `bridge` | `command` | **-15 MW** | FlightControl | Comandi pilota scollegati dall'HAL; blocco input manuali WASD/QE/Spazio/Ctrl |
-| `nav_computer` | Elaboratore Rotte & Vettori Salto | `ponte_comando` / `bridge` | `command` | **-10 MW** | SystemMap, FlightControl | Impossibile calcolare rotte planetarie; perdita vettore di salto Hyperdrive e waypoint HUD |
-| `sensors_matrix` | Matrice Sensori Phased Array | `matrice_sensori` / `sensors` | `sensors` | **-25..-120 MW** | Sensors, Weapons | Radar completamente cieco (0 blip); blocco ping attivo 2km; missili incapaci di agganciare |
-| `antenna_array` | Antenna Tranceiver Sub-Spazio | `comunicazioni` / `comms` | `comms` | **-15..-65 MW** | Comms, HackExploits, StationHub | Impossibile inviare richiesta di attracco stazioni; nessun link EW per montare Target Drive |
-| `armory_defense` | Alimentazione Armeria & Torrette | `armamenti` / `armory` | `weapons` | **-30..-250 MW** | Weapons, SpaceWorld | Laser scarichi e non ricaricabili; torretta bloccata; blocco lancio missili/sonde balistiche |
-| `arm_sx_balancer` / `arm_dx_balancer` | Bilanciatori Servo Motori Scudi | `armatura_adattiva` / `room_14..15` | `defense` | **-10..-90 MW** | ShieldMatrix | Collasso rigenerazione scudi; rapido decadimento a 0 HP; torrette automatiche PDG e Flak spente |
-| `scrubber` | Filtro CO2 Primario (Scrubber) | `supporto_vitale_min..adv` | `life_support` | **-10 MW** | LifeSupport, PodInfo | Tossicità e accumulo rapido CO2; caduta O2; asfissia, rantoli e decesso dell'equipaggio |
-| `heater` | Caldaia Termoregolatrice    | `supporto_vitale_min..adv` | `life_support` | **-10 MW** | LifeSupport, PodInfo | Temperatura crolla sotto zero; ipotermia grave nei pod; congelamento condotti e merci |
-| `serra_idroponica` | Serra Idroponica O2/Biologica | `supporto_vitale_adv` | `life_support` | **-15 MW** | LifeSupport, PodInfo | Deperimento e morte delle colture; perdita rigenerazione continua O2 e razioni |
-| `cargo_handling` | Manipolatore Stiva & Portelloni | `baia_carico` / `cargo` | `cargo` | **-10 MW** | CargoBay, ServiceDrone | Portelloni stiva bloccati; impossibile espellere o caricare merci; blocco raffinazione ghiaccio |
-| `dronestation` | Baia Ricarica Drone EVA Esterno | `pod_drone` / `room_13` | `service` | **-10..-30 MW** | ServiceDrone | Drone di servizio non si ricarica ad attracco; se a secco nello spazio va perso alla deriva |
-| `recharge_dock` | Nodo Ricarica Duct Drone (Interno) | `cargo` / `engineering` | `engineering` | **-10 MW** | DuctDrone | Il drone dei condotti non ricarica la batteria a contatto; blocco riparazioni interne |
-| `server_rack` | Server Centrale Cyber-Guerra / Mainframe | `mainframe` | `cyber` / `mainframe` | **-10..-30 MW** | HackExploits, Terminal | Blocco exploit offensivi; caduta firewall; comandi terminale crittografici (`decript`/`worm`) off |
-| `cooling_01` | Radiatore Criogenico di Raffreddamento | `engine_room` / `sala_motori` | `engineering` | **-20 MW** | ShipHAL, PowerGrid | Surriscaldamento esponenziale reattore e motori; rischio meltdown o scram forzato |
-| `battery_01` | Banco Batterie d'Emergenza  | `engine_room` / `reattore_fusione` | `engineering` | **Buffer 500 MJ** | PowerGrid, ShipHAL | Assenza di riserva energetica; spegnimento improvviso a freddo della nave su sbalzi di carico |
-| `cam_array` | Array Telecamere Esterne & Fari | Esterno Scafo (6 cardinali) | `sensors` / `service` | **-5..-15 MW** | Cams | Schermi video su 'NO SIGNAL'; spegnimento fari esterni; perdita visuale visiva, termica e lidar |
+| ID Dispositivo | Nome rappresentativo | Classe Componente | Sottosistema HAL | Stanza / Settore | Categoria | Potenza Nominale | Effetto Critico se OFF |
+|---|---|---|---|---|---|---|---|
+| `core_reactor` | Reattore Tokamak Primario | `ReactorComponent` | `power` | `reattore_fusione` / `reactor` | `reactor` | **+500 / +1000 MW** | Blackout generale nave se batterie esaurite; blocco Cruise e Hyperdrive |
+| `engine_main` | Propulsore a Scarica Ionica | `ThrusterComponent` | `propulsion` | `sala_motori` / `engine` | `propulsion` | **-50..-80 MW** | Perdita spinta longitudinale; disingaggio Cruise Drive; blocco Hyperdrive |
+| `rcs_pitch_l` / `r` | Attuatori RCS Babordo / Tribordo | `ThrusterComponent` | `propulsion` | `rcs_left`, `rcs_right` | `propulsion` | **-15 MW cad.** | Perdita rotazione (Pitch/Yaw/Roll) e stabilizzazione; deriva permanente |
+| `helm_control` | Consolle Pilotaggio e Plancia | `HelmControlComponent` | `propulsion` | `ponte_comando` / `bridge` | `command` | **-15 MW** | Comandi pilota scollegati dall'HAL; blocco input manuali WASD/QE/Spazio |
+| `nav_computer` | Elaboratore Rotte & Salto | `NavComputerComponent` | `navigation` | `ponte_comando` / `bridge` | `command` | **-10 MW** | Impossibile calcolare rotte planetarie; spegnimento vettori salto e waypoint |
+| `sensors_matrix` | Matrice Sensori Phased Array | `SensorsMatrixComponent` | `sensors` | `matrice_sensori` / `sensors` | `sensors` | **-25..-120 MW** | Radar cieco (0 blip); blocco ping attivo 2km; perdita tracking armi |
+| `antenna_array` | Antenna Transceiver Sub-Spazio | `AntennaArrayComponent` | `comms` | `comunicazioni` / `comms` | `comms` | **-15..-65 MW** | Blocco richieste attracco stazioni; waterfall muta; nessun link EW |
+| `armory_defense` | Alimentazione Armeria & Torrette | `ArmoryDefenseComponent` | `defense` | `armamenti` / `armory` | `tactical` | **-30..-250 MW** | Laser scarichi; servomeccanismi torretta bloccati; stop lancio missili |
+| `arm_sx/dx_balancer` | Bilanciatori Scudi Deflettori | `ShieldBalancerComponent` | `defense` | `armatura_adattiva` / `14..15` | `defense` | **-10..-90 MW** | Collasso rigenerazione scudi; rapido decadimento a 0 HP; stop deflettori |
+| `scrubber` | Filtro CO2 Primario (Scrubber) | `LifeSupportComponent` | `life_support` | `supporto_vitale` / `11` | `life_support` | **-10 MW** | Tossicità e accumulo rapido CO2; caduta purezza O2; asfissia equipaggio |
+| `heater` | Caldaia Termoregolatrice | `LifeSupportComponent` | `life_support` | `supporto_vitale` / `11` | `life_support` | **-10 MW** | Temperatura cabina sotto zero; ipotermia; congelamento condotti e merci |
+| `serra_idroponica` | Serra Idroponica O2/Biologica | `LifeSupportComponent` | `life_support` | `supporto_vitale` / `11` | `life_support` | **-15 MW** | Perdita rigenerazione continua biologica O2; deperimento delle colture |
+| `cargo_handling` | Manipolatore Stiva & Portelloni | `CargoHandlingComponent` | `cargo` | `baia_carico` / `cargo` | `cargo` | **-10 MW** | Portelloni stiva bloccati; impossibile espellere o stivare; stop raffinatore |
+| `dronestation` | Baia Ricarica Drone EVA Esterno | `DroneStationComponent` | `cargo` / `service` | `pod_drone` / `13` | `service` | **-10..-30 MW** | Drone EVA non si ricarica ad attracco; rischio perdita alla deriva |
+| `recharge_dock` | Dock Ricarica Drone Condotti | `RechargeDockComponent` | `cargo` / `service` | `cargo` / `engineering` | `engineering` | **-10 MW** | Drone condotti non si ricarica nella culla; stop riparazioni interne |
+| `server_rack` | Server Cyber-Guerra / Mainframe | `ServerRackComponent` | `cyber` | `mainframe` | `cyber` | **-10..-30 MW** | Blocco exploit offensivi; caduta firewall; comandi shell crypto disabilitati |
+| `cooling_01` | Radiatore Criogenico | `CoolingComponent` | `power` | `engine_room` / `motori` | `engineering` | **-20 MW** | Accumulo termico; surriscaldamento esponenziale e scram forzato |
+| `battery_01` | Banco Batterie d'Emergenza | `BatteryComponent` | `power` | `engine_room` / `reattore` | `engineering` | **Buffer 500 MJ** | Assenza riserva tampone; blackout istantaneo su sbalzi di carico |
+| `cam_array` | Array Telecamere Esterne & Fari | `CamArrayComponent` | `optics` | `bridge` / Scafo | `sensors` | **-5..-15 MW** | Schermi Cams su 'NO SIGNAL'; spegnimento fari esterni; perdita visuale |
 
 ---
 

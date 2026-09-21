@@ -16,10 +16,12 @@ graph LR
     classDef econ fill:#1f2937,stroke:#ec4899,stroke-width:2px,color:#fff;
     classDef util fill:#1f2937,stroke:#8b5cf6,stroke-width:2px,color:#fff;
 
-    %% Autoloads
+    %% Autoloads & Core Systems
     NM[NetworkManager]:::net
     SWM[SpaceWorldManager]:::world
     SSGM[StarSystemGridManager]:::world
+    HWBUS[ShipHardwareBus]:::world
+    HAL[ShipHAL - Ship OS]:::world
     SDM[ShipDriveManager]:::fs
     TDM[TerminalDriveManager]:::fs
     FPM[FolderPasswordManager]:::fs
@@ -42,9 +44,11 @@ graph LR
     NM -- "Economy Sync" --> FEM
     NM -- "Cargo Replication" --> CM
 
-    %% Relazioni Mondo 3D & Spazio
+    %% Relazioni Mondo 3D, Hardware & Ship OS
+    SWM -- "Inizializza Bus & Blueprints" --> HWBUS
+    HWBUS -- "I/O Registri & Telemetria" --> HAL
+    HAL -- "Syscall & Servizi Tipizzati" --> SSM
     SWM -- "Coordinate & Mappa" --> SSGM
-    SWM -- "Attivazione Sottosistemi" --> SDM
     SWM -- "Notifiche di Bordo" --> NTF
 
     %% Relazioni File System & Sicurezza

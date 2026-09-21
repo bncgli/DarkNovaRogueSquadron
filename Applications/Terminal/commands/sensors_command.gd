@@ -39,6 +39,9 @@ func execute(terminal: Terminal, args: Array[String]) -> void:
 			terminal.push_line_to_output("Sottocomando 'sensors %s' non riconosciuto. Digita 'sensors help' per la guida." % subcmd)
 
 func _execute_sweep_toggle(terminal: Terminal, active: bool) -> void:
+	var hal: ShipHAL = _get_hal(terminal)
+	if hal and hal.sensors:
+		hal.sensors.toggle_sweep(active)
 	terminal.push_line_to_output("[color=#00ffcc][SENSORS][/color] Scansione sweep volumetrico a 360° impostata su: [b]%s[/b] (Frequenza: 12.0 Hz)" % ("ATTIVA" if active else "IN PAUSA"))
 
 func _execute_get_targets(terminal: Terminal) -> void:
@@ -102,7 +105,7 @@ func _execute_get_probe_targets(terminal: Terminal, probe_id: String) -> void:
 		var pos: Vector3 = t.get("pos", Vector3.ZERO)
 		var dist := (pos - p_pos).length()
 		if dist <= p_radius and str(t.get("id", "")) != actual_id:
-			var item := t.duplicate()
+			var item: Dictionary = t.duplicate()
 			item["probe_dist"] = dist
 			probe_contacts.append(item)
 			
@@ -124,7 +127,15 @@ func _execute_get_probe_targets(terminal: Terminal, probe_id: String) -> void:
 	terminal.push_line_to_output("================================================================================")
 
 func _get_hal(terminal: Terminal) -> ShipHAL:
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	if terminal and "ship_hal" in terminal and terminal.ship_hal != null:
+		return terminal.ship_hal
+	var swm = null
+	if terminal and terminal.is_inside_tree():
+		swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	elif Engine.get_main_loop() is SceneTree:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			swm = tree.root.get_node_or_null("SpaceWorldManager")
 	if swm and swm.has_method("get_ship_hal"):
 		return swm.get_ship_hal()
 	return null

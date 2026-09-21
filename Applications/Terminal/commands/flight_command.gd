@@ -80,6 +80,9 @@ func _execute_cruise(terminal: Terminal, hal: ShipHAL, start: bool) -> void:
 		terminal.push_line_to_output("[color=#ff4040][ERRORE HARDWARE][/color] Dispositivo 'engine_main' (%s) non alimentato. Impossibile avviare Cruise Drive." % st.get("room_id", "sala_motori"))
 		return
 	
+	if hal and hal.propulsion:
+		hal.propulsion.toggle_cruise(start)
+	
 	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
 	var ship = swm.get_spaceship() if swm and swm.has_method("get_spaceship") else null
 	var cdc = ship.cruise_controller if ship and "cruise_controller" in ship else null
@@ -99,8 +102,11 @@ func _execute_toggle_inertia(terminal: Terminal, hal: ShipHAL, enabled: bool) ->
 		var st := hal.get_device_status("rcs_pitch_l")
 		terminal.push_line_to_output("[color=#ff4040][ERRORE HARDWARE][/color] Attuatori RCS (%s) non alimentati. Impossibile attivare smorzamento inerziale." % st.get("room_id", "rcs_left"))
 		return
+	
+	if hal and hal.propulsion:
+		hal.propulsion.toggle_inertia(enabled)
 		
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	var swm = terminal.get_node_or_null("/root/SpaceWorldManager") if terminal.is_inside_tree() else null
 	if swm and swm.has_method("set_inertia_dampening"):
 		swm.set_inertia_dampening(enabled)
 	var ship = swm.get_spaceship() if swm and swm.has_method("get_spaceship") else null
@@ -114,8 +120,11 @@ func _execute_set_speed(terminal: Terminal, hal: ShipHAL, val: float) -> void:
 		var st := hal.get_device_status("engine_main")
 		terminal.push_line_to_output("[color=#ff4040][ERRORE HARDWARE][/color] Dispositivo 'engine_main' (%s) non alimentato. Regolazione velocità non consentita." % st.get("room_id", "sala_motori"))
 		return
+	
+	if hal and hal.propulsion:
+		hal.propulsion.set_speed_limiter(clampf(val, 0.1, 2.0))
 		
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	var swm = terminal.get_node_or_null("/root/SpaceWorldManager") if terminal.is_inside_tree() else null
 	if swm and swm.has_method("set_ship_max_linear_speed"):
 		var target_speed := val if val > 2.0 else val * 20.0
 		swm.set_ship_max_linear_speed(target_speed)
@@ -154,7 +163,7 @@ func _execute_rotate(terminal: Terminal, hal: ShipHAL, pitch: float, yaw: float,
 			ship.rotate_object_local(Vector3(1, 0, 0), deg_to_rad(pitch))
 			ship.rotate_object_local(Vector3(0, 1, 0), deg_to_rad(yaw))
 			ship.rotate_object_local(Vector3(0, 0, 1), deg_to_rad(roll))
-			var rot := ship.rotation_degrees
+			var rot: Vector3 = ship.rotation_degrees
 			terminal.push_line_to_output("[color=#33ccff][FLIGHT][/color] Rotazione relativa applicata. Assetto attuale: Pitch %.1f°, Yaw %.1f°, Roll %.1f°" % [rot.x, rot.y, rot.z])
 	else:
 		terminal.push_line_to_output("[color=#ffaa00][FLIGHT][/color] Vascello non agganciato.")
@@ -168,14 +177,22 @@ func _execute_slide(terminal: Terminal, hal: ShipHAL, x: float, y: float) -> voi
 	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
 	var ship = swm.get_spaceship() if swm and swm.has_method("get_spaceship") else null
 	if ship and is_instance_valid(ship):
-		var slide_vec := ship.global_transform.basis * Vector3(x, y, 0.0)
+		var slide_vec: Vector3 = ship.global_transform.basis * Vector3(x, y, 0.0)
 		ship.linear_velocity += slide_vec
 		terminal.push_line_to_output("[color=#33ccff][FLIGHT][/color] Impulso di slide applicato: X %+.1f, Y %+.1f (Velocità attuale: %.1f m/s)" % [x, y, ship.linear_velocity.length()])
 	else:
 		terminal.push_line_to_output("[color=#ffaa00][FLIGHT][/color] Vascello non agganciato.")
 
 func _get_hal(terminal: Terminal) -> ShipHAL:
-	var swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	if terminal and "ship_hal" in terminal and terminal.ship_hal != null:
+		return terminal.ship_hal
+	var swm = null
+	if terminal and terminal.is_inside_tree():
+		swm = terminal.get_node_or_null("/root/SpaceWorldManager")
+	elif Engine.get_main_loop() is SceneTree:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree and tree.root:
+			swm = tree.root.get_node_or_null("SpaceWorldManager")
 	if swm and swm.has_method("get_ship_hal"):
 		return swm.get_ship_hal()
 	return null

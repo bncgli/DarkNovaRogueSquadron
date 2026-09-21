@@ -16,14 +16,26 @@ func _init(p_device_id: String = "", p_room_id: String = "", p_category: String 
 	super._init(p_device_id, p_room_id, p_category)
 	power_draw_nominal = 0.0 # Il reattore è un generatore, non assorbe passivamente
 	heat_max = 250.0 # Il reattore tollera temperature più elevate
+	power_output_current = power_output_nominal * power_target
 
 func initialize_registers() -> void:
+	power_output_current = power_output_nominal * power_target
 	super.initialize_registers()
 	registers["power_target"] = power_target
 	registers["fuel"] = fuel_level
 	registers["power_output"] = power_output_current
 	if not readonly_registers.has("power_output"):
 		readonly_registers.append("power_output")
+
+func set_online(online: bool) -> void:
+	super.set_online(online)
+	if not is_online:
+		power_output_current = 0.0
+		registers["power_output"] = 0.0
+	else:
+		var health_factor: float = health_percent / 100.0
+		power_output_current = power_output_nominal * power_target * health_factor
+		registers["power_output"] = power_output_current
 
 func _on_register_written(reg_name: String, value: Variant) -> void:
 	super._on_register_written(reg_name, value)

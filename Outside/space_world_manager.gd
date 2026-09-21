@@ -2260,10 +2260,9 @@ func get_weapon_targets() -> Array[Dictionary]:
 
 ## Verifica se il sottosistema Armeria (Sublayer 3) riceve alimentazione sufficiente
 func is_armory_powered() -> bool:
-	var devices := get_power_devices()
-	for dev in devices:
-		if dev and dev.id == "armory_defense":
-			return true # Sostituito logica obsoleta inputs_powered
+	var hal := get_ship_hal()
+	if hal:
+		return hal.is_device_powered("armory_defense")
 	return true
 
 # --- PROFILI BALISTICI DELLE MUNIZIONI (Fase E - Hard Sci-Fi) ---
@@ -2444,10 +2443,9 @@ func trigger_active_ping(radius: float = 50000.0) -> void:
 	active_ping_triggered.emit(origin, radius)
 
 func is_sensors_powered() -> bool:
-	var devices := get_power_devices()
-	for dev in devices:
-		if dev and dev.id == "sensors_radar":
-			return true # Sostituito logica obsoleta inputs_powered
+	var hal := get_ship_hal()
+	if hal:
+		return hal.is_device_powered("sensors_matrix")
 	return true
 
 ## Verifica se la nave ha potenza disponibile sufficiente (es. per ping radar)
@@ -3429,6 +3427,9 @@ func set_cruise_coils_power(power_mw: float) -> void:
 		cdc.set_cruise_coils_power(power_mw)
 
 func is_cruise_drive_powered() -> bool:
+	var hal := get_ship_hal()
+	if hal:
+		return hal.is_device_powered("engine_main")
 	var cdc := get_cruise_drive_controller()
 	if cdc:
 		return cdc.get_is_powered()

@@ -203,8 +203,10 @@ func update_room_power(room_id: String) -> void:
 	for r in rooms:
 		if r.id == room_id:
 			var total: float = 0.0
-			for d in r.devices:
-				total += d.power_mw
+			if "devices" in r and r.devices is Array:
+				for d in r.devices:
+					var mw: float = float(d.power_mw) if d is ShipDeviceData else float(d.get("power_mw", 0.0) if d is Dictionary else 0.0)
+					total += mw
 			r.power_mw = total
 			emit_changed()
 			return
@@ -213,8 +215,10 @@ func update_room_power(room_id: String) -> void:
 func recalculate_all_powers() -> void:
 	for r in rooms:
 		var total: float = 0.0
-		for d in r.devices:
-			total += d.power_mw
+		if "devices" in r and r.devices is Array:
+			for d in r.devices:
+				var mw: float = float(d.power_mw) if d is ShipDeviceData else float(d.get("power_mw", 0.0) if d is Dictionary else 0.0)
+				total += mw
 		r.power_mw = total
 	emit_changed()
 
@@ -360,10 +364,87 @@ func get_duct_by_id(duct_id: String) -> ShipDuctData:
 
 func get_device_by_id(dev_id: String) -> ShipDeviceData:
 	for r in rooms:
-		for dev in r.devices:
-			if dev.id == dev_id:
-				return dev
+		if "devices" in r and r.devices is Array:
+			for dev in r.devices:
+				if dev is ShipDeviceData and dev.id == dev_id:
+					return dev
+				elif dev is Dictionary and dev.get("id") == dev_id:
+					var dev_obj := ShipDeviceData.new()
+					dev_obj.from_dict(dev)
+					return dev_obj
 	return null
+
+## Trova la stanza che ospita il dispositivo specificato
+func find_room_by_device_id(dev_id: String) -> ShipRoomData:
+	for r in rooms:
+		if "devices" in r and r.devices is Array:
+			for dev in r.devices:
+				var d_id: String = dev.id if dev is ShipDeviceData else (dev.get("id", "") if dev is Dictionary else "")
+				if d_id == dev_id:
+					return r
+	return null
+
+## Genera un ID dispositivo univoco incrementando il suffisso numerico se già esistente
+func get_unique_device_id(base_id: String) -> String:
+	if get_device_by_id(base_id) == null:
+		return base_id
+	var prefix := base_id
+	var num := 1
+	var regex := RegEx.new()
+	regex.compile("^(.*)_(\\d+)$")
+	var m := regex.search(base_id)
+	if m:
+		prefix = m.get_string(1)
+		num = m.get_string(2).to_int() + 1
+	else:
+		num = 1
+	
+	while true:
+		var candidate := "%s_%02d" % [prefix, num]
+		if get_device_by_id(candidate) == null:
+			return candidate
+		num += 1
+	return base_id
+
+## Sposta un dispositivo in un'altra stanza aggiornando array, coordinate, settore e bilanci energetici
+func move_device_to_room(dev_id: String, target_room_id: String) -> bool:
+	var source_room := find_room_by_device_id(dev_id)
+	if not source_room:
+		return false
+	if source_room.id == target_room_id:
+		return true
+	var target_room := get_room_by_id(target_room_id)
+	if not target_room:
+		return false
+	
+	var dev_obj: Variant = null
+	for j in range(source_room.devices.size()):
+		var d = source_room.devices[j]
+		var d_id: String = d.id if d is ShipDeviceData else (d.get("id", "") if d is Dictionary else "")
+		if d_id == dev_id:
+			dev_obj = d
+			source_room.devices.remove_at(j)
+			break
+	
+	if dev_obj == null:
+		return false
+	
+	var r_name: String = target_room.name if not target_room.name.is_empty() else target_room.id
+	var r_center: Vector2 = target_room.rect.get_center()
+	
+	if dev_obj is ShipDeviceData:
+		dev_obj.sector = r_name
+		dev_obj.pos = r_center
+	elif dev_obj is Dictionary:
+		dev_obj["sector"] = r_name
+		dev_obj["pos"] = [r_center.x, r_center.y]
+	
+	target_room.devices.append(dev_obj)
+	update_room_power(source_room.id)
+	update_room_power(target_room.id)
+	recalculate_all_powers()
+	emit_changed()
+	return true
 
 ## Istanziamento nodi fisici per tutte le stanze e dispositivi del blueprint
 func instantiate_physical_components() -> Array[ShipPhysicalComponent]:
@@ -406,12 +487,16 @@ func remove_duct(duct_id: String) -> bool:
 
 func remove_device(dev_id: String) -> bool:
 	for r in rooms:
-		for j in range(r.devices.size()):
-			if r.devices[j].id == dev_id:
-				r.devices.remove_at(j)
-				update_room_power(r.id)
-				emit_changed()
-				return true
+		if "devices" in r and r.devices is Array:
+			for j in range(r.devices.size()):
+				var dev = r.devices[j]
+				var d_id: String = dev.id if dev is ShipDeviceData else (dev.get("id", "") if dev is Dictionary else "")
+				if d_id == dev_id:
+					r.devices.remove_at(j)
+					update_room_power(r.id)
+					recalculate_all_powers()
+					emit_changed()
+					return true
 	return false
 
 func remove_damage(dmg_id: String) -> bool:
