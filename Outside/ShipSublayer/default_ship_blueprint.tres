@@ -751,17 +751,6 @@ sector = "Ponte di Comando"
 desc = "Calcolo rotte orbitali, vettori salto Hyperdrive e waypoint."
 component_class = "NavComputerComponent"
 
-[sub_resource type="Resource" id="Resource_pr4qk"]
-script = ExtResource("4_dev_script")
-id = "cam_array"
-name = "Array Telecamere Esterne"
-pos = Vector2(300, 50)
-power_mw = -5.0
-category = "sensors"
-sector = "Ponte di Comando"
-desc = "Telecamere scafo perimetrali 6CH e proiettori fari."
-component_class = "CamArrayComponent"
-
 [sub_resource type="Resource" id="Resource_5xj2i"]
 script = ExtResource("2_r4o8m")
 id = "bridge"
@@ -769,8 +758,8 @@ name = "Ponte di Comando"
 rect = Rect2(230, 45, 140, 70)
 color = Color(0.12, 0.28, 0.45, 0.55)
 border_color = Color(0.35, 0.75, 1, 0.8)
-devices = [SubResource("Resource_ffog8"), SubResource("Resource_lyyn7"), SubResource("Resource_pr4qk")]
-power_mw = -30.0
+devices = [SubResource("Resource_ffog8"), SubResource("Resource_lyyn7")]
+power_mw = -25.0
 
 [sub_resource type="Resource" id="Resource_ay3ga"]
 script = ExtResource("4_dev_script")
@@ -783,6 +772,17 @@ sector = "Sensori & Avionica"
 desc = "Radar volumetrico 3D, scansione passiva e ping attivo 120 MW."
 component_class = "SensorsMatrixComponent"
 
+[sub_resource type="Resource" id="Resource_pr4qk"]
+script = ExtResource("4_dev_script")
+id = "cam_array"
+name = "Array Telecamere Esterne"
+pos = Vector2(165, 147.5)
+power_mw = -5.0
+category = "sensors"
+sector = "Sensori & Avionica"
+desc = "Telecamere scafo perimetrali 6CH e proiettori fari."
+component_class = "CamArrayComponent"
+
 [sub_resource type="Resource" id="Resource_02wv5"]
 script = ExtResource("2_r4o8m")
 id = "sensors"
@@ -790,18 +790,18 @@ name = "Sensori & Avionica"
 rect = Rect2(110, 115, 110, 65)
 color = Color(0.12, 0.35, 0.3, 0.5)
 border_color = Color(0.2, 0.85, 0.65, 0.8)
-devices = [SubResource("Resource_ay3ga")]
-power_mw = -25.0
+devices = [SubResource("Resource_ay3ga"), SubResource("Resource_pr4qk")]
+power_mw = -30.0
 
 [sub_resource type="Resource" id="Resource_hnu3l"]
 script = ExtResource("4_dev_script")
 id = "antenna_array"
 name = "Transceiver Sub-Spazio"
-pos = Vector2(440, 145)
+pos = Vector2(440, 147.5)
 power_mw = -15.0
 category = "comms"
 sector = "Comunicazioni & EW"
-desc = "Antenna telecomunicazioni subspazio e stabilizzatore link EW."
+desc = "Array comunicazioni radio a lungo raggio e link EW."
 component_class = "AntennaArrayComponent"
 
 [sub_resource type="Resource" id="Resource_r8ncx"]
@@ -891,7 +891,7 @@ power_mw = -20.0
 [sub_resource type="Resource" id="Resource_o81n8"]
 script = ExtResource("4_dev_script")
 id = "core_reactor"
-name = "Reattore Tokamak Primario"
+name = "Reattore PincoPanco Primario"
 pos = Vector2(250, 240)
 power_mw = 1000.0
 category = "reactor"
