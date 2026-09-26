@@ -215,3 +215,36 @@ func test_leftover_directory_cleanup_and_window_close_when_disconnected() -> voi
 	await get_tree().process_frame
 
 	assert_false(DirAccess.dir_exists_absolute("user://files/Ship Drive"), "user://files/Ship Drive should be cleaned up when disconnected")
+
+func test_reset_ship_drive_to_default() -> void:
+	NetworkManager.start_solo_game("SoloTester")
+	NetworkManager.start_mission()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	
+	assert_true(ShipDriveManager.is_drive_mounted, "Ship Drive should be mounted")
+	
+	# Modifica o rimuove un file esistente
+	var target_file := "user://files/Ship Drive/Flight Log.txt"
+	assert_true(FileAccess.file_exists(target_file), "Flight Log.txt should initially exist")
+	DirAccess.remove_absolute(target_file)
+	assert_false(FileAccess.file_exists(target_file), "Flight Log.txt should be removed")
+	
+	# Crea un file spazzatura
+	var junk_file := "user://files/Ship Drive/junk.tmp"
+	var f := FileAccess.open(junk_file, FileAccess.WRITE)
+	f.store_string("corrupted junk")
+	f.close()
+	assert_true(FileAccess.file_exists(junk_file), "junk.tmp should exist")
+	
+	# Esegue il reset
+	ShipDriveManager.reset_ship_drive_to_default()
+	await get_tree().process_frame
+	
+	# Verifica il ripristino
+	assert_true(FileAccess.file_exists(target_file), "Flight Log.txt should be restored after reset")
+	assert_false(FileAccess.file_exists(junk_file), "junk.tmp should be removed after reset")
+	assert_true(FileAccess.file_exists("user://files/Ship Drive/Programs/Weapons/weapons_config.dat"), "weapons_config.dat should exist after reset")
+	
+	NetworkManager.disconnect_game()
+	await get_tree().process_frame

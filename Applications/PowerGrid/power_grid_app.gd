@@ -189,6 +189,12 @@ func _on_room_power_toggled(room_id: String, is_on: bool) -> void:
 	var room := _get_room_by_id(room_id)
 	if not room.is_empty():
 		room["is_on"] = is_on
+		if room_widgets.has(room_id):
+			var widget = room_widgets[room_id]
+			if "power_switch" in widget and widget.power_switch and widget.power_switch.button_pressed != is_on:
+				widget.power_switch.set_pressed_no_signal(is_on)
+			if widget.has_method("_update_visuals"):
+				widget._update_visuals(is_on)
 		var st_col := "#33ff66" if is_on else "#ff4040"
 		_print_terminal("[color=#ffffaa]Stanza %s: [color=%s]%s[/color][/color]" % [str(room.get("name", "Ignota")), st_col, "ACCESA" if is_on else "SPENTA"])
 		
@@ -337,11 +343,13 @@ func _update_ui_telemetry() -> void:
 	for room_id in room_widgets:
 		var room := _get_room_by_id(room_id)
 		if not room.is_empty():
+			var is_on: bool = bool(room.get("is_on", false))
 			var room_p := 0.0
-			for dev in room.get("devices", []):
-				room_p += float(dev.get("power_mw", 0.0))
-			if room_p == 0.0 and room.has("power_mw"):
-				room_p = float(room.get("power_mw", 0.0))
+			if is_on:
+				for dev in room.get("devices", []):
+					room_p += float(dev.get("power_mw", 0.0))
+				if room_p == 0.0 and room.has("power_mw"):
+					room_p = float(room.get("power_mw", 0.0))
 			room_widgets[room_id].update_power(room_p)
 
 func _update_inspector() -> void:
@@ -371,10 +379,11 @@ func _update_inspector() -> void:
 	var devices: Array = room.get("devices", [])
 	
 	var room_p: float = 0.0
-	for dev in devices:
-		room_p += float(dev.get("power_mw", 0.0))
-	if room_p == 0.0 and room.has("power_mw"):
-		room_p = float(room.get("power_mw", 0.0))
+	if is_on:
+		for dev in devices:
+			room_p += float(dev.get("power_mw", 0.0))
+		if room_p == 0.0 and room.has("power_mw"):
+			room_p = float(room.get("power_mw", 0.0))
 	
 	if inspector_title_label:
 		inspector_title_label.text = "%s [%s]" % [r_name, r_cat]
@@ -384,7 +393,10 @@ func _update_inspector() -> void:
 		inspector_desc_label.text = "Stato: %s | Dispositivi installati: %d" % [status_str, devices.size()]
 	
 	if inspector_inputs_label:
-		if room_p > 0.0:
+		if not is_on:
+			inspector_inputs_label.text = "Carico: 0.0 MW (OFFLINE)"
+			inspector_inputs_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		elif room_p > 0.0:
 			inspector_inputs_label.text = "Produzione: +%.1f MW" % room_p
 			inspector_inputs_label.modulate = Color(0.2, 1.0, 0.4, 1.0) # #33ff66
 		elif room_p < 0.0:
@@ -395,7 +407,10 @@ func _update_inspector() -> void:
 			inspector_inputs_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
 	
 	if inspector_regime_label:
-		if room_p > 0.0:
+		if not is_on:
+			inspector_regime_label.text = "STANDBY / DISCONNESSO"
+			inspector_regime_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		elif room_p > 0.0:
 			inspector_regime_label.text = "GENERAZIONE ATTIVA"
 			inspector_regime_label.modulate = Color(0.2, 1.0, 0.4, 1.0)
 		elif room_p < 0.0:
@@ -407,7 +422,9 @@ func _update_inspector() -> void:
 	
 	if inspector_regime_bar:
 		inspector_regime_bar.value = abs(room_p)
-		if room_p > 0.0:
+		if not is_on:
+			inspector_regime_bar.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		elif room_p > 0.0:
 			inspector_regime_bar.modulate = Color(0.2, 1.0, 0.4, 1.0)
 		elif room_p < 0.0:
 			inspector_regime_bar.modulate = Color(1.0, 0.25, 0.25, 1.0)

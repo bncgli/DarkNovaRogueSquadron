@@ -200,8 +200,43 @@ func unmount_target_drive() -> void:
 			_delete_dir_recursive("user://files/Target Drive")
 		_refresh_desktop()
 
-func _populate_default_ship_drive_files() -> void:
-	if FileAccess.file_exists("user://files/Ship Drive/Ship Systems.txt") and FileAccess.file_exists("user://files/Ship Drive/Programs/Weapons/weapons_config.dat"):
+## Ripristina in modo completo e pulito tutti i file e password originali di Ship Drive
+func reset_ship_drive_to_default(force: bool = true) -> void:
+	if not is_drive_mounted:
+		if is_ship_connected():
+			mount_drive()
+		else:
+			return
+	
+	# Pulisce le password di Ship Drive prima di ricrearle
+	var fpm := get_node_or_null("/root/FolderPasswordManager")
+	if fpm and fpm.has_method("delete_path"):
+		fpm.delete_path(SHIP_DRIVE_NAME)
+	
+	if DirAccess.dir_exists_absolute(SHIP_DRIVE_ROOT_DIR):
+		_delete_dir_recursive(SHIP_DRIVE_ROOT_DIR)
+	DirAccess.make_dir_recursive_absolute(SHIP_DRIVE_ROOT_DIR)
+	
+	_populate_default_ship_drive_files(force)
+	
+	_refresh_desktop()
+	drive_synced.emit()
+	
+	var notif := get_node_or_null("/root/NotificationManager")
+	if notif and notif.has_method("spawn_notification"):
+		notif.spawn_notification("Ship Drive ripristinato ai valori predefiniti.")
+	
+	var nm := _get_net_mgr()
+	if nm and nm.get("is_host") and is_inside_tree() and multiplayer.has_multiplayer_peer():
+		var snapshot: Array = _gather_drive_snapshot()
+		_rpc_receive_full_sync.rpc(snapshot)
+
+## Alias per reset_ship_drive_to_default conforme alle convenzioni API
+func restore_default_ship_drive_files(force: bool = true) -> void:
+	reset_ship_drive_to_default(force)
+
+func _populate_default_ship_drive_files(force: bool = false) -> void:
+	if not force and FileAccess.file_exists("user://files/Ship Drive/Ship Systems.txt") and FileAccess.file_exists("user://files/Ship Drive/Programs/Weapons/weapons_config.dat"):
 		return
 	
 	var bp_files: Array = []

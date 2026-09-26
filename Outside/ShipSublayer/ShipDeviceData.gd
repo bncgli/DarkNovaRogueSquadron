@@ -7,7 +7,21 @@ extends Resource
 @export var id: String = ""
 @export var name: String = ""
 @export var pos: Vector2 = Vector2.ZERO
-@export var power_mw: float = 0.0
+@export var power_mw: float = 0.0:
+	set(val):
+		power_mw = val
+		if custom_properties == null:
+			custom_properties = {}
+		if power_mw > 0.0:
+			custom_properties["power_output_nominal"] = power_mw
+			custom_properties.erase("power_draw_nominal")
+		elif power_mw < 0.0:
+			custom_properties["power_draw_nominal"] = absf(power_mw)
+			custom_properties.erase("power_output_nominal")
+		else:
+			custom_properties.erase("power_output_nominal")
+			custom_properties.erase("power_draw_nominal")
+		emit_changed()
 @export var category: String = "utility"
 @export var sector: String = ""
 @export var desc: String = ""
@@ -202,6 +216,10 @@ func create_physical_component(room_id: String = "") -> ShipPhysicalComponent:
 	for prop in custom_properties:
 		if prop in comp:
 			comp.set(prop, custom_properties[prop])
+	if power_mw > 0.0:
+		comp.power_output_nominal = power_mw
+	elif power_mw < 0.0:
+		comp.power_draw_nominal = absf(power_mw)
 	comp.initialize_registers()
 	return comp
 
@@ -228,9 +246,9 @@ func from_dict(data: Dictionary) -> void:
 		elif data["pos"] is Vector2:
 			pos = data["pos"]
 			
-	power_mw = float(data.get("power_mw", 0.0))
 	category = data.get("category", "utility")
 	sector = data.get("sector", "")
 	desc = data.get("desc", "")
 	component_class = data.get("component_class", "")
 	custom_properties = data.get("custom_properties", {})
+	power_mw = float(data.get("power_mw", 0.0))

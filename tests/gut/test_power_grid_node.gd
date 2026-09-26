@@ -132,6 +132,31 @@ func test_room_inspector_populates_selected_room_details() -> void:
 	assert_false(_app.inspector_title_label.text.is_empty(), "Inspector title deve essere popolato")
 	assert_not_null(_app.inspector_inputs_label, "Inspector inputs label presente")
 
+func test_room_offline_telemetry_and_inspector() -> void:
+	_app = await _create_app()
+	await _start_solo_mission()
+	
+	assert_false(_app.rooms_data.is_empty(), "rooms_data deve essere popolato")
+	var reactor_rid := ""
+	for r in _app.rooms_data:
+		var r_cat: String = str(r.get("category", "")).to_lower()
+		var r_id: String = str(r.get("id", "")).to_lower()
+		if r_cat == "engineering" or r_id.contains("reactor") or r_id.contains("reattore"):
+			reactor_rid = str(r.get("id", ""))
+			break
+	if reactor_rid.is_empty():
+		reactor_rid = str(_app.rooms_data[0].get("id", ""))
+	
+	_app._on_room_selected(reactor_rid)
+	_app._on_room_power_toggled(reactor_rid, false)
+	await get_tree().process_frame
+	
+	assert_true(_app.inspector_inputs_label.text.contains("OFFLINE"), "Inspector deve indicare OFFLINE quando la stanza è spenta")
+	assert_true(_app.inspector_regime_label.text.contains("STANDBY / DISCONNESSO"), "Regime inspector deve indicare STANDBY / DISCONNESSO")
+	if _app.room_widgets.has(reactor_rid):
+		var w = _app.room_widgets[reactor_rid]
+		assert_true(w.power_status_label.text.contains("OFFLINE"), "Il widget della stanza deve mostrare 0.0 MW (OFFLINE)")
+
 func test_mini_terminal_commands_execute_without_error() -> void:
 	_app = await _create_app()
 	await _start_solo_mission()

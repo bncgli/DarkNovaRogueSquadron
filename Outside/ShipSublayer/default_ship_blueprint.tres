@@ -739,6 +739,9 @@ category = "command"
 sector = "Ponte di Comando"
 desc = "Interfaccia diegetica controlli pilota WASD/QE."
 component_class = "HelmControlComponent"
+custom_properties = {
+"power_draw_nominal": 15.0
+}
 
 [sub_resource type="Resource" id="Resource_lyyn7"]
 script = ExtResource("4_dev_script")
@@ -750,6 +753,9 @@ category = "command"
 sector = "Ponte di Comando"
 desc = "Calcolo rotte orbitali, vettori salto Hyperdrive e waypoint."
 component_class = "NavComputerComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_5xj2i"]
 script = ExtResource("2_r4o8m")
@@ -771,6 +777,9 @@ category = "sensors"
 sector = "Sensori & Avionica"
 desc = "Radar volumetrico 3D, scansione passiva e ping attivo 120 MW."
 component_class = "SensorsMatrixComponent"
+custom_properties = {
+"power_draw_nominal": 25.0
+}
 
 [sub_resource type="Resource" id="Resource_pr4qk"]
 script = ExtResource("4_dev_script")
@@ -782,6 +791,9 @@ category = "sensors"
 sector = "Sensori & Avionica"
 desc = "Telecamere scafo perimetrali 6CH e proiettori fari."
 component_class = "CamArrayComponent"
+custom_properties = {
+"power_draw_nominal": 5.0
+}
 
 [sub_resource type="Resource" id="Resource_02wv5"]
 script = ExtResource("2_r4o8m")
@@ -803,6 +815,9 @@ category = "comms"
 sector = "Comunicazioni & EW"
 desc = "Array comunicazioni radio a lungo raggio e link EW."
 component_class = "AntennaArrayComponent"
+custom_properties = {
+"power_draw_nominal": 15.0
+}
 
 [sub_resource type="Resource" id="Resource_r8ncx"]
 script = ExtResource("2_r4o8m")
@@ -824,6 +839,9 @@ category = "tactical"
 sector = "Armeria & Sicurezza"
 desc = "Condensatori laser, puntamento torrette e dispenser missili."
 component_class = "ArmoryDefenseComponent"
+custom_properties = {
+"power_draw_nominal": 30.0
+}
 
 [sub_resource type="Resource" id="Resource_n0eur"]
 script = ExtResource("2_r4o8m")
@@ -845,6 +863,9 @@ category = "cyber"
 sector = "MainFrame"
 desc = "Mainframe quantistico per firewall, exploit e crittografia."
 component_class = "ServerRackComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_8nl2e"]
 script = ExtResource("2_r4o8m")
@@ -866,6 +887,9 @@ category = "cargo"
 sector = "Baia di Carico Principale"
 desc = "Serrande portelloni cargo e bloccaggio magnetico merci."
 component_class = "CargoHandlingComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_kgv66"]
 script = ExtResource("4_dev_script")
@@ -877,6 +901,9 @@ category = "engineering"
 sector = "Baia di Carico Principale"
 desc = "Nodo ricarica ad induzione per drone condotti interno."
 component_class = "RechargeDockComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_h72b7"]
 script = ExtResource("2_r4o8m")
@@ -1027,6 +1054,9 @@ category = "life_support"
 sector = "Supporto vitale minimale"
 desc = "Scrubber chimico per purificazione CO2 e ricircolo aria."
 component_class = "LifeSupportComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_8jhlj"]
 script = ExtResource("4_dev_script")
@@ -1038,6 +1068,9 @@ category = "life_support"
 sector = "Supporto vitale minimale"
 desc = "Caldaia termoregolatrice della cabina (21°C)."
 component_class = "LifeSupportComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_e6lv0"]
 script = ExtResource("4_dev_script")
@@ -1049,6 +1082,9 @@ category = "life_support"
 sector = "Supporto vitale minimale"
 desc = "Serra idroponica biologica per ossigeno continuo e razioni."
 component_class = "LifeSupportComponent"
+custom_properties = {
+"power_draw_nominal": 15.0
+}
 
 [sub_resource type="Resource" id="Resource_03nkn"]
 script = ExtResource("2_r4o8m")
@@ -1071,6 +1107,9 @@ category = "service"
 sector = "Pod drone di servizio"
 desc = "Culla di attracco e ricarica drone spaziale esterno."
 component_class = "DroneStationComponent"
+custom_properties = {
+"power_draw_nominal": 10.0
+}
 
 [sub_resource type="Resource" id="Resource_3dehh"]
 script = ExtResource("2_r4o8m")
@@ -1093,6 +1132,9 @@ category = "defense"
 sector = "Armatura adattiva SX"
 desc = "Generazione e bilanciamento bolla scudi Babordo."
 component_class = "ShieldBalancerComponent"
+custom_properties = {
+"power_draw_nominal": 45.0
+}
 
 [sub_resource type="Resource" id="Resource_t3r7o"]
 script = ExtResource("2_r4o8m")
@@ -1115,6 +1157,9 @@ category = "defense"
 sector = "Armatura adattiva DX"
 desc = "Generazione e bilanciamento bolla scudi Tribordo."
 component_class = "ShieldBalancerComponent"
+custom_properties = {
+"power_draw_nominal": 45.0
+}
 
 [sub_resource type="Resource" id="Resource_2knsl"]
 script = ExtResource("2_r4o8m")

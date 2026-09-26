@@ -30,6 +30,10 @@ Questa cartella racchiude i grafici, i diagrammi di flusso di processo e le matr
    - Flusso Dati tra `ShipBlueprint`, Sistemi della Nave (`ShipSystems`), Droni (`DuctDrone`, `ServiceDrone`) e Terminale OS.
    - Matrice dei Ruoli (RBAC) e autorizzazioni di accesso alle applicazioni.
 
+5. [**05. ShipHAL — Hardware Abstraction Layer & Ship Operating System**](../SHIP_HAL_GUIDE.md)
+   - Architettura Kernel OS, astrazione hardware su `ShipHardwareBus` e gestione dei 10 sottosistemi di dominio tipizzati.
+   - Syscall atomiche, gestione breaker, aliasing retrocompatibile e matrice di interconnessione con GUI e Terminale.
+
 ---
 
 ## 🧭 Panoramica di Alto Livello dell'Architettura

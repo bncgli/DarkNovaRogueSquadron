@@ -108,3 +108,39 @@ func test_find_room_by_device_id_nonexistent() -> void:
 	assert_null(bp.find_room_by_device_id("nonexistent_device"))
 	assert_false(bp.move_device_to_room("nonexistent_device", "sensors"))
 	assert_false(bp.move_device_to_room("sensors_matrix_01", "nonexistent_room"))
+
+func test_device_power_synchronization_with_custom_properties_and_physical_component() -> void:
+	var dev := ShipDeviceData.create_canonical_device("core_reactor", "reactor_test", "bridge", Vector2(10, 10))
+	assert_almost_eq(dev.power_mw, 500.0, 0.01)
+	assert_eq(dev.custom_properties.get("power_output_nominal"), 500.0)
+	
+	# Cambia valore potenza generatore
+	dev.power_mw = 650.0
+	assert_almost_eq(dev.power_mw, 650.0, 0.01)
+	assert_eq(dev.custom_properties.get("power_output_nominal"), 650.0)
+	assert_false(dev.custom_properties.has("power_draw_nominal"))
+	
+	var phys_comp := dev.create_physical_component("bridge")
+	assert_not_null(phys_comp)
+	assert_almost_eq(phys_comp.power_output_nominal, 650.0, 0.01)
+	
+	# Cambia valore su consumatore
+	var cons := ShipDeviceData.create_canonical_device("sensors_matrix", "sensor_test", "bridge", Vector2(20, 20))
+	cons.power_mw = -40.0
+	assert_eq(cons.custom_properties.get("power_draw_nominal"), 40.0)
+	assert_false(cons.custom_properties.has("power_output_nominal"))
+	
+	var phys_cons := cons.create_physical_component("bridge")
+	assert_almost_eq(phys_cons.power_draw_nominal, 40.0, 0.01)
+	
+	phys_comp.free()
+	phys_cons.free()
+
+func test_blueprint_drive_passwords_management() -> void:
+	bp.set_drive_password("Ship Drive/Programs/FlightControls", "CUSTOM-1234")
+	assert_true(bp.drive_passwords.has("Ship Drive/Programs/FlightControls"))
+	assert_eq(bp.get_drive_password("Ship Drive/Programs/FlightControls"), "CUSTOM-1234")
+	
+	bp.remove_drive_password("Ship Drive/Programs/FlightControls")
+	assert_false(bp.drive_passwords.has("Ship Drive/Programs/FlightControls"))
+	assert_eq(bp.get_drive_password("Ship Drive/Programs/FlightControls"), "")

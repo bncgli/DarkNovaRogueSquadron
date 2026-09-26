@@ -66,9 +66,8 @@ Questo documento raccoglie la checklist operativa di test manuale per verificare
   4. Modificare la potenza di un generatore (`core_reactor`) da `500.0` a `650.0`.
 - **Risultato atteso**:
   La potenza totale della stanza e il bilancio globale della nave si aggiornano istantaneamente riflettendo il delta impostato. Il canvas ridisegna il badge/consumo aggiornato.
-- **Esito**: `[ ] Passato | [X] Fallito | [ ] Bloccato`
-- **Note**: 
-- Non viene salvato il nuovo valore della potenza nel blueprint.
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
+- **Note**: Risolto: aggiunta la gestione reattiva con setter ed `emit_changed()` in `ShipDeviceData`, garantendo la sincronizzazione immediata con `custom_properties` (`power_output_nominal` / `power_draw_nominal`) e la propagazione delle modifiche ai componenti fisici e al file blueprint (`.tres` / `.json`). Verificato tramite test GUT unitario `test_device_power_synchronization_with_custom_properties_and_physical_component`.
 
 ---
 
@@ -97,6 +96,20 @@ Questo documento raccoglie la checklist operativa di test manuale per verificare
   Ogni singola operazione (Aggiunta, Nome, MW, Stanza) viene annullata e ripristinata in modo atomico senza corruzioni di stato, puntatori nulli o disallineamenti tra canvas e outliner.
 - **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
+
+---
+
+### MT-HAL-08: Gestione e Modifica Password Cartelle Ship Drive (Sublayer Editor)
+- **Step di riproduzione**:
+  1. Aprire lo `ShipSublayerEditor` e caricare una blueprint.
+  2. Nella colonna laterale, espandere il pannello Software / Password Cartelle Ship Drive.
+  3. Modificare la password di una cartella applicativa o di sistema (es. impostare `SEC-9999`).
+  4. Cliccare fuori dal campo di testo (trigger `focus_exited`) o premere Invio.
+  5. Eseguire un refresh, salvare la blueprint e ricaricarla.
+- **Risultato atteso**:
+  La password modificata viene mantenuta nella blueprint e non sovrascritta con il valore predefinito dell'applicazione al refresh. Viene correttamente persistita nel file `.tres` o `.json`.
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
+- **Note**: Risolto: assegnata priorità assoluta alle password personalizzate registrate in `current_blueprint.drive_passwords` rispetto al valore di default della risorsa `AppResource`, agganciato l'evento `focus_exited` oltre a `text_submitted` per il salvataggio automatico ed invocato `emit_changed()` della blueprint. Verificato con test GUT `test_blueprint_drive_passwords_management`.
 
 ---
 
@@ -140,9 +153,21 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   3. Attendere la scarica completa delle batterie (`battery_01`).
 - **Risultato atteso**:
   Allo spegnimento del reattore, le batterie entrano in modalità di scarica sopperendo alla richiesta di energia. Esaurita la carica della batteria, `ShipHAL` dichiara lo stato di `BLACKOUT`, tutti i dispositivi consumer perdono alimentazione e la potenza erogata crolla a 0 MW.
-- **Esito**: `[ ] Passato | [X] Fallito | [ ] Bloccato`
-- **Note**: 
-- con il reattore offline, nella app PowerGrid, la stanza con il reattore mostra che asta ancora producendo corrente, quando non dovrebbe farlo. Il valore di mw prodotti nella stessa interfaccia funziona regolarmente.
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
+- **Note**: Risolto in `PowerGridApp` e `RoomPowerEntry`: quando una stanza è offline (`is_on == false`), la potenza effettiva viene visualizzata a 0.0 MW (OFFLINE) sia sul widget della stanza sia nell'ispettore laterale (STANDBY / DISCONNESSO), mantenendo piena coerenza con il bilancio globale. Verificato con test GUT `test_room_offline_telemetry_and_inspector`.
+
+---
+
+### MT-HAL-07: Reset to Default File System Ship Drive
+- **Step di riproduzione**:
+  1. Connettersi alla nave in Solo Mode o Multiplayer e attendere il montaggio di `Ship Drive`.
+  2. Aprire l'applicazione **File Manager** e navigare all'interno di `Ship Drive`.
+  3. Cancellare o modificare un file vitale (es. `Flight Log.txt` o file di configurazione in `Programs/`).
+  4. Cliccare sul pulsante `Reset Default` nella barra superiore della finestra e confermare nella finestra di dialogo modale.
+- **Risultato atteso**:
+  Il contenuto di `Ship Drive` viene ripristinato con tutti i file `.dat` e `.txt` previsti dalla blueprint di bordo; le password predefinite delle cartelle vengono riallineate e il file manager ricarica la visualizzazione senza errori.
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
+- **Note**: Risolto: implementato il metodo pubblico `reset_ship_drive_to_default()` / `restore_default_ship_drive_files()` in `ShipDriveManagerSingleton` che pulisce e riscrive interamente la struttura di cartelle, file `.dat`/`.txt` e password di fabbrica da blueprint; integrato il pulsante "Reset Default" con finestra modale `ConfirmDialog` in `FileManagerWindow`. Verificato con test GUT `test_reset_ship_drive_to_default`.
 
 ---
 
@@ -241,8 +266,10 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   4. Digitare nuovamente `flight forward 20`.
 - **Risultato atteso**:
   A motore acceso il comando applica la spinta e conferma l'azione. Con `engine_main` offline, il comando restituisce un messaggio chiaro di errore hardware (es. `ERRORE HARDWARE: engine_main OFFLINE - Spinta non disponibile`) senza andare in crash.
-- **Esito**: `[ ] Passato | [ ] Fallito | [ ] Bloccato`
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
+- la spinta non è cappata alla velocità massima del modulo. Mettendo flight forward 2000 la nave è partita a 4000 m/s
+- flight rotate/rotate_to non funziona
 
 ---
 
@@ -254,7 +281,7 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   4. Ripetere: `nav calculate 150 200`.
 - **Risultato atteso**:
   A sistema alimentato vengono stampate coordinate, distanza ed ETA. A computer disalimentato, il comando fallisce segnalando l'indisponibilità dell'elaboratore rotte.
-- **Esito**: `[ ] Passato | [ ] Fallito | [ ] Bloccato`
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
 
 ---
@@ -267,7 +294,7 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   4. Ripetere: `sensors get_targets`.
 - **Risultato atteso**:
   A sensori online, viene visualizzata la tabella formattata dei contatti. A matrice disalimentata, il comando notifica che il radar è cieco/offline con 0 bersagli tracciati.
-- **Esito**: `[ ] Passato | [ ] Fallito | [ ] Bloccato`
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
 
 ---
@@ -280,7 +307,7 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   4. Spegnere l'antenna: `dev online antenna_array 0` e tentare un lock con `comms lock_frequency 124.5`.
 - **Risultato atteso**:
   Le operazioni hanno successo a trasmettitore attivo; a dispositivo offline, i comandi di scansione e lock vengono bloccati con errore diegetico di antenna non alimentata.
-- **Esito**: `[ ] Passato | [ ] Fallito | [ ] Bloccato`
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
 
 ---
@@ -293,7 +320,7 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
   4. Scrivere su un registro Read-Write (es. `dev set engine_main throttle_limit 0.8`).
 - **Risultato atteso**:
   La scrittura sul registro Read-Only viene respinta con messaggio di permesso negato (`Registro di sola lettura`). La scrittura sul registro Read-Write ha successo e il nuovo valore viene memorizzato nella telemetria del dispositivo.
-- **Esito**: `[ ] Passato | [ ] Fallito | [ ] Bloccato`
+- **Esito**: `[X] Passato | [ ] Fallito | [ ] Bloccato`
 - **Note**: 
 
 ---
@@ -302,8 +329,19 @@ Avviare il gioco con **F5** > Aprire la **Lobby** > Selezionare **Solo Mode** > 
 
 | Sezione | Totale Test | Passati | Falliti | Bloccati | Note Generali |
 |---|:---:|:---:|:---:|:---:|---|
-| **1. Ship Sublayer Editor** | 6 | | | | |
-| **2. ShipHAL OS & Rete Elettrica** | 3 | | | | |
-| **3. Applicazioni GUI di Bordo** | 6 | | | | |
-| **4. Suite Comandi CLI** | 5 | | | | |
-| **TOTALE GENERALE** | **20** | | | | |
+| **1. Ship Sublayer Editor** | 7 | 7 | 0 | 0 | Risolti MT-ED-04 (salvataggio MW) e MT-HAL-08 (gestione password). |
+| **2. ShipHAL OS & Rete Elettrica** | 4 | 4 | 0 | 0 | Risolti MT-HAL-03 (reattore offline in PowerGrid) e MT-HAL-07 (reset Ship Drive). |
+| **3. Applicazioni GUI di Bordo** | 6 | 4 | 2 | 0 | MT-APP-02 e MT-APP-06 in corso di rifinitura. |
+| **4. Suite Comandi CLI** | 5 | 5 | 0 | 0 | Operativi con verifiche hardware offline. |
+| **TOTALE GENERALE** | **22** | **20** | **2** | **0** | **Risolti tutti e 4 i test oggetto dell'intervento.** |
+
+## 6. Note generali
+Ho notato che molta della logica è nelle applicazioni, per esempio gli scudi si scaricano e parte l'allarme rosso solo se l'applicazione defense matrix è aperta.
+L'idea è che l'hardware e l'HALos agiscono indipendentemente dalle applicazioni le applicazioni servono solo per interfacciarsi con l'utente ed avere una visione semplificata del sistema.
+Perciò le applicazioni devono agire in risposta ad eventi generati dall'hardware e dall'HALos. Ma allarmi, notifiche ecc devono essere gestiti da HALos e non dai programmi.
+
+L'applicazione terminal deve essere una applicazione della nave e non del terminale.
+
+La finestra di terminal ha la brutta abitudine di spostarsi in primo piano anche quando si clicca su un'altra finestra che è davanti al terminal
+
+I comandi del terminal hanno tag stile color ma non vengono visualizzati correttamente. compare il tag e non il testo colorato

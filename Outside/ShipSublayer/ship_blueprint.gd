@@ -365,12 +365,14 @@ func get_duct_by_id(duct_id: String) -> ShipDuctData:
 func get_device_by_id(dev_id: String) -> ShipDeviceData:
 	for r in rooms:
 		if "devices" in r and r.devices is Array:
-			for dev in r.devices:
+			for i in range(r.devices.size()):
+				var dev = r.devices[i]
 				if dev is ShipDeviceData and dev.id == dev_id:
 					return dev
 				elif dev is Dictionary and dev.get("id") == dev_id:
 					var dev_obj := ShipDeviceData.new()
 					dev_obj.from_dict(dev)
+					r.devices[i] = dev_obj
 					return dev_obj
 	return null
 

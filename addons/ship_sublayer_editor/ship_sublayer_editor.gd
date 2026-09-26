@@ -862,25 +862,37 @@ func _refresh_software_panel() -> void:
 		displayed_passwords.append(pwd_key)
 		
 		var edit_pwd := LineEdit.new()
-		# La password viene presa prioritariamente dal file risorsa come richiesto
-		if app_res:
+		# La password viene presa prioritariamente dalla blueprint (se personalizzata), altrimenti dalla risorsa app
+		if current_blueprint.drive_passwords.has(pwd_key):
+			edit_pwd.text = str(current_blueprint.drive_passwords[pwd_key])
+		elif app_res and not app_res.default_password.is_empty():
 			edit_pwd.text = app_res.default_password
 		else:
-			edit_pwd.text = current_blueprint.drive_passwords.get(pwd_key, "")
+			edit_pwd.text = ""
 			
 		edit_pwd.custom_minimum_size = Vector2(80, 0)
 		edit_pwd.placeholder_text = "Pass"
 		edit_pwd.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		edit_pwd.add_theme_font_size_override("font_size", 10)
 		
-		edit_pwd.text_submitted.connect((func(new_pwd: String, key: String, t: String):
+		var apply_app_pwd := func(new_pwd: String, key: String, t: String):
+			var cur_val: String = current_blueprint.drive_passwords.get(key, (app_res.default_password if app_res else ""))
+			if cur_val == new_pwd:
+				return
 			save_undo_state("Cambia Password " + t)
 			if new_pwd.is_empty():
 				current_blueprint.remove_drive_password(key)
 			else:
 				current_blueprint.set_drive_password(key, new_pwd)
+			current_blueprint.emit_changed()
 			_refresh_software_panel()
+		
+		edit_pwd.text_submitted.connect((func(new_pwd: String, key: String, t: String):
+			apply_app_pwd.call(new_pwd, key, t)
 		).bind(pwd_key, title))
+		edit_pwd.focus_exited.connect(func():
+			apply_app_pwd.call(edit_pwd.text, pwd_key, title)
+		)
 		row.add_child(edit_pwd)
 		
 		var btn_uninstall := Button.new()
@@ -919,17 +931,29 @@ func _refresh_software_panel() -> void:
 			row.add_child(slbl)
 			
 			var sedit := LineEdit.new()
-			sedit.text = current_blueprint.drive_passwords[skey]
+			sedit.text = str(current_blueprint.drive_passwords.get(skey, ""))
 			sedit.custom_minimum_size = Vector2(80, 0)
 			sedit.placeholder_text = "Pass"
 			sedit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 			sedit.add_theme_font_size_override("font_size", 10)
 			
-			sedit.text_submitted.connect((func(v, k):
+			var apply_sys_pwd := func(v: String, k: String):
+				if current_blueprint.drive_passwords.get(k, "") == v:
+					return
 				save_undo_state("Cambia Password Sistema")
-				current_blueprint.set_drive_password(k, v)
+				if v.is_empty():
+					current_blueprint.remove_drive_password(k)
+				else:
+					current_blueprint.set_drive_password(k, v)
+				current_blueprint.emit_changed()
 				_refresh_software_panel()
+			
+			sedit.text_submitted.connect((func(v, k):
+				apply_sys_pwd.call(v, k)
 			).bind(skey))
+			sedit.focus_exited.connect(func():
+				apply_sys_pwd.call(sedit.text, skey)
+			)
 			row.add_child(sedit)
 			
 			var sdel := Button.new()
@@ -938,6 +962,7 @@ func _refresh_software_panel() -> void:
 			sdel.pressed.connect((func(k):
 				save_undo_state("Rimuovi Password Sistema")
 				current_blueprint.remove_drive_password(k)
+				current_blueprint.emit_changed()
 				_refresh_software_panel()
 			).bind(skey))
 			row.add_child(sdel)
@@ -1407,6 +1432,11 @@ func _populate_property_editor(elem_type: String, elem_id: String, elem_data: Va
 			_add_float_field("Potenza (MW):", dev.power_mw, func(v):
 				save_undo_state("Modifica Potenza Dispositivo")
 				dev.power_mw = v
+				dev.emit_changed()
+				var parent_room := current_blueprint.find_room_by_device_id(dev.id)
+				if parent_room:
+					current_blueprint.update_room_power(parent_room.id)
+					parent_room.emit_changed()
 				current_blueprint.recalculate_all_powers()
 				current_blueprint.emit_changed()
 				_update_stats_label()
@@ -1968,6 +1998,7 @@ func _add_passwords_editor() -> void:
 		btn_del_pwd.pressed.connect((func(cp):
 			save_undo_state("Rimuovi Password")
 			current_blueprint.remove_drive_password(cp)
+			current_blueprint.emit_changed()
 			_show_blueprint_metadata_props()
 		).bind(cur_path))
 		h.add_child(lbl_p)
@@ -2142,6 +2173,7 @@ func _on_btn_add_drive_password_pressed() -> void:
 	save_undo_state("Aggiungi Password")
 	var path_key := "Ship Drive/Programs/SecureFolder_%d" % (current_blueprint.drive_passwords.size() + 1)
 	current_blueprint.set_drive_password(path_key, "SEC-%04d" % randi_range(1000, 9999))
+	current_blueprint.emit_changed()
 	_refresh_software_panel()
 	_set_status_msg("Nuova password cartella creata.")
 
@@ -2314,6 +2346,8 @@ func _on_file_dialog_file_selected(path: String) -> void:
 func _save_to_path(path: String) -> void:
 	if not current_blueprint:
 		return
+	current_blueprint.recalculate_all_powers()
+	current_blueprint.emit_changed()
 	var err := ResourceSaver.save(current_blueprint, path)
 	if err == OK:
 		current_file_path = path

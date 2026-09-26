@@ -30,22 +30,30 @@ func setup(data: Dictionary) -> void:
 		power_switch.button_pressed = is_on
 	_update_visuals(is_on)
 	
-	update_power(float(data.get("power_mw", 0.0)))
+	var initial_p: float = float(data.get("power_mw", 0.0)) if is_on else 0.0
+	update_power(initial_p)
 
 func update_power(power_mw: float) -> void:
 	current_power = power_mw
+	var is_off: bool = (power_switch != null and not power_switch.button_pressed)
 	if power_status_label:
-		power_status_label.text = "%.1f MW" % power_mw
-		if power_mw > 0.0:
-			power_status_label.modulate = Color(0.2, 1.0, 0.4, 1.0) # Generator (#33ff66)
-		elif power_mw < 0.0:
-			power_status_label.modulate = Color(1.0, 0.25, 0.25, 1.0) # Consumer (#ff4040)
+		if is_off and power_mw == 0.0:
+			power_status_label.text = "0.0 MW (OFFLINE)"
+			power_status_label.modulate = Color(0.65, 0.65, 0.65, 1.0)
 		else:
-			power_status_label.modulate = Color(0.65, 0.65, 0.65, 1.0) # Neutral / Standby
+			power_status_label.text = "%.1f MW" % power_mw
+			if power_mw > 0.0:
+				power_status_label.modulate = Color(0.2, 1.0, 0.4, 1.0) # Generator (#33ff66)
+			elif power_mw < 0.0:
+				power_status_label.modulate = Color(1.0, 0.25, 0.25, 1.0) # Consumer (#ff4040)
+			else:
+				power_status_label.modulate = Color(0.65, 0.65, 0.65, 1.0) # Neutral / Standby
 	
 	if power_bar:
 		power_bar.value = abs(power_mw)
-		if power_mw > 0.0:
+		if is_off and power_mw == 0.0:
+			power_bar.modulate = Color(0.65, 0.65, 0.65, 1.0)
+		elif power_mw > 0.0:
 			power_bar.modulate = Color(0.2, 1.0, 0.4, 1.0)
 		elif power_mw < 0.0:
 			power_bar.modulate = Color(1.0, 0.25, 0.25, 1.0)

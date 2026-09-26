@@ -70,4 +70,23 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_lrke7")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_ogij0")
 text = "^"
 
+[node name="Reset Button" type="Button" parent="Top Bar" index="3"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 44.0
+offset_right = 134.0
+grow_vertical = 2
+focus_mode = 0
+mouse_filter = 1
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxFlat_xgbvp")
+theme_override_styles/hover = SubResource("StyleBoxFlat_lrke7")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ogij0")
+text = "Reset Default"
+
 [connection signal="pressed" from="Top Bar/Back Button" to="ScrollContainer/File Manager Window" method="_on_back_button_pressed"]
+[connection signal="pressed" from="Top Bar/Reset Button" to="ScrollContainer/File Manager Window" method="_on_reset_button_pressed"]
