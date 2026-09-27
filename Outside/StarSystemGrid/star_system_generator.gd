@@ -327,6 +327,7 @@ static func generate_system(seed_str: String = "", archetype: Archetype = Archet
 		station_body.occluding = false
 		station_body.description = "Hub orbitale con scali commerciali, baia d'attracco e riparazioni navali."
 		station_body.resources = ["FUEL", "SUPPLIES", "NANITES"]
+		station_body.comms_frequency = 1840.0
 		
 		# Dislivello altimetrico 3D locale Y (es. +/- 200..1200m)
 		var s_elevation: float = rng.randf_range(200.0, 850.0) * (1.0 if rng.randf() > 0.5 else -1.0)
@@ -369,6 +370,7 @@ static func generate_system(seed_str: String = "", archetype: Archetype = Archet
 			wreck_body.occluding = false
 			wreck_body.description = "Relitto bellico abbandonato con scafo squarciato e moduli di recupero."
 			wreck_body.resources = ["ALLOYS", "SCRAP_ELECTRONICS", "COMPONENTS"]
+			wreck_body.comms_frequency = 850.5
 			
 			var w_elevation: float = rng.randf_range(300.0, 1100.0) * (1.0 if rng.randf() > 0.5 else -1.0)
 			if wreck_body.get("local_elevation") != null:
@@ -402,6 +404,7 @@ static func generate_system(seed_str: String = "", archetype: Archetype = Archet
 		b_body.radius_km = 1.0
 		b_body.occluding = false
 		b_body.description = "Settore ad alto rischio presidiato da sciacalli e navi ricercate."
+		b_body.comms_frequency = 2185.2
 		var b_elev: float = rng.randf_range(-800.0, 800.0)
 		if b_body.get("local_elevation") != null:
 			b_body.set("local_elevation", b_elev)

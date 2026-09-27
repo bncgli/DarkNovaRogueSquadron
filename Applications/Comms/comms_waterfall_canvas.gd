@@ -72,10 +72,25 @@ func _update_waterfall_row(_delta: float) -> void:
 func update_state(freq: float, auto_rot_or_jam: bool = false, azimuth_or_pwr: float = 0.0, operational: bool = true, signals: Array[Dictionary] = []) -> void:
 	current_frequency = freq
 	is_auto_rotating = auto_rot_or_jam
+	var prev_azimuth := antenna_azimuth
 	antenna_azimuth = azimuth_or_pwr
 	is_operational = operational
 	active_signals = signals
+	
+	if is_operational:
+		if active_signals.is_empty():
+			# Nessun segnale visibile nel raggio/cono dell'antenna: svuota immediatamente il waterfall a solo rumore
+			_clear_waterfall_signals()
+		elif absf(fposmod(antenna_azimuth - prev_azimuth + 180.0, 360.0) - 180.0) > 3.0:
+			# Se l'antenna è stata ruotata, ripulisci lo storico per aggiornare prontamente la visuale
+			_clear_waterfall_signals()
 	queue_redraw()
+
+func _clear_waterfall_signals() -> void:
+	for r in range(waterfall_history.size()):
+		var row: PackedFloat32Array = waterfall_history[r]
+		for j in range(row.size()):
+			row[j] = randf_range(0.03, 0.11)
 
 func set_operational(op: bool) -> void:
 	is_operational = op

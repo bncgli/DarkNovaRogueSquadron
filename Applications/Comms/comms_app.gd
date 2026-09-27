@@ -77,7 +77,7 @@ var active_config: Dictionary = {
 	"bandwidth_hz": 1420.0,
 	"antenna_gain": 1.0,
 	"auto_rotate_speed": 45.0,
-	"reception_cone_deg": 25.0,
+	"reception_cone_deg": 45.0,
 	"subspace_relay_active": true,
 	"auto_tune_sos": true,
 	"signal_amplification": 1.2,
@@ -178,9 +178,24 @@ func _ready() -> void:
 	_update_connection_state()
 	load_dat_configuration()
 	_update_permissions()
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.comms:
+			var hal_st: Dictionary = hal.comms.get_status()
+			if hal_st.has("azimuth"):
+				antenna_azimuth_deg = float(hal_st.get("azimuth", 0.0))
+				if antenna_heading_slider:
+					antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
+	_sync_antenna_to_hal(antenna_azimuth_deg)
 	_refresh_signals()
 	_refresh_ui_display()
 	_log_comms_message("[color=#64c8ff][SISTEMA][/color] Suite Ricezione Comms & Antenna Direzionale inizializzata.")
+
+func _sync_antenna_to_hal(azimuth: float) -> void:
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.comms:
+			hal.comms.rotate_antenna(azimuth)
 
 func _connect_system_signals() -> void:
 	if SpaceWorldManager:
@@ -309,6 +324,7 @@ func _process(delta: float) -> void:
 			antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
 		if antenna_heading_value:
 			antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
+		_sync_antenna_to_hal(antenna_azimuth_deg)
 		_refresh_antenna_ui()
 		_refresh_tuner_state()
 	
@@ -325,8 +341,25 @@ func _process(delta: float) -> void:
 				antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
 			if antenna_heading_value:
 				antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
+			_sync_antenna_to_hal(antenna_azimuth_deg)
 			_refresh_antenna_ui()
 			_refresh_tuner_state()
+	
+	# 3. Sincronizzazione azimuth con HAL se ruotato esternamente (es. comando CLI comms rotate)
+	elif SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.comms:
+			var hal_st: Dictionary = hal.comms.get_status()
+			if hal_st.has("azimuth"):
+				var hal_az: float = float(hal_st.get("azimuth", antenna_azimuth_deg))
+				if absf(hal_az - antenna_azimuth_deg) > 0.5:
+					antenna_azimuth_deg = hal_az
+					if antenna_heading_slider:
+						antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
+					if antenna_heading_value:
+						antenna_heading_value.text = "%03d°" % int(antenna_azimuth_deg)
+					_refresh_antenna_ui()
+					_refresh_tuner_state()
 
 # --- GESTIONE DELLO STATO OPERATIVO / CONNESSIONE ---
 func _is_ship_operational() -> bool:
@@ -525,15 +558,145 @@ func _get_locked_signal() -> Variant:
 	return null
 
 func _refresh_signals() -> void:
+	var collected: Array[Dictionary] = []
 	if SpaceWorldManager and SpaceWorldManager.has_method("get_comms_transmissions"):
 		var live_transmissions: Array[Dictionary] = SpaceWorldManager.get_comms_transmissions()
-		if not live_transmissions.is_empty():
-			available_signals = live_transmissions
+		for t in live_transmissions:
+			if t is Dictionary and t.has("freq"):
+				collected.append(t)
+	
+	var gm = get_node_or_null("/root/StarSystemGridManager")
+	if not gm and Engine.has_singleton("StarSystemGridManager"):
+		gm = Engine.get_singleton("StarSystemGridManager")
+	if gm != null:
+		var cur_coords: Vector3i = gm.get_current_sector_coords() if gm.has_method("get_current_sector_coords") else Vector3i.ZERO
+		var bodies: Array = gm.system_celestial_bodies
+		if bodies.is_empty() and gm.current_system_data != null:
+			bodies = gm.current_system_data.celestial_bodies
+		
+		for b in bodies:
+			if b == null:
+				continue
+			var b_freq: float = 0.0
+			var b_name: String = ""
+			var b_id: String = ""
+			var b_type: String = ""
+			var b_coords: Vector3i = Vector3i.ZERO
+			if b is CelestialBodyData:
+				b_freq = b.comms_frequency
+				b_name = b.name
+				b_id = b.id
+				b_type = b.type
+				b_coords = b.coords
+			elif b is Dictionary:
+				b_freq = float(b.get("comms_frequency", 0.0))
+				b_name = str(b.get("name", ""))
+				b_id = str(b.get("id", ""))
+				b_type = str(b.get("type", ""))
+				b_coords = b.get("coords", Vector3i.ZERO)
+			
+			if b_freq > 0.0:
+				var already := false
+				for c in collected:
+					if str(c.get("id", "")).to_lower() == b_id.to_lower() or absf(float(c.get("freq", 0.0)) - b_freq) < 0.1:
+						already = true
+						break
+				if not already:
+					var dx: float = float(b_coords.x - cur_coords.x)
+					var dy: float = float(b_coords.y - cur_coords.y)
+					var dist_q: float = sqrt(dx * dx + dy * dy)
+					var bearing_deg: float = fposmod(rad_to_deg(atan2(dx, -dy)), 360.0)
+					collected.append({
+						"id": b_id.to_lower(),
+						"freq": b_freq,
+						"strength": clampf(1.0 - (dist_q / 25.0), 0.2, 0.95),
+						"name": b_name,
+						"desc": "Trasmissione da settore [%d, %d, %d]" % [b_coords.x, b_coords.y, b_coords.z],
+						"source": b_name,
+						"bearing_deg": bearing_deg,
+						"distance_quadrants": dist_q,
+						"distance": dist_q * 1000.0,
+						"type": b_type,
+						"target_ship_id": b_id,
+						"unlocked": true
+					})
+	
+	if not collected.is_empty():
+		available_signals = collected
 
 # --- CALCOLI ANTENNA DIREZIONALE & MATEMATICA SEGNALE ---
 func get_angular_difference(a_deg: float, b_deg: float) -> float:
 	var diff := fposmod(a_deg - b_deg + 180.0, 360.0) - 180.0
 	return absf(diff)
+
+func is_signal_visible(sig: Dictionary) -> bool:
+	if not _is_ship_operational() or not is_comms_powered:
+		return false
+	
+	var sig_freq: float = float(sig.get("freq", 0.0))
+	if sig_freq <= 0.0:
+		return false
+	
+	# 1. Se ShipHAL e l'hardware antenna_array sono presenti, interroga i registri diegetici
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.comms:
+			var vis_freqs: Array[float] = hal.comms.get_visible_frequencies()
+			for vf in vis_freqs:
+				if absf(vf - sig_freq) <= 0.5:
+					return true
+			return false
+	
+	# 2. Calcolo geometrico locale di visibilità (assenza di HAL o test isolati)
+	var target_bearing: float = _get_signal_bearing(sig)
+	var delta_theta: float = get_angular_difference(antenna_azimuth_deg, target_bearing)
+	var cone_deg: float = float(active_config.get("reception_cone_deg", 25.0))
+	if delta_theta > cone_deg:
+		return false
+	
+	var dist: float = _get_signal_distance(sig)
+	var amp: float = float(active_config.get("signal_amplification", 1.2))
+	var max_dist: float = 15000.0 * amp
+	if dist > max_dist:
+		return false
+	
+	return true
+
+func get_visible_signals() -> Array[Dictionary]:
+	var visible: Array[Dictionary] = []
+	if not _is_ship_operational() or not is_comms_powered:
+		return visible
+	
+	for sig in available_signals:
+		if is_signal_visible(sig):
+			visible.append(sig)
+	
+	# Se HAL riporta frequenze visibili diegetiche non presenti nel catalogo locale, aggiungile
+	if SpaceWorldManager and SpaceWorldManager.has_method("get_ship_hal"):
+		var hal: ShipHAL = SpaceWorldManager.get_ship_hal()
+		if hal and hal.comms:
+			var vis_freqs: Array[float] = hal.comms.get_visible_frequencies()
+			for vf in vis_freqs:
+				var found := false
+				for vs in visible:
+					if absf(float(vs.get("freq", 0.0)) - vf) <= 0.5:
+						found = true
+						break
+				if not found:
+					visible.append({
+						"id": "freq_%.1f" % vf,
+						"freq": vf,
+						"strength": 0.85,
+						"name": "📡 Trasmissione RF %.1f MHz" % vf,
+						"desc": "Portante subspaziale intercettata nel cono dell'antenna.",
+						"source": "Sorgente Direzionale",
+						"bearing_deg": antenna_azimuth_deg,
+						"distance": 1000.0,
+						"type": "BROADCAST",
+						"unlocked": true
+					})
+	
+	return visible
 
 func _get_signal_bearing(sig: Dictionary) -> float:
 	if sig.has("bearing_deg"):
@@ -617,6 +780,7 @@ func _on_antenna_heading_changed(new_val: float) -> void:
 			antenna_heading_slider.set_value_no_signal(antenna_azimuth_deg)
 		return
 	antenna_azimuth_deg = fposmod(new_val, 360.0)
+	_sync_antenna_to_hal(antenna_azimuth_deg)
 	_refresh_antenna_ui()
 	_refresh_tuner_state()
 
@@ -796,8 +960,16 @@ func _refresh_tuner_state() -> void:
 	if freq_value_label:
 		freq_value_label.text = "%.1f MHz" % current_frequency
 	
+	var visible_sigs := get_visible_signals()
+	if waterfall_canvas:
+		waterfall_canvas.update_state(current_frequency, is_auto_rotating, antenna_azimuth_deg, _is_ship_operational(), visible_sigs)
+	
 	var tuned_sig: Variant = _get_locked_signal()
+	var is_visible := false
 	if tuned_sig != null:
+		is_visible = is_signal_visible(tuned_sig)
+	
+	if tuned_sig != null and is_visible:
 		var sig_id: String = str(tuned_sig.get("id", ""))
 		var sig_name: String = str(tuned_sig.get("name", "Segnale"))
 		var sig_type: String = str(tuned_sig.get("type", "UNKNOWN"))
@@ -863,12 +1035,25 @@ func _refresh_tuner_state() -> void:
 				btn_connect_drive.text = "⚠️ SEGNALE INSUFFICIENTE PER INTRUSIONE EW (SNR >= 75%%, Dist < 1200m)"
 	else:
 		if signal_lock_badge:
-			signal_lock_badge.text = "⚪ RUMORE BIANCO / NESSUN AGGANCIO"
+			if tuned_sig != null and not is_visible:
+				var s_bearing: float = _get_signal_bearing(tuned_sig)
+				var d_th: float = get_angular_difference(antenna_azimuth_deg, s_bearing)
+				signal_lock_badge.text = "⚪ RUMORE BIANCO / FUORI PUNTAMENTO (Δθ=%d°)" % int(d_th)
+			else:
+				signal_lock_badge.text = "⚪ RUMORE BIANCO / NESSUN AGGANCIO"
 			signal_lock_badge.modulate = Color(0.6, 0.7, 0.8)
 		if signal_info_label:
-			signal_info_label.text = "Scorrere il cursore per intercettare portanti RF o trasmissioni subspaziali attive."
+			if tuned_sig != null and not is_visible:
+				var s_bearing: float = _get_signal_bearing(tuned_sig)
+				signal_info_label.text = "Frequenza sintonizzata: orientare l'antenna verso %03d° per agganciare." % int(s_bearing)
+			else:
+				signal_info_label.text = "Scorrere il cursore per intercettare portanti RF o trasmissioni subspaziali attive."
 		if signal_detail_label:
-			signal_detail_label.text = "[color=#7799aa]Nessuna trasmissione agganciata sulla frequenza attuale.[/color]\n[color=#557788]Sintonizzare la frequenza e orientare l'antenna verso la sorgente per stabilire il collegamento radio.[/color]"
+			if tuned_sig != null and not is_visible:
+				var s_bearing: float = _get_signal_bearing(tuned_sig)
+				signal_detail_label.text = "[color=#7799aa]Nessuna trasmissione ricevibile sulla rotta attuale (sorgente a %03d°).[/color]\n[color=#557788]Allineare l'antenna verso la sorgente per stabilire il collegamento radio.[/color]" % int(s_bearing)
+			else:
+				signal_detail_label.text = "[color=#7799aa]Nessuna trasmissione agganciata sulla frequenza attuale.[/color]\n[color=#557788]Sintonizzare la frequenza e orientare l'antenna verso la sorgente per stabilire il collegamento radio.[/color]"
 		if btn_listen_signal:
 			btn_listen_signal.disabled = true
 		if station_actions_box:
@@ -877,9 +1062,6 @@ func _refresh_tuner_state() -> void:
 			btn_connect_drive.visible = true
 			btn_connect_drive.disabled = true
 			btn_connect_drive.text = "🔗 NESSUN SEGNALE BERSAGLIO AGGANCIATO"
-	
-	if waterfall_canvas:
-		waterfall_canvas.update_state(current_frequency, is_auto_rotating, antenna_azimuth_deg, _is_ship_operational(), available_signals)
 
 func _refresh_ui_display() -> void:
 	var total_power := 50.0 + (15.0 if is_auto_rotating else 0.0)

@@ -951,6 +951,19 @@ class CommsSubsystem extends RefCounted:
 			return ant.get_frequencies()
 		return [1420.0, 1920.0, 433.0] if _hal.is_device_operational("antenna_array") else []
 
+	func get_range_quadrants() -> float:
+		var ant := _hal.find_component_for_device("antenna_array") as AntennaArrayComponent
+		if ant:
+			return ant.get_effective_range_quadrants()
+		return 0.0
+
+	func set_reception_cone(cone_deg: float) -> bool:
+		var ant := _hal.find_component_for_device("antenna_array") as AntennaArrayComponent
+		if ant:
+			ant.set_reception_cone(cone_deg)
+			return true
+		return false
+
 	func is_operational() -> bool:
 		return bool(get_status().get("is_operational", false))
 

@@ -15,6 +15,7 @@ extends Resource
 @export var atmosphere: String = "none"
 @export var resources: Array[String] = []
 @export var local_elevation: float = 0.0 # Quota altimetrica 3D locale Y (metri) rispetto al piano del settore
+@export var comms_frequency: float = 0.0 # Frequenza radio/subspazio MHz emessa (0 = nessuna/default)
 
 func _init(p_id: String = "", p_name: String = "", p_type: String = "planet", p_coords: Vector3i = Vector3i.ZERO, p_elevation: float = 0.0) -> void:
 	id = p_id
@@ -47,7 +48,8 @@ func to_dict() -> Dictionary:
 		"description": description,
 		"temperature": temperature,
 		"atmosphere": atmosphere,
-		"resources": resources.duplicate()
+		"resources": resources.duplicate(),
+		"comms_frequency": comms_frequency
 	}
 
 ## Deserializzazione da dizionario
@@ -87,3 +89,5 @@ func from_dict(data: Dictionary) -> void:
 		resources.clear()
 		for r in data["resources"]:
 			resources.append(str(r))
+	
+	comms_frequency = float(data.get("comms_frequency", comms_frequency))

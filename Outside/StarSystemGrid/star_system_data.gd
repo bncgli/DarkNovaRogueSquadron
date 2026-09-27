@@ -245,7 +245,8 @@ func create_default_system() -> void:
 			"luminosity": 1.0,
 			"color": [1.0, 0.96, 0.9, 1.0],
 			"occluding": false,
-			"description": "Stella di sequenza principale al centro del sistema."
+			"description": "Stella di sequenza principale al centro del sistema.",
+			"comms_frequency": 0.0
 		},
 		{
 			"id": "PLANET_VULCAN",
@@ -255,7 +256,8 @@ func create_default_system() -> void:
 			"radius_km": 4800.0,
 			"mass_tons": 3.3e20,
 			"occluding": true,
-			"description": "Mondo lavico interno ad alta densità metallica."
+			"description": "Mondo lavico interno ad alta densità metallica.",
+			"comms_frequency": 0.0
 		},
 		{
 			"id": "PLANET_TERRA_NOVA",
@@ -265,7 +267,8 @@ func create_default_system() -> void:
 			"radius_km": 6371.0,
 			"mass_tons": 5.97e21,
 			"occluding": true,
-			"description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata."
+			"description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata.",
+			"comms_frequency": 1420.0
 		},
 		{
 			"id": "MOON_LUNA_SEC",
@@ -275,7 +278,8 @@ func create_default_system() -> void:
 			"radius_km": 1737.0,
 			"mass_tons": 7.35e19,
 			"occluding": true,
-			"description": "Luna mineraria di Terra Nova."
+			"description": "Luna mineraria di Terra Nova.",
+			"comms_frequency": 433.0
 		},
 		{
 			"id": "BELT_CERES_EX",
@@ -285,7 +289,8 @@ func create_default_system() -> void:
 			"radius_km": 25000.0,
 			"mass_tons": 1.5e18,
 			"occluding": false,
-			"description": "Denso campo di detriti e minerali preziosi."
+			"description": "Denso campo di detriti e minerali preziosi.",
+			"comms_frequency": 2750.0
 		},
 		{
 			"id": "STATION_VALKYRIE",
@@ -295,7 +300,8 @@ func create_default_system() -> void:
 			"radius_km": 15.0,
 			"mass_tons": 8.5e10,
 			"occluding": false,
-			"description": "Hub orbitale militare e commerciale dell'avamposto."
+			"description": "Hub orbitale militare e commerciale dell'avamposto.",
+			"comms_frequency": 1840.0
 		},
 		{
 			"id": "PATROL_VANGUARD",
@@ -305,7 +311,8 @@ func create_default_system() -> void:
 			"radius_km": 0.5,
 			"mass_tons": 45000.0,
 			"occluding": false,
-			"description": "Squadriglia di caccia di sicurezza perimetrale."
+			"description": "Squadriglia di caccia di sicurezza perimetrale.",
+			"comms_frequency": 1920.0
 		},
 		{
 			"id": "WRECK_TITAN_GRAVE",
@@ -315,7 +322,8 @@ func create_default_system() -> void:
 			"radius_km": 2.5,
 			"mass_tons": 1.2e8,
 			"occluding": false,
-			"description": "Relitto bellico abbandonato ricco di materiali rari."
+			"description": "Relitto bellico abbandonato ricco di materiali rari.",
+			"comms_frequency": 850.5
 		},
 		{
 			"id": "GAS_GIANT_KRONOS",
@@ -325,7 +333,8 @@ func create_default_system() -> void:
 			"radius_km": 69911.0,
 			"mass_tons": 1.89e24,
 			"occluding": true,
-			"description": "Imponente gigante gassoso con complessi anelli d'idrogeno."
+			"description": "Imponente gigante gassoso con complessi anelli d'idrogeno.",
+			"comms_frequency": 2400.0
 		},
 		{
 			"id": "GAS_GIANT_AETHER",
@@ -335,7 +344,8 @@ func create_default_system() -> void:
 			"radius_km": 25362.0,
 			"mass_tons": 8.68e22,
 			"occluding": true,
-			"description": "Gigante ghiacciato all'estrema periferia del sistema."
+			"description": "Gigante ghiacciato all'estrema periferia del sistema.",
+			"comms_frequency": 2185.2
 		}
 	]
 	

@@ -7,6 +7,7 @@ script = ExtResource("1_sys_script")
 description = "Sistema stellare principale Dark Nova Helios."
 celestial_bodies = [{
 "color": Color(1, 0.96, 0.9, 1),
+"comms_frequency": 0.0,
 "coords": Vector3i(0, 0, 0),
 "description": "Stella di sequenza principale al centro del sistema.",
 "id": "STAR_SOL_PRIME",
@@ -17,6 +18,7 @@ celestial_bodies = [{
 "radius_km": 696340.0,
 "type": "STAR"
 }, {
+"comms_frequency": 0.0,
 "coords": Vector3i(1, 3, 0),
 "description": "Mondo lavico interno ad alta densità metallica.",
 "id": "PLANET_VULCAN",
@@ -26,6 +28,7 @@ celestial_bodies = [{
 "radius_km": 4800.0,
 "type": "PLANET"
 }, {
+"comms_frequency": 1420.0,
 "coords": Vector3i(4, 8, 0),
 "description": "Pianeta abitabile dell'orbita mediana con ecosfera stabilizzata.",
 "id": "PLANET_TERRA_NOVA",
@@ -35,6 +38,7 @@ celestial_bodies = [{
 "radius_km": 6371.0,
 "type": "PLANET"
 }, {
+"comms_frequency": 433.0,
 "coords": Vector3i(4, 8, 0),
 "description": "Luna mineraria di Terra Nova.",
 "id": "MOON_LUNA_SEC",
@@ -44,6 +48,7 @@ celestial_bodies = [{
 "radius_km": 1737.0,
 "type": "MOON"
 }, {
+"comms_frequency": 2750.0,
 "coords": Vector3i(3, 10, 0),
 "description": "Denso campo di detriti e minerali preziosi.",
 "id": "BELT_CERES_EX",
@@ -53,6 +58,7 @@ celestial_bodies = [{
 "radius_km": 25000.0,
 "type": "ASTEROID_FIELD"
 }, {
+"comms_frequency": 1840.0,
 "coords": Vector3i(4, 12, 0),
 "description": "Hub orbitale militare e commerciale dell'avamposto.",
 "id": "STATION_VALKYRIE",
@@ -62,6 +68,7 @@ celestial_bodies = [{
 "radius_km": 15.0,
 "type": "STATION"
 }, {
+"comms_frequency": 1920.0,
 "coords": Vector3i(4, 11, 0),
 "description": "Squadriglia di caccia di sicurezza perimetrale.",
 "id": "PATROL_VANGUARD",
@@ -71,6 +78,7 @@ celestial_bodies = [{
 "radius_km": 0.5,
 "type": "PATROL"
 }, {
+"comms_frequency": 850.5,
 "coords": Vector3i(5, 14, 0),
 "description": "Relitto bellico abbandonato ricco di materiali rari.",
 "id": "WRECK_TITAN_GRAVE",
@@ -80,6 +88,7 @@ celestial_bodies = [{
 "radius_km": 2.5,
 "type": "WRECK"
 }, {
+"comms_frequency": 2400.0,
 "coords": Vector3i(8, 20, 0),
 "description": "Imponente gigante gassoso con complessi anelli d'idrogeno.",
 "id": "GAS_GIANT_KRONOS",
@@ -89,6 +98,7 @@ celestial_bodies = [{
 "radius_km": 69911.0,
 "type": "GAS_GIANT"
 }, {
+"comms_frequency": 2185.2,
 "coords": Vector3i(-12, 16, 0),
 "description": "Gigante ghiacciato all'estrema periferia del sistema.",
 "id": "GAS_GIANT_AETHER",

@@ -3227,7 +3227,59 @@ func get_comms_transmissions() -> Array[Dictionary]:
 			"unlocked": true
 		})
 
-	# Se non è presente la scena 3D o non sono stati trovati segnali, usa i fallback sintetici
+	# Se non è presente la scena 3D o non sono stati trovati segnali, consulta la mappa stellare di sistema
+	if signals.is_empty():
+		var gm = get_node_or_null("/root/StarSystemGridManager")
+		if not gm and Engine.has_singleton("StarSystemGridManager"):
+			gm = Engine.get_singleton("StarSystemGridManager")
+		if gm != null:
+			var cur_coords: Vector3i = gm.get_current_sector_coords() if gm.has_method("get_current_sector_coords") else Vector3i.ZERO
+			var bodies: Array = gm.system_celestial_bodies
+			if bodies.is_empty() and gm.current_system_data != null:
+				bodies = gm.current_system_data.celestial_bodies
+			
+			for b in bodies:
+				if b == null:
+					continue
+				var b_freq: float = 0.0
+				var b_name: String = ""
+				var b_id: String = ""
+				var b_type: String = ""
+				var b_coords: Vector3i = Vector3i.ZERO
+				if b is CelestialBodyData:
+					b_freq = b.comms_frequency
+					b_name = b.name
+					b_id = b.id
+					b_type = b.type
+					b_coords = b.coords
+				elif b is Dictionary:
+					b_freq = float(b.get("comms_frequency", 0.0))
+					b_name = str(b.get("name", ""))
+					b_id = str(b.get("id", ""))
+					b_type = str(b.get("type", ""))
+					b_coords = b.get("coords", Vector3i.ZERO)
+				
+				if b_freq > 0.0:
+					var dx: float = float(b_coords.x - cur_coords.x)
+					var dy: float = float(b_coords.y - cur_coords.y)
+					var dist_q: float = sqrt(dx * dx + dy * dy)
+					var bearing_deg: float = fposmod(rad_to_deg(atan2(dx, -dy)), 360.0)
+					signals.append({
+						"id": b_id.to_lower(),
+						"freq": b_freq,
+						"strength": clampf(1.0 - (dist_q / 25.0), 0.2, 0.95),
+						"name": b_name,
+						"desc": "Trasmissione da settore [%d, %d, %d]" % [b_coords.x, b_coords.y, b_coords.z],
+						"source": b_name,
+						"bearing_deg": bearing_deg,
+						"distance_quadrants": dist_q,
+						"distance": dist_q * 1000.0,
+						"type": b_type,
+						"target_ship_id": b_id,
+						"unlocked": true
+					})
+
+	# Se non sono presenti segnali dalla mappa, usa i fallback sintetici
 	if signals.is_empty():
 		signals = [
 			{
